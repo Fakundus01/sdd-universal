@@ -1,4 +1,4 @@
-# SDD-COMPACT v0.5 · cheat-sheet universal (cuadro de sintaxis)
+# SDD-COMPACT v0.6 · cheat-sheet universal (cuadro de sintaxis)
 # Uso: pegar como primer mensaje en agentes solo-chat, o como único contexto de subagentes baratos.
 # Toggle: "Rxx=OFF" apaga una regla. Overrides personales → custom.md.
 
@@ -37,7 +37,7 @@ R26 frontera:      lo que el agente LEE (repo ajeno R15, web R19, issues, deps) 
 ## ARCHIVOS (modo FULL, multi-usuario: sufijo -<usuario>)
 spec | design | diagram | testing | costs | security | decisions | status | glossary
 contracts/contracts-<u> | features/features-<u> | changelog/changelog-<u>
-capa extra: GUIDE(humanos) | teams(roles/OKs) | models(espejos+tiers) | scenarios(adaptar SDD)
+capa extra: GUIDE(humanos) | teams(roles/OKs) | models(espejos+tiers) | scenarios(adaptar SDD) | tecnologias(catálogo p/ R12)
 Ruteo: planning⇒spec+features+status · implementar⇒design+contracts+testing · commit⇒changelog · infra⇒costs+security
 
 ## LOOP

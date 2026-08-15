@@ -22,7 +22,8 @@ Un paquete abierto de gobernanza: **la especificación va antes que el código**
 | `custom.md` | Tus overrides personales (el núcleo nunca se edita) |
 | `teams.md` | Capa enterprise: roles, aprobaciones, ceremonias, subagentes por rol |
 | `models.md` | Espejos multi-agente + tiers de modelo + ahorro de tokens |
-| `blocks.md` | Cómo se combinan los bloques (BASE + TYPE + STACK + PLAYBOOKS) |
+| `blocks.md` | Cómo se combinan los bloques (BASE + TYPE + STACK + TECNOLOGÍAS + PLAYBOOKS) |
+| `tecnologias.md` | Catálogo de 101 tecnologías con ecosistema y uso — elegibles desde la web |
 | `playbooks/` | Recetas paso a paso (deploy, env, React+Vite, GitHub+Vercel…) con notas `[NOVATO]` |
 | `prompts/` | Start, loop/HANDBACK, mantenimiento, migración desde otro chat |
 | `web/` | El catálogo web (front puro, deployable en Vercel tal cual) |
@@ -39,4 +40,4 @@ Regla R20: nada entra "porque suena bien". Toda mejora nace de un caso real → 
 
 ## Estado
 
-**v0.5** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.
+**v0.6** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.

@@ -15,6 +15,7 @@ En vez de un solo SDD gigante que intenta cubrir todo, el sistema se arma con **
 | **BASE** | El núcleo universal. Siempre presente, nunca se edita. | `SDD-MASTER.md` (o `SDD-COMPACT.md`) |
 | **TYPE** | Un tipo de proyecto: decisiones ya tomadas, features típicas, riesgos del dominio, preguntas extra. | chatbot, calculadora, web-app, api-propia, scraper, proceso-automático, juego-de-estudio, guía-de-estudio/TP |
 | **STACK** | Lenguaje/librerías/framework y sus convenciones. | python-libs, ts-fullstack, react-front, node-back |
+| **TECNOLOGÍA** | Una pieza concreta del catálogo (`tecnologias.md`): qué es, de qué ecosistema y para qué sirve. Se eligen de a varias y parametrizan al STACK. | React, PostgreSQL, FastAPI, Godot… |
 | **PLAYBOOK** | Procedimiento paso a paso ya resuelto (ver `playbooks/`). | deploy-vercel, env-setup, create-react-vite |
 
 Cabecera estándar de todo bloque (primeras líneas del MD):
@@ -26,10 +27,10 @@ BLOQUE: type · ID: chatbot · NIVEL: novato+pro · COMBINA-CON: stack/*, playbo
 ## 3 · Regla de composición
 
 ```
-SDD final = BASE + 1 TYPE + 0..1 STACK + 0..N PLAYBOOKS + custom.md
+SDD final = BASE + 1 TYPE + 0..1 STACK + 0..N TECNOLOGÍAS + 0..N PLAYBOOKS + custom.md
 ```
 
-**Precedencia (lo específico pisa lo general):** BASE < TYPE < STACK < PLAYBOOK < `custom.md`. Si el TYPE dice "usá SQLite" y el STACK elegido dice "Postgres", gana el STACK; si tu `custom.md` dice otra cosa, gana custom. Los bloques nunca contradicen las reglas fijas del BASE (R05, R08, R17…): solo agregan o parametrizan.
+**Precedencia (lo específico pisa lo general):** BASE < TYPE < STACK < TECNOLOGÍA < PLAYBOOK < `custom.md`. Si el TYPE dice "usá SQLite" y el STACK elegido dice "Postgres", gana el STACK; si tu `custom.md` dice otra cosa, gana custom. Los bloques nunca contradicen las reglas fijas del BASE (R05, R08, R17…): solo agregan o parametrizan.
 
 ## 4 · Qué trae un bloque TYPE (contrato)
 
@@ -61,4 +62,5 @@ Igual que una regla (R20): caso real → se documenta → entra con el formato e
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.6 | 2026-08-15 | Tipo de bloque **TECNOLOGÍA** (`tecnologias.md`, 101 piezas concretas) sumado a la regla de composición y a la precedencia, entre STACK y PLAYBOOK: una tecnología puntual pisa la convención general del stack, pero un playbook la pisa a ella. Elegibles desde el combinador de la web. |
 | 0.4 | 2026-08-15 | Primera especificación: 4 tipos de bloque, regla de composición con precedencia, contrato de TYPE, combinación v1 (estática) y v2 (con IA), niveles y etiquetas. |

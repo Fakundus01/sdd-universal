@@ -220,6 +220,59 @@
   footer a{color:var(--accent-ink);text-decoration:none}
   footer a:hover{text-decoration:underline}
   footer nav{display:flex;gap:14px;flex-wrap:wrap}
+
+  /* ---------- selector de tecnologías ---------- */
+  .techpick{background:var(--panel-2);border:1px solid var(--panel-line);border-radius:12px;
+            padding:14px 16px;margin-bottom:16px}
+  .techpick .hd{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+  .techpick .open{background:transparent;color:var(--panel-ink);border:1px solid var(--panel-line);
+       border-radius:10px;padding:9px 15px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit}
+  .techpick .open:hover{border-color:#7b74f5}
+  .techpick .hint{font-size:.79rem;color:var(--panel-muted)}
+  .selchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+  .selchips:empty{display:none}
+  .selchip{display:inline-flex;align-items:center;gap:7px;background:var(--panel);
+       border:1px solid var(--panel-line);border-radius:999px;padding:5px 6px 5px 12px;font-size:.79rem}
+  .selchip b{font-weight:600}
+  .selchip small{color:var(--panel-muted)}
+  .selchip button{background:none;border:0;color:var(--panel-muted);cursor:pointer;font-size:.9rem;
+       line-height:1;padding:2px 5px;border-radius:50%;font-family:inherit}
+  .selchip button:hover{color:#fff;background:var(--panel-line)}
+
+  dialog.tech{border:1px solid var(--line);border-radius:18px;padding:0;background:var(--card);
+       color:var(--ink);width:min(760px,94vw);max-height:88vh;box-shadow:var(--shadow-lg)}
+  dialog.tech::backdrop{background:rgba(10,14,28,.6)}
+  .dlg-head{padding:20px 22px 14px;border-bottom:1px solid var(--line);position:relative}
+  .dlg-head h2{font-size:1.15rem;letter-spacing:-.02em}
+  .dlg-head p{font-size:.83rem;color:var(--muted);margin-top:4px;max-width:64ch}
+  .dlg-x{position:absolute;top:16px;right:16px;background:none;border:1px solid var(--line-strong);
+       color:var(--muted);width:30px;height:30px;border-radius:9px;cursor:pointer;font-family:inherit}
+  .dlg-x:hover{color:var(--ink)}
+  .dlg-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px 22px;
+       border-bottom:1px solid var(--line);background:var(--bg-soft)}
+  .dlg-filters input,.dlg-filters select{padding:8px 11px;border:1px solid var(--line-strong);
+       border-radius:9px;font-size:.83rem;background:var(--card);color:var(--ink);font-family:inherit}
+  .dlg-filters input{flex:1;min-width:150px}
+  .dlg-filters .os{display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--muted);cursor:pointer}
+  .dlg-filters .os input{flex:none;accent-color:var(--accent);width:15px;height:15px}
+  .dlg-list{overflow-y:auto;padding:8px 14px;max-height:min(46vh,420px)}
+  .dlg-grp{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;
+       color:var(--muted);padding:12px 8px 6px}
+  .trow{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:10px;cursor:pointer}
+  .trow:hover{background:var(--bg-soft)}
+  .trow input{accent-color:var(--accent);width:16px;height:16px;flex:none}
+  .trow .nm{font-weight:600;font-size:.89rem;flex:none}
+  .trow .meta{font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .trow .os{font-size:.63rem;font-weight:700;color:var(--green);background:var(--green-soft);
+       border-radius:999px;padding:2px 7px;margin-left:auto;flex:none}
+  .dlg-empty{padding:34px 10px;text-align:center;color:var(--muted);font-size:.87rem}
+  .dlg-foot{display:flex;align-items:center;gap:9px;padding:14px 22px;border-top:1px solid var(--line);
+       flex-wrap:wrap}
+  .dlg-foot .n{font-size:.84rem;color:var(--muted);margin-right:auto}
+  .dlg-foot button{border-radius:10px;padding:9px 17px;font-size:.85rem;font-weight:700;cursor:pointer;
+       font-family:inherit;border:0}
+  .dlg-foot .clear{background:transparent;color:var(--muted);border:1px solid var(--line-strong)!important}
+  .dlg-foot .done{background:var(--accent);color:var(--on-accent)}
 </style>
 </head>
 <body>
@@ -233,6 +286,7 @@
     <a href="../GUIDE.md" class="hide-s">Guía</a>
     <a href="https://github.com/Fakundus01/sdd-universal/tree/main/examples/turnos/sdd" class="hide-s">Ejemplo</a>
     <a href="../sdd-universal-tablero.html" class="hide-s">Tablero</a>
+    <a href="#" id="navtech" class="hide-s">Tecnologías</a>
     <a href="https://github.com/Fakundus01/sdd-universal">GitHub</a>
     <button class="tbtn" id="theme" type="button" aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">◐</button>
   </nav>
@@ -331,6 +385,14 @@
       <option value="CONFIANZA">Confianza — auto-commit</option>
     </select></div>
   </div>
+  <div class="techpick">
+    <div class="hd">
+      <button class="open" id="opentech" type="button">＋ Elegir tecnologías</button>
+      <span class="hint" id="techhint"></span>
+    </div>
+    <div class="selchips" id="selchips"></div>
+  </div>
+
   <span class="lbl">Playbooks para sumar</span>
   <div class="pbs" id="pbs">
     <label><input type="checkbox" value="env-setup" checked> env-setup (credenciales)</label>
@@ -359,8 +421,31 @@
 
 </main>
 
+<dialog class="tech" id="techdlg" aria-labelledby="techtitle">
+  <div class="dlg-head">
+    <h2 id="techtitle">Catálogo de tecnologías</h2>
+    <p id="techsub"></p>
+    <button class="dlg-x" id="techx" type="button" aria-label="Cerrar el catálogo">✕</button>
+  </div>
+  <div class="dlg-filters">
+    <label class="sr" for="tq">Buscar tecnología</label>
+    <input id="tq" type="search" placeholder="Buscar: React, Postgres, Rust…" autocomplete="off">
+    <label class="sr" for="tcat">Categoría</label>
+    <select id="tcat"></select>
+    <label class="sr" for="tfam">Ecosistema</label>
+    <select id="tfam"></select>
+    <label class="os"><input type="checkbox" id="tos"> Solo open source</label>
+  </div>
+  <div class="dlg-list" id="techlist" role="group" aria-label="Tecnologías disponibles"></div>
+  <div class="dlg-foot">
+    <span class="n" id="techsel" role="status">Ninguna elegida</span>
+    <button class="clear" id="techclear" type="button">Limpiar</button>
+    <button class="done" id="techdone" type="button">Listo</button>
+  </div>
+</dialog>
+
 <footer>
-  <div>SDD Universal <b>v0.5</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.6</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -372,6 +457,7 @@
 
 </div>
 
+<script src="tecnologias.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -398,6 +484,7 @@ const CARDS = [
  {c:"Base",n:"pro",  s:"ok",t:"Multi-agente & ahorro de tokens",d:"Espejos para Claude, Codex/ChatGPT, Cursor, Copilot y Gemini + técnicas de ahorro por tier de modelo.",f:"../models.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Bloques componibles",d:"Cómo se arma un SDD a medida combinando BASE + TYPE + STACK + PLAYBOOKS, con reglas de precedencia. Es el motor detrás del combinador.",f:"../blocks.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Cómo crece el SDD (escenarios)",d:"La matriz de 23 situaciones reales: dónde funciona, dónde falla y qué adaptación resolvió cada caso. Nada entra al núcleo «porque suena bien».",f:"../scenarios.md"},
+ {c:"Base",n:"novato",s:"ok",t:"Catálogo de tecnologías",d:"101 tecnologías (lenguajes, frameworks, bibliotecas, bases, cloud, IA, testing…) con su ecosistema y para qué sirve cada una. Elegilas desde el combinador y entran solas al prompt.",f:"../tecnologias.md"},
 
  {c:"Proyectos",n:"pro",  s:"comb",t:"Web app full-stack",d:"Front + back + DB con contratos entre capas. El clásico. Combinalo con tu stack en el combinador.",k:"webapp"},
  {c:"Proyectos",n:"pro",  s:"comb",t:"Chatbot con IA",d:"Historial, límite de gasto de API, personalidad configurable y evaluación de respuestas.",k:"chatbot"},
@@ -535,9 +622,105 @@ document.addEventListener("click", e => {
 $("q").oninput = render;
 $("lvl").onchange = render;
 
+/* ---------- catálogo de tecnologías ---------- */
+const sel = new Set();
+const dlg = $("techdlg");
+
+(() => {
+  const cats = [...new Set(TECH.map(t => t.c))];
+  const fams = [...new Set(TECH.map(t => t.f).filter(Boolean))]
+    .sort((a, b) => TECH.filter(t => t.f === b).length - TECH.filter(t => t.f === a).length);
+  $("tcat").innerHTML = `<option value="">Categoría: todas</option>` +
+    cats.map(c => `<option value="${esc(c)}">${esc(c)} (${TECH.filter(t => t.c === c).length})</option>`).join("");
+  $("tfam").innerHTML = `<option value="">Ecosistema: todos</option>` +
+    fams.map(f => `<option value="${esc(f)}">${esc(f)} (${TECH.filter(t => t.f === f).length})</option>`).join("");
+  $("techsub").textContent = `${TECH.length} tecnologías en ${cats.length} categorías. Marcá las que quieras usar y entran al prompt de arranque. Elegir no reemplaza justificar: tu agente igual tiene que decirte si la combinación sirve para tu proyecto (R12).`;
+  $("techhint").textContent = `${TECH.length} disponibles · opcional`;
+})();
+
+function techRows(){
+  const q = $("tq").value.trim().toLowerCase(),
+        c = $("tcat").value, f = $("tfam").value, onlyOS = $("tos").checked;
+  return TECH.filter(t =>
+    (!c || t.c === c) && (!f || t.f === f) && (!onlyOS || t.os) &&
+    (!q || (t.n + " " + t.u + " " + t.e + " " + t.t).toLowerCase().includes(q)));
+}
+
+function renderTech(){
+  const list = techRows();
+  if (!list.length){
+    $("techlist").innerHTML = `<p class="dlg-empty">Ninguna tecnología coincide con esos filtros.<br>El catálogo arranca con lo que ya relevamos y crece con casos reales (R20).</p>`;
+  } else {
+    let html = "", grupo = null;
+    for (const t of list){
+      if (t.c !== grupo){ grupo = t.c; html += `<p class="dlg-grp">${esc(grupo)}</p>`; }
+      const meta = [t.t, t.e, t.u].filter(Boolean).join(" · ");
+      html += `<label class="trow">
+        <input type="checkbox" value="${esc(t.n)}"${sel.has(t.n) ? " checked" : ""}>
+        <span class="nm">${esc(t.n)}</span>
+        <span class="meta">${esc(meta)}</span>
+        ${t.os ? '<span class="os">open source</span>' : ""}
+      </label>`;
+    }
+    $("techlist").innerHTML = html;
+  }
+  const n = sel.size;
+  $("techsel").textContent = n === 0 ? "Ninguna elegida"
+    : n === 1 ? "1 tecnología elegida" : `${n} tecnologías elegidas`;
+}
+
+function renderSel(){
+  $("selchips").innerHTML = [...sel].map(n => {
+    const t = TECH.find(x => x.n === n) || {};
+    return `<span class="selchip"><b>${esc(n)}</b>${t.e ? `<small>${esc(t.e)}</small>` : ""}
+      <button type="button" data-unsel="${esc(n)}" aria-label="Quitar ${esc(n)}">✕</button></span>`;
+  }).join("");
+  const n = sel.size;
+  $("techhint").textContent = n === 0 ? `${TECH.length} disponibles · opcional`
+    : n === 1 ? "1 elegida" : `${n} elegidas`;
+}
+
+$("techlist").addEventListener("change", e => {
+  const cb = e.target.closest("input[type=checkbox]");
+  if (!cb) return;
+  cb.checked ? sel.add(cb.value) : sel.delete(cb.value);
+  renderTech(); renderSel();
+});
+["tq","tcat","tfam","tos"].forEach(id => {
+  $(id).addEventListener(id === "tq" ? "input" : "change", renderTech);
+});
+function openTech(){ renderTech(); dlg.showModal(); $("tq").focus(); }
+$("opentech").onclick = openTech;
+$("navtech").onclick = e => { e.preventDefault(); openTech(); };
+$("techx").onclick = () => dlg.close();
+$("techdone").onclick = () => dlg.close();
+$("techclear").onclick = () => { sel.clear(); renderTech(); renderSel(); };
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+document.addEventListener("click", e => {
+  const un = e.target.closest("[data-unsel]");
+  if (un) { sel.delete(un.dataset.unsel); renderTech(); renderSel(); }
+});
+
 /* ---------- combinador ---------- */
 $("ctype").innerHTML = Object.entries(TYPES)
   .map(([k, v]) => `<option value="${k}">${esc(v.name)}</option>`).join("");
+
+function techBlock(){
+  if (!sel.size) return "";
+  const filas = [...sel].map(n => {
+    const t = TECH.find(x => x.n === n) || {n};
+    return `- ${t.n}${t.e ? ` (${t.e})` : ""}${t.u ? ` — ${t.u}` : ""}`;
+  }).join("\n");
+  return `
+TECNOLOGÍAS ELEGIDAS (las saqué del catálogo, no son una decisión de arquitectura):
+${filas}
+
+Antes de aceptarlas: decime si esta combinación tiene sentido para este proyecto (R12),
+qué falta, qué sobra y qué chocaría entre sí. Si algo no conviene, proponé el reemplazo
+con el motivo — prefiero cambiar de idea ahora y no a mitad del código (R25). Verificá
+también las versiones actuales contra la web antes de fijarlas (R19).
+`;
+}
 
 function buildPrompt(){
   const t = TYPES[$("ctype").value], lvl = $("clvl").value, perf = $("cperf").value;
@@ -553,7 +736,7 @@ TIPO DE PROYECTO: ${t.name}
 ${t.extra}
 
 STACK: ${STACKS[$("cstack").value]}
-
+${techBlock()}
 PLAYBOOKS a seguir al pie de la letra cuando toque (R24): ${pbs.length ? pbs.join(", ") : "ninguno por ahora"} — te los adjunto junto con el master.
 
 Arrancá con el cuestionario socrático (R04) sumando las preguntas propias de este tipo de proyecto. Después: propuesta de estructura y stack → mi OK → carpeta del repo (R10, con OK) → generás sdd/ → primer commit solo con los MD (R01). Avisame, como siempre, que R01 es desactivable.`;
@@ -565,6 +748,7 @@ function renderFiles(){
     {f:"../SDD-MASTER.md", n:"SDD-MASTER.md", d:"el núcleo — siempre"},
     ...pbs.map(p => ({f:PB_META[p].f, n:p + ".md", d:PB_META[p].d}))
   ];
+  if (sel.size) files.push({f:"../tecnologias.md", n:"tecnologias.md", d:`${sel.size} tecnologías elegidas`});
   if ($("clvl").value === "NOVATO") files.push({f:"../GUIDE.md", n:"GUIDE.md", d:"para vos, no para el agente"});
   $("filelist").innerHTML = files.map(x =>
     `<li><a href="${x.f}" download><code>${esc(x.n)}</code><span>${esc(x.d)}</span></a></li>`).join("");
@@ -595,6 +779,7 @@ $("dl").onclick = () => {
 readURL();
 render();
 renderRoadmap();
+renderSel();
 </script>
 </body>
 </html>
