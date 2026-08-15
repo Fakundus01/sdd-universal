@@ -647,7 +647,7 @@
 </dialog>
 
 <footer>
-  <div>SDD Universal <b>v0.10</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.11</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -687,6 +687,7 @@ const CARDS = [
  {c:"Base",n:"pro",  s:"ok",t:"Bloques componibles",d:"Cómo se arma un SDD a medida combinando BASE + TYPE + STACK + PLAYBOOKS, con reglas de precedencia. Es el motor detrás del combinador.",f:"../blocks.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Cómo crece el SDD (escenarios)",d:"La matriz de 23 situaciones reales: dónde funciona, dónde falla y qué adaptación resolvió cada caso. Nada entra al núcleo «porque suena bien».",f:"../scenarios.md"},
  {c:"Base",n:"novato",s:"ok",t:"Mis reglas: armá tu custom.md",d:"Prendé y apagá las 26 reglas, elegí perfil y modo, sumá las tuyas, y bajate el custom.md ya escrito. El núcleo no se toca nunca: por eso tu configuración sobrevive a cada actualización.",f:"#reglas",dl:false,cta:"Configurar mis reglas →"},
+ {c:"Base",n:"pro",  s:"ok",t:"Seguridad por superficie",d:"Los controles que hacen falta según lo que tu proyecto realmente hace: login, datos de personas, plata, IA, archivos o API pública. Seis preguntas, y solo aparecen los niveles que aplican — no un checklist de 200 ítems que nadie termina.",f:"../seguridad.md"},
  {c:"Base",n:"novato",s:"ok",t:"Catálogo de tecnologías",d:"101 tecnologías (lenguajes, frameworks, bibliotecas, bases, cloud, IA, testing…) con su ecosistema y para qué sirve cada una. Elegilas desde el combinador y entran solas al prompt.",f:"../tecnologias.md"},
 
  {c:"Proyectos",n:"pro",  s:"comb",t:"Web app full-stack",d:"Front + back + DB con contratos entre capas. El clásico. Combinalo con tu stack en el combinador.",k:"webapp"},
@@ -1046,6 +1047,11 @@ STACK: ${STACKS[$("cstack").value]}
 ${techBlock()}
 PLAYBOOKS a seguir al pie de la letra cuando toque (R24): ${pbs.length ? pbs.join(", ") : "ninguno por ahora"} — te los adjunto junto con el master.
 
+SEGURIDAD (R27): clasificá la superficie de este proyecto con las seis preguntas de
+seguridad.md (¿login? ¿datos de personas? ¿plata? ¿IA con entrada del usuario?
+¿archivos subidos? ¿API pública?), decime qué niveles quedan activos y por qué, y
+registralo en security.md. No me pases el checklist entero: solo lo que aplica.
+
 Arrancá con el cuestionario socrático (R04) sumando las preguntas propias de este tipo de proyecto. Después: propuesta de estructura y stack → mi OK → carpeta del repo (R10, con OK) → generás sdd/ → primer commit solo con los MD (R01). Avisame, como siempre, que R01 es desactivable.`;
 }
 
@@ -1053,6 +1059,7 @@ function renderFiles(){
   const pbs = [...document.querySelectorAll("#pbs input:checked")].map(x => x.value);
   const files = [
     {f:"../SDD-MASTER.md", n:"SDD-MASTER.md", d:"el núcleo — siempre"},
+    {f:"../seguridad.md", n:"seguridad.md", d:"controles por superficie (R27)"},
     ...pbs.map(p => ({f:PB_META[p].f, n:p + ".md", d:PB_META[p].d}))
   ];
   if (sel.size) files.push({f:"../tecnologias.md", n:"tecnologias.md", d:`${sel.size} tecnologías elegidas`});
@@ -1089,7 +1096,8 @@ function renderArbol(){
     "├── AGENTS.md",
     "├── CLAUDE.md",
     "└── sdd/",
-    linea("    ├── SDD-MASTER.md", "el núcleo")
+    linea("    ├── SDD-MASTER.md", "el núcleo"),
+    linea("    ├── seguridad.md", "controles según lo que hacés (R27)")
   ];
   if (o.custom)         filas.push(linea("    ├── custom.md", "tus reglas"));
   if (o.conTecnologias) filas.push(linea("    ├── tecnologias.md", `${sel.size} elegidas`));

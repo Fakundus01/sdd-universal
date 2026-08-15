@@ -64,7 +64,8 @@ A partir de ahí el agente te hace un cuestionario, propone la estructura, esper
 
 | | |
 |---|---|
-| \`sdd/SDD-MASTER.md\` | El núcleo: las reglas y el protocolo de lectura |${playbooks.length ? `\n| \`sdd/playbooks/\` | ${playbooks.length} receta(s) paso a paso: ${playbooks.join(", ")} |` : ""}
+| \`sdd/SDD-MASTER.md\` | El núcleo: las reglas y el protocolo de lectura |
+| \`sdd/seguridad.md\` | Los controles según lo que tu proyecto hace (R27). El agente lo usa solo, no hace falta que lo leas |${playbooks.length ? `\n| \`sdd/playbooks/\` | ${playbooks.length} receta(s) paso a paso: ${playbooks.join(", ")} |` : ""}
 | \`PROMPT-DE-ARRANQUE.txt\` | Tu prompt, ya armado con las opciones que elegiste |
 | \`.gitignore\` | Con \`.env\` adentro desde el minuto cero (R17) |
 | \`AGENTS.md\` / \`CLAUDE.md\` | Una línea para que cualquier agente encuentre el SDD solo |
@@ -91,7 +92,10 @@ SDD Universal · https://sdd-universal.vercel.app
       {nombre: `${carpeta}/.gitignore`, contenido: GITIGNORE},
       {nombre: `${carpeta}/AGENTS.md`, contenido: ESPEJO("sdd/SDD-MASTER.md")},
       {nombre: `${carpeta}/CLAUDE.md`, contenido: ESPEJO("sdd/SDD-MASTER.md")},
-      {nombre: `${carpeta}/sdd/SDD-MASTER.md`, contenido: await traer("../SDD-MASTER.md")}
+      {nombre: `${carpeta}/sdd/SDD-MASTER.md`, contenido: await traer("../SDD-MASTER.md")},
+      // seguridad.md va siempre: R27 lo necesita en el arranque para clasificar
+      // la superficie, y es justo lo que nadie descarga si hay que elegirlo.
+      {nombre: `${carpeta}/sdd/seguridad.md`, contenido: await traer("../seguridad.md")}
     ];
 
     if (custom)           archivos.push({nombre: `${carpeta}/sdd/custom.md`, contenido: custom});

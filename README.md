@@ -24,6 +24,7 @@ Un paquete abierto de gobernanza: **la especificación va antes que el código**
 | `models.md` | Espejos multi-agente + tiers de modelo + ahorro de tokens |
 | `blocks.md` | Cómo se combinan los bloques (BASE + TYPE + STACK + TECNOLOGÍAS + PLAYBOOKS) |
 | `tecnologias.md` | Catálogo de 101 tecnologías con ecosistema y uso — elegibles desde la web |
+| `seguridad.md` | Controles de seguridad por superficie de ataque (R27): solo los que tu proyecto necesita |
 | `playbooks/` | Recetas paso a paso (deploy, env, React+Vite, GitHub+Vercel…) con notas `[NOVATO]` |
 | `prompts/` | Start, loop/HANDBACK, mantenimiento, migración desde otro chat |
 | `web/` | El catálogo web: catálogo, combinador, guía navegable y demo comparativo |
@@ -42,4 +43,4 @@ Regla R20: nada entra "porque suena bien". Toda mejora nace de un caso real → 
 
 ## Estado
 
-**v0.10** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.
+**v0.11** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.
