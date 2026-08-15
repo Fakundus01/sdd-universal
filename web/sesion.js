@@ -131,13 +131,28 @@ const Sesion = (() => {
   const localLeer = () => { try { return JSON.parse(localStorage.getItem(LOCAL)) || []; } catch { return []; } };
   const localEscribir = v => localStorage.setItem(LOCAL, JSON.stringify(v));
 
+  /* Si las tablas todavía no existen (el SQL del playbook no se corrió),
+     PostgREST devuelve 404 PGRST205. No es un error del usuario: seguimos
+     contra localStorage en vez de romper la página. */
+  let sinTablas = false;
+  const esFaltanTablas = e => /PGRST205|schema cache/i.test(e?.message || "");
+
   async function listar(){
-    if (!usuario()) return localLeer();
-    return await rest("combinaciones?select=*&order=actualizado_en.desc");
+    if (!usuario() || sinTablas) return localLeer();
+    try {
+      return await rest("combinaciones?select=*&order=actualizado_en.desc");
+    } catch (e) {
+      if (!esFaltanTablas(e)) throw e;
+      sinTablas = true;
+      console.warn("Supabase está configurado pero faltan las tablas. " +
+        "Corré supabase/schema.sql (playbooks/supabase-auth.md, paso B). " +
+        "Mientras tanto se guarda en este navegador.");
+      return localLeer();
+    }
   }
 
   async function guardarCombinacion(c){
-    if (!usuario()){
+    if (!usuario() || sinTablas){
       const todas = localLeer().filter(x => x.nombre.toLowerCase() !== c.nombre.toLowerCase());
       todas.unshift({...c, id: crypto.randomUUID(), actualizado_en: new Date().toISOString()});
       localEscribir(todas);
@@ -153,7 +168,7 @@ const Sesion = (() => {
   }
 
   async function borrarCombinacion(id){
-    if (!usuario()){ localEscribir(localLeer().filter(x => x.id !== id)); return; }
+    if (!usuario() || sinTablas){ localEscribir(localLeer().filter(x => x.id !== id)); return; }
     await rest(`combinaciones?id=eq.${id}`, {method: "DELETE"});
   }
 
@@ -161,7 +176,7 @@ const Sesion = (() => {
      Si no, la persona pierde lo que venía armando sin cuenta. */
   async function migrarLocales(){
     const locales = localLeer();
-    if (!usuario() || !locales.length) return 0;
+    if (!usuario() || sinTablas || !locales.length) return 0;
     for (const c of locales){
       const {id, actualizado_en, ...datos} = c;
       await guardarCombinacion(datos).catch(() => {});
