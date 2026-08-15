@@ -145,19 +145,55 @@ const Sesion = (() => {
     guardar(null); avisar();
   }
 
-  /* El magic link vuelve con los tokens en el hash de la URL. Se leen, se
-     guardan y se limpia la barra de direcciones para que no queden ahí. */
+  /* Confirmar el mail, el magic link y el recupero vuelven todos al sitio con
+     el resultado en el hash de la URL.
+     Si salió bien, vienen los tokens: la persona llega YA CON SESIÓN, así que
+     no hay que mandarla a ningún formulario de acceso.
+     Si salió mal (link vencido o ya usado), viene `error_description`.
+     En los dos casos se limpia la barra de direcciones: un access_token no
+     tiene por qué quedar en el historial ni en un link que se pueda compartir. */
   function leerCallback(){
-    if (!location.hash.includes("access_token")) return false;
+    if (!location.hash || location.hash.length < 2) return null;
     const h = new URLSearchParams(location.hash.slice(1));
+    const limpiar = () => history.replaceState(null, "", location.pathname + location.search);
+
+    if (h.get("error") || h.get("error_description")){
+      limpiar();
+      const d = (h.get("error_description") || "").toLowerCase();
+      return {error: d.includes("expired")
+        ? "Ese link ya venció. Pedí uno nuevo desde «Entrar»."
+        : d.includes("already")
+          ? "Ese link ya se usó. Entrá con tu mail y contraseña."
+          : (h.get("error_description") || "El link no era válido.")};
+    }
+
+    if (!h.get("access_token")) return null;
     guardar({
       access_token: h.get("access_token"),
       refresh_token: h.get("refresh_token"),
       expires_at: Date.now() + (+h.get("expires_in") || 3600) * 1000,
       user: null
     });
-    history.replaceState(null, "", location.pathname + location.search);
-    return true;
+    limpiar();
+    return {tipo: h.get("type") || "sesion"};   // signup | recovery | magiclink
+  }
+
+  /* Con sesión activa (incluida la que llega por el link de recupero) se puede
+     fijar una contraseña nueva. Esto es lo que hace que "olvidé mi contraseña"
+     termine en algo, y no en una pantalla que no lleva a ningún lado. */
+  async function cambiarPassword(nueva){
+    if ((nueva || "").length < 8)
+      throw new Error("La contraseña tiene que tener al menos 8 caracteres.");
+    if (!s) throw new Error("Se cerró la sesión. Volvé a pedir el link.");
+    if (s.expires_at && Date.now() > s.expires_at - 60000) await refrescar();
+    const r = await fetch(`${SUPABASE.url}/auth/v1/user`, {
+      method: "PUT",
+      headers: {apikey: SUPABASE.key, Authorization: `Bearer ${s?.access_token}`,
+                "Content-Type": "application/json"},
+      body: JSON.stringify({password: nueva})
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(traducir(d.msg || d.message || d.error_description));
   }
 
   async function traerUsuario(){
@@ -170,13 +206,15 @@ const Sesion = (() => {
     return usuario();
   }
 
+  /* Devuelve qué pasó al cargar, para que la interfaz pueda decirlo:
+     {usuario, tipo?, error?} — `tipo` es signup | recovery | magiclink. */
   async function iniciar(){
-    if (!activo()) return null;
-    const vino = leerCallback();
+    if (!activo()) return {usuario: null};
+    const cb = leerCallback();
     if (!s) { try { s = JSON.parse(localStorage.getItem(CLAVE)); } catch { s = null; } }
-    if (s && (!s.user || vino)) await traerUsuario().catch(() => guardar(null));
+    if (s && (!s.user || cb?.tipo)) await traerUsuario().catch(() => guardar(null));
     avisar();
-    return usuario();
+    return {usuario: usuario(), tipo: cb?.tipo, error: cb?.error};
   }
 
   /* ---------------- combinaciones ---------------- */
@@ -255,7 +293,7 @@ const Sesion = (() => {
 
   return {
     activo, usuario, iniciar, salir,
-    registrar, entrar, recuperar, pedirLink,
+    registrar, entrar, recuperar, pedirLink, cambiarPassword,
     listar, guardarCombinacion, borrarCombinacion, migrarLocales,
     guardarTema, traerPerfil,
     alCambiar: f => oyentes.push(f)

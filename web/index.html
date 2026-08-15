@@ -226,6 +226,13 @@
   /* ---------- sesión ---------- */
   dialog.auth{width:min(440px,94vw)}
   @media (max-width:640px){dialog.auth{height:auto;max-height:88vh;border-radius:18px;border:1px solid var(--line);width:94vw}}
+  .aviso{display:flex;align-items:center;gap:12px;margin-top:16px;padding:13px 16px;border-radius:12px;
+       background:var(--green-soft);border:1px solid var(--green);color:var(--green);font-size:.88rem}
+  .aviso.err{background:var(--red-soft);border-color:var(--red-line);color:var(--red)}
+  .aviso span{flex:1}
+  .aviso button{background:none;border:0;color:inherit;cursor:pointer;font-size:.95rem;
+       opacity:.7;font-family:inherit;flex:none}
+  .aviso button:hover{opacity:1}
   .authtabs{display:flex;gap:6px;padding:14px 22px 0}
   .authtabs button{flex:1;background:var(--bg-soft);border:1px solid var(--line);color:var(--muted);
        border-radius:10px;padding:9px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit}
@@ -346,6 +353,11 @@
   <p class="lead">Catálogo abierto de paquetes de gobernanza para construir con agentes de IA (Claude, Codex, Cursor, Copilot, Gemini…). Descargás el que necesitás, se lo das a tu agente, y trabaja con estructura, buenas prácticas y pocos tokens — <b>sepas programar o no</b>.</p>
   <p class="mini">Nosotros no te hacemos el proyecto: te damos las herramientas para que lo haga tu agente, bajo tus reglas y con tu OK.</p>
 </header>
+
+<div class="aviso" id="aviso" role="status" hidden>
+  <span id="avisotexto"></span>
+  <button type="button" id="avisox" aria-label="Cerrar el aviso">✕</button>
+</div>
 
 <main>
 
@@ -557,7 +569,7 @@
     <button class="dlg-x" id="authx" type="button" aria-label="Cerrar">✕</button>
   </div>
 
-  <div class="authtabs" role="tablist">
+  <div class="authtabs" role="tablist" id="authtabs">
     <button role="tab" type="button" id="tabEntrar" aria-selected="true">Entrar</button>
     <button role="tab" type="button" id="tabCrear" aria-selected="false">Crear cuenta</button>
   </div>
@@ -1110,18 +1122,31 @@ $("authbtn").onclick = async () => {
 };
 $("authx").onclick = () => $("authdlg").close();
 
-/* --- pestañas entrar / crear cuenta --- */
+/* --- avisos de la barra superior --- */
+function avisar(texto, esError = false){
+  $("avisotexto").textContent = texto;
+  $("aviso").className = "aviso" + (esError ? " err" : "");
+  $("aviso").hidden = false;
+}
+$("avisox").onclick = () => $("aviso").hidden = true;
+
+/* --- pestañas entrar / crear cuenta / contraseña nueva --- */
 let modoAuth = "entrar";
 function pintarAuth(){
-  const crear = modoAuth === "crear";
-  $("tabEntrar").setAttribute("aria-selected", !crear);
+  const crear = modoAuth === "crear", nueva = modoAuth === "nueva";
+  $("tabEntrar").setAttribute("aria-selected", modoAuth === "entrar");
   $("tabCrear").setAttribute("aria-selected", crear);
-  $("authsend").textContent = crear ? "Crear mi cuenta" : "Entrar";
-  $("authpass").autocomplete = crear ? "new-password" : "current-password";
-  $("authhint").textContent = crear
+  $("authtabs").hidden = nueva;
+  $("authmail").closest(".authform").querySelectorAll("label")[0].hidden = nueva;
+  $("authmail").hidden = nueva;
+  $("authtitle").textContent = nueva ? "Elegí una contraseña nueva" : "Tu cuenta";
+  $("authsend").textContent = nueva ? "Guardar la contraseña" : crear ? "Crear mi cuenta" : "Entrar";
+  $("authpass").autocomplete = (crear || nueva) ? "new-password" : "current-password";
+  $("authhint").textContent = (crear || nueva)
     ? "Elegí algo de 8 caracteres o más. No la reutilices de otro sitio."
     : "";
-  $("autholvide").hidden = crear;
+  $("autholvide").hidden = crear || nueva;
+  $("authlink").hidden = nueva;
   $("authmsg").className = "authmsg"; $("authmsg").textContent = "";
 }
 $("tabEntrar").onclick = () => { modoAuth = "entrar"; pintarAuth(); };
@@ -1153,7 +1178,14 @@ async function conBoton(textoMientras, fn){
 $("authform").onsubmit = e => {
   e.preventDefault();
   const email = $("authmail").value.trim(), pass = $("authpass").value;
-  if (modoAuth === "crear") {
+  if (modoAuth === "nueva") {
+    conBoton("Guardando…", async () => {
+      await Sesion.cambiarPassword(pass);
+      decirAuth("ok", "Contraseña actualizada. Ya podés usarla la próxima vez.");
+      $("authpass").value = "";
+      setTimeout(() => { $("authdlg").close(); modoAuth = "entrar"; pintarAuth(); }, 1200);
+    });
+  } else if (modoAuth === "crear") {
     conBoton("Creando…", async () => {
       const r = await Sesion.registrar(email, pass);
       if (r.sesion) {
@@ -1206,12 +1238,22 @@ renderRoadmap();
 renderSel();
 
 (async () => {
-  await Sesion.iniciar();
+  const r = await Sesion.iniciar();
+
+  // El link del mail vuelve acá con la sesión ya hecha: no se pide acceso de nuevo.
+  if (r.error) avisar(r.error, true);
+  else if (r.tipo === "signup")   avisar("¡Mail confirmado! Tu cuenta quedó activa y ya estás dentro.");
+  else if (r.tipo === "magiclink") avisar("Listo, entraste. Ya podés guardar tus combinaciones.");
+  else if (r.tipo === "recovery") {
+    avisar("Link verificado. Elegí tu contraseña nueva para terminar.");
+    modoAuth = "nueva"; pintarAuth(); $("authdlg").showModal(); $("authpass").focus();
+  }
+
   if (Sesion.usuario()){
     const migradas = await Sesion.migrarLocales().catch(() => 0);
     const perfil = await Sesion.traerPerfil();
     if (perfil?.tema && !Tema.elegido()) Tema.aplicar(perfil.tema, false);
-    if (migradas) console.info(`${migradas} combinación(es) del navegador subidas a tu cuenta.`);
+    if (migradas) avisar(`Subimos a tu cuenta ${migradas} combinación(es) que tenías guardadas en este navegador.`);
   }
   await renderGuardadas();
 })();
