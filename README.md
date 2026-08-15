@@ -40,4 +40,4 @@ Regla R20: nada entra "porque suena bien". Toda mejora nace de un caso real → 
 
 ## Estado
 
-**v0.6** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.
+**v0.7** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.
