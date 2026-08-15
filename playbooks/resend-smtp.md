@@ -1,7 +1,7 @@
 BLOQUE: playbook · ID: resend-smtp · CATEGORÍA: infra · NIVEL: novato+pro
-TIEMPO: 15 min en modo prueba · 30–40 min con dominio propio (más la espera del DNS) · REQUISITOS: un proyecto de Supabase andando (playbook `supabase-auth`) · RESULTADO: los mails de confirmación y de recupero llegan de verdad, a cualquier casilla
+TIEMPO: 10 min con Gmail · 30–40 min con dominio propio (más la espera del DNS) · REQUISITOS: un proyecto de Supabase andando (playbook `supabase-auth`) · RESULTADO: los mails de confirmación y de recupero llegan de verdad
 
-# Mails que llegan: Resend como SMTP de Supabase
+# Mails que llegan: SMTP propio en Supabase (Gmail o Resend)
 
 ## El problema que resuelve
 
@@ -11,7 +11,29 @@ Con SMTP propio, los mails salen desde tu dominio, con tu reputación, sin ese t
 
 ---
 
-## Antes de empezar: la decisión del dominio
+## Elegí proveedor primero
+
+Hay tres caminos y ninguno es "el correcto" en abstracto — depende de en qué etapa estás:
+
+| | **Gmail** | **Resend, modo prueba** | **Resend con dominio** |
+|---|---|---|---|
+| Costo | USD 0 | USD 0 | ~USD 15/año (el dominio) |
+| ¿Hace falta dominio? | **No** | No | Sí |
+| Le podés mandar a | cualquiera | **solo a vos** | cualquiera |
+| Remitente que ve la gente | `vos@gmail.com` | `onboarding@resend.dev` | `hola@tudominio.com` |
+| Límite | ~500/día | 3.000/mes | 3.000/mes |
+| Se configura en | 10 min | 10 min | 30 min + espera del DNS |
+
+**Cómo elegir:**
+- **Recién arrancás y querés que funcione hoy** → Gmail (Parte D, abajo). Es el único gratis que le manda a cualquiera sin dominio.
+- **Ya tenés dominio o el proyecto es público** → Resend con dominio. Es lo correcto a largo plazo.
+- **Querés probar el circuito antes de comprar nada** → Resend en modo prueba.
+
+> **Lo que Gmail no es:** un servicio de mail transaccional. Google no prohíbe esto para un proyecto chico, pero tampoco lo diseñó para eso: si el volumen crece te empieza a limitar, y el remitente personal le baja seriedad a tu producto. Sirve para arrancar y para probar; no para quedarse.
+
+---
+
+## Antes de empezar: la decisión del dominio (si vas por Resend)
 
 Es la única parte que puede costar plata, así que va derecho:
 
@@ -81,8 +103,41 @@ Es la única parte que puede costar plata, así que va derecho:
 
 ---
 
+## Parte D · La alternativa: Gmail (sin dominio, gratis)
+
+Si querés que funcione hoy y no tenés dominio, este es el camino. Reemplaza a las partes A, B y C.
+
+13. **Activá la verificación en dos pasos** en tu cuenta de Google: `myaccount.google.com/security` → **Verificación en 2 pasos**. Sin esto, el paso siguiente no existe.
+    [NOVATO] Es la que te manda un código al celular cuando entrás desde una compu nueva.
+14. Entrá a `myaccount.google.com/apppasswords`. Poné un nombre (ej. `supabase`) y **Crear**.
+15. Google te muestra **16 letras en 4 grupos**. Copialas. Esa es la contraseña que vas a usar, **no** la de tu cuenta.
+
+    ⚠️ Es un secreto real: quien la tenga puede mandar mails desde tu casilla. Va solo al panel de Supabase, nunca al repo ni a un chat. Se revoca desde esa misma pantalla cuando quieras.
+
+16. En Supabase: **Project Settings** → **Authentication** → **SMTP Settings** → **Enable Custom SMTP**:
+
+    | Campo | Valor |
+    |---|---|
+    | Host | `smtp.gmail.com` |
+    | Port | `465` |
+    | Username | tu dirección completa, ej. `facu@gmail.com` |
+    | Password | las 16 letras del paso 15, **sin espacios** |
+    | Sender email | **la misma dirección de Gmail** |
+    | Sender name | el nombre que querés que vean |
+
+    > **El campo que más se falla:** *Sender email* tiene que ser tu propia dirección de Gmail. Si ponés otra, Google la reescribe igual y el mail sale con un `via` raro que dispara los filtros de spam.
+
+17. Guardá y subí el rate limit (paso 11 de la Parte C: aplica igual).
+
+**Límite real:** ~500 mails por día en una cuenta gratuita. Para confirmaciones y recuperos de un proyecto chico, sobra.
+
+**Cuándo migrar a Resend:** cuando el proyecto deje de ser tuyo nomás — el día que te incomode que la confirmación llegue desde tu Gmail personal, ya es tarde para pensarlo.
+
+---
+
 ## Verificación
 
+- Con Gmail: mirá tu carpeta **Enviados**. Si el mail está ahí, salió; si no llegó, el problema es del destinatario o del filtro de spam, no de la configuración.
 - En Resend, **Logs** muestra cada mail con su estado (`delivered`, `bounced`, `complained`).
 - Registrate en tu sitio con una dirección real: el mail tiene que llegar en segundos, **a la bandeja de entrada y no a spam**.
 - Tocá el link: tenés que volver al sitio **ya con la sesión hecha**, sin que te pida entrar de nuevo.
@@ -93,7 +148,8 @@ Es la única parte que puede costar plata, así que va derecho:
 
 ## Errores comunes
 
-- **"Invalid login" o "535 authentication failed"** → el Username no es `resend`, o pegaste el email en vez de la clave.
+- **"Invalid login" o "535 authentication failed"** → con Resend: el Username no es `resend`, o pegaste el email en vez de la clave. Con Gmail: usaste la contraseña de tu cuenta en vez de la App Password, o la pegaste con los espacios.
+- **Con Gmail no aparece la opción de App Passwords** → falta activar la verificación en dos pasos (paso 13). La pantalla directamente no existe hasta que la prendés.
 - **El mail llega a spam** → falta DKIM/SPF (Parte B) o estás usando `onboarding@resend.dev`, que es compartido. Con dominio verificado y DMARC, mejora mucho.
 - **"You can only send testing emails to your own email address"** → estás en modo prueba. Es lo esperado: hay que verificar un dominio (Parte B).
 - **Sigue sin llegar nada y en Resend → Logs no aparece ningún intento** → Supabase no está usando tu SMTP: revisá que *Enable Custom SMTP* haya quedado guardado.

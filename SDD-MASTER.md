@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.9 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
+**Versión:** 0.10 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -336,6 +336,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.10 | 2026-08-15 | La web arma y descarga **la carpeta del proyecto entera** en un `.zip`: `sdd/` con el master, los playbooks elegidos, tu `custom.md`, los espejos `AGENTS.md`/`CLAUDE.md`, el `.gitignore` con `.env` (R17, paso 0) y el prompt de arranque. Se descomprime y ya se puede trabajar. 8 tipos de proyecto nuevos (landing, tienda, dashboard, móvil, bot de mensajería, gestión, videojuego, análisis de datos): 16 en total. El playbook de mails suma Gmail como camino gratis sin dominio. |
 | 0.9 | 2026-08-15 | R17 reforzada: el `.gitignore` con `.env` pasa a ser el **paso 0** de todo repo, antes del primer commit, y aparece en el start-prompt, en el Definition of Done y en el template de playbooks. Se agrega el caso inverso (claves públicas a propósito, como la `anon` de Supabase). Nuevos: `sdd/` propio del paquete — la web del catálogo pasa a tener su especificación —, `web/guia.html` (guía navegable) y `web/demo.html` (la misma pantalla con y sin spec, funcionando). |
 | 0.8 | 2026-08-15 | Configurador de reglas en la web: se prenden y apagan las 26 reglas, se elige perfil/modo/variante y se descarga el `custom.md` ya escrito con la sintaxis exacta. Las reglas `fijas` aparecen con candado — no se pueden apagar, y verlas ahí explica por qué. |
 | 0.7 | 2026-08-15 | Playbook `supabase-auth`: cuentas de usuario por magic link en un sitio estático, con `supabase/schema.sql` (RLS incluida, que es el paso que si se saltea deja la base abierta). La web del catálogo suma sesión, combinaciones guardadas, paginación y tema oscuro por default. |
