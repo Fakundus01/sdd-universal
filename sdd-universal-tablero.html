@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDD Universal · Tablero v0.1</title>
+<style>
+  :root{
+    --bg:#f5f6fa; --card:#ffffff; --ink:#1a2233; --muted:#5b6478; --line:#e4e7ef;
+    --accent:#4f46e5; --accent-soft:#eef0ff; --green:#15803d; --green-soft:#eaf7ef;
+    --amber:#b45309; --amber-soft:#fdf3e3; --red:#b91c1c; --red-soft:#fdecec;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;line-height:1.55}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 20px 80px}
+  header.hero{padding:42px 0 18px}
+  .hero h1{font-size:1.9rem;letter-spacing:-.02em}
+  .hero h1 span{color:var(--accent)}
+  .hero p.sub{color:var(--muted);margin-top:6px;max-width:70ch}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .chip{font-size:.78rem;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);border:1px solid #dcdffb}
+  nav.toc{position:sticky;top:0;background:rgba(245,246,250,.94);backdrop-filter:blur(6px);z-index:9;border-bottom:1px solid var(--line);margin:18px -20px 26px;padding:10px 20px;display:flex;gap:6px;flex-wrap:wrap}
+  nav.toc a{font-size:.82rem;font-weight:600;color:var(--muted);text-decoration:none;padding:5px 11px;border-radius:8px}
+  nav.toc a:hover{background:#fff;color:var(--accent)}
+  section{margin-bottom:46px}
+  h2{font-size:1.25rem;letter-spacing:-.01em;margin-bottom:4px;scroll-margin-top:64px}
+  h2 .n{color:var(--accent);font-family:var(--mono);font-size:.95rem;margin-right:6px}
+  p.lead{color:var(--muted);margin-bottom:16px;max-width:80ch}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+
+  /* ---- flujo ---- */
+  .flow{display:flex;flex-direction:column;align-items:center;gap:0}
+  .fbox{width:100%;max-width:560px;text-align:center;border-radius:12px;padding:12px 16px;border:1.5px solid var(--line);background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+  .fbox b{display:block;font-size:.95rem}
+  .fbox small{color:var(--muted);display:block;margin-top:2px}
+  .fbox .r{font-family:var(--mono);font-size:.7rem;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:1px 6px;margin-left:4px}
+  .fstart{border-color:var(--accent);background:var(--accent-soft)}
+  .fstart b{color:var(--accent)}
+  .floop-title{border-color:var(--ink);background:#1a2233;color:#fff}
+  .floop-title small{color:#c7cbe0}
+  .arrow{color:#9aa1b5;font-size:1.15rem;line-height:1;padding:7px 0}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:860px;margin:4px 0}
+  .lane{border-radius:14px;padding:14px;border:1.5px dashed var(--line)}
+  .lane.green{background:var(--green-soft);border-color:#bfe3cc}
+  .lane.amber{background:var(--amber-soft);border-color:#eed9b0}
+  .lane h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;text-align:center}
+  .lane.green h3{color:var(--green)} .lane.amber h3{color:var(--amber)}
+  .lane .fbox{max-width:none;margin:0 auto}
+  .lane .arrow{text-align:center}
+  .loopnote{margin-top:10px;font-size:.85rem;color:var(--muted);text-align:center;background:#fff;border:1px dashed var(--line);border-radius:10px;padding:8px 14px;max-width:560px}
+  .loopnote b{color:var(--accent)}
+
+  /* ---- arquitectura ---- */
+  .tree{font-family:var(--mono);font-size:.83rem;line-height:1.75;white-space:pre;overflow-x:auto;background:#101527;color:#dbe1f5;border-radius:12px;padding:18px 22px}
+  .tree .c{color:#7f8db0}
+  .tree .hl{color:#a5b4fc;font-weight:700}
+  .tree .nw{color:#6ee7a0}
+  .tree .us{color:#fbbf6d}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:.8rem;color:var(--muted)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+  /* ---- reglas ---- */
+  .rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+  .rule{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+  .rule .top{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+  .rid{font-family:var(--mono);font-weight:700;font-size:.78rem;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:7px}
+  .rule b{font-size:.9rem}
+  .tag{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:999px;letter-spacing:.03em}
+  .on{background:var(--green-soft);color:var(--green)}
+  .sw{background:var(--amber-soft);color:var(--amber)}
+  .fx{background:#eef1f6;color:var(--muted)}
+  .rule p{font-size:.84rem;color:var(--muted)}
+  .profilebar{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .profile{border-radius:12px;padding:12px 16px;font-size:.86rem}
+  .profile b{display:block;margin-bottom:2px}
+  .p-strict{background:var(--red-soft);color:var(--red);border:1px solid #f3c6c6}
+  .p-trust{background:var(--green-soft);color:var(--green);border:1px solid #bfe3cc}
+
+  /* ---- extras ---- */
+  .extras{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+  .extra{background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:12px 15px}
+  .extra b{font-size:.9rem}
+  .extra p{font-size:.84rem;color:var(--muted);margin-top:3px}
+  .st{float:right;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:999px}
+  .in01{background:var(--accent-soft);color:var(--accent)}
+  .in02{background:#eef1f6;color:var(--muted)}
+
+  /* ---- roadmap ---- */
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+  .step{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .step .v{font-family:var(--mono);font-weight:700;color:var(--accent);font-size:.85rem}
+  .step b{display:block;margin:4px 0 4px;font-size:.92rem}
+  .step p{font-size:.83rem;color:var(--muted)}
+  .step.now{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .step.now .v::after{content:" · HOY";color:var(--green)}
+
+  details{margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+  summary{cursor:pointer;font-weight:600;font-size:.88rem;color:var(--accent)}
+  details pre{margin-top:10px;font-family:var(--mono);font-size:.78rem;line-height:1.6;overflow-x:auto;background:#101527;color:#dbe1f5;border-radius:10px;padding:14px 16px}
+  footer{color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);padding-top:16px}
+  footer a{color:var(--accent);text-decoration:none}
+  @media(max-width:720px){.split,.profilebar{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>SDD <span>Universal</span> · Tablero de Gobernanza</h1>
+  <p class="sub">Un paquete portable de Specification-Driven Development: se lo pasás a cualquier agente de IA (Claude, Cursor, Copilot…) como primer mensaje y conduce todo el proyecto — con el mínimo gasto de tokens.</p>
+  <div class="chips">
+    <span class="chip">v0.4 · 2026-08-15</span>
+    <span class="chip">Fuente: Markdown</span>
+    <span class="chip">Español · nombres de archivo en inglés</span>
+    <span class="chip">24 reglas con toggle</span>
+    <span class="chip">NOVATO friendly · pensar-por-tres</span>
+    <span class="chip">Modos FULL · LITE · COMPACT · FEDERADO</span>
+    <span class="chip">Multi-agente: Claude · Codex · Cursor · Copilot · Gemini</span>
+    <span class="chip">Capa enterprise por roles</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#flujo">① Flujo de trabajo</a>
+  <a href="#arqui">② Arquitectura de archivos</a>
+  <a href="#reglas">③ Reglas R01–R17</a>
+  <a href="#extras">④ Lo que le agregué</a>
+  <a href="#escenarios">⑤ Escenarios</a>
+  <a href="#roadmap">⑥ Roadmap</a>
+</nav>
+
+<section id="flujo">
+  <h2><span class="n">①</span>Flujo de trabajo (diagrama)</h2>
+  <p class="lead">Dos entradas posibles (proyecto nuevo o repo existente) que desembocan en el mismo ciclo. Cada caja marca la regla que la gobierna.</p>
+  <div class="card">
+    <div class="flow">
+      <div class="fbox fstart"><b>START-PROMPT (prompt de arranque)</b><small>la primera prompt del historial define el proyecto y reescribe los MD</small></div>
+      <div class="arrow">▼</div>
+      <div class="split">
+        <div class="lane green">
+          <h3>Greenfield · proyecto nuevo</h3>
+          <div class="fbox"><b>Cuestionario socrático <span class="r">R04</span></b><small>más preguntas de lo normal: stack, forma de trabajar, frameworks (con recomendación), ¿IA? ¿qué modelo? <span class="r">R12</span></small></div>
+          <div class="arrow">▼</div>
+          <div class="fbox"><b>Propuesta de estructura + stack → OK</b><small>crear carpeta del repo con OK <span class="r">R10</span></small></div>
+          <div class="arrow">▼</div>
+          <div class="fbox"><b>Generar sdd/ completo</b><small>primer commit = solo los MD <span class="r">R01</span></small></div>
+        </div>
+        <div class="lane amber">
+          <h3>Brownfield · repo existente sin SDD</h3>
+          <div class="fbox"><b>Analizar ANTES de tocar nada <span class="r">R15</span></b><small>subagentes económicos: estructura, git log, estilo del equipo <span class="r">R11</span></small></div>
+          <div class="arrow">▼</div>
+          <div class="fbox"><b>Generar sdd/ reflejando lo que existe</b><small>+ prompt de arranque sintética que reconstruye el contexto</small></div>
+          <div class="arrow">▼</div>
+          <div class="fbox"><b>OK del humano → commit de los MD</b><small><span class="r">R01</span> y adaptarse al estilo detectado</small></div>
+        </div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="fbox floop-title"><b>CICLO DE TRABAJO (loop)</b><small>se repite por cada feature o cambio</small></div>
+      <div class="arrow">▼</div>
+      <div class="fbox"><b>1 · git log primero <span class="r">R02</span></b><small>mirar los cambios recientes: mini-historial de por dónde vamos</small></div>
+      <div class="arrow">▼</div>
+      <div class="fbox"><b>2 · Planning socrático <span class="r">R04</span></b><small>modelo alto: puede proponer mejoras propias <span class="r">R03</span> · modelo bajo: literal</small></div>
+      <div class="arrow">▼</div>
+      <div class="fbox"><b>3 · Fase MD: proponer → OK → aplicar <span class="r">R08</span></b><small>la especificación siempre va primero; nadie escribe el MD de otro usuario <span class="r">R09</span></small></div>
+      <div class="arrow">▼</div>
+      <div class="fbox"><b>4 · Fase código: proponer → OK → implementar</b><small>POO, archivos ≤300 líneas, comentarios útiles <span class="r">R05</span> <span class="r">R06</span></small></div>
+      <div class="arrow">▼</div>
+      <div class="fbox"><b>5 · Testing <span class="r">R07</span></b><small>back: tests automatizados · front: verificación en navegador</small></div>
+      <div class="arrow">▼</div>
+      <div class="fbox"><b>6 · Changelog + semver <span class="r">R13</span> → Commit con OK <span class="r">R01</span></b><small>R01 es desactivable (modo CONFIANZA = auto-commit) y el agente siempre lo avisa · sin secretos en el diff <span class="r">R17</span></small></div>
+      <div class="arrow">▼</div>
+      <div class="fbox fstart"><b>7 · HANDBACK</b><small>la IA se retroalimenta sola: informe compacto + próximo paso propuesto. El humano solo responde: <b>OK</b> / editar / STOP</small></div>
+      <div class="loopnote">⟲ Con el <b>OK</b>, el próximo paso propuesto se convierte en la nueva prompt y el ciclo vuelve al paso 1 — sin que la persona redacte nada.</div>
+    </div>
+  </div>
+  <details>
+    <summary>Ver el código Mermaid de este flujo (para pegar en diagram.md)</summary>
+    <pre>flowchart TD
+    SP[START-PROMPT] --> G{¿Repo nuevo o existente?}
+    G -->|Greenfield| G1[Cuestionario socrático R04 + R12]
+    G1 --> G2[Propuesta estructura+stack → OK · carpeta R10]
+    G2 --> G3[Generar sdd/ · primer commit R01]
+    G -->|Brownfield| B1[Subagentes analizan repo R15/R11]
+    B1 --> B2[Generar sdd/ + prompt sintética]
+    B2 --> B3[OK → commit MDs R01]
+    G3 --> L0[[CICLO DE TRABAJO]]
+    B3 --> L0
+    L0 --> L1[git log R02] --> L2[Planning R04/R03]
+    L2 --> L3[Fase MD: proponer→OK→aplicar R08/R09]
+    L3 --> L4[Fase código: proponer→OK→implementar R05/R06]
+    L4 --> L5[Testing R07] --> L6[Changelog+semver R13 · commit R01/R17]
+    L6 --> H[HANDBACK: informe + próximo paso]
+    H -->|OK| L1
+    H -->|STOP| FIN[Cierre]</pre>
+  </details>
+</section>
+
+<section id="arqui">
+  <h2><span class="n">②</span>Arquitectura de archivos</h2>
+  <p class="lead">El SDD-MASTER es el <b>conductor</b>: el único archivo que un agente lee entero. Su Protocolo de Lectura rutea a cada tarea (y a cada subagente) solo hacia los 2–3 archivos que necesita → menos tokens.</p>
+  <div class="card">
+<div class="tree">repo/
+├── AGENTS.md            <span class="c"># espejo 1 línea → "leé sdd/SDD-MASTER.md"</span>
+├── CLAUDE.md            <span class="c"># ídem, para Claude Code</span>
+├── README.md            <span class="c"># instalación y puesta en marcha</span>
+├── src/ …               <span class="c"># código (POO, archivos ≤300 líneas)</span>
+└── sdd/
+    ├── <span class="hl">SDD-MASTER.md</span>    <span class="c"># conductor: reglas + protocolo de lectura (SIEMPRE se lee)</span>
+    ├── spec.md          <span class="c"># qué es el proyecto, problema, alcance, features+estado</span>
+    ├── design.md        <span class="c"># diseño técnico, capas, decisiones con su porqué</span>
+    ├── diagram.md       <span class="c"># diagramas Mermaid: arquitectura + flujo</span>
+    ├── testing.md       <span class="c"># estrategia de pruebas (back: tests · front: navegador)</span>
+    ├── costs.md         <span class="c"># infra y tools free/open-source (Vercel, Supabase…)</span>
+    ├── <span class="nw">security.md</span>      <span class="c"># [nuevo] secretos, .env, qué nunca se commitea</span>
+    ├── <span class="nw">decisions.md</span>     <span class="c"># [nuevo] ADRs: decisiones con fecha y motivo</span>
+    ├── <span class="nw">status.md</span>        <span class="c"># [nuevo] tracking de features: 20→40→60→80→100%</span>
+    ├── <span class="nw">glossary.md</span>      <span class="c"># [nuevo·opcional] vocabulario del dominio</span>
+    ├── contracts/
+    │   └── <span class="us">contracts-facundo.md</span>  <span class="c"># un archivo por usuario: nadie pisa a nadie</span>
+    ├── features/
+    │   └── <span class="us">features-facundo.md</span>
+    ├── changelog/
+    │   └── <span class="us">changelog-facundo.md</span>
+    └── prompts/
+        ├── start-prompt.md   <span class="c"># plantillas greenfield / brownfield</span>
+        └── loop-prompt.md    <span class="c"># loop + formato HANDBACK</span></div>
+    <div class="legend">
+      <span><i style="background:#a5b4fc"></i>Conductor (lectura obligatoria)</span>
+      <span><i style="background:#6ee7a0"></i>Nuevos que sumé en v0.1</span>
+      <span><i style="background:#fbbf6d"></i>Por usuario (multi-equipo); con 1 persona son archivos planos</span>
+    </div>
+  </div>
+</section>
+
+<section id="reglas">
+  <h2><span class="n">③</span>Catálogo de reglas R01–R17</h2>
+  <p class="lead">Cada regla tiene ID y toggle: escribís <code>R01=OFF</code> en cualquier mensaje y el agente lo registra. Dos perfiles rápidos:</p>
+  <div class="profilebar">
+    <div class="profile p-strict"><b>Modo ESTRICTO (default)</b>Todas ON: la IA nunca commitea ni pushea sin tu OK.</div>
+    <div class="profile p-trust"><b>Modo CONFIANZA</b>R01=OFF: auto-commit y push permitidos, para quien confía y quiere velocidad. El agente siempre avisa que existe esta opción.</div>
+  </div>
+  <div class="rules">
+    <div class="rule"><div class="top"><span class="rid">R01</span><b>GIT-OK</b><span class="tag on">ON</span><span class="tag sw">desactivable</span></div><p>Nada de commit/push sin OK explícito. Presenta el diff resumido y espera. Avisa al arrancar que se puede apagar.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R02</span><b>GIT-LOG-PRIMERO</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>Antes de tocar código: git log reciente (+diff). Mini-historial de por dónde va el proyecto.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R03</span><b>AUTONOMÍA-POR-MODELO</b><span class="tag on">ON</span><span class="tag sw">desactivable</span></div><p>Modelo alto: puede recrear/mejorar propuestas flojas marcando [MEJORA PROPUESTA]. Modelo bajo: todo al pie de la letra.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R04</span><b>PLANNING-SOCRÁTICO</b><span class="tag on">ON</span><span class="tag sw">desactivable</span></div><p>En planning: seguir el paso a paso de la persona y preguntar más de lo normal hasta estructurar lo que quiere.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R05</span><b>CÓDIGO-POO-MODULAR</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>Clases/POO cuando se pueda. Archivos de 200–300 líneas (tolerancia ~400). 1000 líneas → dividir en módulos. Escalable.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R06</span><b>COMENTARIOS-ÚTILES</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>Sin comentarios redundantes tipo "tirar dados" sobre tirar_dados(). Solo lógica larga o no obvia, explicando el para qué.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R07</span><b>TESTING-SIEMPRE</b><span class="tag on">ON</span><span class="tag sw">desactivable</span></div><p>Nada terminado sin prueba. Back: tests automatizados. Front: verificación en el navegador del agente. Detalle en testing.md.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R08</span><b>MD-PRIMERO (2 fases)</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>Proponer MD → OK → aplicar → proponer código → OK → implementar. No se toca código antes de aprobar los MD.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R09</span><b>ESCRITURA-DE-MD</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>Regeneración completa solo con START-PROMPT. Incrementales solo en Fase MD. Prohibido escribir el archivo de otro usuario.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R10</span><b>UBICACIÓN-DE-REPOS</b><span class="tag on">ON</span><span class="tag sw">desactivable</span></div><p>Sin carpeta: proponer Desktop\repositorios o C:\Users\&lt;u&gt;\source\repos y crear solo con OK (o la ruta que dé la persona).</p></div>
+    <div class="rule"><div class="top"><span class="rid">R11</span><b>SUBAGENTES-ECONÓMICOS</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>Lecturas masivas y análisis van a subagentes con el mínimo slice de contexto según el Protocolo de Lectura.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R12</span><b>MODELO-RECOMENDADO</b><span class="tag on">ON</span><span class="tag sw">desactivable</span></div><p>Recomendar modelo por tarea sin sobredimensionar: texto simple → económico; arquitectura/refactor grande → alto.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R13</span><b>CHANGELOG-SEMVER</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>MAJOR.MINOR.PATCH + entrada por cambio en el changelog del usuario. El historial nunca se borra.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R14</span><b>COSTOS-OPEN-SOURCE</b><span class="tag on">ON</span><span class="tag sw">desactivable</span></div><p>Con infra: costs.md prioriza free tiers — Vercel/Netlify/CF Pages · Supabase/Neon/Postgres local · Railway/Render/Fly.io · GH Actions.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R15</span><b>BROWNFIELD-ANALIZAR</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>Repo sin SDD: prohibido tocar código. Analizar → generar sdd/ fiel a lo que existe → prompt sintética → OK → recién ahí trabajar.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R16</span><b>DEFINITION-OF-DONE</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>Cierra solo si: código + tests verdes + MDs al día + changelog + OKs registrados. Checklist en el master §10.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R17</span><b>SECURITY-BÁSICA</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>Secretos en .env (gitignoreado), jamás en commits. Revisar el diff buscando claves antes de cada commit. Datos de terceros documentados.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R18</span><b>MODO-POR-TAMAÑO</b><span class="tag on">ON</span><span class="tag sw">desactivable</span></div><p>Clasificar el proyecto al arrancar: script chico → LITE (1 solo archivo) · estándar → FULL · monorepo → FEDERADO (un sdd/ por módulo).</p></div>
+    <div class="rule"><div class="top"><span class="rid">R19</span><b>MANTENIMIENTO</b><span class="tag on">ON</span><span class="tag sw">desactivable</span></div><p>&gt;30 días inactivo → proponer auditoría: versiones de deps contra la web, vulnerabilidades, salud del repo. Actualiza código y MDs con OK.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R20</span><b>META-ESCALABILIDAD</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>El SDD crece solo desde casos reales (scenarios.md). Master ≤400 líneas. Personalización en custom.md, nunca editando el núcleo.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R21</span><b>EQUIPO-ROLES</b><span class="tag on">AUTO</span><span class="tag sw">desactivable</span></div><p>Equipo grande → teams.md: OKs por rol (spec→PO, diseño→TL, tests→QA, deploy→infra), autonomía por seniority, subagentes por rol.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R22</span><b>MULTI-AGENTE</b><span class="tag on">ON</span><span class="tag sw">desactivable</span></div><p>Un núcleo, espejos de 1 línea por herramienta (AGENTS.md, CLAUDE.md, cursor, copilot, GEMINI.md). Tiers unificados ALTO/MEDIO/ECONÓMICO.</p></div>
+  </div>
+</section>
+
+<section id="extras">
+  <h2><span class="n">④</span>Lo que le agregué para hacerlo más fuerte</h2>
+  <p class="lead">Además de todo lo tuyo (git-OK, git log, modelos, POO, testing, multi-usuario, costos, handback, brownfield…) y de la base del doc de Gobernanza, sumé esto — inspirado en Spec-Kit, el estándar AGENTS.md y prácticas de contexto para agentes:</p>
+  <div class="extras">
+    <div class="extra"><span class="st in01">v0.1 ✓</span><b>Protocolo de Lectura (ruteo)</b><p>Tabla "tarea → qué archivos leer". Es el corazón del ahorro de tokens: nadie lee sdd/ entero, y cada subagente recibe solo su slice.</p></div>
+    <div class="extra"><span class="st in01">v0.1 ✓</span><b>Espejos AGENTS.md / CLAUDE.md</b><p>Una línea en la raíz apuntando al master. Cualquier agente (Claude, Cursor, Copilot, Gemini) encuentra el SDD solo — es el estándar que la industria adoptó.</p></div>
+    <div class="extra"><span class="st in01">v0.1 ✓</span><b>Perfiles ESTRICTO / CONFIANZA</b><p>Un switch de una palabra que configura la autonomía completa (tu regla de "commit con OK, pero desactivable" hecha sistema).</p></div>
+    <div class="extra"><span class="st in01">v0.1 ✓</span><b>status.md con % de avance</b><p>Estados estilo Spec-Kit: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%, con dependencias y bloqueos.</p></div>
+    <div class="extra"><span class="st in01">v0.1 ✓</span><b>decisions.md (ADRs)</b><p>Cada decisión con fecha y motivo. Evita que el agente (o un compañero) re-discuta lo ya decidido en cada sesión nueva.</p></div>
+    <div class="extra"><span class="st in01">v0.1 ✓</span><b>security.md + regla R17</b><p>Secretos en .env, nunca en commits, revisión del diff. Es el agujero clásico de los proyectos con IA.</p></div>
+    <div class="extra"><span class="st in01">v0.1 ✓</span><b>Definition of Done</b><p>Checklist duro de cierre: sin esto, "terminado" significa cualquier cosa.</p></div>
+    <div class="extra"><span class="st in01">v0.1 ✓</span><b>Semver del propio SDD</b><p>El paquete se versiona a sí mismo (§11): sabés qué versión de la gobernanza usa cada repo.</p></div>
+    <div class="extra"><span class="st in01">v0.2 ✓</span><b>Matriz de escenarios S01–S14</b><p>scenarios.md: dónde funciona, dónde falla y la adaptación de cada caso. Es el motor de crecimiento del SDD (R20).</p></div>
+    <div class="extra"><span class="st in01">v0.2 ✓</span><b>custom.md (overrides)</b><p>El núcleo universal no se edita: cada persona pisa reglas en su custom.md. Compartible con la comunidad sin perder la base.</p></div>
+    <div class="extra"><span class="st in01">v0.2 ✓</span><b>SDD-COMPACT (cuadro de sintaxis)</b><p>Cheat-sheet por palabras clave, ≤60 líneas: para agentes solo-chat, subagentes baratos o quien prefiera keywords a descripciones.</p></div>
+    <div class="extra"><span class="st in01">v0.2 ✓</span><b>Skill instalable + exportes Word/PDF</b><p>sdd-universal.skill para que Claude lo aplique solo (sin pegar nada), y el master exportado a .docx y .pdf para repartir.</p></div>
+    <div class="extra"><span class="st in01">v0.2 ✓</span><b>R19: auto-actualización</b><p>Proyecto dormido &gt;30 días → auditoría contra la web de frameworks, librerías y lenguaje + salud del git, con plan priorizado.</p></div>
+    <div class="extra"><span class="st in01">v0.3 ✓</span><b>GUIDE.md: guía de uso honesta</b><p>Quick start en 3 caminos, la curva real de aprendizaje (día 1 con fricción, proyecto 2 fluido) y cadencias de actualización por tipo de proyecto.</p></div>
+    <div class="extra"><span class="st in01">v0.3 ✓</span><b>teams.md: capa enterprise</b><p>11 roles (PO, AF, SM, QA, devs por seniority, pasantes, People Lead, Manager, RPA, infra): qué lee, escribe y aprueba cada uno + ceremonias Scrum + subagentes por rol.</p></div>
+    <div class="extra"><span class="st in01">v0.3 ✓</span><b>models.md: multi-agente + tokens</b><p>Espejos por herramienta (AGENTS.md, CLAUDE.md, Cursor, Copilot, Gemini), tiers unificados y técnicas de ahorro de tokens por capa.</p></div>
+    <div class="extra"><span class="st in01">v0.4 ✓</span><b>Modo NOVATO (R23): pensar-por-tres</b><p>Para gente sin experiencia en código: el agente planifica, se autocritica, corrige y recién ejecuta — en lenguaje llano y de a un paso.</p></div>
+    <div class="extra"><span class="st in01">v0.4 ✓</span><b>Playbooks (R24): recetas literales</b><p>Deploy Vercel, env y credenciales, React+Vite, publicar en GitHub — con notas [NOVATO] y catálogo de 15 guías por venir (Azure, AWS, SQL, MongoDB, Postman…).</p></div>
+    <div class="extra"><span class="st in01">v0.4 ✓</span><b>Bloques componibles + web catálogo</b><p>BASE+TYPE+STACK+PLAYBOOKS con precedencia, y un sitio estático (listo para Vercel) con combinador que genera tu prompt de arranque.</p></div>
+    <div class="extra"><span class="st in01">v0.4 ✓</span><b>Spec = contrato de 6 elementos + Verificador</b><p>Outcomes, límites, constraints, decisiones, sub-tareas y criterios testeables; patrón Coordinador/Implementadores/Verificador con incentivos opuestos.</p></div>
+    <div class="extra"><span class="st in02">v0.5</span><b>glossary.md + plantillas por MD</b><p>Vocabulario del dominio y un template listo por archivo (spec, design, contracts…) para generarlos siempre iguales.</p></div>
+    <div class="extra"><span class="st in02">v0.5</span><b>review.md + gate de spec en CI</b><p>Auto code-review del agente y pipeline que falla si el código diverge de la spec.</p></div>
+  </div>
+</section>
+
+<section id="escenarios">
+  <h2><span class="n">⑤</span>Escenarios: dónde funciona y dónde se adapta</h2>
+  <p class="lead">Resumen de la matriz completa (S01–S14 en <b>scenarios.md</b>). Cada fallo detectado se convierte en una regla o modo nuevo — así crece el SDD.</p>
+  <div class="card" style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:.84rem">
+      <tr style="text-align:left;color:var(--muted);border-bottom:1px solid var(--line)"><th style="padding:6px 10px">Situación</th><th style="padding:6px 10px">¿Funciona?</th><th style="padding:6px 10px">Adaptación</th></tr>
+      <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px 10px">Web app estándar (nuevo o existente)</td><td style="padding:6px 10px">✅ Perfecto</td><td style="padding:6px 10px">— (caso de diseño)</td></tr>
+      <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px 10px">Script chico / prototipo hackathon</td><td style="padding:6px 10px">❌ Overhead</td><td style="padding:6px 10px">Modo LITE: un solo sdd-lite.md (+ perfil CONFIANZA)</td></tr>
+      <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px 10px">Monorepo / microservicios</td><td style="padding:6px 10px">❌ No rutea</td><td style="padding:6px 10px">Modo FEDERADO: sdd/ raíz que solo deriva + sdd/ por módulo</td></tr>
+      <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px 10px">Data science / notebooks · Game dev</td><td style="padding:6px 10px">⚠️ A medias</td><td style="padding:6px 10px">Variantes DATA (tests = validación de datos) y GAME (playtest.md)</td></tr>
+      <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px 10px">Agente solo-chat / modelo económico</td><td style="padding:6px 10px">❌ Sin archivos</td><td style="padding:6px 10px">SDD-COMPACT pegado como contexto (cuadro de sintaxis)</td></tr>
+      <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px 10px">Proyecto dormido 6+ meses</td><td style="padding:6px 10px">❌ Stack viejo</td><td style="padding:6px 10px">R19: auditoría web de deps + salud del repo, con OK</td></tr>
+      <tr><td style="padding:6px 10px">El SDD mismo crece sin control</td><td style="padding:6px 10px">❌ Bloat</td><td style="padding:6px 10px">R20: solo casos reales, master ≤400 líneas, custom.md para lo personal</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="roadmap">
+  <h2><span class="n">⑥</span>Roadmap del armado (de a poquito)</h2>
+  <div class="steps">
+    <div class="step"><span class="v">v0.1</span><b>Master + Tablero ✓</b><p>SDD-MASTER.md (reglas, protocolo, prompts) + este tablero visual.</p></div>
+    <div class="step"><span class="v">v0.2</span><b>Escalable y compartible ✓</b><p>Escenarios S01–S14, modos, R18–R20, COMPACT, custom.md, prompts, skill y exportes.</p></div>
+    <div class="step"><span class="v">v0.3</span><b>Guía + Enterprise + Multi-agente ✓</b><p>GUIDE.md, teams.md (roles y ceremonias), models.md (espejos y tiers), R21–R22.</p></div>
+    <div class="step now"><span class="v">v0.4</span><b>Novato + Playbooks + Web ✓</b><p>R23–R24, blocks.md, 4 playbooks, catálogo web con combinador, README del repo, contrato de spec de 6 elementos.</p></div>
+    <div class="step"><span class="v">v0.5 → v1.0</span><b>Publicar + pilotos</b><p>Repo público + web en Vercel (playbook listo), plantillas por MD, gate de spec en CI, y pilotos reales antes de congelar la v1.</p></div>
+  </div>
+</section>
+
+<footer>
+  Basado en: tu doc <b>Gobernanza_SDD_Automation.docx</b> · <a href="https://github.com/github/spec-kit">GitHub Spec-Kit</a> · <a href="https://github.com/SpillwaveSolutions/sdd-skill">sdd-skill</a> · estándar <a href="https://www.morphllm.com/agents-md-guide">AGENTS.md</a> · <a href="https://code.claude.com/docs/en/best-practices">Claude Code best practices</a>
+</footer>
+
+</div>
+</body>
+</html>

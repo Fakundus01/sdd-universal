@@ -1,0 +1,13 @@
+# Sistema operativo
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editores
+.vscode/
+.idea/
+
+# Nunca secretos (R17)
+.env
+.env.*
+!.env.example
