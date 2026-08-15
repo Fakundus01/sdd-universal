@@ -1,0 +1,62 @@
+name: ➕ Falta algo en el catálogo
+description: Una tecnología, un playbook, un tipo de proyecto o un control de seguridad.
+title: "[catálogo] "
+labels: ["catálogo"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **La regla acá es una sola: entra lo que alguien usó en un proyecto real.**
+
+        Un catálogo que lista todo lo que existe no ayuda a elegir nada — por eso pedimos
+        el caso concreto y no solo el nombre.
+
+  - type: dropdown
+    id: que
+    attributes:
+      label: ¿Qué falta?
+      options:
+        - Una tecnología (lenguaje, framework, base, herramienta…)
+        - Un playbook (procedimiento paso a paso)
+        - Un tipo de proyecto
+        - Un control de seguridad (seguridad.md)
+    validations:
+      required: true
+
+  - type: input
+    id: nombre
+    attributes:
+      label: Nombre
+      placeholder: "Astro · Docker · app de escritorio · rotación de claves"
+    validations:
+      required: true
+
+  - type: textarea
+    id: caso
+    attributes:
+      label: ¿En qué proyecto real lo usaste?
+      description: No hace falta que sea tuyo ni que esté publicado. Sí que exista.
+      placeholder: |
+        Lo usé para el sitio de la panadería de mi vieja: 12 páginas estáticas que…
+    validations:
+      required: true
+
+  - type: textarea
+    id: aporta
+    attributes:
+      label: ¿Qué resuelve que hoy no esté resuelto?
+      description: Si ya hay algo parecido en el catálogo, decí por qué no alcanzaba.
+    validations:
+      required: true
+
+  - type: input
+    id: categoria
+    attributes:
+      label: ¿Dónde iría?
+      placeholder: "Frameworks · infra · Proyectos · nivel N2 de seguridad"
+
+  - type: markdown
+    attributes:
+      value: |
+        Si es un **playbook**, mirá [`playbooks/_template.md`](https://github.com/Fakundus01/sdd-universal/blob/main/playbooks/_template.md):
+        todo playbook necesita verificación observable y errores comunes. Si querés escribirlo vos, mejor todavía.

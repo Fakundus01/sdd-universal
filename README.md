@@ -39,8 +39,14 @@ Seguí [`playbooks/publish-github-vercel.md`](playbooks/publish-github-vercel.md
 
 ## Cómo contribuir
 
-Regla R20: nada entra "porque suena bien". Toda mejora nace de un caso real → agregá una fila a [`scenarios.md`](scenarios.md) con la situación, el problema y tu adaptación propuesta. Tus personalizaciones van en `custom.md`; el núcleo se versiona con semver y tu custom sobrevive a cada actualización.
+Regla R20: nada entra "porque suena bien". Toda mejora nace de un caso real.
+
+- [🐞 Algo no funcionó](https://github.com/Fakundus01/sdd-universal/issues/new?template=1-error.yml)
+- [🧩 El SDD no cubre mi caso](https://github.com/Fakundus01/sdd-universal/issues/new?template=2-escenario.yml) — los campos del formulario **son** las columnas de [`scenarios.md`](scenarios.md)
+- [➕ Falta algo en el catálogo](https://github.com/Fakundus01/sdd-universal/issues/new?template=3-catalogo.yml)
+
+Detalle completo en [`CONTRIBUTING.md`](CONTRIBUTING.md). Tus personalizaciones van en `custom.md`; el núcleo se versiona con semver y tu custom sobrevive a cada actualización.
 
 ## Estado
 
-**v0.11** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.
+**v0.12** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.

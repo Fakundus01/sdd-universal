@@ -1,0 +1,64 @@
+name: 🧩 El SDD no cubre mi caso
+description: Te hizo fricción, no encajó, o faltaba algo. Así es como nacen las reglas nuevas.
+title: "[escenario] "
+labels: ["escenario"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Este formulario **es** el motor de crecimiento del SDD (regla R20): ninguna regla entra
+        "porque suena bien", todas nacen de un caso real como el tuyo.
+
+        Los campos de abajo son exactamente las columnas de [`scenarios.md`](https://github.com/Fakundus01/sdd-universal/blob/main/scenarios.md).
+        Si los completás bien, tu caso puede entrar tal cual.
+
+  - type: textarea
+    id: situacion
+    attributes:
+      label: La situación
+      description: Qué estabas haciendo, con qué tipo de proyecto y en qué contexto.
+      placeholder: |
+        Monorepo con 6 servicios, equipo de 4, cada uno tocando módulos distintos…
+    validations:
+      required: true
+
+  - type: dropdown
+    id: funciona
+    attributes:
+      label: ¿Funciona hoy el SDD para eso?
+      options:
+        - "❌ No — directamente no sirve"
+        - "⚠️ A medias / hace fricción"
+        - "✅ Funciona, pero se podría mejorar"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problema
+    attributes:
+      label: El problema concreto
+      description: Qué falla exactamente. Cuanto más específico, mejor — "es incómodo" no alcanza para diseñar la solución.
+      placeholder: |
+        La tabla del Protocolo de Lectura crece sin límite y los subagentes reciben contexto de más…
+    validations:
+      required: true
+
+  - type: textarea
+    id: adaptacion
+    attributes:
+      label: Cómo lo resolverías (si se te ocurre)
+      description: No hace falta que sea una solución completa. Si no se te ocurre, dejalo vacío — el caso vale igual.
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: ¿Qué hiciste mientras tanto?
+      description: Los parches que inventa la gente suelen ser la mejor pista de cuál es la solución buena.
+
+  - type: checkboxes
+    id: costo
+    attributes:
+      label: Chequeo de R20
+      description: Toda regla nueva tiene que justificar su costo en tokens. Si no aplica, ignoralo.
+      options:
+        - label: Creo que esto le ahorraría tokens o errores a otra gente, no solo a mí

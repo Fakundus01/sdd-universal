@@ -276,6 +276,33 @@ const Sesion = (() => {
     return locales.length;
   }
 
+  /* ---------------- métricas anónimas ---------------- */
+
+  /* Suma un contador. No manda usuario, ni sesión, ni nada que identifique:
+     va con la clave pública aunque haya sesión abierta, a propósito.
+     Falla en silencio — una métrica caída nunca puede romper la página. */
+  function contar(tipo, detalle = ""){
+    if (!activo()) return;
+    fetch(`${SUPABASE.url}/rest/v1/eventos`, {
+      method: "POST",
+      headers: {apikey: SUPABASE.key, "Content-Type": "application/json", Prefer: "return=minimal"},
+      body: JSON.stringify({tipo, detalle: String(detalle).slice(0, 120)}),
+      keepalive: true
+    }).catch(() => {});
+  }
+
+  /* Solo devuelve algo si el perfil tiene admin=true; para cualquier otro,
+     RLS filtra y esto es una lista vacía. */
+  async function metricas(){
+    const [resumen, porDia] = await Promise.all([
+      rest("metricas_resumen?select=*&order=total.desc"),
+      rest("metricas_por_dia?select=*&order=dia.desc")
+    ]);
+    return {resumen, porDia};
+  }
+
+  const esAdmin = async () => Boolean((await traerPerfil())?.admin);
+
   /* ---------------- preferencias ---------------- */
 
   async function guardarTema(tema){
@@ -294,6 +321,7 @@ const Sesion = (() => {
   return {
     activo, usuario, iniciar, salir,
     registrar, entrar, recuperar, pedirLink, cambiarPassword,
+    contar, metricas, esAdmin,
     listar, guardarCombinacion, borrarCombinacion, migrarLocales,
     guardarTema, traerPerfil,
     alCambiar: f => oyentes.push(f)

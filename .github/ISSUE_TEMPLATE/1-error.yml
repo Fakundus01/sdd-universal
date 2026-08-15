@@ -1,0 +1,62 @@
+name: 🐞 Algo no funcionó
+description: El agente hizo algo raro, un playbook falló, o la web se rompió.
+title: "[error] "
+labels: ["error"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por tomarte el tiempo. Cuanto más concreto, más rápido se arregla.
+
+        **Si es algo de seguridad, no lo pongas acá** — usá el canal privado del menú anterior.
+
+  - type: dropdown
+    id: donde
+    attributes:
+      label: ¿Dónde pasó?
+      options:
+        - El agente, siguiendo el SDD
+        - Un playbook (deploy, env, Supabase, mails…)
+        - La web del catálogo
+        - El paquete descargado (.zip)
+        - Otra cosa
+    validations:
+      required: true
+
+  - type: textarea
+    id: que-paso
+    attributes:
+      label: Qué pasó
+      description: Contalo como te salga. Si es del agente, pegá el pedazo de conversación donde se desvió.
+      placeholder: |
+        Le pedí que armara la spec y empezó a escribir código sin esperar mi OK…
+    validations:
+      required: true
+
+  - type: textarea
+    id: esperaba
+    attributes:
+      label: Qué esperabas que pasara
+    validations:
+      required: true
+
+  - type: input
+    id: agente
+    attributes:
+      label: ¿Qué agente y qué modelo usabas?
+      placeholder: "Claude Opus, Cursor con GPT, Gemini…"
+
+  - type: input
+    id: version
+    attributes:
+      label: Versión del SDD
+      description: Está en la primera línea de SDD-MASTER.md y en el pie de la web.
+      placeholder: "v0.11"
+
+  - type: checkboxes
+    id: revisado
+    attributes:
+      label: Antes de enviar
+      options:
+        - label: Busqué si ya estaba reportado
+        - label: Miré los errores comunes de la guía

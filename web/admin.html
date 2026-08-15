@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel · SDD Hub</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0b0f1f" id="themecolor">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="base.css">
+<style>
+  main{padding-top:34px}
+  h1{font-size:1.7rem;letter-spacing:-.03em}
+  .sub{color:var(--muted);font-size:.9rem;margin:7px 0 26px;max-width:78ch}
+  .estado{padding:22px 24px;border-radius:14px;border:1px solid var(--line);background:var(--card);
+       font-size:.9rem;color:var(--muted);max-width:70ch}
+  .estado b{color:var(--ink)}
+  .estado a{color:var(--accent-ink)}
+
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:26px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .tile .n{font-size:1.85rem;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+  .tile .l{font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-top:4px}
+
+  section.bloque{margin-bottom:32px}
+  section.bloque h2{font-size:1.05rem;letter-spacing:-.01em;margin-bottom:3px}
+  section.bloque p.d{color:var(--muted);font-size:.83rem;margin-bottom:13px}
+  table{width:100%;border-collapse:collapse;font-size:.87rem;background:var(--card);
+       border:1px solid var(--line);border-radius:13px;overflow:hidden}
+  th{text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+     padding:11px 14px;border-bottom:1px solid var(--line-strong);background:var(--bg-soft)}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);color:var(--ink-soft)}
+  tr:last-child td{border-bottom:0}
+  td.num{text-align:right;font-family:var(--mono);color:var(--ink);font-weight:600}
+  td.barra{width:34%;padding-right:18px}
+  .b{height:7px;border-radius:99px;background:var(--accent);min-width:3px}
+  .vacia{padding:26px 14px;text-align:center;color:var(--muted);font-size:.86rem}
+
+  .pager{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:14px 10px 0}
+  .pager button{background:var(--card);border:1px solid var(--line-strong);color:var(--ink);border-radius:9px;
+       min-width:36px;height:34px;padding:0 11px;font-size:.83rem;font-weight:600;cursor:pointer;font-family:inherit}
+  .pager button[aria-current="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+  .pager button:disabled{opacity:.4;cursor:not-allowed}
+  .pager .info{font-size:.8rem;color:var(--muted);margin:0 4px}
+  .nota{margin-top:30px;padding:16px 18px;border-radius:12px;background:var(--bg-soft);
+       border:1px solid var(--line);font-size:.83rem;color:var(--muted);max-width:80ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="top">
+  <a class="brand" href="./"><span class="mark"><span></span></span>SDD Hub</a>
+  <nav>
+    <a href="./">Catálogo</a>
+    <a href="guia.html" class="hide-s">Guía</a>
+    <button class="tbtn" id="theme" type="button" aria-label="Cambiar a tema claro" title="Cambiar tema">◐</button>
+  </nav>
+</div>
+
+<main>
+  <h1>Panel</h1>
+  <p class="sub">Contadores anónimos: qué se descarga y qué combinaciones se arman. <b>No hay nada que identifique a nadie</b> — sin usuario, sin IP, sin cookies de seguimiento. Es lo que permite tener estos números sin contradecir la spec ni activar el nivel N2 de <code>seguridad.md</code>.</p>
+
+  <div id="contenido">
+    <div class="estado" id="estado">Cargando…</div>
+  </div>
+
+  <div class="nota" id="nota" hidden>
+    Los eventos se borran a los 18 meses (<code>limpiar_eventos_viejos()</code>). La fecha se guarda por día y no con hora: con poco tráfico, una marca de tiempo exacta más el detalle puede volver a identificar a una persona.
+  </div>
+</main>
+
+<footer>
+  <div>SDD Universal · panel interno</div>
+  <nav><a href="./">Volver al catálogo</a></nav>
+</footer>
+
+</div>
+
+<script src="tema.js"></script>
+<script src="supabase-config.js"></script>
+<script src="sesion.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const POR_PAGINA = 15;
+const paginas = {};   // por bloque
+
+function pager(id, total, pagina){
+  const n = Math.ceil(total / POR_PAGINA);
+  if (n <= 1) return "";
+  const nums = [];
+  for (let p = 1; p <= n; p++){
+    if (p === 1 || p === n || Math.abs(p - pagina) <= 1) nums.push(p);
+    else if (nums[nums.length - 1] !== "…") nums.push("…");
+  }
+  return `<nav class="pager" data-bloque="${id}">
+    <button type="button" data-p="${pagina - 1}"${pagina === 1 ? " disabled" : ""}>‹</button>
+    ${nums.map(x => x === "…" ? '<span class="info">…</span>'
+      : `<button type="button" data-p="${x}"${x === pagina ? ' aria-current="true"' : ""}>${x}</button>`).join("")}
+    <button type="button" data-p="${pagina + 1}"${pagina === n ? " disabled" : ""}>›</button>
+    <span class="info">${(pagina - 1) * POR_PAGINA + 1}–${Math.min(pagina * POR_PAGINA, total)} de ${total}</span>
+  </nav>`;
+}
+
+function tabla(id, titulo, desc, filas, etiqueta){
+  const pagina = paginas[id] || 1;
+  const max = Math.max(...filas.map(f => f.total), 1);
+  const trozo = filas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+  return `<section class="bloque" id="b-${id}">
+    <h2>${esc(titulo)}</h2><p class="d">${esc(desc)}</p>
+    ${filas.length ? `<table>
+      <thead><tr><th>${esc(etiqueta)}</th><th style="text-align:right">Total</th><th></th><th>Último</th></tr></thead>
+      <tbody>${trozo.map(f => `<tr>
+        <td>${esc(f.detalle || "—")}</td>
+        <td class="num">${f.total}</td>
+        <td class="barra"><div class="b" style="width:${Math.round(f.total / max * 100)}%"></div></td>
+        <td>${esc(f.ultimo || "")}</td>
+      </tr>`).join("")}</tbody>
+    </table>${pager(id, filas.length, pagina)}`
+    : `<div class="vacia">Todavía no hay datos de este tipo.</div>`}
+  </section>`;
+}
+
+let datos = null;
+
+function pintar(){
+  const {resumen, porDia} = datos;
+  const de = t => resumen.filter(r => r.tipo === t).sort((a, b) => b.total - a.total);
+  const suma = t => de(t).reduce((n, r) => n + Number(r.total), 0);
+  const hoy = new Date().toISOString().slice(0, 10);
+  const visitasHoy = porDia.filter(d => d.dia === hoy && d.tipo === "visita")
+    .reduce((n, d) => n + Number(d.total), 0);
+
+  $("contenido").innerHTML = `
+    <div class="tiles">
+      <div class="tile"><div class="n">${suma("visita")}</div><div class="l">Visitas</div></div>
+      <div class="tile"><div class="n">${visitasHoy}</div><div class="l">Visitas hoy</div></div>
+      <div class="tile"><div class="n">${suma("descarga")}</div><div class="l">Descargas de MD</div></div>
+      <div class="tile"><div class="n">${suma("paquete")}</div><div class="l">Paquetes .zip</div></div>
+      <div class="tile"><div class="n">${suma("combinacion")}</div><div class="l">Combinaciones</div></div>
+    </div>
+    ${tabla("descargas", "Lo más descargado", "Qué archivo del catálogo se lleva la gente.", de("descarga"), "Archivo")}
+    ${tabla("combinaciones", "Combinaciones más armadas", "tipo / stack / nivel. Sirve para saber qué tipos de proyecto faltan.", de("combinacion"), "Combinación")}
+    ${tabla("paquetes", "Paquetes descargados", "Carpeta completa vs. archivos sueltos.", de("paquete"), "Tipo de paquete")}
+    ${tabla("visitas", "Visitas por página", "", de("visita"), "Página")}`;
+  $("nota").hidden = false;
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest(".pager button[data-p]");
+  if (!b || b.disabled) return;
+  const bloque = b.closest(".pager").dataset.bloque;
+  paginas[bloque] = +b.dataset.p;
+  pintar();
+  $("b-" + bloque).scrollIntoView({behavior: "smooth", block: "start"});
+});
+
+(async () => {
+  if (!Sesion.activo()){
+    $("estado").innerHTML = "El panel necesita Supabase configurado. Ver <code>playbooks/supabase-auth.md</code>.";
+    return;
+  }
+  const r = await Sesion.iniciar();
+  if (!r.usuario){
+    $("estado").innerHTML = `Necesitás <b>entrar con tu cuenta</b> para ver el panel. <a href="./">Ir al catálogo</a> y usar el botón «Entrar».`;
+    return;
+  }
+  if (!await Sesion.esAdmin()){
+    $("estado").innerHTML = `La cuenta <b>${esc(r.usuario.email)}</b> no es administradora.<br><br>
+      Para habilitarla: en Supabase → <b>Table Editor</b> → <code>perfiles</code> → poné <code>admin = true</code> en tu fila.
+      No hay ninguna forma de hacerlo desde la web, a propósito.`;
+    return;
+  }
+  try {
+    datos = await Sesion.metricas();
+    pintar();
+  } catch (e) {
+    $("estado").textContent = "No se pudieron leer las métricas: " + e.message +
+      ". ¿Corriste supabase/metricas.sql?";
+  }
+})();
+</script>
+</body>
+</html>

@@ -237,6 +237,25 @@
        flex-wrap:wrap;flex:none;background:var(--bg-soft)}
   .dlg-foot .n{font-size:.84rem;color:var(--muted);margin-right:auto}
 
+  /* ---------- comunidad ---------- */
+  .comunidad{margin-top:60px;background:var(--card);border:1px solid var(--line);border-radius:18px;
+       padding:28px 26px}
+  .comunidad h2{font-size:1.3rem;letter-spacing:-.02em}
+  .comunidad p.sub{color:var(--muted);font-size:.89rem;margin:7px 0 20px;max-width:80ch}
+  .cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+  .c-card{display:flex;flex-direction:column;gap:5px;text-decoration:none;background:var(--bg-soft);
+       border:1px solid var(--line);border-radius:13px;padding:16px 17px}
+  .c-card:hover{border-color:var(--accent)}
+  .c-card.destacada{border-color:var(--accent);background:var(--accent-soft)}
+  .c-card .ico{font-size:1.15rem}
+  .c-card b{color:var(--ink);font-size:.93rem}
+  .c-card small{color:var(--muted);font-size:.81rem;line-height:1.5}
+  .c-card code{font-family:var(--mono);font-size:.76rem;color:var(--accent-ink)}
+  .cpie{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);
+       font-size:.82rem;color:var(--muted)}
+  .cpie a{color:var(--accent-ink);text-decoration:none}
+  .cpie a:hover{text-decoration:underline}
+
   /* ---------- sesión ---------- */
   dialog.auth{width:min(440px,94vw)}
   @media (max-width:640px){dialog.auth{height:auto;max-height:88vh;border-radius:18px;border:1px solid var(--line);width:94vw}}
@@ -536,6 +555,34 @@
   </div>
 </section>
 
+<section class="comunidad" id="comunidad">
+  <h2>¿Te hizo fricción? Contámelo</h2>
+  <p class="sub">El SDD crece de una sola manera: <b>casos reales</b>. Ninguna regla entra "porque suena bien" — es la regla R20, y es lo que evita que esto termine siendo un documento de 2000 líneas que nadie lee.</p>
+  <div class="cgrid">
+    <a class="c-card" href="https://github.com/Fakundus01/sdd-universal/issues/new?template=1-error.yml">
+      <span class="ico">🐞</span>
+      <b>Algo no funcionó</b>
+      <small>El agente hizo algo raro, un playbook falló, o la web se rompió.</small>
+    </a>
+    <a class="c-card destacada" href="https://github.com/Fakundus01/sdd-universal/issues/new?template=2-escenario.yml">
+      <span class="ico">🧩</span>
+      <b>No cubre mi caso</b>
+      <small>Los campos del formulario <b>son</b> las columnas de <code>scenarios.md</code>: tu caso puede entrar tal cual.</small>
+    </a>
+    <a class="c-card" href="https://github.com/Fakundus01/sdd-universal/issues/new?template=3-catalogo.yml">
+      <span class="ico">➕</span>
+      <b>Falta algo en el catálogo</b>
+      <small>Una tecnología, un playbook, un tipo de proyecto o un control de seguridad.</small>
+    </a>
+  </div>
+  <p class="cpie">
+    No hace falta que propongas la solución: <b>el caso bien contado vale más</b>, porque la solución se diseña una vez y el caso no se puede inventar.
+    · <a href="https://github.com/Fakundus01/sdd-universal/discussions">Preguntar algo</a>
+    · <a href="https://github.com/Fakundus01/sdd-universal/blob/main/CONTRIBUTING.md">Cómo contribuir</a>
+    · <a href="https://github.com/Fakundus01/sdd-universal/security/advisories/new">Reportar algo de seguridad (privado)</a>
+  </p>
+</section>
+
 </main>
 
 <dialog class="tech reglas" id="reglasdlg" aria-labelledby="reglastitle">
@@ -647,12 +694,13 @@
 </dialog>
 
 <footer>
-  <div>SDD Universal <b>v0.11</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.12</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
     <a href="https://github.com/Fakundus01/sdd-universal/tree/main/examples/turnos/sdd">Ejemplo real</a>
     <a href="../scenarios.md">Cómo crece</a>
+    <a href="#comunidad">Feedback</a>
     <a href="https://github.com/Fakundus01/sdd-universal">GitHub</a>
   </nav>
 </footer>
@@ -844,6 +892,12 @@ function renderRoadmap(){
 }
 
 /* ---------- eventos del catálogo ---------- */
+// Qué se descarga del catálogo, sin saber quién lo descarga.
+document.addEventListener("click", e => {
+  const desc = e.target.closest("a.btn[download]");
+  if (desc) Sesion.contar("descarga", desc.getAttribute("href").split("/").pop());
+});
+
 document.addEventListener("click", e => {
   const chip = e.target.closest("[data-cat]");
   if (chip) { cat = chip.dataset.cat; catPage = 1; render(); return; }
@@ -1123,10 +1177,17 @@ async function bajar(boton, fn){
   } finally { b.disabled = false; b.textContent = original; }
 }
 
-$("zipProyecto").onclick = () => bajar("zipProyecto", Paquete.proyecto);
-$("zipSolo").onclick     = () => bajar("zipSolo", Paquete.soloMd);
+$("zipProyecto").onclick = () => {
+  Sesion.contar("paquete", "proyecto:" + $("ctype").value);
+  bajar("zipProyecto", Paquete.proyecto);
+};
+$("zipSolo").onclick = () => {
+  Sesion.contar("paquete", "sueltos");
+  bajar("zipSolo", Paquete.soloMd);
+};
 
 $("go").onclick = () => {
+  Sesion.contar("combinacion", $("ctype").value + "/" + $("cstack").value + "/" + $("clvl").value);
   $("ta").value = buildPrompt();
   renderFiles();
   renderArbol();
@@ -1346,6 +1407,7 @@ renderRoadmap();
 renderSel();
 
 (async () => {
+  Sesion.contar("visita", location.pathname);
   const r = await Sesion.iniciar();
 
   // El link del mail vuelve acá con la sesión ya hecha: no se pide acceso de nuevo.

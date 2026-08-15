@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Preguntar algo (no es un error)
+    url: https://github.com/Fakundus01/sdd-universal/discussions
+    about: Dudas de uso, "¿esto se puede?", mostrar lo que construiste.
+  - name: 📖 Leer la guía antes de reportar
+    url: https://sdd-universal.vercel.app/web/guia.html
+    about: Los 7 errores más comunes están ahí con su antídoto. Puede que sea uno de esos.
+  - name: 🔐 Reportar algo de seguridad
+    url: https://github.com/Fakundus01/sdd-universal/security/advisories/new
+    about: Si encontraste una vulnerabilidad, NO abras una issue pública. Usá este canal privado.

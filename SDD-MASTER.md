@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.11 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
+**Versión:** 0.12 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -343,6 +343,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.12 | 2026-08-15 | Canal de feedback sobre GitHub Issues: tres plantillas, y la de "escenario" tiene como campos las columnas de `scenarios.md`, así lo que reporta la comunidad entra directo al motor de R20. Nuevos: `CONTRIBUTING.md`, sección de comunidad en la web, métricas anónimas (`supabase/metricas.sql`) con panel propio — sin usuario, sin IP y sin cookies de seguimiento, para no contradecir la spec ni activar el nivel N2. |
 | 0.11 | 2026-08-15 | R27 (seguridad por superficie) y `seguridad.md`: en vez de un checklist de 200 ítems que nadie lee, seis preguntas clasifican qué hace el proyecto y se aplican solo los niveles que correspondan (N0 base · N1 identidad · N2 datos · N3 plata · N4 IA · N5 archivos · N6 superficie pública). Incluye las herramientas con lo que cada una **no** detecta. Escenario S24. |
 | 0.10 | 2026-08-15 | La web arma y descarga **la carpeta del proyecto entera** en un `.zip`: `sdd/` con el master, los playbooks elegidos, tu `custom.md`, los espejos `AGENTS.md`/`CLAUDE.md`, el `.gitignore` con `.env` (R17, paso 0) y el prompt de arranque. Se descomprime y ya se puede trabajar. 8 tipos de proyecto nuevos (landing, tienda, dashboard, móvil, bot de mensajería, gestión, videojuego, análisis de datos): 16 en total. El playbook de mails suma Gmail como camino gratis sin dominio. |
 | 0.9 | 2026-08-15 | R17 reforzada: el `.gitignore` con `.env` pasa a ser el **paso 0** de todo repo, antes del primer commit, y aparece en el start-prompt, en el Definition of Done y en el template de playbooks. Se agrega el caso inverso (claves públicas a propósito, como la `anon` de Supabase). Nuevos: `sdd/` propio del paquete — la web del catálogo pasa a tener su especificación —, `web/guia.html` (guía navegable) y `web/demo.html` (la misma pantalla con y sin spec, funcionando). |
