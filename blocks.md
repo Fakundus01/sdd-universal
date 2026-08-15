@@ -1,6 +1,6 @@
 # blocks.md · Bloques componibles: el SDD como LEGO
 
-**Versión:** 0.4 · 2026-08-15 · **Para agentes:** leer solo cuando el proyecto viene de la web/catálogo o cuando la tarea es combinar bloques. **Para humanos:** cómo funciona el catálogo descargable.
+**Versión:** 0.10 · 2026-08-15 · **Para agentes:** leer solo cuando el proyecto viene de la web/catálogo o cuando la tarea es combinar bloques. **Para humanos:** cómo funciona el catálogo descargable.
 
 ---
 
@@ -13,7 +13,7 @@ En vez de un solo SDD gigante que intenta cubrir todo, el sistema se arma con **
 | Tipo | Qué es | Ejemplos |
 |---|---|---|
 | **BASE** | El núcleo universal. Siempre presente, nunca se edita. | `SDD-MASTER.md` (o `SDD-COMPACT.md`) |
-| **TYPE** | Un tipo de proyecto: decisiones ya tomadas, features típicas, riesgos del dominio, preguntas extra. | chatbot, calculadora, web-app, api-propia, scraper, proceso-automático, juego-de-estudio, guía-de-estudio/TP |
+| **TYPE** | Un tipo de proyecto: decisiones ya tomadas, features típicas, riesgos del dominio, preguntas extra. | 16 hoy: web-app, chatbot, calculadora, api-propia, scraper, proceso-automático, landing, tienda, dashboard, app-móvil, bot-mensajería, gestión, videojuego, análisis-de-datos, juego-de-estudio, guía-de-estudio/TP |
 | **STACK** | Lenguaje/librerías/framework y sus convenciones. | python-libs, ts-fullstack, react-front, node-back |
 | **TECNOLOGÍA** | Una pieza concreta del catálogo (`tecnologias.md`): qué es, de qué ecosistema y para qué sirve. Se eligen de a varias y parametrizan al STACK. | React, PostgreSQL, FastAPI, Godot… |
 | **PLAYBOOK** | Procedimiento paso a paso ya resuelto (ver `playbooks/`). | deploy-vercel, env-setup, create-react-vite |
@@ -62,5 +62,6 @@ Igual que una regla (R20): caso real → se documenta → entra con el formato e
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.10 | 2026-08-15 | El combinador pasa de generar un prompt a **armar la carpeta entera del proyecto** en un `.zip` (v1 de §5). 8 TYPE nuevos: landing, tienda, dashboard, app-móvil, bot-mensajería, gestión, videojuego y análisis-de-datos — 16 en total. Corregida la versión del encabezado, que seguía en 0.4. |
 | 0.6 | 2026-08-15 | Tipo de bloque **TECNOLOGÍA** (`tecnologias.md`, 101 piezas concretas) sumado a la regla de composición y a la precedencia, entre STACK y PLAYBOOK: una tecnología puntual pisa la convención general del stack, pero un playbook la pisa a ella. Elegibles desde el combinador de la web. |
 | 0.4 | 2026-08-15 | Primera especificación: 4 tipos de bloque, regla de composición con precedencia, contrato de TYPE, combinación v1 (estática) y v2 (con IA), niveles y etiquetas. |
