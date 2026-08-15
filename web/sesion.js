@@ -76,9 +76,62 @@ const Sesion = (() => {
 
   /* ---------------- API pública ---------------- */
 
+  /* Los errores de GoTrue vienen en inglés y algunos son crípticos.
+     Se traducen acá y no en la interfaz, para que haya un solo lugar
+     donde mirar cuando aparezca uno nuevo. */
+  function traducir(msg = ""){
+    const m = msg.toLowerCase();
+    if (m.includes("already registered") || m.includes("already been registered"))
+      return "Ese mail ya tiene cuenta. Entrá en vez de crear una nueva.";
+    if (m.includes("invalid login credentials"))
+      return "Mail o contraseña incorrectos.";
+    if (m.includes("email not confirmed"))
+      return "Te falta confirmar el mail: buscá el correo de confirmación (revisá spam).";
+    if (m.includes("password should be at least"))
+      return "La contraseña es muy corta: mínimo 8 caracteres.";
+    if (m.includes("unable to validate email") || m.includes("invalid format"))
+      return "Ese mail no parece válido.";
+    if (m.includes("rate limit") || m.includes("too many"))
+      return "Demasiados intentos seguidos. Esperá un minuto y probá de nuevo.";
+    if (m.includes("signups not allowed"))
+      return "Los registros están cerrados en este momento.";
+    return msg || "No se pudo completar. Probá de nuevo.";
+  }
+
+  /* Crear cuenta con mail y contraseña.
+     Devuelve {sesion:true} si el proyecto tiene la confirmación de mail
+     apagada (entra directo), o {sesion:false} si hay que confirmar. */
+  async function registrar(email, password){
+    if ((password || "").length < 8)
+      throw new Error("La contraseña tiene que tener al menos 8 caracteres.");
+    try {
+      const d = await auth("signup", {email, password});
+      if (d.access_token){ guardar(normalizar(d)); avisar(); return {sesion: true}; }
+      return {sesion: false};
+    } catch (e) { throw new Error(traducir(e.message)); }
+  }
+
+  async function entrar(email, password){
+    try {
+      guardar(normalizar(await auth("token", {email, password}, "?grant_type=password")));
+      avisar();
+    } catch (e) { throw new Error(traducir(e.message)); }
+  }
+
+  /* Recuperar contraseña y magic link: los dos dependen de que el mail
+     llegue. Quedan como camino alternativo, no como el principal. */
+  async function recuperar(email){
+    const volverA = location.href.split("#")[0];
+    try {
+      await auth("recover", {email}, `?redirect_to=${encodeURIComponent(volverA)}`);
+    } catch (e) { throw new Error(traducir(e.message)); }
+  }
+
   async function pedirLink(email){
     const volverA = location.href.split("#")[0];
-    await auth("otp", {email, create_user: true}, `?redirect_to=${encodeURIComponent(volverA)}`);
+    try {
+      await auth("otp", {email, create_user: true}, `?redirect_to=${encodeURIComponent(volverA)}`);
+    } catch (e) { throw new Error(traducir(e.message)); }
   }
 
   async function salir(){
@@ -201,7 +254,8 @@ const Sesion = (() => {
   }
 
   return {
-    activo, usuario, iniciar, pedirLink, salir,
+    activo, usuario, iniciar, salir,
+    registrar, entrar, recuperar, pedirLink,
     listar, guardarCombinacion, borrarCombinacion, migrarLocales,
     guardarTema, traerPerfil,
     alCambiar: f => oyentes.push(f)

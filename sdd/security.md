@@ -31,6 +31,14 @@ Esta es la confusión más peligrosa del proyecto, así que va explícita:
 
 **Sin cuenta no se guarda nada en ningún servidor**: todo queda en el `localStorage` del navegador, que la persona borra cuando quiera.
 
+## 2b · Contraseñas (desde ADR-008)
+
+- **Nunca las vemos ni las guardamos.** Viajan una sola vez por HTTPS al endpoint de Supabase, que las hashea con bcrypt. No pasan por `localStorage`, ni por logs, ni por el estado de la aplicación: el campo se limpia al cerrar el diálogo.
+- **Mínimo 8 caracteres**, validado en el navegador *antes* de la llamada — para dar un mensaje rápido, no como control de seguridad. El control real es el mínimo configurado en el proyecto de Supabase, que es el que no se puede saltear.
+- El campo tiene `autocomplete="new-password"` al registrarse y `current-password` al entrar, para que los gestores de contraseñas hagan lo correcto.
+- **Confirmación de mail apagada** (ADR-008): cualquiera puede registrarse con una dirección que no le pertenece. Aceptado con estas condiciones: nadie ve datos de otro (RLS), no se envía correo a terceros, y no se guarda nada sensible. **Si alguna de las tres deja de ser cierta, se vuelve a activar antes que cualquier otra cosa.**
+- El recupero de contraseña depende del mail, igual que el magic link. Mientras no haya SMTP propio, **si alguien pierde la contraseña no la puede recuperar de forma confiable**. Está dicho en la interfaz en vez de prometer algo que puede no funcionar.
+
 ## 3 · Superficie de ataque
 
 1. **RLS mal configurada.** Es *el* riesgo del proyecto: con la clave pública y sin políticas, cualquiera lee las tablas enteras. Mitigación: `supabase/schema.sql` crea las políticas en el mismo script que las tablas, y la verificación del playbook incluye la prueba de las dos cuentas. Toda tabla nueva arranca con RLS.

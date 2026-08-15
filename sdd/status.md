@@ -30,6 +30,7 @@
 | D3 | Los outcomes O1–O4 de la spec no se están midiendo | 2026-08-15 | 2026-09-30 | Sin analytics no hay dato. Decidir si se suma algo que respete la spec (sin píxeles de terceros) o si se bajan los outcomes a algo observable |
 | D4 | Traducción al inglés sin decidir | 2026-08-15 | 2026-10-15 | Es el mayor multiplicador de alcance y el mayor costo de mantenimiento. Va a ADR cuando se decida, no antes |
 | D5 | `web/og.png` se generó con un script que no quedó en el repo | 2026-08-15 | 2026-09-15 | El día que haya que cambiar el texto de la imagen. Contradice ADR-004 en chiquito |
+| D6 | Sin SMTP propio: el recupero de contraseña y el magic link dependen del mailer del free tier, que manda pocos correos por hora y cae en spam | 2026-08-15 | 2026-09-30 | El primer usuario que pierda la contraseña y no la pueda recuperar. Se resuelve con Resend (free hasta 3.000/mes) y reactivando la confirmación de mail (ADR-008) |
 
 ## Próximo ciclo
 

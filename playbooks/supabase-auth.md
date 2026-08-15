@@ -42,7 +42,17 @@ Este playbook agrega **cuentas de usuario** a un sitio estático sin convertirlo
 
 ## Parte C · Configurar el email y las URLs de retorno
 
-8. **Authentication** → **Providers** → confirmá que **Email** esté habilitado y que **Confirm email** esté en ON.
+8. **Authentication** → **Providers** → **Email**. Confirmá que esté habilitado, y decidí una de las dos:
+
+   | | **Confirm email = OFF** | **Confirm email = ON** |
+   |---|---|---|
+   | Al registrarse | entra en el acto, sin ningún mail | espera un mail de confirmación |
+   | Requisito | ninguno | que los mails **realmente lleguen** |
+   | Riesgo | alguien se registra con una dirección que no es suya | ninguno |
+
+   > ⚠️ **La trampa más común de este playbook.** El mailer incluido en el free tier manda muy pocos correos por hora y cae seguido en spam. Si dejás **Confirm email = ON** sin configurar SMTP propio (paso 10), lo más probable es que nadie pueda entrar nunca — ni con magic link ni con contraseña — y el síntoma es mudo: el botón se queda como estaba y no hay error en pantalla.
+   >
+   > **Recomendación para arrancar:** apagalo, probá que todo el circuito funcione, y volvé a prenderlo cuando tengas SMTP propio. Apagarlo es aceptable solo si tu app no manda correo a terceros y nadie ve datos de otro — si guardás algo sensible, configurá SMTP primero.
 9. **Authentication** → **URL Configuration**:
    - **Site URL:** la URL de tu sitio en producción (ej. `https://tu-proyecto.vercel.app`)
    - **Redirect URLs:** agregá una por línea:
@@ -83,7 +93,8 @@ Este playbook agrega **cuentas de usuario** a un sitio estático sin convertirlo
 ## Errores comunes
 
 - **`redirect_to is not allowed`** → falta la URL exacta en *Redirect URLs* (paso 9). Tiene que coincidir carácter por carácter, barra final incluida.
-- **El mail no llega** → mirá spam. El SMTP gratis de Supabase tiene un límite bajo por hora; para uso real conviene enchufar Resend o similar en *Authentication → SMTP Settings*.
+- **El mail no llega y no hay ningún error en pantalla** → es el problema número uno, y no es tu código. El SMTP gratis de Supabase tiene un límite muy bajo por hora y cae en spam. Solución rápida: apagá *Confirm email* (paso 8) y usá mail + contraseña. Solución de fondo: enchufá Resend o similar en *Authentication → SMTP Settings*.
+- **"Email not confirmed" al entrar con contraseña** → la cuenta se creó con *Confirm email* en ON y nunca se confirmó. Apagá la opción y volvé a registrarte, o confirmá el usuario a mano desde *Authentication → Users*.
 - **`new row violates row-level security policy`** → estás insertando sin sesión activa, o el `usuario_id` no coincide con el de la sesión. Es RLS haciendo bien su trabajo.
 - **Entra pero al recargar se desloguea** → el token está en el hash de la URL y no se está guardando. Revisá que la página llame a la función que lo procesa al cargar.
 - **Funciona en local y no en producción** → casi siempre es *Site URL* apuntando a `localhost`.

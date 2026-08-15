@@ -226,7 +226,21 @@
   /* ---------- sesión ---------- */
   dialog.auth{width:min(440px,94vw)}
   @media (max-width:640px){dialog.auth{height:auto;max-height:88vh;border-radius:18px;border:1px solid var(--line);width:94vw}}
-  .authform{padding:20px 22px 22px;display:flex;flex-direction:column;gap:8px}
+  .authtabs{display:flex;gap:6px;padding:14px 22px 0}
+  .authtabs button{flex:1;background:var(--bg-soft);border:1px solid var(--line);color:var(--muted);
+       border-radius:10px;padding:9px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit}
+  .authtabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+  .authform{padding:16px 22px 22px;display:flex;flex-direction:column;gap:8px}
+  .passfila{display:flex;gap:7px}
+  .passfila input{flex:1;min-width:0}
+  .passfila button{background:var(--bg-soft);border:1px solid var(--line-strong);color:var(--muted);
+       border-radius:10px;width:44px;cursor:pointer;font-size:.95rem;font-family:inherit;flex:none}
+  .passfila button:hover{color:var(--ink)}
+  .authhint{font-size:.76rem;color:var(--muted);min-height:1px}
+  .authalt{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:12px;border-top:1px solid var(--line)}
+  .authalt button{background:none;border:0;color:var(--accent-ink);font-size:.79rem;cursor:pointer;
+       font-family:inherit;padding:2px 0;text-decoration:underline}
+  .authalt button:hover{color:var(--ink)}
   .authform label{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
   .authform input{padding:11px 13px;border:1px solid var(--line-strong);border-radius:10px;
        background:var(--bg-soft);color:var(--ink);font-size:.92rem;font-family:inherit}
@@ -538,15 +552,35 @@
 
 <dialog class="tech auth" id="authdlg" aria-labelledby="authtitle">
   <div class="dlg-head" style="cursor:default">
-    <h2 id="authtitle">Entrar</h2>
-    <p>Te mandamos un link al mail y listo — <b>sin contraseñas</b>. Sirve para guardar tus combinaciones y encontrarlas después desde el celular o desde otra compu.</p>
+    <h2 id="authtitle">Tu cuenta</h2>
+    <p>Sirve para guardar tus combinaciones y encontrarlas después desde el celular o desde otra compu.</p>
     <button class="dlg-x" id="authx" type="button" aria-label="Cerrar">✕</button>
   </div>
+
+  <div class="authtabs" role="tablist">
+    <button role="tab" type="button" id="tabEntrar" aria-selected="true">Entrar</button>
+    <button role="tab" type="button" id="tabCrear" aria-selected="false">Crear cuenta</button>
+  </div>
+
   <form class="authform" id="authform">
     <label for="authmail">Tu email</label>
     <input id="authmail" type="email" required autocomplete="email" placeholder="vos@ejemplo.com">
+
+    <label for="authpass">Contraseña</label>
+    <div class="passfila">
+      <input id="authpass" type="password" required minlength="8" autocomplete="current-password"
+             placeholder="mínimo 8 caracteres">
+      <button type="button" id="verpass" aria-label="Mostrar la contraseña" title="Mostrar u ocultar">👁</button>
+    </div>
+    <p class="authhint" id="authhint"></p>
+
     <p class="authmsg" id="authmsg" role="status"></p>
-    <button class="done" type="submit" id="authsend">Mandame el link</button>
+    <button class="done" type="submit" id="authsend">Entrar</button>
+
+    <div class="authalt">
+      <button type="button" id="autholvide">Olvidé mi contraseña</button>
+      <button type="button" id="authlink">Entrar con un link al mail</button>
+    </div>
     <p class="authnote">Guardamos tu email y las combinaciones que armes. Nada más, y podés borrarlas cuando quieras.</p>
   </form>
 </dialog>
@@ -1075,19 +1109,87 @@ $("authbtn").onclick = async () => {
   } else $("authdlg").showModal();
 };
 $("authx").onclick = () => $("authdlg").close();
-$("authform").onsubmit = async e => {
+
+/* --- pestañas entrar / crear cuenta --- */
+let modoAuth = "entrar";
+function pintarAuth(){
+  const crear = modoAuth === "crear";
+  $("tabEntrar").setAttribute("aria-selected", !crear);
+  $("tabCrear").setAttribute("aria-selected", crear);
+  $("authsend").textContent = crear ? "Crear mi cuenta" : "Entrar";
+  $("authpass").autocomplete = crear ? "new-password" : "current-password";
+  $("authhint").textContent = crear
+    ? "Elegí algo de 8 caracteres o más. No la reutilices de otro sitio."
+    : "";
+  $("autholvide").hidden = crear;
+  $("authmsg").className = "authmsg"; $("authmsg").textContent = "";
+}
+$("tabEntrar").onclick = () => { modoAuth = "entrar"; pintarAuth(); };
+$("tabCrear").onclick  = () => { modoAuth = "crear";  pintarAuth(); };
+pintarAuth();
+
+$("verpass").onclick = () => {
+  const i = $("authpass");
+  i.type = i.type === "password" ? "text" : "password";
+  $("verpass").setAttribute("aria-label",
+    i.type === "password" ? "Mostrar la contraseña" : "Ocultar la contraseña");
+};
+
+function decirAuth(clase, texto){
+  const m = $("authmsg");
+  m.className = "authmsg " + clase;
+  m.textContent = texto;
+}
+
+async function conBoton(textoMientras, fn){
+  const btn = $("authsend"), original = btn.textContent;
+  $("authmsg").className = "authmsg"; $("authmsg").textContent = "";
+  btn.disabled = true; btn.textContent = textoMientras;
+  try { await fn(); }
+  catch (err) { decirAuth("err", err.message); }
+  finally { btn.disabled = false; btn.textContent = original; }
+}
+
+$("authform").onsubmit = e => {
   e.preventDefault();
-  const msg = $("authmsg"), btn = $("authsend");
-  msg.className = "authmsg"; msg.textContent = "";
-  btn.disabled = true; btn.textContent = "Mandando…";
-  try {
-    await Sesion.pedirLink($("authmail").value.trim());
-    msg.className = "authmsg ok";
-    msg.textContent = "Listo: revisá tu mail y tocá el link. Podés cerrar esta ventana.";
-  } catch (err) {
-    msg.className = "authmsg err";
-    msg.textContent = "No se pudo enviar: " + err.message;
-  } finally { btn.disabled = false; btn.textContent = "Mandame el link"; }
+  const email = $("authmail").value.trim(), pass = $("authpass").value;
+  if (modoAuth === "crear") {
+    conBoton("Creando…", async () => {
+      const r = await Sesion.registrar(email, pass);
+      if (r.sesion) {
+        decirAuth("ok", "¡Listo! Ya estás dentro.");
+        await renderGuardadas();
+        setTimeout(() => $("authdlg").close(), 900);
+      } else {
+        decirAuth("ok", "Cuenta creada. Te mandamos un mail de confirmación: tocá el link y después entrá acá con tu contraseña.");
+      }
+    });
+  } else {
+    conBoton("Entrando…", async () => {
+      await Sesion.entrar(email, pass);
+      decirAuth("ok", "¡Hola de nuevo!");
+      await renderGuardadas();
+      setTimeout(() => $("authdlg").close(), 700);
+    });
+  }
+};
+
+$("autholvide").onclick = () => {
+  const email = $("authmail").value.trim();
+  if (!email) { $("authmail").focus(); return decirAuth("err", "Escribí tu mail primero."); }
+  conBoton("Mandando…", async () => {
+    await Sesion.recuperar(email);
+    decirAuth("ok", "Si ese mail tiene cuenta, te llega un link para poner una contraseña nueva.");
+  });
+};
+
+$("authlink").onclick = () => {
+  const email = $("authmail").value.trim();
+  if (!email) { $("authmail").focus(); return decirAuth("err", "Escribí tu mail primero."); }
+  conBoton("Mandando…", async () => {
+    await Sesion.pedirLink(email);
+    decirAuth("ok", "Te mandamos un link. Si no llega en unos minutos, revisá spam o usá la contraseña.");
+  });
 };
 
 /* ---------- init ---------- */
