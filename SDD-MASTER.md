@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.8 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
+**Versión:** 0.9 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -134,7 +134,8 @@ Repo existente sin SDD: prohibido tocar código. Primero subagentes analizan (es
 Una tarea se cierra solo si: código implementado + tests verdes (R07) + MDs al día (R08/R09) + changelog (R13) + OKs registrados (R01/R08). Checklist completo en §10.
 
 **R17 · SECURITY-BÁSICA — [ON] — fija**
-Secretos y claves siempre en `.env` (y `.env` en `.gitignore`). Nunca commitear credenciales. Revisar el diff antes de cada commit buscando secretos. Si el producto guarda datos de terceros (ej.: prospectos), `security.md` debe decir qué se guarda, de dónde sale y cuánto se retiene. Detalle: `security.md`.
+**Paso 0 de todo repo, antes del primer commit:** crear el `.gitignore` con `.env`, `.env.*` (salvo `.env.example`), carpetas de dependencias y artefactos de build. No es una tarea de higiene para después: un `.gitignore` que se agrega *después* del primer secreto llega tarde, porque la clave ya quedó en el historial de git y sacarla de ahí es reescribir la historia del repo. El agente lo propone en el arranque aunque el proyecto todavía no tenga ningún secreto — el día que aparezca, el hábito ya tiene que estar.
+Secretos y claves siempre en `.env`, nunca en el código ni en el repo. Se commitea un `.env.example` con los nombres de las variables y sin los valores. Ojo con el caso inverso: algunas claves **son públicas a propósito** (ej. la `anon` de Supabase) y esconderlas no protege nada — lo que protege es la configuración del servicio. Si una clave es pública, el MD dice por qué. Revisar el diff antes de cada commit buscando secretos. Si el producto guarda datos de terceros (ej.: prospectos), `security.md` debe decir qué se guarda, de dónde sale y cuánto se retiene. Detalle: `security.md`.
 
 **R18 · MODO-POR-TAMAÑO — [ON] — desactivable**
 En el arranque, clasificar el proyecto y elegir modo: script chico (≤~300 líneas estimadas o ≤1 día) → **LITE** (un solo `sdd-lite.md` con spec + changelog embebidos); proyecto estándar → **FULL**; monorepo/multi-servicio → **FEDERADO**. Registrar la elección en §3; el humano puede forzar otro modo.
@@ -241,8 +242,9 @@ Pasos: hacé el cuestionario socrático (R04) preguntando lo que falte
 (forma de trabajar, lenguajes —un solo lenguaje tipo TypeScript
 full-stack, o Python back + JS front—, frameworks con recomendación,
 etc.). Después proponé estructura + stack, esperá mi OK, creá la
-carpeta del repo (R10, con OK), generá los MD de sdd/ y hacé el
-primer commit (solo los MD) según R01.
+carpeta del repo (R10, con OK), creá el .gitignore con .env desde el
+paso 0 (R17), generá los MD de sdd/ y hacé el primer commit (solo los
+MD y el .gitignore) según R01.
 ```
 
 ### 6.2 Brownfield — repo existente sin SDD
@@ -323,7 +325,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 - [ ] Tests verdes (back) / verificación en navegador (front)
 - [ ] Archivos ≤300 líneas (o justificado ≤400) y sin comentarios redundantes
 - [ ] Changelog con la versión correcta, del usuario correcto
-- [ ] Sin secretos en el diff (R17)
+- [ ] `.gitignore` existe y cubre `.env` — y sin secretos en el diff (R17)
 - [ ] `status.md` refleja el % real de la feature
 - [ ] Commit/push con OK (o `R01=OFF` registrado en §3)
 - [ ] Sin drift sin resolver: todo lo que apareció contra la spec pasó por R25 (MD corregido o deuda anotada con fecha)
@@ -334,6 +336,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.9 | 2026-08-15 | R17 reforzada: el `.gitignore` con `.env` pasa a ser el **paso 0** de todo repo, antes del primer commit, y aparece en el start-prompt, en el Definition of Done y en el template de playbooks. Se agrega el caso inverso (claves públicas a propósito, como la `anon` de Supabase). Nuevos: `sdd/` propio del paquete — la web del catálogo pasa a tener su especificación —, `web/guia.html` (guía navegable) y `web/demo.html` (la misma pantalla con y sin spec, funcionando). |
 | 0.8 | 2026-08-15 | Configurador de reglas en la web: se prenden y apagan las 26 reglas, se elige perfil/modo/variante y se descarga el `custom.md` ya escrito con la sintaxis exacta. Las reglas `fijas` aparecen con candado — no se pueden apagar, y verlas ahí explica por qué. |
 | 0.7 | 2026-08-15 | Playbook `supabase-auth`: cuentas de usuario por magic link en un sitio estático, con `supabase/schema.sql` (RLS incluida, que es el paso que si se saltea deja la base abierta). La web del catálogo suma sesión, combinaciones guardadas, paginación y tema oscuro por default. |
 | 0.6 | 2026-08-15 | `tecnologias.md`: catálogo de 101 tecnologías (lenguajes, frameworks, bibliotecas, bases, cloud, DevOps, testing, IA, videojuegos) con categoría, ecosistema y uso principal, más su fila en el Protocolo de Lectura. Se elige desde el combinador de la web con filtros, y lo elegido entra al prompt de arranque como bloque `TECNOLOGÍAS ELEGIDAS` — sin reemplazar la justificación de R12. |

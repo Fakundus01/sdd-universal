@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reservá tu turno — Peluquería Nadia</title>
+<style>
+  :root{--bg:#12121a;--card:#1b1b26;--ink:#f2f2f7;--muted:#9a9ab0;--line:#2c2c3a;
+        --ac:#e0568a;--ac2:#ff7fae;--ok:#4ade80;--warn:#fbbf24;--mono:ui-monospace,Consolas,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       line-height:1.5;padding:18px;font-size:14px}
+  h1{font-size:1.15rem;letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:.8rem;margin:3px 0 16px}
+  .campo{margin-bottom:14px}
+  label{display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+        color:var(--muted);margin-bottom:6px}
+  select,input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;
+       background:var(--card);color:var(--ink);font-size:.88rem;font-family:inherit}
+  .dias{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+  .dia{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;
+       padding:7px 10px;cursor:pointer;font-family:inherit;text-align:center;min-width:52px}
+  .dia small{display:block;font-size:.62rem;color:var(--muted);text-transform:uppercase}
+  .dia b{font-size:.95rem}
+  .dia.sel{background:var(--ac);border-color:var(--ac);color:#fff}
+  .dia.sel small{color:#ffd9e7}
+  .dia.cerrado{opacity:.32;cursor:not-allowed}
+  .horas{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:6px}
+  .hora{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;
+        padding:8px 4px;cursor:pointer;font-family:inherit;font-size:.83rem}
+  .hora.sel{background:var(--ac);border-color:var(--ac);color:#fff}
+  .btn{width:100%;background:var(--ac);color:#fff;border:0;border-radius:10px;padding:12px;
+       font-weight:700;font-size:.92rem;cursor:pointer;font-family:inherit;margin-top:4px}
+  .btn:hover{background:var(--ac2)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .msg{margin-top:12px;padding:11px 13px;border-radius:10px;font-size:.85rem;display:none}
+  .msg.ok{display:block;background:#14321f;color:var(--ok);border:1px solid #1f5433}
+  .msg.aviso{display:block;background:#332612;color:var(--warn);border:1px solid #59421a}
+  .msg .cv{display:block;margin-top:5px;font-family:var(--mono);font-size:.7rem;opacity:.75}
+  .vacio-h{color:var(--muted);font-size:.83rem;padding:10px 0}
+  .agenda{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .agenda h2{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
+  .agenda ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+  .agenda li{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 11px;
+       font-size:.8rem;display:flex;gap:9px;align-items:center}
+  .agenda li code{font-family:var(--mono);color:var(--ac2);font-size:.78rem}
+  .agenda li span{color:var(--muted);margin-left:auto;font-size:.74rem}
+  .agenda .vacio{color:var(--muted);font-size:.8rem}
+  .sim{margin-top:10px;width:100%;background:transparent;color:var(--muted);border:1px dashed var(--line);
+       border-radius:9px;padding:8px;font-size:.76rem;cursor:pointer;font-family:inherit}
+  .sim:hover{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<h1>Reservá tu turno</h1>
+<p class="sub">Peluquería Nadia · Villa Crespo · martes a sábado, 9 a 19</p>
+
+<div class="campo">
+  <label for="servicio">Servicio</label>
+  <select id="servicio"></select>
+</div>
+
+<div class="campo">
+  <label>Día</label>
+  <div class="dias" id="dias"></div>
+</div>
+
+<div class="campo">
+  <label>Horario</label>
+  <div class="horas" id="horas"></div>
+</div>
+
+<div class="campo">
+  <label for="nombre">Tu nombre</label>
+  <input id="nombre" type="text" value="Ana Pérez">
+</div>
+
+<button class="btn" id="confirmar">Confirmar turno</button>
+<div class="msg" id="msg"></div>
+
+<button class="sim" id="simular">⟳ Simular: otra clienta reserva el horario que elegiste</button>
+
+<div class="agenda">
+  <h2>Agenda del día</h2>
+  <ul id="agenda"></ul>
+</div>
+
+<script>
+/* <<<CODIGO */
+const SERVICIOS = [
+  {id: 1, nombre: "Corte", duracion: 30},
+  {id: 2, nombre: "Color", duracion: 90},
+  {id: 3, nombre: "Peinado", duracion: 45}
+];
+
+// Del spec.md: martes a sábado, 9 a 19. Dos peluqueras en paralelo.
+const HORARIO = {abre: 9, cierra: 19, cerrados: [0, 1]};   // 0=domingo, 1=lunes
+const PELUQUERAS = ["Nadia", "Carla"];
+
+let turnos = [];
+
+const minutos = h => +h.slice(0, 2) * 60 + +h.slice(3);
+const aHora = m => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+
+// V2 · un día cerrado devuelve lista vacía, no un error.
+// V3 · un servicio que no termina antes del cierre no se ofrece.
+// El slot se ofrece solo si queda al menos una peluquera libre.
+function horariosDisponibles(fecha, servicio) {
+  if (HORARIO.cerrados.includes(fecha.getDay())) return [];
+
+  const libres = [];
+  for (let m = HORARIO.abre * 60; m + servicio.duracion <= HORARIO.cierra * 60; m += 30) {
+    const inicio = aHora(m);
+    if (peluqueraLibre(fecha, inicio, servicio.duracion)) libres.push(inicio);
+  }
+  return libres;
+}
+
+// Dos turnos se pisan si uno arranca antes de que termine el otro.
+// El borde no cuenta: 15:30 justo después de 15:00–15:30 es válido.
+function seSolapan(inicioA, durA, inicioB, durB) {
+  const a = minutos(inicioA), b = minutos(inicioB);
+  return a < b + durB && b < a + durA;
+}
+
+function peluqueraLibre(fecha, inicio, duracion) {
+  const f = fecha.toDateString();
+  return PELUQUERAS.find(p => !turnos.some(t =>
+    t.fecha === f && t.peluquera === p && seSolapan(inicio, duracion, t.hora, t.duracion)));
+}
+
+// V1 · se vuelve a chequear al confirmar: entre que se pidieron los horarios
+// y que la clienta tocó el botón, alguien pudo tomar el slot.
+function reservar(fecha, hora, servicio, nombre) {
+  const peluquera = peluqueraLibre(fecha, hora, servicio.duracion);
+  if (!peluquera) return {ok: false, error: "HORARIO_OCUPADO"};
+
+  turnos.push({fecha: fecha.toDateString(), hora, duracion: servicio.duracion,
+               servicio: servicio.nombre, nombre, peluquera});
+  return {ok: true, peluquera};
+}
+/* CODIGO>>> */
+
+const DIAS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const $ = id => document.getElementById(id);
+const proximosDias = () => Array.from({length: 14}, (_, i) => {
+  const d = new Date(); d.setDate(d.getDate() + i); return d;
+});
+let diaSel = 0, horaSel = null;
+
+// arrancamos en el primer día abierto, no en uno cerrado
+while (HORARIO.cerrados.includes(proximosDias()[diaSel].getDay())) diaSel++;
+
+function servicioActual(){ return SERVICIOS.find(s => s.id === +$("servicio").value); }
+
+function pintar() {
+  if (!$("servicio").options.length)
+    $("servicio").innerHTML = SERVICIOS.map(s =>
+      `<option value="${s.id}">${s.nombre} (${s.duracion} min)</option>`).join("");
+
+  $("dias").innerHTML = proximosDias().map((d, i) => {
+    const cerrado = HORARIO.cerrados.includes(d.getDay());
+    return `<button class="dia${i === diaSel ? " sel" : ""}${cerrado ? " cerrado" : ""}"
+      data-d="${i}" ${cerrado ? "disabled" : ""} title="${cerrado ? "Cerrado" : ""}">
+      <small>${DIAS[d.getDay()]}</small><b>${d.getDate()}</b></button>`;
+  }).join("");
+
+  const fecha = proximosDias()[diaSel];
+  const slots = horariosDisponibles(fecha, servicioActual());
+  $("horas").innerHTML = slots.length
+    ? slots.map(h => `<button class="hora${h === horaSel ? " sel" : ""}" data-h="${h}">${h}</button>`).join("")
+    : `<p class="vacio-h">No queda lugar para ${servicioActual().nombre} este día. Probá con otro.</p>`;
+
+  if (horaSel && !slots.includes(horaSel)) horaSel = null;
+  $("confirmar").disabled = !horaSel;
+
+  pintarAgenda();
+}
+
+function pintarAgenda() {
+  const f = proximosDias()[diaSel].toDateString();
+  const delDia = turnos.filter(t => t.fecha === f);
+  $("agenda").innerHTML = delDia.length
+    ? delDia.sort((a, b) => a.hora.localeCompare(b.hora)).map(t =>
+        `<li><code>${t.hora}</code> ${t.nombre} <span>${t.servicio} · ${t.peluquera}</span></li>`).join("")
+    : `<li class="vacio">Sin turnos para este día.</li>`;
+}
+
+document.addEventListener("click", e => {
+  const d = e.target.closest("[data-d]");
+  if (d) { diaSel = +d.dataset.d; horaSel = null; $("msg").className = "msg"; pintar(); }
+  const h = e.target.closest("[data-h]");
+  if (h) { horaSel = h.dataset.h; pintar(); }
+});
+$("servicio").onchange = () => { horaSel = null; $("msg").className = "msg"; pintar(); };
+
+$("confirmar").onclick = () => {
+  if (!horaSel) return;
+  const serv = servicioActual();
+  const r = reservar(proximosDias()[diaSel], horaSel, serv, $("nombre").value || "Sin nombre");
+  const m = $("msg");
+  if (r.ok) {
+    m.className = "msg ok";
+    m.innerHTML = `¡Listo! Te esperamos a las ${horaSel} para ${serv.nombre}, con ${r.peluquera}.
+      <span class="cv">V1 · se verificó que el horario siguiera libre</span>`;
+    horaSel = null;
+  } else {
+    m.className = "msg aviso";
+    m.innerHTML = `Ese horario se acaba de ocupar. Elegí otro de la lista, que ya se actualizó.
+      <span class="cv">V1 · HORARIO_OCUPADO — no se creó nada</span>`;
+  }
+  pintar();
+};
+
+$("simular").onclick = () => {
+  if (!horaSel) { alert("Elegí primero un horario."); return; }
+  const serv = servicioActual(), fecha = proximosDias()[diaSel];
+  // ocupamos a las dos peluqueras para forzar el choque
+  reservar(fecha, horaSel, serv, "Sofía G.");
+  reservar(fecha, horaSel, serv, "Lucía M.");
+  // A propósito NO refrescamos la lista de horarios: así queda la pantalla
+  // desactualizada, que es exactamente lo que pasa en la vida real mientras
+  // la clienta decide. El choque se detecta recién al confirmar (V1).
+  pintarAgenda();
+};
+
+pintar();
+</script>
+</body>
+</html>

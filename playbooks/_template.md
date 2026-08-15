@@ -17,6 +17,10 @@ TIEMPO: <estimado> · REQUISITOS: <qué hace falta antes> · RESULTADO: <qué qu
 ## Errores comunes
 - <síntoma> → <causa> → <solución>
 
+## Secretos (obligatorio si el playbook toca claves, tokens o conexiones)
+- Qué va al `.env` y qué al `.env.example`, y confirmar que `.env` esté en `.gitignore` ANTES de generar la primera clave.
+- Si alguna clave es pública a propósito, decirlo y explicar qué la protege en su lugar.
+
 ## Nota para agentes
 Seguir literal. No re-derivar comandos. Si un paso falla dos veces, frenar y mostrar el error al humano (no improvisar). Versiones de herramientas: verificar con R19 si el playbook tiene más de ~6 meses.
 ```

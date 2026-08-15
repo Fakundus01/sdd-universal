@@ -17,8 +17,9 @@ Pasos: hacé el cuestionario socrático (R04) preguntando lo que falte
 full-stack o Python back + JS front—, frameworks con recomendación
 según el proyecto, IA sí/no y qué modelo conviene). Después proponé
 estructura + stack, esperá mi OK, creá la carpeta del repo (R10, con
-OK), generá los MD de sdd/ y hacé el primer commit (solo los MD)
-según R01.
+OK), creá el .gitignore con .env desde el paso 0 (R17), generá los MD
+de sdd/ y hacé el primer commit (solo los MD y el .gitignore) según
+R01.
 ```
 
 ## Brownfield — repo existente sin SDD

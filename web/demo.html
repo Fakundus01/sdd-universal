@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo: con SDD vs sin SDD</title>
+<meta name="description" content="El mismo formulario de reservas, construido dos veces. Los dos funcionan y se ven igual. Probá los tres casos borde y mirá cuál se rompe en silencio.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0b0f1f" id="themecolor">
+<link rel="canonical" href="https://sdd-universal.vercel.app/web/demo.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="SDD Hub">
+<meta property="og:title" content="Demo: con SDD vs sin SDD">
+<meta property="og:description" content="El mismo formulario de reservas construido dos veces. Los dos andan y se ven igual — hasta que probás los casos borde.">
+<meta property="og:url" content="https://sdd-universal.vercel.app/web/demo.html">
+<meta property="og:image" content="https://sdd-universal.vercel.app/web/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="base.css">
+<style>
+  .hero{padding:44px 0 6px;max-width:78ch}
+  .hero .kick{font-size:.72rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-ink)}
+  .hero h1{font-size:clamp(1.8rem,4.6vw,2.5rem);letter-spacing:-.03em;line-height:1.15;margin:10px 0}
+  .hero p{color:var(--muted);font-size:1rem;margin-bottom:10px}
+
+  /* ---------- qué probar ---------- */
+  .probar{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:28px 0 30px}
+  .probar h2{font-size:1.02rem;margin-bottom:3px}
+  .probar>p{color:var(--muted);font-size:.87rem;margin-bottom:16px}
+  .casos{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:12px;list-style:none;counter-reset:c}
+  .casos li{counter-increment:c;background:var(--bg-soft);border:1px solid var(--line);border-radius:12px;
+       padding:14px 15px 14px 43px;position:relative;font-size:.85rem;color:var(--muted)}
+  .casos li::before{content:counter(c);position:absolute;left:14px;top:14px;width:20px;height:20px;border-radius:50%;
+       background:var(--accent);color:var(--on-accent);font-size:.68rem;font-weight:800;display:grid;place-items:center}
+  .casos li b{display:block;color:var(--ink);font-size:.89rem;margin-bottom:3px}
+  .casos li em{font-style:normal;color:var(--accent-ink);font-family:var(--mono);font-size:.74rem}
+
+  /* ---------- comparación ---------- */
+  .comp{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+  @media (max-width:880px){.comp{grid-template-columns:1fr}}
+  .panel{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--card)}
+  .panel.malo{border-color:var(--red-line)}
+  .panel.bueno{border-color:#2f6b47}
+  .phead{padding:15px 18px;border-bottom:1px solid var(--line)}
+  .phead .tag{font-size:.64rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+       padding:3px 9px;border-radius:999px}
+  .panel.malo .tag{background:var(--red-soft);color:var(--red)}
+  .panel.bueno .tag{background:var(--green-soft);color:var(--green)}
+  .phead h2{font-size:1.02rem;margin:8px 0 3px}
+  .phead p{font-size:.82rem;color:var(--muted)}
+  iframe{width:100%;height:660px;border:0;display:block;background:#12121a}
+  .pfoot{padding:12px 18px;border-top:1px solid var(--line);background:var(--bg-soft);
+       display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .pfoot span{font-size:.78rem;color:var(--muted);margin-right:auto}
+  .pfoot button,.pfoot a{background:transparent;border:1px solid var(--line-strong);color:var(--muted);
+       border-radius:8px;padding:6px 12px;font-size:.78rem;cursor:pointer;font-family:inherit;text-decoration:none}
+  .pfoot button:hover,.pfoot a:hover{color:var(--ink);border-color:var(--muted)}
+
+  /* ---------- código ---------- */
+  .codigo{margin-top:34px}
+  .codigo>p{color:var(--muted);font-size:.88rem;margin-bottom:14px;max-width:78ch}
+  .tabs{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+  .tabs button{background:var(--card);border:1px solid var(--line-strong);color:var(--muted);border-radius:9px;
+       padding:8px 15px;font-size:.83rem;font-weight:600;cursor:pointer;font-family:inherit}
+  .tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+  pre.src{background:var(--panel);border:1px solid var(--panel-line);border-radius:14px;padding:18px;
+       overflow-x:auto;font-family:var(--mono);font-size:.775rem;line-height:1.62;color:var(--panel-ink);
+       max-height:520px;overflow-y:auto}
+  pre.src .c{color:var(--panel-muted);font-style:italic}
+
+  /* ---------- por qué ---------- */
+  .porque{margin-top:40px;background:var(--panel-2);border:1px solid var(--panel-line);border-radius:18px;
+       padding:26px 26px 28px}
+  .porque h2{color:#fff;font-size:1.25rem;letter-spacing:-.02em}
+  .porque>p{color:var(--panel-muted);font-size:.9rem;margin:7px 0 20px;max-width:80ch}
+  .vs{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+  .v{background:var(--panel);border:1px solid var(--panel-line);border-radius:12px;padding:15px 16px}
+  .v .id{font-family:var(--mono);font-size:.72rem;font-weight:700;color:#a9a4ff;
+       background:rgba(123,116,245,.14);border-radius:6px;padding:2px 8px;display:inline-block;margin-bottom:8px}
+  .v p{font-size:.85rem;color:var(--panel-ink);margin-bottom:7px}
+  .v small{font-size:.78rem;color:var(--panel-muted);display:block}
+  .cierre{margin-top:22px;padding-top:20px;border-top:1px solid var(--panel-line)}
+  .cierre p{color:var(--panel-ink);font-size:.92rem;margin-bottom:14px;max-width:80ch}
+  .cierre .btns{display:flex;gap:10px;flex-wrap:wrap}
+  .cierre a{text-decoration:none;font-size:.85rem;font-weight:700;padding:10px 17px;border-radius:10px;
+       background:var(--accent);color:#fff}
+  .cierre a.g{background:transparent;color:var(--panel-ink);border:1px solid var(--panel-line)}
+</style>
+</head>
+<body>
+<a class="skip" href="#comparacion">Saltar a la comparación</a>
+
+<div class="wrap">
+
+<div class="top">
+  <a class="brand" href="./"><span class="mark"><span></span></span>SDD Hub</a>
+  <nav>
+    <a href="./" class="hide-s">Catálogo</a>
+    <a href="guia.html">Guía</a>
+    <a href="demo.html" aria-current="page">Demo</a>
+    <a href="../sdd-universal-tablero.html" class="hide-s">Tablero</a>
+    <a href="https://github.com/Fakundus01/sdd-universal" class="hide-s">GitHub</a>
+    <button class="tbtn" id="theme" type="button" aria-label="Cambiar a tema claro" title="Cambiar tema">◐</button>
+  </nav>
+</div>
+
+<header class="hero">
+  <p class="kick">Demo en vivo</p>
+  <h1>El mismo formulario, construido dos veces</h1>
+  <p>Los dos son de verdad y funcionan acá abajo. Se ven igual, tienen los mismos campos y ninguno tira errores. La diferencia no está en el aspecto: está en los <b>casos borde</b>, que son justo los que aparecen recién en producción.</p>
+  <p>Es el proyecto de turnos del <a href="https://github.com/Fakundus01/sdd-universal/tree/main/examples/turnos/sdd">ejemplo del paquete</a>: una peluquería que abre de martes a sábado, de 9 a 19, con dos peluqueras.</p>
+</header>
+
+<main>
+
+<div class="probar">
+  <h2>Probá estos tres casos en los dos</h2>
+  <p>No hace falta que me creas: son 30 segundos y la diferencia se ve sola.</p>
+  <ol class="casos">
+    <li><b>Reservá un lunes</b>La peluquería cierra los lunes. <em>criterio V2</em></li>
+    <li><b>Pedí un Color (90 min) a las 18:00</b>Cierran a las 19. <em>criterio V3</em></li>
+    <li><b>Elegí un horario, tocá "Simular" y después "Confirmar"</b>Alguien te ganó el turno mientras decidías. <em>criterio V1</em></li>
+  </ol>
+</div>
+
+<section class="comp" id="comparacion">
+  <div class="panel malo">
+    <div class="phead">
+      <span class="tag">Sin SDD</span>
+      <h2>"Hacéme un formulario de turnos"</h2>
+      <p>Una sola frase al agente. Anda, se ve bien y se entregó en dos minutos.</p>
+    </div>
+    <iframe id="f1" src="demo-sin-sdd.html" title="Formulario de reservas construido sin SDD"></iframe>
+    <div class="pfoot">
+      <span>Sin spec: nadie le dijo qué días abre</span>
+      <button type="button" data-reset="f1">Reiniciar</button>
+      <a href="demo-sin-sdd.html" target="_blank" rel="noopener">Abrir solo ↗</a>
+    </div>
+  </div>
+
+  <div class="panel bueno">
+    <div class="phead">
+      <span class="tag">Con SDD</span>
+      <h2>Mismo pedido, con spec antes</h2>
+      <p>El agente preguntó primero y escribió los criterios de verificación. Después codeó.</p>
+    </div>
+    <iframe id="f2" src="demo-con-sdd.html" title="Formulario de reservas construido con SDD"></iframe>
+    <div class="pfoot">
+      <span>Los lunes aparecen apagados, y hay motivo</span>
+      <button type="button" data-reset="f2">Reiniciar</button>
+      <a href="demo-con-sdd.html" target="_blank" rel="noopener">Abrir solo ↗</a>
+    </div>
+  </div>
+</section>
+
+<section class="codigo">
+  <h2 style="font-size:1.3rem;letter-spacing:-.02em;margin-bottom:6px">El código de los dos</h2>
+  <p>Esto no es un resumen: es el código real que está corriendo en los iframes de arriba, leído del archivo en vivo. Fijate que el de la izquierda <b>no es más feo</b> — es más corto, más simple y perfectamente legible. Ese es el punto incómodo: el problema no se ve mirando el código.</p>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-src="demo-sin-sdd.html">Sin SDD</button>
+    <button role="tab" aria-selected="false" data-src="demo-con-sdd.html">Con SDD</button>
+  </div>
+  <pre class="src" id="src" tabindex="0">Cargando…</pre>
+</section>
+
+<section class="porque">
+  <h2>Por qué el de la derecha maneja los casos borde</h2>
+  <p>No es que ese agente sea más inteligente. Es que <b>antes de escribir una línea</b>, la spec ya tenía escritos los criterios de verificación — y un criterio escrito es un test que alguien va a correr. El de la izquierda nunca supo que existían, porque nadie se los dijo y nadie se los preguntó.</p>
+  <div class="vs">
+    <div class="v">
+      <span class="id">V1</span>
+      <p>Dos reservas al mismo horario: la segunda recibe <code>409</code> y no se crea la fila.</p>
+      <small>Sin SDD: las dos entran, y la peluquera se entera cuando llegan dos clientas juntas.</small>
+    </div>
+    <div class="v">
+      <span class="id">V2</span>
+      <p>Pedir disponibilidad de un lunes devuelve lista vacía, no un error.</p>
+      <small>Sin SDD: el lunes se ofrece igual, con todos los horarios libres.</small>
+    </div>
+    <div class="v">
+      <span class="id">V3</span>
+      <p>Un turno de 60 min a las 18:30 no se ofrece: excede el horario de cierre.</p>
+      <small>Sin SDD: se ofrece, y el Color de 90 minutos termina a las 19:30 con el local cerrado.</small>
+    </div>
+  </div>
+
+  <div class="cierre">
+    <p>Los tres salieron de <code>spec.md §7</code>, escritos durante el cuestionario de arranque, cuando todavía no costaba nada cambiarlos. Arreglar esto después de deployar cuesta un cliente enojado y un rediseño del modelo de datos — que es exactamente el drift que <b>R25</b> existe para frenar.</p>
+    <div class="btns">
+      <a href="https://github.com/Fakundus01/sdd-universal/tree/main/examples/turnos/sdd">Ver el sdd/ completo</a>
+      <a class="g" href="../SDD-MASTER.md" download>Descargar el master</a>
+      <a class="g" href="guia.html">Leer la guía</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div>SDD Universal <b>v0.9</b> · licencia MIT</div>
+  <nav>
+    <a href="./">Catálogo</a>
+    <a href="guia.html">Guía</a>
+    <a href="https://github.com/Fakundus01/sdd-universal">GitHub</a>
+  </nav>
+</footer>
+
+</div>
+
+<script src="tema.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+
+/* Reiniciar un demo = recargar su iframe. */
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-reset]");
+  if (!b) return;
+  const f = $(b.dataset.reset);
+  f.src = f.src;
+});
+
+/* Muestra el código real del archivo que está corriendo arriba: se lee del
+   propio HTML entre los marcadores, así nunca se desincroniza con el demo. */
+const esc = s => s.replace(/[&<>]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+
+async function mostrar(archivo){
+  $("src").textContent = "Cargando…";
+  try {
+    const txt = await (await fetch(archivo)).text();
+    const cuerpo = txt.split("/* <<<CODIGO */")[1].split("/* CODIGO>>> */")[0].trim();
+    // resaltamos solo los comentarios: el resto se lee mejor sin colores de más
+    $("src").innerHTML = esc(cuerpo).replace(/(\/\/.*)$/gm, '<span class="c">$1</span>');
+  } catch {
+    $("src").textContent = "No se pudo leer el código. Abrí el demo con «Abrir solo» y mirá el fuente.";
+  }
+}
+
+document.querySelectorAll(".tabs button").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+    mostrar(b.dataset.src);
+  };
+});
+
+mostrar("demo-sin-sdd.html");
+</script>
+</body>
+</html>

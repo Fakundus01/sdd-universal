@@ -1,0 +1,77 @@
+/* Base compartida por index.html, guia.html y demo.html.
+   Tokens, reset, barra superior y pie. Lo específico de cada página
+   vive en su propio <style>. */
+
+/* Oscuro por default, siempre — sin importar la preferencia del sistema.
+   El tema claro es opt-in con el toggle y queda guardado en localStorage. */
+:root{
+  --bg:#0b0f1f; --bg-soft:#101527; --card:#151b30; --ink:#eef1fb; --ink-soft:#c7cee6;
+  --muted:#98a2c0; --line:#252d47; --line-strong:#333d5c;
+  --accent:#7b74f5; --accent-ink:#a9a4ff; --accent-soft:#1e2145; --on-accent:#fff;
+  --green:#5ed88f; --green-soft:#123024; --amber:#f0b45f; --amber-soft:#33260f;
+  --red:#ff8f8f; --red-soft:#361a1c; --red-line:#5c2b2e;
+  --panel:#151b30; --panel-2:#1c2440; --panel-line:#303a5c;
+  --panel-ink:#dbe1f5; --panel-muted:#8b96bb;
+  --shadow:0 1px 2px rgba(0,0,0,.35); --shadow-lg:0 10px 30px rgba(0,0,0,.45);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --radius:14px;
+}
+:root[data-theme="light"]{
+  --bg:#f5f6fa; --bg-soft:#eceef6; --card:#fff; --ink:#1a2233; --ink-soft:#3a465e;
+  --muted:#5b6478; --line:#e4e7ef; --line-strong:#d3d8e6;
+  --accent:#4f46e5; --accent-ink:#4f46e5; --accent-soft:#eef0ff; --on-accent:#fff;
+  --green:#15803d; --green-soft:#eaf7ef; --amber:#b45309; --amber-soft:#fdf3e3;
+  --red:#b91c1c; --red-soft:#fdecec; --red-line:#f3c6c6;
+  --panel:#101527; --panel-2:#181f38; --panel-line:#2b3352;
+  --panel-ink:#dbe1f5; --panel-muted:#8b96bb;
+  --shadow:0 1px 2px rgba(16,24,40,.05); --shadow-lg:0 10px 30px rgba(16,24,40,.09);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{background:var(--bg);color:var(--ink);line-height:1.55;
+     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
+     -webkit-font-smoothing:antialiased}
+a{color:var(--accent-ink)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.skip{position:absolute;left:-9999px;top:0;background:var(--accent);color:var(--on-accent);
+      padding:10px 16px;border-radius:0 0 10px 0;font-weight:700;z-index:50}
+.skip:focus{left:0}
+.wrap{max-width:1140px;margin:0 auto;padding:0 20px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- barra superior ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0;
+     border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:-.02em;font-size:1.02rem;
+       text-decoration:none;color:var(--ink)}
+.brand .mark{width:26px;height:26px;border-radius:8px;background:var(--accent);flex:none;
+             display:grid;place-items:center}
+.brand .mark span{display:block;width:13px;height:2.5px;background:#fff;border-radius:2px;
+                  box-shadow:0 -4.5px 0 #fff,0 4.5px 0 #fff}
+.top nav{display:flex;align-items:center;gap:4px}
+.top nav a{font-size:.85rem;font-weight:600;color:var(--muted);text-decoration:none;padding:7px 10px;border-radius:8px}
+.top nav a:hover{background:var(--bg-soft);color:var(--ink)}
+.top nav a[aria-current="page"]{color:var(--accent-ink);background:var(--accent-soft)}
+.authbtn{background:var(--accent);color:var(--on-accent);border:0;border-radius:9px;padding:8px 14px;
+      font-size:.83rem;font-weight:700;cursor:pointer;font-family:inherit;flex:none}
+.authbtn.dentro{background:transparent;color:var(--muted);border:1px solid var(--line-strong);
+      max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.authbtn.dentro:hover{color:var(--ink)}
+.tbtn{background:none;border:1px solid var(--line-strong);color:var(--muted);cursor:pointer;
+      width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:.95rem;flex:none}
+.tbtn:hover{color:var(--ink);border-color:var(--muted)}
+/* En celular la barra se queda con lo esencial; el resto vive en el pie */
+@media (max-width:620px){
+  .top nav a.hide-s{display:none}
+  .top nav a{padding:7px 8px;font-size:.82rem}
+  .top{padding:13px 0}
+}
+
+/* ---------- pie ---------- */
+footer{margin-top:64px;color:var(--muted);font-size:.83rem;border-top:1px solid var(--line);
+       padding:24px 0 60px;display:flex;gap:14px;flex-wrap:wrap;justify-content:space-between}
+footer a{color:var(--accent-ink);text-decoration:none}
+footer a:hover{text-decoration:underline}
+footer nav{display:flex;gap:14px;flex-wrap:wrap}

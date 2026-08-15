@@ -26,7 +26,9 @@ Un paquete abierto de gobernanza: **la especificación va antes que el código**
 | `tecnologias.md` | Catálogo de 101 tecnologías con ecosistema y uso — elegibles desde la web |
 | `playbooks/` | Recetas paso a paso (deploy, env, React+Vite, GitHub+Vercel…) con notas `[NOVATO]` |
 | `prompts/` | Start, loop/HANDBACK, mantenimiento, migración desde otro chat |
-| `web/` | El catálogo web (front puro, deployable en Vercel tal cual) |
+| `web/` | El catálogo web: catálogo, combinador, guía navegable y demo comparativo |
+| `sdd/` | La especificación **de la web** — el paquete aplicado a sí mismo |
+| `supabase/` | El esquema SQL con las políticas RLS para el login |
 | `exports/` | El master en Word y PDF para repartir |
 | `skill/` | Skill instalable para Claude |
 
@@ -40,4 +42,4 @@ Regla R20: nada entra "porque suena bien". Toda mejora nace de un caso real → 
 
 ## Estado
 
-**v0.8** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.
+**v0.9** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.

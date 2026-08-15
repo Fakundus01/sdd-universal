@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de uso · SDD Universal</title>
+<meta name="description" content="Cómo se usa el SDD Universal: quick start en tres caminos, la curva real de aprendizaje, cadencias de actualización y los errores más comunes con su antídoto.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0b0f1f" id="themecolor">
+<link rel="canonical" href="https://sdd-universal.vercel.app/web/guia.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="SDD Hub">
+<meta property="og:title" content="Guía de uso · SDD Universal">
+<meta property="og:description" content="Quick start en tres caminos, la respuesta honesta a «¿es fácil?», cadencias de actualización y los errores comunes con su antídoto.">
+<meta property="og:url" content="https://sdd-universal.vercel.app/web/guia.html">
+<meta property="og:image" content="https://sdd-universal.vercel.app/web/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="base.css">
+<style>
+  .layout{display:grid;grid-template-columns:236px 1fr;gap:40px;align-items:start;padding-top:32px}
+  @media (max-width:900px){.layout{grid-template-columns:1fr;gap:22px;padding-top:22px}}
+
+  /* ---------- índice lateral ---------- */
+  .toc{position:sticky;top:22px}
+  .toc h2{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
+       color:var(--muted);margin-bottom:11px}
+  .toc ol{list-style:none;counter-reset:t;display:flex;flex-direction:column;gap:2px}
+  .toc a{counter-increment:t;display:flex;gap:9px;text-decoration:none;color:var(--muted);
+       font-size:.855rem;padding:7px 10px;border-radius:9px;line-height:1.35;border-left:2px solid transparent}
+  .toc a::before{content:counter(t);font-family:var(--mono);font-size:.72rem;opacity:.65;flex:none;padding-top:1px}
+  .toc a:hover{background:var(--bg-soft);color:var(--ink)}
+  .toc a.act{color:var(--accent-ink);background:var(--accent-soft);border-left-color:var(--accent)}
+  .toc .baja{margin-top:14px;display:block;text-align:center;font-size:.8rem;font-weight:700;
+       text-decoration:none;background:var(--accent);color:var(--on-accent);padding:9px;border-radius:10px}
+  @media (max-width:900px){
+    .toc{position:static;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 16px}
+    .toc ol{flex-direction:row;flex-wrap:wrap}
+    .toc a{border-left:0;border:1px solid var(--line);padding:6px 11px}
+    .toc a.act{border-color:var(--accent)}
+  }
+
+  /* ---------- contenido ---------- */
+  article{max-width:74ch;min-width:0}
+  .ghero{padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:32px}
+  .ghero .kick{font-size:.72rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-ink)}
+  .ghero h1{font-size:clamp(1.75rem,4.4vw,2.4rem);letter-spacing:-.03em;line-height:1.15;margin:9px 0}
+  .ghero p{color:var(--muted);font-size:1rem;margin-bottom:18px}
+  .ghero .meta{font-size:.78rem;color:var(--muted);padding-bottom:16px}
+
+  article section{scroll-margin-top:22px;margin-bottom:46px}
+  article h2{font-size:1.3rem;letter-spacing:-.02em;margin-bottom:6px;display:flex;align-items:baseline;gap:11px}
+  article h2 .n{font-family:var(--mono);font-size:.8rem;color:var(--accent-ink);flex:none}
+  article h3{font-size:1rem;margin:24px 0 7px;color:var(--ink)}
+  article p{color:var(--ink-soft);margin-bottom:13px;font-size:.94rem}
+  article p.intro{color:var(--muted);font-size:.9rem;margin-bottom:20px}
+  article b, article strong{color:var(--ink)}
+  article code{font-family:var(--mono);font-size:.85em;background:var(--bg-soft);
+       padding:1.5px 6px;border-radius:5px;color:var(--accent-ink);border:1px solid var(--line)}
+  article a{color:var(--accent-ink)}
+
+  table{width:100%;border-collapse:collapse;margin:6px 0 20px;font-size:.875rem;display:block;overflow-x:auto}
+  thead th{text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;
+       color:var(--muted);padding:0 12px 8px;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+  tbody td{padding:11px 12px;border-bottom:1px solid var(--line);color:var(--ink-soft);vertical-align:top}
+  tbody tr:last-child td{border-bottom:0}
+  tbody td:first-child{color:var(--ink);font-weight:600}
+
+  .callout{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
+       border-radius:0 12px 12px 0;padding:15px 18px;margin:6px 0 20px}
+  .callout p:last-child{margin-bottom:0}
+  .callout.aviso{border-left-color:var(--amber)}
+  .callout .t{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+       color:var(--accent-ink);margin-bottom:5px}
+  .callout.aviso .t{color:var(--amber)}
+
+  ol.errores{list-style:none;counter-reset:e;display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+  ol.errores li{counter-increment:e;background:var(--card);border:1px solid var(--line);border-radius:12px;
+       padding:13px 16px 13px 46px;position:relative;font-size:.89rem;color:var(--ink-soft)}
+  ol.errores li::before{content:counter(e);position:absolute;left:14px;top:13px;width:21px;height:21px;
+       border-radius:50%;background:var(--red-soft);color:var(--red);font-size:.7rem;font-weight:800;
+       display:grid;place-items:center}
+  ol.errores b{display:block;color:var(--ink);margin-bottom:2px}
+
+  dl.faq{display:flex;flex-direction:column;gap:3px}
+  dl.faq dt{font-weight:700;font-size:.92rem;color:var(--ink);margin-top:15px}
+  dl.faq dd{color:var(--ink-soft);font-size:.9rem}
+
+  .cierre{background:var(--panel-2);border:1px solid var(--panel-line);border-radius:16px;
+       padding:24px 26px;margin-top:10px}
+  .cierre h2{color:#fff;margin-bottom:5px}
+  .cierre p{color:var(--panel-muted);font-size:.9rem;margin-bottom:16px}
+  .cierre .btns{display:flex;gap:10px;flex-wrap:wrap}
+  .cierre a{text-decoration:none;font-size:.86rem;font-weight:700;padding:10px 17px;border-radius:10px;
+       background:var(--accent);color:#fff}
+  .cierre a.g{background:transparent;color:var(--panel-ink);border:1px solid var(--panel-line)}
+</style>
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+
+<div class="wrap">
+
+<div class="top">
+  <a class="brand" href="./"><span class="mark"><span></span></span>SDD Hub</a>
+  <nav>
+    <a href="./" class="hide-s">Catálogo</a>
+    <a href="guia.html" aria-current="page">Guía</a>
+    <a href="demo.html">Demo</a>
+    <a href="../sdd-universal-tablero.html" class="hide-s">Tablero</a>
+    <a href="https://github.com/Fakundus01/sdd-universal" class="hide-s">GitHub</a>
+    <button class="tbtn" id="theme" type="button" aria-label="Cambiar a tema claro" title="Cambiar tema">◐</button>
+  </nav>
+</div>
+
+<div class="layout">
+
+  <nav class="toc" aria-label="Índice de la guía">
+    <h2>En esta guía</h2>
+    <ol>
+      <li><a href="#que-es">Qué es, en tres líneas</a></li>
+      <li><a href="#quick-start">Quick start: tres caminos</a></li>
+      <li><a href="#es-facil">¿Es fácil de usar?</a></li>
+      <li><a href="#actualizar">Cómo se actualiza</a></li>
+      <li><a href="#errores">Errores comunes</a></li>
+      <li><a href="#preguntas">Preguntas rápidas</a></li>
+    </ol>
+    <a class="baja" href="../GUIDE.md" download>Descargar en .md</a>
+  </nav>
+
+  <article id="contenido">
+
+    <header class="ghero">
+      <p class="kick">Guía de uso</p>
+      <h1>Cómo se usa el SDD Universal</h1>
+      <p>Para humanos. Los agentes no leen esta guía salvo que se la pidas — a ellos les alcanza con el master.</p>
+      <p class="meta">Versión 0.9 · 2026-08-15 · lectura de ~8 minutos</p>
+    </header>
+
+    <section id="que-es">
+      <h2><span class="n">01</span>Qué es, en tres líneas</h2>
+      <p>Un paquete portable de gobernanza: <b>la especificación va antes que el código</b>, los archivos MD son la memoria del proyecto, y un archivo conductor (<code>SDD-MASTER.md</code>) rutea a agentes y subagentes para que gasten la menor cantidad de tokens posible.</p>
+      <p>Se lo das a cualquier agente de IA en el primer mensaje (o como skill) y trabaja bajo tus reglas, con tu OK en los momentos que importan.</p>
+    </section>
+
+    <section id="quick-start">
+      <h2><span class="n">02</span>Quick start: tres caminos</h2>
+      <p class="intro">Cinco minutos. Elegí el que se parezca más a tu situación.</p>
+      <table>
+        <thead><tr><th>Camino</th><th>Cuándo conviene</th><th>Cómo</th></tr></thead>
+        <tbody>
+          <tr><td>A · Skill (Claude)</td><td>Usás Claude siempre</td><td>Instalá <code>sdd-universal.skill</code> una vez. Después solo decís "aplicá el SDD" al arrancar cualquier proyecto.</td></tr>
+          <tr><td>B · Carpeta <code>sdd/</code></td><td>Proyecto con repo, cualquier agente</td><td>Copiá la carpeta a la raíz, creá los espejos (<code>AGENTS.md</code>, <code>CLAUDE.md</code>… ver <code>models.md</code>) y pegá el start-prompt.</td></tr>
+          <tr><td>C · Pegado</td><td>Agente solo-chat o prueba rápida</td><td>Pegá <code>SDD-COMPACT.md</code> + tu pedido. Listo.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <p class="t">Antes de arrancar</p>
+        <p>Mirá <a href="https://github.com/Fakundus01/sdd-universal/tree/main/examples/turnos/sdd">el ejemplo real</a>: un <code>sdd/</code> completo de un proyecto chico. Vale más que cualquier explicación — en 3 minutos ves exactamente qué te va a generar el agente y con qué nivel de detalle. Y si querés verlo funcionando, está el <a href="demo.html">demo lado a lado</a>.</p>
+      </div>
+      <p>En los tres casos el flujo es el mismo: elegís perfil (ESTRICTO o CONFIANZA), contestás el cuestionario socrático, das el OK a la propuesta, y el agente genera los MD y arranca el loop de HANDBACK.</p>
+    </section>
+
+    <section id="es-facil">
+      <h2><span class="n">03</span>¿Es fácil de usar?</h2>
+      <p class="intro">La respuesta honesta, que no es "sí".</p>
+
+      <h3>El día 1 tiene fricción real</h3>
+      <p>Los dobles OK (primero MD, después código) se sienten lentos, y el cuestionario de arranque parece largo. Es intencional: es el precio de la trazabilidad, y es exactamente lo que evita el clásico <i>"el agente me generó cualquier cosa y ahora no sé qué hay en el repo"</i>.</p>
+
+      <h3>Del proyecto 2 en adelante es fluido</h3>
+      <p>El loop HANDBACK reduce tu trabajo a leer 20 líneas y responder "OK". La mayoría de la gente tarda 1–2 proyectos en internalizar el ritmo.</p>
+
+      <h3>Quién lo agarra más rápido</h3>
+      <p>Un junior o pasante lo aprende en un día: su trabajo es seguir el HANDBACK. El rol que más práctica necesita es el que <b>aprueba</b> — leer propuestas de MD con criterio es una habilidad.</p>
+
+      <h3>Dónde molesta, y el antídoto</h3>
+      <table>
+        <thead><tr><th>Situación</th><th>Antídoto</th></tr></thead>
+        <tbody>
+          <tr><td>Script de una tarde</td><td>Modo LITE: un solo archivo</td></tr>
+          <tr><td>Prototipo exploratorio</td><td>Perfil CONFIANZA</td></tr>
+          <tr><td>Equipo entrando de cero</td><td>Un proyecto piloto primero, no todos a la vez</td></tr>
+        </tbody>
+      </table>
+
+      <h3>El costo en tokens es asimétrico</h3>
+      <p>El arranque gasta más, porque genera todos los MD. Pero cada ciclo posterior gasta <i>menos</i> que un chat sin SDD, porque el contexto está ruteado y nunca se re-explica la historia del proyecto. El punto de equilibrio llega en 2–3 ciclos.</p>
+
+      <div class="callout aviso">
+        <p class="t">Una advertencia que hay que decir de frente</p>
+        <p>El SDD no elimina la complejidad: <b>la reubica</b>. Las specs se vuelven código fuente, con su propia deuda técnica y su costo de mantenimiento. Por eso existen R19 (auditoría) y la regla de que los MD desactualizados son un bug, no un detalle.</p>
+      </div>
+    </section>
+
+    <section id="actualizar">
+      <h2><span class="n">04</span>Cómo se actualiza</h2>
+      <p class="intro">Hay dos niveles y no hay que mezclarlos.</p>
+
+      <h3>A · Los MD del proyecto</h3>
+      <p><code>spec</code>, <code>design</code>, <code>contracts</code>, <code>changelog</code>… los actualiza <b>el agente</b>, con el workflow de 2 fases (R08/R09). Vos solo aprobás.</p>
+      <table>
+        <thead><tr><th>Cuándo</th><th>Qué se actualiza</th></tr></thead>
+        <tbody>
+          <tr><td>Cada ciclo (HANDBACK)</td><td><code>changelog</code>, <code>status.md</code></td></tr>
+          <tr><td>Cada feature nueva</td><td><code>features</code>, <code>contracts</code>, <code>testing</code></td></tr>
+          <tr><td>Cuando cambia el rumbo</td><td><code>spec</code>, <code>design</code>, <code>decisions</code> (con el OK que corresponda)</td></tr>
+          <tr><td>Mensual, o al retomar</td><td>Auditoría completa con <code>maintenance-prompt.md</code> (R19)</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        <p class="t">Regla de oro</p>
+        <p>Nunca edites un MD del proyecto a mano en caliente. Pedíselo al agente: lo hace por el workflow y queda registrado.</p>
+      </div>
+
+      <h3>B · El núcleo del SDD</h3>
+      <p><b>No se toca por proyecto.</b> Ajustes personales → <code>custom.md</code> (armalo desde <a href="./#reglas" id="linkreglas">Mis reglas</a> en el catálogo). Mejoras universales → una fila nueva en <code>scenarios.md</code> con el problema y tu adaptación (R20). Cuando salga una versión nueva del núcleo, reemplazás esos archivos y tu <code>custom.md</code> sobrevive intacto.</p>
+
+      <h3>Por tipo de proyecto</h3>
+      <table>
+        <thead><tr><th>Tipo</th><th>Cadencia</th></tr></thead>
+        <tbody>
+          <tr><td>Solo / chico</td><td>Modo LITE: actualizás <code>sdd-lite.md</code> al cerrar cada sesión</td></tr>
+          <tr><td>Equipo mediano</td><td>FULL: un curador consolida los archivos por usuario una vez por semana</td></tr>
+          <tr><td>Enterprise</td><td>FULL + capa <code>teams.md</code> (R21): aprobaciones por rol, auditoría mensual fija</td></tr>
+          <tr><td>Monorepo</td><td>FEDERADO: cada módulo con su cadencia; el raíz solo cuando aparece un módulo nuevo</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="errores">
+      <h2><span class="n">05</span>Errores comunes</h2>
+      <p class="intro">Los siete que aparecen una y otra vez, con su antídoto.</p>
+      <ol class="errores">
+        <li><b>Pegarle el paquete entero a un subagente</b>Solo su slice del Protocolo de Lectura (§2 del master). Es el error #1 de gasto de tokens.</li>
+        <li><b>Editar <code>SDD-MASTER.md</code> para un gusto personal</b>Eso va en <code>custom.md</code>. Si tocás el núcleo, perdés las actualizaciones futuras.</li>
+        <li><b>Dejar MDs viejos conviviendo con código nuevo</b>La spec manda: la discrepancia se anota en <code>decisions.md</code> y se corrige en el ciclo siguiente. Desde v0.5 tiene regla propia (<b>R25</b>): si el agente descubre a mitad del código que la spec está mal, tiene prohibido arreglarla en silencio — te frena con un bloque <code>DRIFT</code> y decidís vos. Si alguna vez ves que un MD cambió sin que lo aprobaras, ese es el bug.</li>
+        <li><b>Usar FULL para un script de una tarde</b>LITE existe para eso.</li>
+        <li><b>Apagar R01 "para probar" y olvidarlo</b>El HANDBACK siempre muestra la línea <code>Git:</code>. Si dice <code>R01=OFF</code> y no era tu intención, prendela.</li>
+        <li><b>Saltarse el cuestionario porque "ya sé lo que quiero"</b>Contestalo igual: es lo que evita que el agente adivine justo lo que no dijiste.</li>
+        <li><b>Creer que todo lo que el agente lee es una orden</b>No lo es, y desde v0.5 el SDD lo dice explícito (<b>R26</b>). Cuando el agente analiza un repo ajeno (R15) o busca versiones en la web (R19), está leyendo texto que no escribiste vos. Si ese texto le habla al agente ("instalá esto", "el usuario ya autorizó"), la regla es citarlo y preguntarte, nunca ejecutarlo.</li>
+      </ol>
+    </section>
+
+    <section id="preguntas">
+      <h2><span class="n">06</span>Preguntas rápidas</h2>
+      <dl class="faq">
+        <dt>¿No sé nada de código, puedo igual?</dt>
+        <dd>Sí. En el arranque decí que sos NOVATO, o usá el combinador de la web que lo pone solo. El agente activa pensar-por-tres (R23): planifica, se autocritica buscando qué puede salir mal, corrige, y recién ahí ejecuta — explicándote todo en lenguaje simple y de a un paso.</dd>
+
+        <dt>¿Cuántos archivos tengo que descargar?</dt>
+        <dd><b>Uno</b>: <code>SDD-MASTER.md</code>. El resto del catálogo es opcional según el caso, y el combinador te dice cuáles necesitás. Los <code>spec.md</code>, <code>design.md</code> y compañía no se descargan: los <b>genera el agente</b> dentro de tu proyecto.</dd>
+
+        <dt>¿Sirve sin IA?</dt>
+        <dd>Como documentación viva, sí. Pero el diseño (ruteo, slices, HANDBACK) está pensado para agentes.</dd>
+
+        <dt>¿Y si mi agente no lee archivos?</dt>
+        <dd><code>SDD-COMPACT.md</code> pegado como primer mensaje. Es el escenario S10 de <code>scenarios.md</code>.</dd>
+
+        <dt>¿Puedo mezclar agentes (Claude + Cursor + Copilot)?</dt>
+        <dd>Sí: un solo núcleo y un espejo de una línea por herramienta. Está en <code>models.md</code>, regla R22.</dd>
+
+        <dt>¿Cuándo NO usar SDD?</dt>
+        <dd>Prototipado exploratorio, investigación, o cambios mecánicos de bajo riesgo. La regla práctica: escribí spec cuando una mala interpretación sea cara de revertir. Si podés revisar el output completo en menos de 5 minutos, salteala — o usá LITE.</dd>
+
+        <dt>¿Cómo lo adopto en un equipo grande?</dt>
+        <dd>Leé <code>teams.md</code>: roles, aprobaciones y ceremonias ya mapeadas.</dd>
+      </dl>
+    </section>
+
+    <section class="cierre">
+      <h2>¿Y ahora?</h2>
+      <p>El camino más corto: bajate el master, abrí tu agente y pegalo. Si querés ver la diferencia antes de creerme, el demo la muestra funcionando.</p>
+      <div class="btns">
+        <a href="../SDD-MASTER.md" download>Descargar SDD-MASTER.md</a>
+        <a class="g" href="demo.html">Ver el demo</a>
+        <a class="g" href="./">Ir al catálogo</a>
+      </div>
+    </section>
+
+  </article>
+</div>
+
+<footer>
+  <div>SDD Universal <b>v0.9</b> · licencia MIT</div>
+  <nav>
+    <a href="./">Catálogo</a>
+    <a href="demo.html">Demo</a>
+    <a href="../SDD-MASTER.md">Master</a>
+    <a href="https://github.com/Fakundus01/sdd-universal">GitHub</a>
+  </nav>
+</footer>
+
+</div>
+
+<script src="tema.js"></script>
+<script>
+/* Marca en el índice la sección que se está leyendo.
+   Con posiciones y no con IntersectionObserver: el observer depende del
+   pipeline de render y no dispara en contextos sin compositing. Esto anda
+   siempre y se puede verificar leyendo el DOM. */
+const enlaces = [...document.querySelectorAll(".toc a[href^='#']")];
+const secciones = enlaces.map(a => document.getElementById(a.getAttribute("href").slice(1)));
+
+function marcarActiva(){
+  const linea = scrollY + innerHeight * 0.25;   // un cuarto de pantalla abajo
+  let activa = 0;
+  secciones.forEach((s, i) => {
+    if (s && s.getBoundingClientRect().top + scrollY <= linea) activa = i;
+  });
+  enlaces.forEach((a, i) => a.classList.toggle("act", i === activa));
+}
+
+addEventListener("scroll", marcarActiva, {passive: true});
+addEventListener("resize", marcarActiva);
+marcarActiva();
+
+/* El link a "Mis reglas" abre el diálogo del catálogo, no una página aparte. */
+document.getElementById("linkreglas").addEventListener("click", () => {
+  sessionStorage.setItem("sdd-abrir-reglas", "1");
+});
+</script>
+</body>
+</html>
