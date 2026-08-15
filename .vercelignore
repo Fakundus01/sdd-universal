@@ -1,0 +1,9 @@
+# Config local de desarrollo (no forma parte del sitio publicado)
+.claude/
+
+# Sistema operativo / editores
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/

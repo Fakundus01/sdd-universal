@@ -8,12 +8,15 @@ Un paquete abierto de gobernanza: **la especificación va antes que el código**
 2. **¿No sabés programar?** Arrancá por [`GUIDE.md`](GUIDE.md) y usá el **combinador** de la [web del catálogo](web/index.html): elegís qué querés construir y te genera el prompt exacto.
 3. **¿Agente sin archivos (solo chat)?** Pegá [`SDD-COMPACT.md`](SDD-COMPACT.md) y listo.
 
+**¿Querés ver primero qué genera?** Mirá [`examples/turnos/sdd/`](examples/turnos/sdd/): un `sdd/` completo de un proyecto real, con sus 12 archivos.
+
 ## Qué hay acá
 
 | Archivo/carpeta | Qué es |
 |---|---|
-| `SDD-MASTER.md` | El núcleo: 24 reglas con toggle (R01–R24), protocolo de lectura, prompts |
-| `SDD-COMPACT.md` | Todo el sistema en ~60 líneas de palabras clave |
+| `SDD-MASTER.md` | El núcleo: 26 reglas con toggle (R01–R26), protocolo de lectura, prompts |
+| `SDD-COMPACT.md` | Todo el sistema en ~45 líneas de palabras clave |
+| `examples/` | **Un `sdd/` real y completo** de un proyecto chico — la mejor forma de entender qué genera el agente |
 | `GUIDE.md` | Guía de uso para humanos (con la respuesta honesta a "¿es fácil?") |
 | `scenarios.md` | Dónde funciona, dónde no, y cómo se adapta — el motor de crecimiento |
 | `custom.md` | Tus overrides personales (el núcleo nunca se edita) |
@@ -36,4 +39,4 @@ Regla R20: nada entra "porque suena bien". Toda mejora nace de un caso real → 
 
 ## Estado
 
-**v0.4** · 2026-08 · Ver historial en cada archivo. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.
+**v0.5** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.

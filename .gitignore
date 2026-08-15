@@ -7,6 +7,10 @@ desktop.ini
 .vscode/
 .idea/
 
+# Herramientas (config local; .claude/launch.json SÍ se versiona)
+.claude/settings.local.json
+.vercel/
+
 # Nunca secretos (R17)
 .env
 .env.*

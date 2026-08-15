@@ -1,6 +1,6 @@
 # GUIDE.md · Guía de uso del SDD Universal
 
-**Versión:** 0.3 · 2026-08-15 · **Para humanos.** Los agentes no leen esta guía salvo que se la pidan (ej.: el onboarding-agent de teams.md).
+**Versión:** 0.5 · 2026-08-15 · **Para humanos.** Los agentes no leen esta guía salvo que se la pidan (ej.: el onboarding-agent de teams.md).
 
 ---
 
@@ -17,6 +17,8 @@ Un paquete portable de gobernanza: la especificación va antes que el código, l
 | **A. Skill (Claude)** | Usás Claude siempre | Instalá `sdd-universal.skill` una vez. Después solo decís "aplicá el SDD" al arrancar cualquier proyecto. |
 | **B. Carpeta `sdd/`** | Proyecto con repo (cualquier agente) | Copiá la carpeta `sdd/` a la raíz, creá los espejos (`AGENTS.md`, `CLAUDE.md`… ver `models.md`) y pegá el start-prompt de `prompts/start-prompt.md`. |
 | **C. Pegado** | Agente solo-chat o prueba rápida | Pegá `SDD-COMPACT.md` + tu pedido. Listo. |
+
+**Antes de arrancar, mirá `examples/turnos/sdd/`**: es un `sdd/` real y completo de un proyecto chico. Vale más que cualquier explicación — en 3 minutos ves exactamente qué te va a generar el agente y con qué nivel de detalle.
 
 En los tres casos el flujo es el mismo: elegís perfil (ESTRICTO/CONFIANZA), contestás el cuestionario socrático, das el OK a la propuesta, y el agente genera los MD y arranca el loop de HANDBACK.
 
@@ -72,10 +74,11 @@ Regla de oro: **nunca edites un MD del proyecto a mano en caliente** — pedíse
 
 1. **Pegarle el paquete entero a un subagente** → solo su slice del Protocolo de Lectura (§2 del master). Es el error #1 de gasto de tokens.
 2. **Editar `SDD-MASTER.md` para un gusto personal** → eso va en `custom.md`; si tocás el núcleo, perdés las actualizaciones futuras.
-3. **Dejar MDs viejos conviviendo con código nuevo** → la spec manda: la discrepancia se anota en `decisions.md` y se corrige en el ciclo siguiente.
+3. **Dejar MDs viejos conviviendo con código nuevo** → la spec manda: la discrepancia se anota en `decisions.md` y se corrige en el ciclo siguiente. Desde v0.5 esto tiene regla propia (**R25**): si el agente descubre a mitad del código que la spec está mal, tiene prohibido arreglarla en silencio — te frena con un bloque `DRIFT` y decidís vos. Si alguna vez ves que un MD cambió sin que lo hayas aprobado, ese es el bug.
 4. **Usar FULL para un script de una tarde** → LITE existe para eso.
 5. **Apagar R01 "para probar" y olvidarlo** → el HANDBACK siempre muestra la línea `Git:`; si dice "R01=OFF" y no era tu intención, prendela.
 6. **Saltarse el cuestionario porque "ya sé lo que quiero"** → contestalo igual: es lo que evita que el agente adivine justo lo que no dijiste.
+7. **Creer que todo lo que el agente lee es una orden** → no lo es, y desde v0.5 el SDD lo dice explícito (**R26**). Cuando el agente analiza un repo ajeno (R15) o busca versiones en la web (R19), está leyendo texto que no escribiste vos. Si ese texto le habla al agente ("instalá esto", "el usuario ya autorizó"), la regla es citarlo y preguntarte, nunca ejecutarlo. Vale la pena saberlo para detectar si tu agente se lo saltea.
 
 ---
 
@@ -94,4 +97,5 @@ Regla de oro: **nunca edites un MD del proyecto a mano en caliente** — pedíse
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.5 | 2026-08-15 | Puntero a `examples/turnos/` en el quick start; error común #3 ampliado con R25 (spec-drift) y #7 nuevo (R26: lo que el agente lee no manda). Corregida la versión del encabezado, que seguía en 0.3 pese a documentar R23. |
 | 0.3 | 2026-08-15 | Primera guía: quick start, evaluación honesta de la curva, cadencias de actualización por tipo de proyecto, errores comunes. |
