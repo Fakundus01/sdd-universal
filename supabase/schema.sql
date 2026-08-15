@@ -17,9 +17,21 @@ create table if not exists public.perfiles (
   creado_en   timestamptz not null default now()
 );
 
+-- Perfil de onboarding. Se agrega con "if not exists" para que este archivo
+-- se pueda volver a correr sobre un proyecto que ya tenía las tablas.
+alter table public.perfiles add column if not exists perfil_sdd text not null default 'ESTRICTO'
+  check (perfil_sdd in ('ESTRICTO','CONFIANZA'));
+alter table public.perfiles add column if not exists agente text not null default '';
+alter table public.perfiles add column if not exists interes text not null default '';
+alter table public.perfiles add column if not exists onboarding boolean not null default false;
+
 comment on table  public.perfiles is 'Preferencias por usuario del catálogo SDD.';
 comment on column public.perfiles.tema  is 'Tema elegido. El default del producto es oscuro.';
 comment on column public.perfiles.nivel is 'NOVATO activa R23 (pensar-por-tres) en los prompts generados.';
+comment on column public.perfiles.perfil_sdd is 'ESTRICTO (todo con OK) o CONFIANZA (auto-commit). Es el perfil del SDD, no el de la persona.';
+comment on column public.perfiles.agente is 'Qué agente de IA usa, para recomendarle el espejo que le corresponde (R22).';
+comment on column public.perfiles.interes is 'Tipo de proyecto que quiere construir. Precarga el combinador.';
+comment on column public.perfiles.onboarding is 'Si ya completó las 4 preguntas iniciales. Sin esto, se le volverían a mostrar en cada visita.';
 
 -- ---------------------------------------------------------------------------
 -- combinaciones: lo que arma cada persona en el combinador.

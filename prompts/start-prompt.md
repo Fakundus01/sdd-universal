@@ -12,6 +12,10 @@ IA en el producto: [no / sí: para qué]
 Modo: [FULL / LITE / FEDERADO — o "clasificalo vos (R18)"]
 Perfil: [ESTRICTO / CONFIANZA] · Overrides: [ej. R01=OFF / ninguno]
 
+Nota: dicto mis mensajes por voz, así que si alguna palabra no te cierra
+(sobre todo nombres de herramientas), citámela y preguntame qué quise
+decir en vez de asumir (R04).
+
 Pasos: hacé el cuestionario socrático (R04) preguntando lo que falte
 (forma de trabajar, lenguajes —un solo lenguaje tipo TypeScript
 full-stack o Python back + JS front—, frameworks con recomendación

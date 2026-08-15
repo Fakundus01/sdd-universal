@@ -318,12 +318,24 @@ const Sesion = (() => {
     return r?.[0] || null;
   }
 
+  /* Guarda las respuestas del onboarding. Solo manda las columnas que
+     conoce: si el esquema todavía no tiene las nuevas, falla en silencio
+     y el perfil sigue viviendo en localStorage. */
+  async function guardarPerfil({nivel, interes, perfil_sdd, agente, onboarding}){
+    if (!usuario()) return;
+    await rest(`perfiles?id=eq.${usuario().id}`, {
+      method: "PATCH",
+      body: JSON.stringify({nivel: nivel || "PRO", interes, perfil_sdd: perfil_sdd || "ESTRICTO",
+                            agente, onboarding})
+    }).catch(() => {});
+  }
+
   return {
     activo, usuario, iniciar, salir,
     registrar, entrar, recuperar, pedirLink, cambiarPassword,
     contar, metricas, esAdmin,
     listar, guardarCombinacion, borrarCombinacion, migrarLocales,
-    guardarTema, traerPerfil,
+    guardarTema, traerPerfil, guardarPerfil,
     alCambiar: f => oyentes.push(f)
   };
 })();

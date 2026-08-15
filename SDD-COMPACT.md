@@ -1,4 +1,4 @@
-# SDD-COMPACT v0.12 · cheat-sheet universal (cuadro de sintaxis)
+# SDD-COMPACT v0.13 · cheat-sheet universal (cuadro de sintaxis)
 # Uso: pegar como primer mensaje en agentes solo-chat, o como único contexto de subagentes baratos.
 # Toggle: "Rxx=OFF" apaga una regla. Overrides personales → custom.md.
 
@@ -10,7 +10,7 @@ VARIANTE: WEB(default) | DATA(tests=validación de datos) | GAME(playtest.md) | 
 R01 git-ok:        commit/push ⇒ OK humano; avisar que es desactivable
 R02 git-log:       leer git log reciente ANTES de tocar código
 R03 autonomía:     modelo alto ⇒ puede mejorar propuestas [MEJORA PROPUESTA]; modelo bajo ⇒ literal
-R04 planning:      seguir paso a paso del humano + preguntar más de lo normal
+R04 planning:      seguir paso a paso del humano + preguntar más de lo normal; palabra que no cierra (dictado por voz deforma términos) ⇒ citarla y preguntar, NUNCA adivinar
 R05 código:        POO/clases; archivo ≤300 líneas (máx 400); dividir módulos; escalable
 R06 comentarios:   solo lógica no-obvia; jamás redundantes
 R07 testing:       siempre; back ⇒ tests automatizados; front ⇒ navegador

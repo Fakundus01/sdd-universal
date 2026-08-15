@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.12 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
+**Versión:** 0.13 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -97,6 +97,7 @@ Modelo de tier alto: puede detectar propuestas flojas o mejorables y recrearlas 
 
 **R04 · PLANNING-SOCRÁTICO — [ON] — desactivable**
 Ante un pedido de planning, seguir el paso a paso del usuario y preguntar más de lo normal (alcance, stack, restricciones, usuarios, edge cases) hasta estructurar bien lo que la persona quiere, antes de proponer el plan.
+**Ante una palabra que no cierra, preguntar en vez de adivinar.** Mucha gente dicta sus mensajes por voz y el transcriptor deforma nombres técnicos — "Sonic Cube" por *SonarQube*, "Brusel" por *Vercel*. Si un término no encaja con el contexto, citarlo textual y preguntar qué quiso decir. Interpretarlo mal en silencio se paga tres pasos después, cuando ya se construyó sobre el malentendido.
 
 **R05 · CÓDIGO-POO-MODULAR — [ON] — fija**
 POO/clases siempre que el problema lo permita. Archivos de ~200–300 líneas máximo (tolerancia hasta ~400 si está justificado). Un archivo de 1000 líneas se divide en módulos. Código escalable, con separación de capas.
@@ -343,6 +344,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.13 | 2026-08-15 | R04 suma la regla del dictado: ante una palabra que no cierra, preguntar en vez de adivinar — el transcriptor de voz deforma nombres técnicos y el malentendido se paga tres pasos después. Nuevos: playbook `git-basico` (cierra un pendiente del catálogo) y onboarding de 4 preguntas que precarga el combinador, editable después desde «Mi perfil». |
 | 0.12 | 2026-08-15 | Canal de feedback sobre GitHub Issues: tres plantillas, y la de "escenario" tiene como campos las columnas de `scenarios.md`, así lo que reporta la comunidad entra directo al motor de R20. Nuevos: `CONTRIBUTING.md`, sección de comunidad en la web, métricas anónimas (`supabase/metricas.sql`) con panel propio — sin usuario, sin IP y sin cookies de seguimiento, para no contradecir la spec ni activar el nivel N2. |
 | 0.11 | 2026-08-15 | R27 (seguridad por superficie) y `seguridad.md`: en vez de un checklist de 200 ítems que nadie lee, seis preguntas clasifican qué hace el proyecto y se aplican solo los niveles que correspondan (N0 base · N1 identidad · N2 datos · N3 plata · N4 IA · N5 archivos · N6 superficie pública). Incluye las herramientas con lo que cada una **no** detecta. Escenario S24. |
 | 0.10 | 2026-08-15 | La web arma y descarga **la carpeta del proyecto entera** en un `.zip`: `sdd/` con el master, los playbooks elegidos, tu `custom.md`, los espejos `AGENTS.md`/`CLAUDE.md`, el `.gitignore` con `.env` (R17, paso 0) y el prompt de arranque. Se descomprime y ya se puede trabajar. 8 tipos de proyecto nuevos (landing, tienda, dashboard, móvil, bot de mensajería, gestión, videojuego, análisis de datos): 16 en total. El playbook de mails suma Gmail como camino gratis sin dominio. |

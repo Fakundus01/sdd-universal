@@ -311,6 +311,21 @@
        border-radius:7px;padding:4px 9px;font-size:.76rem;cursor:pointer;font-family:inherit}
   .guardadas li button:hover{color:#fff;border-color:#7b74f5}
 
+  /* ---------- onboarding ---------- */
+  dialog.ob{width:min(540px,94vw)}
+  .ob-progreso{height:3px;background:var(--line);flex:none}
+  .ob-barra{height:100%;background:var(--accent);width:0;transition:width .25s ease}
+  .ob-paso{font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink)}
+  dialog.ob h2{margin-top:6px;font-size:1.15rem}
+  .ob-opciones{padding:16px 22px 4px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1;min-height:0}
+  .ob-op{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--bg-soft);
+       border:1px solid var(--line);border-radius:12px;padding:13px 15px;cursor:pointer;font-family:inherit}
+  .ob-op:hover{border-color:var(--accent)}
+  .ob-op.sel{border-color:var(--accent);background:var(--accent-soft)}
+  .ob-op b{color:var(--ink);font-size:.92rem}
+  .ob-op small{color:var(--muted);font-size:.81rem;line-height:1.45}
+  @media (max-width:640px){dialog.ob{height:auto;max-height:92dvh;border-radius:18px;border:1px solid var(--line);width:94vw}}
+
   /* ---------- configurador de reglas ---------- */
   dialog.reglas{width:min(820px,95vw)}
   .rrow{display:flex;gap:13px;align-items:flex-start;padding:11px 10px;border-radius:10px}
@@ -374,6 +389,7 @@
     <a href="../sdd-universal-tablero.html" class="hide-s">Tablero</a>
     <a href="#" id="navtech">Tecnologías</a>
     <a href="#" id="navreglas">Mis reglas</a>
+    <a href="#" id="navperfil" class="hide-s">Mi perfil</a>
     <a href="https://github.com/Fakundus01/sdd-universal" class="hide-s">GitHub</a>
     <button class="authbtn" id="authbtn" type="button" hidden>Entrar</button>
     <button class="tbtn" id="theme" type="button" aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">◐</button>
@@ -515,6 +531,7 @@
     <label><input type="checkbox" value="publish-github-vercel"> publish-github-vercel</label>
     <label><input type="checkbox" value="supabase-auth"> supabase-auth (login)</label>
     <label><input type="checkbox" value="resend-smtp"> resend-smtp (mails)</label>
+    <label><input type="checkbox" value="git-basico"> git-basico</label>
   </div>
   <button class="gen" id="go" type="button">Generar mi paquete de arranque</button>
 
@@ -584,6 +601,22 @@
 </section>
 
 </main>
+
+<dialog class="tech ob" id="obdlg" aria-labelledby="obTitulo">
+  <div class="ob-progreso"><div class="ob-barra" id="obBarra"></div></div>
+  <div class="dlg-head" style="cursor:default">
+    <span class="ob-paso" id="obPaso"></span>
+    <h2 id="obTitulo"></h2>
+    <p id="obAyuda"></p>
+    <button class="dlg-x" id="obCerrar" type="button" aria-label="Saltar la configuración">✕</button>
+  </div>
+  <div class="ob-opciones" id="obOpciones"></div>
+  <div class="dlg-foot">
+    <button class="clear" id="obAtras" type="button">← Atrás</button>
+    <span class="n"></span>
+    <button class="clear" id="obSaltar" type="button">Prefiero no decir</button>
+  </div>
+</dialog>
 
 <dialog class="tech reglas" id="reglasdlg" aria-labelledby="reglastitle">
   <div class="dlg-head" style="cursor:default">
@@ -694,7 +727,7 @@
 </dialog>
 
 <footer>
-  <div>SDD Universal <b>v0.12</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.13</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -715,6 +748,7 @@
 <script src="reglas-ui.js"></script>
 <script src="supabase-config.js"></script>
 <script src="sesion.js"></script>
+<script src="perfil.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -763,6 +797,7 @@ const CARDS = [
 
  {c:"Herramientas",n:"novato",s:"ok",t:"Playbook: .env y credenciales seguras",d:"env local/development/production, entornos virtuales y la regla de oro: los secretos no se commitean.",f:"../playbooks/env-setup.md"},
  {c:"Herramientas",n:"novato",s:"ok",t:"Playbook: React + Vite desde cero",d:"node -v, npm create vite, npm run dev — explicado para que salga a la primera.",f:"../playbooks/create-react-vite.md"},
+ {c:"Herramientas",n:"novato",s:"ok",t:"Playbook: Git desde cero, sin miedo",d:"Qué es git en criollo, las 4 palabras que hay que entender, el ciclo de todos los días y —lo más importante— cómo deshacer cosas sin romper nada.",f:"../playbooks/git-basico.md"},
  {c:"Herramientas",n:"pro",  s:"ok",t:"Catálogo de playbooks",d:"El índice completo con estado de cada receta. Si te falta una y es repetible, tu agente puede proponerte escribirla (R24).",f:"../playbooks/catalog.md"}
 ];
 
@@ -812,7 +847,8 @@ const PB_META = {
  "deploy-vercel":{f:"../playbooks/deploy-vercel.md",d:"tu front online"},
  "publish-github-vercel":{f:"../playbooks/publish-github-vercel.md",d:"repo público + web"},
  "supabase-auth":{f:"../playbooks/supabase-auth.md",d:"cuentas de usuario"},
- "resend-smtp":{f:"../playbooks/resend-smtp.md",d:"que los mails lleguen"}
+ "resend-smtp":{f:"../playbooks/resend-smtp.md",d:"que los mails lleguen"},
+ "git-basico":{f:"../playbooks/git-basico.md",d:"git desde cero"}
 };
 
 /* ---------- estado y URL ---------- */
@@ -1406,6 +1442,20 @@ render();
 renderRoadmap();
 renderSel();
 
+/* Lo que contestó en el onboarding precarga el combinador. Es todo el punto:
+   si preguntamos y después no cambia nada, preguntamos al pedo. */
+function aplicarPerfil(p){
+  if (p.nivel) $("clvl").value = p.nivel;
+  if (p.perfil_sdd) $("cperf").value = p.perfil_sdd;
+  if (p.interes && TYPES[p.interes]) $("ctype").value = p.interes;
+  if (p.agente && p.agente !== "otro"){
+    const espejos = {claude: "CLAUDE.md", codex: "AGENTS.md",
+                     cursor: ".cursor/rules/", copilot: "copilot-instructions.md"};
+    $("techhint").dataset.espejo = espejos[p.agente] || "";
+  }
+}
+$("navperfil").onclick = e => { e.preventDefault(); Perfil.abrir(aplicarPerfil); };
+
 (async () => {
   Sesion.contar("visita", location.pathname);
   const r = await Sesion.iniciar();
@@ -1426,6 +1476,7 @@ renderSel();
     if (migradas) avisar(`Subimos a tu cuenta ${migradas} combinación(es) que tenías guardadas en este navegador.`);
   }
   await renderGuardadas();
+  await Perfil.iniciar(aplicarPerfil);
 })();
 </script>
 </body>
