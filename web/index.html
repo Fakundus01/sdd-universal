@@ -514,6 +514,10 @@
       <option value="ESTRICTO">Estricto — todo con mi OK</option>
       <option value="CONFIANZA">Confianza — auto-commit</option>
     </select></div>
+    <div><label class="lbl" for="cexiste">¿El proyecto ya existe?</label><select id="cexiste">
+      <option value="nuevo">No, arranco de cero</option>
+      <option value="brownfield">Sí, ya tengo código andando</option>
+    </select></div>
   </div>
   <div class="techpick">
     <div class="hd">
@@ -727,7 +731,7 @@
 </dialog>
 
 <footer>
-  <div>SDD Universal <b>v0.13</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.14</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -1118,7 +1122,46 @@ también las versiones actuales contra la web antes de fijarlas (R19).
 `;
 }
 
+/* Un proyecto que ya existe NO se arranca igual que uno nuevo: R15 dice que
+   primero se analiza y se genera el sdd/ reflejando lo que HAY, y recién
+   después se trabaja. Mandarle el prompt greenfield a un repo con código es
+   pedirle al agente que empiece por crear una carpeta que ya existe. */
+function promptBrownfield(){
+  const t = TYPES[$("ctype").value], lvl = $("clvl").value, perf = $("cperf").value;
+  const pbs = [...document.querySelectorAll("#pbs input:checked")].map(x => x.value);
+  return `Pegá/adjuntá primero el SDD-MASTER (está en la lista de archivos de abajo). Aplicalo.
+
+Este repo YA EXISTE y NO tiene SDD. Aplicá R15: no toques código todavía.
+
+NIVEL: ${lvl}${lvl === "NOVATO"
+  ? " — R23 activa: pensá por tres antes de cada acción con consecuencias, explicame todo en lenguaje simple y un paso por vez."
+  : " — experiencia en código: podés ir al grano."}
+PERFIL: ${perf}${ReglasUI.hayCambios() ? "\nTengo overrides propios en custom.md (va adjunto): leelo DESPUÉS del master." : ""}
+
+QUÉ ES ESTE PROYECTO: ${t.name}
+${t.extra}
+
+Nota: dicto mis mensajes por voz. Si una palabra no te cierra, citámela y
+preguntame qué quise decir en vez de asumir (R04).
+
+PASOS:
+1. Analizá el repo con subagentes económicos (R11): estructura, git log,
+   dependencias y el estilo que ya usa el código. NO toques nada.
+2. Clasificá la superficie de ataque con las seis preguntas de seguridad.md
+   (R27) sobre lo que el proyecto YA hace, y decime qué niveles quedan activos.
+3. Generá sdd/ completo reflejando lo que EXISTE, no lo que te gustaría que
+   existiera. Si algo está a medias, que status.md lo diga con su % real.
+4. Redactá la "prompt de arranque sintética": el contexto reconstruido como si
+   el proyecto hubiera nacido con SDD.
+5. Presentame todo y esperá mi OK. Recién ahí commiteás los MD (R01).
+6. Después de eso, y no antes: proponeme las 3 mejoras que más valor agregan,
+   marcadas [MEJORA PROPUESTA] (R03), y las trabajamos por ciclos con HANDBACK.
+${techBlock()}
+PLAYBOOKS a seguir al pie de la letra cuando toque (R24): ${pbs.length ? pbs.join(", ") : "ninguno por ahora"} — te los adjunto junto con el master.`;
+}
+
 function buildPrompt(){
+  if ($("cexiste").value === "brownfield") return promptBrownfield();
   const t = TYPES[$("ctype").value], lvl = $("clvl").value, perf = $("cperf").value;
   const pbs = [...document.querySelectorAll("#pbs input:checked")].map(x => x.value);
   return `Pegá/adjuntá primero el SDD-MASTER (está en la lista de archivos de abajo). Aplicalo.
@@ -1171,7 +1214,8 @@ function opcionesPaquete(){
     playbooks: pbs,
     custom: ReglasUI.hayCambios() ? ReglasUI.generar() : null,
     conTecnologias: sel.size > 0,
-    conGuia: $("clvl").value === "NOVATO"
+    conGuia: $("clvl").value === "NOVATO",
+    brownfield: $("cexiste").value === "brownfield"
   };
 }
 
@@ -1223,7 +1267,8 @@ $("zipSolo").onclick = () => {
 };
 
 $("go").onclick = () => {
-  Sesion.contar("combinacion", $("ctype").value + "/" + $("cstack").value + "/" + $("clvl").value);
+  Sesion.contar("combinacion", $("ctype").value + "/" + $("cstack").value + "/" +
+    $("clvl").value + "/" + $("cexiste").value);
   $("ta").value = buildPrompt();
   renderFiles();
   renderArbol();

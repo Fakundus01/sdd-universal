@@ -47,18 +47,24 @@ desktop.ini
 .idea/
 `;
 
-  function leeme(nombre, tipo, nivel, playbooks){
+  function leeme(nombre, tipo, nivel, playbooks, brownfield){
     return `# ${nombre}
 
 Carpeta generada desde el catálogo del SDD Universal. Ya viene con todo en su lugar.
 
 ## Qué hacer ahora (3 pasos)
-
-1. **Abrí tu agente de IA** (Claude, Codex/ChatGPT, Cursor, Copilot, Gemini…).
+${brownfield ? `
+> **Tu proyecto ya existe**, así que esta carpeta no reemplaza a la tuya:
+> copiá \`sdd/\`, \`AGENTS.md\` y \`CLAUDE.md\` **dentro** del repo que ya tenés.
+> Si tu repo no tiene \`.gitignore\`, llevate también el de acá.
+` : ""}
+1. **Abrí tu agente de IA** (Claude, Codex/ChatGPT, Cursor, Copilot, Gemini…)${brownfield ? ", parado en tu repo" : ""}.
 2. **Adjuntá o pegá \`sdd/SDD-MASTER.md\`.** Es el único archivo imprescindible${playbooks.length ? `, más los playbooks de \`sdd/playbooks/\` cuando el agente te los pida` : ""}.
 3. **Pegá el contenido de \`PROMPT-DE-ARRANQUE.txt\`** como primer mensaje.
 
-A partir de ahí el agente te hace un cuestionario, propone la estructura, espera tu OK, y recién entonces escribe código.
+${brownfield
+  ? "A partir de ahí el agente analiza tu código **sin tocarlo** (regla R15), escribe el `sdd/` reflejando lo que ya existe, y espera tu OK antes de proponer cualquier cambio."
+  : "A partir de ahí el agente te hace un cuestionario, propone la estructura, espera tu OK, y recién entonces escribe código."}
 
 ## Qué hay en esta carpeta
 
@@ -84,10 +90,10 @@ SDD Universal · https://sdd-universal.vercel.app
   }
 
   /* Carpeta lista para trabajar: espejos, .gitignore, sdd/ y el prompt. */
-  async function proyecto({nombre, tipoNombre, nivel, prompt, playbooks, custom, conTecnologias, conGuia}){
+  async function proyecto({nombre, tipoNombre, nivel, prompt, playbooks, custom, conTecnologias, conGuia, brownfield}){
     const carpeta = slug(nombre);
     const archivos = [
-      {nombre: `${carpeta}/LEEME.md`, contenido: leeme(nombre || carpeta, tipoNombre, nivel, playbooks)},
+      {nombre: `${carpeta}/LEEME.md`, contenido: leeme(nombre || carpeta, tipoNombre, nivel, playbooks, brownfield)},
       {nombre: `${carpeta}/PROMPT-DE-ARRANQUE.txt`, contenido: prompt},
       {nombre: `${carpeta}/.gitignore`, contenido: GITIGNORE},
       {nombre: `${carpeta}/AGENTS.md`, contenido: ESPEJO("sdd/SDD-MASTER.md")},
