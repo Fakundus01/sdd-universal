@@ -329,6 +329,38 @@
        border-radius:7px;padding:4px 9px;font-size:.76rem;cursor:pointer;font-family:inherit}
   .guardadas li button:hover{color:#fff;border-color:#7b74f5}
 
+  /* ---------- configurador de reglas ---------- */
+  dialog.reglas{width:min(820px,95vw)}
+  .rrow{display:flex;gap:13px;align-items:flex-start;padding:11px 10px;border-radius:10px}
+  .rrow:hover{background:var(--bg-soft)}
+  .rrow.off .rtxt b{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
+  .rsw{flex:none;cursor:pointer;display:block}
+  .rrow.fija .rsw{cursor:not-allowed}
+  .rsw input{position:absolute;opacity:0;width:0;height:0}
+  .rsw .pill{display:grid;place-items:center;width:46px;height:26px;border-radius:999px;
+       font-size:.62rem;font-weight:800;letter-spacing:.06em;
+       background:var(--green-soft);color:var(--green);border:1px solid transparent}
+  .rrow.off .rsw .pill{background:var(--bg-soft);color:var(--muted);border-color:var(--line-strong)}
+  .rrow.fija .rsw .pill{background:var(--accent-soft);color:var(--accent-ink);opacity:.75}
+  .rsw input:focus-visible + .pill{outline:3px solid var(--accent);outline-offset:2px}
+  .rtxt{min-width:0}
+  .rtxt b{font-size:.89rem}
+  .rtxt .lock{font-size:.64rem;font-weight:700;color:var(--muted);margin-left:7px;white-space:nowrap}
+  .rtxt p{font-size:.8rem;color:var(--muted);margin-top:2px}
+  .rextra{padding:14px 22px;border-top:1px solid var(--line);background:var(--bg-soft);flex:none;
+       max-height:34vh;overflow-y:auto}
+  .rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:11px}
+  .rextra label{display:block;font-size:.76rem;font-weight:700;color:var(--ink-soft);margin:9px 0 5px}
+  .rextra label small{font-weight:400;color:var(--muted)}
+  .rextra input,.rextra textarea{width:100%;padding:9px 11px;border:1px solid var(--line-strong);
+       border-radius:9px;background:var(--card);color:var(--ink);font-size:.84rem;font-family:inherit;resize:vertical}
+  .rextra textarea{font-family:var(--mono);font-size:.78rem;line-height:1.5}
+  .rprev{margin-top:12px}
+  .rprev summary{cursor:pointer;font-size:.8rem;color:var(--accent-ink);font-weight:600}
+  .rprev pre{margin-top:9px;background:var(--card);border:1px solid var(--line);border-radius:10px;
+       padding:13px;font-family:var(--mono);font-size:.75rem;line-height:1.55;color:var(--ink-soft);
+       overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+
   /* ---------- paginación ---------- */
   .pager{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:14px 10px 4px}
   .pager button{background:var(--card);border:1px solid var(--line-strong);color:var(--ink);
@@ -358,6 +390,7 @@
     <a href="https://github.com/Fakundus01/sdd-universal/tree/main/examples/turnos/sdd" class="hide-s">Ejemplo</a>
     <a href="../sdd-universal-tablero.html" class="hide-s">Tablero</a>
     <a href="#" id="navtech">Tecnologías</a>
+    <a href="#" id="navreglas">Mis reglas</a>
     <a href="https://github.com/Fakundus01/sdd-universal" class="hide-s">GitHub</a>
     <button class="authbtn" id="authbtn" type="button" hidden>Entrar</button>
     <button class="tbtn" id="theme" type="button" aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">◐</button>
@@ -526,6 +559,54 @@
 
 </main>
 
+<dialog class="tech reglas" id="reglasdlg" aria-labelledby="reglastitle">
+  <div class="dlg-head" style="cursor:default">
+    <h2 id="reglastitle">Mis reglas</h2>
+    <p>Prendé y apagá reglas acá y te bajás tu <code>custom.md</code> ya escrito. <b>El núcleo nunca se edita</b>: el agente lee el master y después tu custom, que pisa lo que haga falta — así actualizás el paquete sin perder tu configuración.</p>
+    <button class="dlg-x" id="reglasx" type="button" aria-label="Cerrar">✕</button>
+  </div>
+
+  <div class="dlg-filters">
+    <label class="sr" for="rperfil">Perfil</label>
+    <select id="rperfil"><option value="ESTRICTO">Perfil: Estricto</option><option value="CONFIANZA">Perfil: Confianza</option></select>
+    <label class="sr" for="rmodo">Modo</label>
+    <select id="rmodo"><option>FULL</option><option>LITE</option><option>COMPACT</option><option>FEDERADO</option></select>
+    <label class="sr" for="rvariante">Variante</label>
+    <select id="rvariante"><option>WEB</option><option>DATA</option><option>GAME</option><option>API-only</option></select>
+    <label class="os"><input type="checkbox" id="rsolo" checked> Solo las que se pueden apagar</label>
+  </div>
+
+  <div class="dlg-list" id="rlist"></div>
+
+  <div class="rextra">
+    <div class="rgrid">
+      <div>
+        <label for="rmax">Máximo de líneas por archivo <small>(R05, default 300)</small></label>
+        <input id="rmax" type="number" min="50" max="2000" placeholder="300">
+      </div>
+      <div>
+        <label for="rstack">Infra preferida <small>(R14, default free tier)</small></label>
+        <input id="rstack" type="text" placeholder="aws, azure, on-premise…">
+      </div>
+    </div>
+    <label for="rpropias">Reglas propias <small>(una por línea, formato <code>+R27-NOMBRE: qué hace</code>)</small></label>
+    <textarea id="rpropias" rows="2" placeholder="+R27-BRANCHES: una rama por feature, nunca commits directos a main"></textarea>
+    <label for="rnotas">Notas personales <small>(lo que el agente debería saber de vos)</small></label>
+    <textarea id="rnotas" rows="2" placeholder="- Trabajo en Windows con PowerShell&#10;- Prefiero Python antes que Node cuando da lo mismo"></textarea>
+    <details class="rprev">
+      <summary>Ver el <code>custom.md</code> que se genera</summary>
+      <pre id="rout"></pre>
+    </details>
+  </div>
+
+  <div class="dlg-foot">
+    <span class="n" id="rcount" role="status"></span>
+    <button class="clear" id="rreset" type="button">Reiniciar</button>
+    <button class="clear" id="rcopy" type="button">Copiar</button>
+    <button class="done" id="rdl" type="button">Descargar custom.md</button>
+  </div>
+</dialog>
+
 <dialog class="tech auth" id="authdlg" aria-labelledby="authtitle">
   <div class="dlg-head" style="cursor:default">
     <h2 id="authtitle">Entrar</h2>
@@ -567,7 +648,7 @@
 </dialog>
 
 <footer>
-  <div>SDD Universal <b>v0.7</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.8</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -580,6 +661,8 @@
 </div>
 
 <script src="tecnologias.js"></script>
+<script src="reglas.js"></script>
+<script src="reglas-ui.js"></script>
 <script src="supabase-config.js"></script>
 <script src="sesion.js"></script>
 <script>
@@ -613,6 +696,7 @@ const CARDS = [
  {c:"Base",n:"pro",  s:"ok",t:"Multi-agente & ahorro de tokens",d:"Espejos para Claude, Codex/ChatGPT, Cursor, Copilot y Gemini + técnicas de ahorro por tier de modelo.",f:"../models.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Bloques componibles",d:"Cómo se arma un SDD a medida combinando BASE + TYPE + STACK + PLAYBOOKS, con reglas de precedencia. Es el motor detrás del combinador.",f:"../blocks.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Cómo crece el SDD (escenarios)",d:"La matriz de 23 situaciones reales: dónde funciona, dónde falla y qué adaptación resolvió cada caso. Nada entra al núcleo «porque suena bien».",f:"../scenarios.md"},
+ {c:"Base",n:"novato",s:"ok",t:"Mis reglas: armá tu custom.md",d:"Prendé y apagá las 26 reglas, elegí perfil y modo, sumá las tuyas, y bajate el custom.md ya escrito. El núcleo no se toca nunca: por eso tu configuración sobrevive a cada actualización.",f:"#reglas",dl:false,cta:"Configurar mis reglas →"},
  {c:"Base",n:"novato",s:"ok",t:"Catálogo de tecnologías",d:"101 tecnologías (lenguajes, frameworks, bibliotecas, bases, cloud, IA, testing…) con su ecosistema y para qué sirve cada una. Elegilas desde el combinador y entran solas al prompt.",f:"../tecnologias.md"},
 
  {c:"Proyectos",n:"pro",  s:"comb",t:"Web app full-stack",d:"Front + back + DB con contratos entre capas. El clásico. Combinalo con tu stack en el combinador.",k:"webapp"},
@@ -721,9 +805,11 @@ function render(){
     const estado = x.s === "ok"
       ? '<span class="tag t-ok">✓ disponible</span>'
       : '<span class="tag t-ok">✓ vía combinador</span>';
-    const btn = x.f
-      ? `<a class="btn ${x.dl === false ? "b-alt" : "b-go"}" href="${x.f}"${x.dl === false ? "" : " download"}>${esc(x.cta || "Descargar MD")}</a>`
-      : `<button class="btn b-go" type="button" data-pick="${esc(x.k)}">Usar en el combinador ↓</button>`;
+    const btn = x.f === "#reglas"
+      ? `<button class="btn b-alt" type="button" data-abrir-reglas="1">${esc(x.cta)}</button>`
+      : x.f
+        ? `<a class="btn ${x.dl === false ? "b-alt" : "b-go"}" href="${x.f}"${x.dl === false ? "" : " download"}>${esc(x.cta || "Descargar MD")}</a>`
+        : `<button class="btn b-go" type="button" data-pick="${esc(x.k)}">Usar en el combinador ↓</button>`;
     return `<article class="c">
       <div class="top-tags"><span class="tag t-cat">${esc(x.c)}</span>
       <span class="tag ${x.n === "novato" ? "t-nov" : "t-pro"}">${esc(x.n)}</span>${estado}</div>
@@ -755,6 +841,7 @@ document.addEventListener("click", e => {
   if (pick) { $("ctype").value = pick.dataset.pick; $("comb").scrollIntoView({behavior:"smooth"}); return; }
   const jump = e.target.closest("[data-jump]");
   if (jump) { $(jump.dataset.jump).scrollIntoView({behavior:"smooth"}); return; }
+  if (e.target.closest("[data-abrir-reglas]")) { e.preventDefault(); ReglasUI.abrir(); return; }
   if (e.target.closest("[data-reset]")) { cat = "Todos"; $("q").value = ""; $("lvl").value = ""; catPage = 1; render(); }
 });
 $("q").oninput = () => { catPage = 1; render(); };
@@ -939,7 +1026,9 @@ function buildPrompt(){
 NIVEL: ${lvl}${lvl === "NOVATO"
   ? " — R23 activa: pensá por tres antes de cada acción con consecuencias (plan → autocrítica → plan corregido), explicame todo en lenguaje simple, un paso por vez, y no asumas que sé nada de programación."
   : " — experiencia en código: podés ir al grano."}
-PERFIL: ${perf} · MODO: que lo clasifiques vos (R18)
+PERFIL: ${perf} · MODO: que lo clasifiques vos (R18)${ReglasUI.hayCambios()
+  ? "\nTengo overrides propios en custom.md (va adjunto): leelo DESPUÉS del master y aplicá lo que pise."
+  : ""}
 
 TIPO DE PROYECTO: ${t.name}
 ${t.extra}
@@ -960,7 +1049,10 @@ function renderFiles(){
   if (sel.size) files.push({f:"../tecnologias.md", n:"tecnologias.md", d:`${sel.size} tecnologías elegidas`});
   if ($("clvl").value === "NOVATO") files.push({f:"../GUIDE.md", n:"GUIDE.md", d:"para vos, no para el agente"});
   $("filelist").innerHTML = files.map(x =>
-    `<li><a href="${x.f}" download><code>${esc(x.n)}</code><span>${esc(x.d)}</span></a></li>`).join("");
+    `<li><a href="${x.f}" download><code>${esc(x.n)}</code><span>${esc(x.d)}</span></a></li>`).join("") +
+    (ReglasUI.hayCambios()
+      ? `<li><a href="#" data-abrir-reglas="1"><code>custom.md</code><span>tus overrides — bajalo desde «Mis reglas»</span></a></li>`
+      : "");
 }
 
 $("go").onclick = () => {
@@ -1081,6 +1173,8 @@ $("authform").onsubmit = async e => {
 };
 
 /* ---------- init ---------- */
+ReglasUI.iniciar();
+$("navreglas").onclick = e => { e.preventDefault(); ReglasUI.abrir(); };
 readURL();
 render();
 renderRoadmap();
