@@ -61,7 +61,8 @@ Este playbook agrega **cuentas de usuario** a un sitio estático sin convertirlo
      http://localhost:4321/web/
      ```
    Sin esto, el link del email rebota con `redirect_to is not allowed`.
-10. *(Opcional pero recomendado)* **Authentication** → **Emails**: traducí las plantillas al español. El mail que llega dice "Magic Link" en inglés hasta que lo cambies.
+10. **Si dejaste Confirm email en ON, seguí con el playbook [`resend-smtp`](resend-smtp.md) antes de probar nada.** Sin SMTP propio, lo más probable es que el mail no llegue y no vas a poder entrar. Ese playbook resuelve confirmación y recupero de una sola vez, y es gratis hasta 3.000 mails por mes.
+11. *(Recomendado)* **Authentication** → **Emails**: traducí las plantillas al español. El mail que llega está en inglés hasta que lo cambies, y es lo primero que ve la persona de tu producto.
 
 ---
 

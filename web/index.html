@@ -481,6 +481,7 @@
     <label><input type="checkbox" value="deploy-vercel"> deploy-vercel</label>
     <label><input type="checkbox" value="publish-github-vercel"> publish-github-vercel</label>
     <label><input type="checkbox" value="supabase-auth"> supabase-auth (login)</label>
+    <label><input type="checkbox" value="resend-smtp"> resend-smtp (mails)</label>
   </div>
   <button class="gen" id="go" type="button">Generar mi prompt de arranque</button>
 
@@ -675,7 +676,8 @@ const CARDS = [
 
  {c:"Infraestructura",n:"novato",s:"ok",t:"Playbook: Deploy en Vercel",d:"Tu front online con URL propia en 20 minutos, con verificación, errores comunes y costos.",f:"../playbooks/deploy-vercel.md"},
  {c:"Infraestructura",n:"novato",s:"ok",t:"Playbook: Publicar en GitHub + Vercel",d:"De carpeta local a repositorio público con web deployada. El paso a paso exacto, comando por comando.",f:"../playbooks/publish-github-vercel.md"},
- {c:"Infraestructura",n:"novato",s:"ok",t:"Playbook: Inicio de sesión con Supabase",d:"Cuentas de usuario por email, sin contraseñas, en un sitio estático. Incluye el SQL con las políticas RLS — el paso que si se saltea deja la base abierta a internet.",f:"../playbooks/supabase-auth.md"},
+ {c:"Infraestructura",n:"novato",s:"ok",t:"Playbook: Inicio de sesión con Supabase",d:"Cuentas de usuario con mail y contraseña en un sitio estático. Incluye el SQL con las políticas RLS — el paso que si se saltea deja la base abierta a internet.",f:"../playbooks/supabase-auth.md"},
+ {c:"Infraestructura",n:"novato",s:"ok",t:"Playbook: Que los mails lleguen (Resend)",d:"El mailer incluido de Supabase manda poquísimo y cae en spam, y el síntoma es mudo: nadie se registra y no hay error. Esto lo arregla, con la parte del DNS explicada.",f:"../playbooks/resend-smtp.md"},
 
  {c:"Herramientas",n:"novato",s:"ok",t:"Playbook: .env y credenciales seguras",d:"env local/development/production, entornos virtuales y la regla de oro: los secretos no se commitean.",f:"../playbooks/env-setup.md"},
  {c:"Herramientas",n:"novato",s:"ok",t:"Playbook: React + Vite desde cero",d:"node -v, npm create vite, npm run dev — explicado para que salga a la primera.",f:"../playbooks/create-react-vite.md"},
@@ -718,7 +720,8 @@ const PB_META = {
  "create-react-vite":{f:"../playbooks/create-react-vite.md",d:"arrancar React con Vite"},
  "deploy-vercel":{f:"../playbooks/deploy-vercel.md",d:"tu front online"},
  "publish-github-vercel":{f:"../playbooks/publish-github-vercel.md",d:"repo público + web"},
- "supabase-auth":{f:"../playbooks/supabase-auth.md",d:"cuentas de usuario"}
+ "supabase-auth":{f:"../playbooks/supabase-auth.md",d:"cuentas de usuario"},
+ "resend-smtp":{f:"../playbooks/resend-smtp.md",d:"que los mails lleguen"}
 };
 
 /* ---------- estado y URL ---------- */

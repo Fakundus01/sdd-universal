@@ -8,7 +8,8 @@
 | env-setup | .env local/dev/prod + entornos virtuales + credenciales | código | novato+pro | ✓ |
 | create-react-vite | Crear un proyecto React con Vite (npm) | código | novato+pro | ✓ |
 | publish-github-vercel | Publicar este mismo sitio SDD en GitHub + Vercel | infra | novato+pro | ✓ |
-| supabase-auth | Inicio de sesión con Supabase (magic link) + RLS y datos por usuario | infra | novato+pro | ✓ |
+| supabase-auth | Inicio de sesión con Supabase (mail + contraseña) + RLS y datos por usuario | infra | novato+pro | ✓ |
+| resend-smtp | Que los mails de confirmación y recupero lleguen de verdad (Resend como SMTP) | infra | novato+pro | ✓ |
 | git-basico | Git desde cero: init, add, commit, push, ramas | herramientas | novato | ⏳ |
 | pipelines-ci | CI/CD con GitHub Actions: tests + deploy automático + gate de spec (si el código diverge de la spec, el build falla) | infra | pro | ⏳ |
 | azure-fundamentos | Azure a fondo: Resource Groups, Storage, DNS, Policies, control de costos | infra | pro | ⏳ |
