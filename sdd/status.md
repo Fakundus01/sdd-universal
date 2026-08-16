@@ -20,8 +20,9 @@
 | F12 | Buscador global (Ctrl+K) | Complete | 100% | Cards + tecnologías + reglas + páginas |
 | F13 | PWA instalable | Complete | 100% | SW sin caché a propósito (ver changelog 0.19) |
 | F14 | Núcleo en inglés | Complete | 100% | Cierra la deuda D4 |
+| F15 | Vista previa de los MD | Complete | 100% | Renderer propio, links internos navegan dentro del preview |
 
-**Avance total: 13.8 / 14 features ≈ 99%**
+**Avance total: 14.8 / 15 features ≈ 99%**
 
 ## Bloqueos
 

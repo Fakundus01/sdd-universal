@@ -28,8 +28,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css?v=19">
-<link rel="stylesheet" href="app.css?v=19">
+<link rel="stylesheet" href="base.css?v=20">
+<link rel="stylesheet" href="app.css?v=20">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -290,6 +290,50 @@
        font-size:.82rem;color:var(--muted)}
   .cpie a{color:var(--accent-ink);text-decoration:none}
   .cpie a:hover{text-decoration:underline}
+
+  /* ---------- vista previa de MD ---------- */
+  dialog.mdprev{width:min(860px,95vw)}
+  .cbtns{display:flex;gap:7px;align-self:stretch}
+  .cbtns .btn{flex:1}
+  .cbtns .b-ver{flex:none;width:44px;background:var(--bg-soft);border:1px solid var(--line-strong);
+       color:var(--muted);font-size:.95rem;padding:9px 0}
+  .cbtns .b-ver:hover{color:var(--ink);border-color:var(--accent)}
+  .files li{display:flex;gap:6px;align-items:stretch}
+  .files li a{flex:1;min-width:0}
+  .ver-mini{flex:none;width:38px;background:var(--panel);border:1px solid var(--panel-line);
+       color:var(--panel-muted);border-radius:9px;cursor:pointer;font-size:.85rem;font-family:inherit}
+  .ver-mini:hover{color:#fff;border-color:#7b74f5}
+  .dlg-foot a{border-radius:10px;padding:9px 17px;font-size:.85rem;font-weight:700;cursor:pointer;
+       font-family:inherit;border:0;text-decoration:none;text-align:center}
+  .md-cuerpo{padding:6px 26px 22px;font-size:.92rem;color:var(--ink-soft);line-height:1.65}
+  @media (min-width:641px){.md-cuerpo{max-height:min(62vh,560px)}}
+  .md-cuerpo h1{font-size:1.35rem;letter-spacing:-.02em;color:var(--ink);margin:20px 0 8px}
+  .md-cuerpo h2{font-size:1.12rem;letter-spacing:-.015em;color:var(--ink);margin:22px 0 7px;
+       padding-top:14px;border-top:1px solid var(--line)}
+  .md-cuerpo h3{font-size:.98rem;color:var(--ink);margin:16px 0 5px}
+  .md-cuerpo h4,.md-cuerpo h5,.md-cuerpo h6{font-size:.9rem;color:var(--ink);margin:13px 0 4px}
+  .md-cuerpo p{margin:0 0 11px}
+  .md-cuerpo b{color:var(--ink)}
+  .md-cuerpo code{font-family:var(--mono);font-size:.84em;background:var(--bg-soft);
+       padding:1.5px 6px;border-radius:5px;color:var(--accent-ink);border:1px solid var(--line)}
+  .md-cuerpo a{color:var(--accent-ink)}
+  .md-cuerpo .md-pre{background:var(--panel);border:1px solid var(--panel-line);border-radius:11px;
+       padding:13px 16px;margin:0 0 13px;overflow-x:auto}
+  .md-cuerpo .md-pre code{background:none;border:0;padding:0;color:var(--panel-ink);
+       font-size:.8rem;line-height:1.6;white-space:pre}
+  .md-cuerpo blockquote{border-left:3px solid var(--accent);background:var(--bg-soft);
+       border-radius:0 10px 10px 0;padding:11px 15px;margin:0 0 13px}
+  .md-cuerpo blockquote p:last-child{margin-bottom:0}
+  .md-cuerpo hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+  .md-cuerpo ul,.md-cuerpo ol{margin:0 0 12px;padding-left:22px}
+  .md-cuerpo li{margin-bottom:4px}
+  .md-cuerpo .md-chk{color:var(--accent-ink)}
+  .md-cuerpo .md-tabla{overflow-x:auto;margin:0 0 14px;border:1px solid var(--line);border-radius:11px}
+  .md-cuerpo table{width:100%;border-collapse:collapse;font-size:.85rem}
+  .md-cuerpo th{text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;
+       color:var(--muted);padding:9px 12px;border-bottom:1px solid var(--line-strong);background:var(--bg-soft)}
+  .md-cuerpo td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  .md-cuerpo tr:last-child td{border-bottom:0}
 
   /* ---------- buscador global ---------- */
   dialog.kbusca{width:min(600px,94vw);margin-top:9vh;margin-bottom:auto}
@@ -767,7 +811,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.19</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.20</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -781,6 +825,20 @@
 </div>
 </div>
 
+
+<dialog class="tech mdprev" id="mddlg" aria-labelledby="mdtitulo">
+  <div class="dlg-head" style="cursor:default">
+    <h2 id="mdtitulo">Vista previa</h2>
+    <p id="mdruta"></p>
+    <button class="dlg-x" id="mdx" type="button" aria-label="Cerrar la vista previa">✕</button>
+  </div>
+  <div class="dlg-list md-cuerpo" id="mdcuerpo"></div>
+  <div class="dlg-foot">
+    <span class="n" id="mdinfo"></span>
+    <a class="clear" id="mdraw" target="_blank" rel="noopener">Abrir crudo</a>
+    <a class="done" id="mddescargar" download>Descargar</a>
+  </div>
+</dialog>
 
 <dialog class="tech kbusca" id="kdlg" aria-label="Buscar en todo">
   <div class="k-in">
@@ -925,20 +983,21 @@
   </div>
 </dialog>
 
-<script src="shell.js?v=19"></script>
-<script src="tema.js?v=19"></script>
-<script src="buscador.js?v=19"></script>
-<script src="zip.js?v=19"></script>
-<script src="paquete.js?v=19"></script>
-<script src="tecnologias.js?v=19"></script>
-<script src="reglas.js?v=19"></script>
-<script src="reglas-ui.js?v=19"></script>
-<script src="supabase-config.js?v=19"></script>
-<script src="sesion.js?v=19"></script>
-<script src="perfil.js?v=19"></script>
-<script src="perfil-vista.js?v=19"></script>
-<script src="app.js?v=19"></script>
-<script src="config-vista.js?v=19"></script>
+<script src="shell.js?v=20"></script>
+<script src="tema.js?v=20"></script>
+<script src="buscador.js?v=20"></script>
+<script src="md.js?v=20"></script>
+<script src="zip.js?v=20"></script>
+<script src="paquete.js?v=20"></script>
+<script src="tecnologias.js?v=20"></script>
+<script src="reglas.js?v=20"></script>
+<script src="reglas-ui.js?v=20"></script>
+<script src="supabase-config.js?v=20"></script>
+<script src="sesion.js?v=20"></script>
+<script src="perfil.js?v=20"></script>
+<script src="perfil-vista.js?v=20"></script>
+<script src="app.js?v=20"></script>
+<script src="config-vista.js?v=20"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -1097,9 +1156,15 @@ function render(){
       : '<span class="tag t-ok">✓ vía combinador</span>';
     const btn = x.f === "#reglas"
       ? `<button class="btn b-alt" type="button" data-abrir-reglas="1">${esc(x.cta)}</button>`
-      : x.f
-        ? `<a class="btn ${x.dl === false ? "b-alt" : "b-go"}" href="${x.f}"${x.dl === false ? "" : " download"}>${esc(x.cta || "Descargar MD")}</a>`
-        : `<button class="btn b-go" type="button" data-pick="${esc(x.k)}">Usar en el combinador ↓</button>`;
+      : x.f && x.f.endsWith(".md")
+        ? `<div class="cbtns">
+             <a class="btn b-go" href="${x.f}" download>${esc(x.cta || "Descargar MD")}</a>
+             <button class="btn b-ver" type="button" data-ver="${x.f}" data-vt="${esc(x.t)}"
+               aria-label="Ver ${esc(x.t)} antes de bajar" title="Ver antes de bajar">👁</button>
+           </div>`
+        : x.f
+          ? `<a class="btn ${x.dl === false ? "b-alt" : "b-go"}" href="${x.f}"${x.dl === false ? "" : " download"}>${esc(x.cta || "Descargar MD")}</a>`
+          : `<button class="btn b-go" type="button" data-pick="${esc(x.k)}">Usar en el combinador ↓</button>`;
     return `<article class="c">
       <div class="top-tags"><span class="tag t-cat">${esc(x.c)}</span>
       <span class="tag ${x.n === "novato" ? "t-nov" : "t-pro"}">${esc(x.n)}</span>${estado}</div>
@@ -1399,7 +1464,9 @@ function renderFiles(){
   if (sel.size) files.push({f:"../tecnologias.md", n:"tecnologias.md", d:`${sel.size} tecnologías elegidas`});
   if ($("clvl").value === "NOVATO") files.push({f:"../GUIDE.md", n:"GUIDE.md", d:"para vos, no para el agente"});
   $("filelist").innerHTML = files.map(x =>
-    `<li><a href="${x.f}" download><code>${esc(x.n)}</code><span>${esc(x.d)}</span></a></li>`).join("") +
+    `<li><a href="${x.f}" download><code>${esc(x.n)}</code><span>${esc(x.d)}</span></a>
+     <button class="ver-mini" type="button" data-ver="${x.f}" data-vt="${esc(x.n)}"
+       aria-label="Ver ${esc(x.n)}" title="Ver antes de bajar">👁</button></li>`).join("") +
     (ReglasUI.hayCambios()
       ? `<li><a href="#" data-abrir-reglas="1"><code>custom.md</code><span>tus overrides — bajalo desde «Mis reglas»</span></a></li>`
       : "");
@@ -1670,6 +1737,49 @@ $("authlink").onclick = () => {
     decirAuth("ok", "Te mandamos un link. Si no llega en unos minutos, revisá spam o usá la contraseña.");
   });
 };
+
+/* ---------- vista previa de los MD ---------- */
+async function abrirPreview(url, titulo){
+  $("mdtitulo").textContent = titulo || url.split("/").pop();
+  $("mdruta").textContent = url.replace(/^\.\.\//, "");
+  $("mdraw").href = url;
+  $("mddescargar").href = url;
+  $("mdcuerpo").innerHTML = '<p class="dlg-empty">Cargando…</p>';
+  $("mddlg").dataset.base = url;
+  if (!$("mddlg").open) $("mddlg").showModal();
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const t = await r.text();
+    $("mdcuerpo").innerHTML = Md.render(t);
+    $("mdcuerpo").scrollTop = 0;
+    $("mdinfo").textContent = `${t.split("\n").length} líneas · ${(t.length / 1024).toFixed(1)} KB`;
+    Sesion.contar("visita", "md:" + url.split("/").pop());
+  } catch (e) {
+    $("mdcuerpo").innerHTML = `<p class="dlg-empty">No se pudo cargar el archivo (${esc(e.message)}).</p>`;
+  }
+}
+
+document.addEventListener("click", e => {
+  const v = e.target.closest("[data-ver]");
+  if (v){ e.preventDefault(); abrirPreview(v.dataset.ver, v.dataset.vt); }
+});
+
+// Un link relativo a otro .md dentro del preview abre ESE archivo en el
+// preview, en vez de sacarte de la app al markdown crudo.
+$("mdcuerpo").addEventListener("click", e => {
+  const a = e.target.closest("a[href]");
+  if (!a) return;
+  const h = a.getAttribute("href");
+  if (h.startsWith("http") || h.startsWith("#")) return;
+  if (/\.md(#|$)/.test(h)){
+    e.preventDefault();
+    const abs = new URL(h, new URL($("mddlg").dataset.base, location.href)).href;
+    abrirPreview(abs, h.split("/").pop().split("#")[0]);
+  }
+});
+$("mdx").onclick = () => $("mddlg").close();
+$("mddlg").addEventListener("click", e => { if (e.target === $("mddlg")) $("mddlg").close(); });
 
 /* ---------- compartir la combinación por link ---------- */
 const b64url = {
