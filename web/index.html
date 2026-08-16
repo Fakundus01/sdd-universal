@@ -26,8 +26,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css">
-<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="base.css?v=18">
+<link rel="stylesheet" href="app.css?v=18">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -639,6 +639,78 @@
   </div>
 </section>
 
+<section class="vista" data-vista="configuracion" hidden>
+  <div class="cfg-cab">
+    <h2>Configuración</h2>
+    <p>Cómo se ve, cómo suena y qué se muestra. Queda guardado en este navegador; el tema viaja con tu cuenta si tenés una.</p>
+  </div>
+
+  <div class="cfg-tabs" role="tablist" id="cfgTabs">
+    <button role="tab" data-tab="temas" aria-selected="true" type="button">Temas</button>
+    <button role="tab" data-tab="texto" aria-selected="false" type="button">Texto</button>
+    <button role="tab" data-tab="anim" aria-selected="false" type="button">Animación y sonido</button>
+    <button role="tab" data-tab="secciones" aria-selected="false" type="button">Secciones</button>
+    <button role="tab" data-tab="admin" aria-selected="false" type="button" id="tabAdmin" hidden>Admin</button>
+  </div>
+
+  <div class="cfg-panel" data-panel="temas">
+    <div class="pcard">
+      <h3>Tema de color</h3>
+      <p class="d">Los de naturaleza (Bosque, Jungla, Océano, Desierto) pueden mover el fondo.</p>
+      <div class="temas" id="cfgTemas"></div>
+    </div>
+    <div class="pcard">
+      <h3>Fondo con vida</h3>
+      <p class="d">Un resplandor que deriva despacio detrás del contenido, solo en los temas de naturaleza.</p>
+      <div class="cfg-fila">
+        <div class="txt"><b>Fondo animado</b><small>Se frena solo si apagás las animaciones.</small></div>
+        <label class="sw"><input type="checkbox" id="cfgVivo"><span class="pista"></span></label>
+      </div>
+      <h3 style="margin-top:18px">Logo</h3>
+      <p class="d">Elegí cómo se mueve.</p>
+      <div class="logos" id="cfgLogos"></div>
+    </div>
+  </div>
+
+  <div class="cfg-panel" data-panel="texto" hidden>
+    <div class="pcard">
+      <h3>Tamaño del texto</h3>
+      <p class="d">Cambia toda la aplicación, no solo esta pantalla.</p>
+      <div class="fs-ops" id="cfgTexto"></div>
+    </div>
+  </div>
+
+  <div class="cfg-panel" data-panel="anim" hidden>
+    <div class="pcard">
+      <h3>Movimiento y sonido</h3>
+      <div class="cfg-fila">
+        <div class="txt"><b>Animaciones</b><small>Transiciones y desplazamiento suave. Apagalas si te marean o si la máquina va lenta.</small></div>
+        <label class="sw"><input type="checkbox" id="cfgAnim"><span class="pista"></span></label>
+      </div>
+      <div class="cfg-fila">
+        <div class="txt"><b>Sonido</b><small>Un clic corto al navegar. Viene apagado.</small></div>
+        <label class="sw"><input type="checkbox" id="cfgSonido"><span class="pista"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="cfg-panel" data-panel="secciones" hidden>
+    <div class="pcard">
+      <h3>Secciones visibles</h3>
+      <p class="d">Sacá del menú lo que no uses. No se borra nada: se vuelve a prender acá.</p>
+      <div id="cfgVistas"></div>
+      <button class="btn b-alt" id="cfgReset" type="button" style="margin-top:12px">Volver a los valores por defecto</button>
+    </div>
+  </div>
+
+  <div class="cfg-panel" data-panel="admin" hidden>
+    <div class="pcard" style="grid-column:1/-1">
+      <h3>Panel de administración</h3>
+      <div id="admZona"><p class="d">Cargando…</p></div>
+    </div>
+  </div>
+</section>
+
 <section class="vista" data-vista="comunidad" hidden>
 <section class="comunidad" id="comunidad">
   <h2>¿Te hizo fricción? Contámelo</h2>
@@ -672,7 +744,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.17</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.18</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -686,43 +758,6 @@
 </div>
 </div>
 
-<dialog class="tech cfg" id="cfgdlg" aria-labelledby="cfgtitle">
-  <div class="dlg-head" style="cursor:default">
-    <h2 id="cfgtitle">Preferencias</h2>
-    <p>Se guardan en este navegador. Si entrás con tu cuenta, el tema viaja con vos.</p>
-    <button class="dlg-x" id="cfgx" type="button" aria-label="Cerrar">✕</button>
-  </div>
-
-  <div class="dlg-list">
-    <div class="cfg-bloque">
-      <h3>Tema</h3>
-      <div class="temas" id="cfgTemas"></div>
-    </div>
-
-    <div class="cfg-bloque">
-      <h3>Comportamiento</h3>
-      <div class="cfg-fila">
-        <div class="txt"><b>Animaciones</b><small>Transiciones y desplazamiento suave. Apagalas si te marean o si la máquina va lenta.</small></div>
-        <label class="sw"><input type="checkbox" id="cfgAnim"><span class="pista"></span></label>
-      </div>
-      <div class="cfg-fila">
-        <div class="txt"><b>Sonido</b><small>Un clic corto al navegar. Viene apagado.</small></div>
-        <label class="sw"><input type="checkbox" id="cfgSonido"><span class="pista"></span></label>
-      </div>
-    </div>
-
-    <div class="cfg-bloque">
-      <h3>Secciones visibles</h3>
-      <p style="font-size:.8rem;color:var(--muted);margin-bottom:4px">Sacá del menú lo que no uses. No se borra nada: se puede volver a prender acá.</p>
-      <div id="cfgVistas"></div>
-    </div>
-  </div>
-
-  <div class="dlg-foot">
-    <span class="n"></span>
-    <button class="clear" id="cfgReset" type="button">Volver a los valores por defecto</button>
-  </div>
-</dialog>
 
 <dialog class="tech ob" id="obdlg" aria-labelledby="obTitulo">
   <div class="ob-progreso"><div class="ob-barra" id="obBarra"></div></div>
@@ -842,9 +877,9 @@
     </div>
     <div class="fila-selects">
       <label class="sr" for="tcat">Categoría</label>
-      <select id="tcat"></select>
+      <span class="combo"><input id="tcat" placeholder="Categoría: todas" autocomplete="off" data-v=""><div class="combo-lista" hidden></div></span>
       <label class="sr" for="tfam">Ecosistema</label>
-      <select id="tfam"></select>
+      <span class="combo"><input id="tfam" placeholder="Ecosistema: todos" autocomplete="off" data-v=""><div class="combo-lista" hidden></div></span>
       <label class="os"><input type="checkbox" id="tos"><span>Solo open source</span></label>
     </div>
   </div>
@@ -857,19 +892,20 @@
   </div>
 </dialog>
 
-<script src="shell.js"></script>
-<script src="tema.js"></script>
-<script src="buscador.js"></script>
-<script src="zip.js"></script>
-<script src="paquete.js"></script>
-<script src="tecnologias.js"></script>
-<script src="reglas.js"></script>
-<script src="reglas-ui.js"></script>
-<script src="supabase-config.js"></script>
-<script src="sesion.js"></script>
-<script src="perfil.js"></script>
-<script src="perfil-vista.js"></script>
-<script src="app.js"></script>
+<script src="shell.js?v=18"></script>
+<script src="tema.js?v=18"></script>
+<script src="buscador.js?v=18"></script>
+<script src="zip.js?v=18"></script>
+<script src="paquete.js?v=18"></script>
+<script src="tecnologias.js?v=18"></script>
+<script src="reglas.js?v=18"></script>
+<script src="reglas-ui.js?v=18"></script>
+<script src="supabase-config.js?v=18"></script>
+<script src="sesion.js?v=18"></script>
+<script src="perfil.js?v=18"></script>
+<script src="perfil-vista.js?v=18"></script>
+<script src="app.js?v=18"></script>
+<script src="config-vista.js?v=18"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -1080,10 +1116,12 @@ const dlg = $("techdlg");
   const cats = [...new Set(TECH.map(t => t.c))];
   const fams = [...new Set(TECH.map(t => t.f).filter(Boolean))]
     .sort((a, b) => TECH.filter(t => t.f === b).length - TECH.filter(t => t.f === a).length);
-  $("tcat").innerHTML = `<option value="">Categoría: todas</option>` +
-    cats.map(c => `<option value="${esc(c)}">${esc(c)} (${TECH.filter(t => t.c === c).length})</option>`).join("");
-  $("tfam").innerHTML = `<option value="">Ecosistema: todos</option>` +
-    fams.map(f => `<option value="${esc(f)}">${esc(f)} (${TECH.filter(t => t.f === f).length})</option>`).join("");
+  Combo.crear($("tcat"), [{v: "", t: "Todas las categorías"},
+    ...cats.map(c => ({v: c, t: c, x: String(TECH.filter(t => t.c === c).length)}))],
+    () => { techPage = 1; renderTech(); });
+  Combo.crear($("tfam"), [{v: "", t: "Todos los ecosistemas"},
+    ...fams.map(f => ({v: f, t: f, x: String(TECH.filter(t => t.f === f).length)}))],
+    () => { techPage = 1; renderTech(); });
   $("techsub").textContent = `${TECH.length} tecnologías en ${cats.length} categorías. Marcá las que quieras usar y entran al prompt de arranque. Elegir no reemplaza justificar: tu agente igual tiene que decirte si la combinación sirve para tu proyecto (R12).`;
   $("techhint").textContent = `${TECH.length} disponibles · opcional`;
 })();
@@ -1117,8 +1155,8 @@ document.addEventListener("click", e => {
 });
 
 function techRows(){
-  const q = $("tq").value.trim().toLowerCase(),
-        c = $("tcat").value, f = $("tfam").value, onlyOS = $("tos").checked;
+  const q = $("tq").value.trim(),
+        c = $("tcat").dataset.v, f = $("tfam").dataset.v, onlyOS = $("tos").checked;
   const base = TECH.filter(t => (!c || t.c === c) && (!f || t.f === f) && (!onlyOS || t.os));
   return Buscador.filtrar(base, q, ["n", "u", "e", "t"]);
 }
@@ -1179,7 +1217,7 @@ $("techlist").addEventListener("change", e => {
   cb.checked ? sel.add(cb.value) : sel.delete(cb.value);
   renderTech(); renderSel();
 });
-["tq","tcat","tfam","tos"].forEach(id => {
+["tq","tos"].forEach(id => {
   $(id).addEventListener(id === "tq" ? "input" : "change", () => { techPage = 1; renderTech(); });
 });
 function openTech(){ renderTech(); dlg.showModal(); $("tq").focus(); }
@@ -1487,6 +1525,7 @@ $("combolist").addEventListener("click", async e => {
 
 Sesion.alCambiar(u => {
   Shell.pintarCuenta(u, Perfil.datos());
+  if (typeof ConfigVista !== "undefined") ConfigVista.chequearAdmin();
   if (typeof PerfilVista !== "undefined" && !$("perfilAva").closest(".vista").hidden) PerfilVista.refrescar();
 });
 
@@ -1599,6 +1638,7 @@ $("authlink").onclick = () => {
 
 /* ---------- init ---------- */
 PerfilVista.iniciar();
+ConfigVista.iniciar();
 ReglasUI.iniciar();
 // si venís desde el link de la guía, abrimos el configurador directo
 if (sessionStorage.getItem("sdd-abrir-reglas")){

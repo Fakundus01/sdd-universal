@@ -88,3 +88,60 @@ const Buscador = (() => {
 
   return {filtrar, puntaje, resaltar, sugerir, norm};
 })();
+
+
+/* Combo: un select que se puede tipear. Muestra hasta ~8 opciones con scroll,
+ * y escribir filtra la lista en el lugar: "d" deja DevOps, Developer Tools
+ * y Bases de datos a la vista, en vez de saltar a la primera que empiece con d. */
+const Combo = (() => {
+  function crear(input, opciones, alCambiar){
+    const caja = input.parentElement.querySelector(".combo-lista");
+    let marcada = -1, visibles = opciones;
+
+    const etiqueta = () => opciones.find(o => o.v === input.dataset.v)?.t || opciones[0].t;
+    input.value = etiqueta();
+
+    const cerrar = () => { caja.hidden = true; marcada = -1; input.value = etiqueta(); };
+
+    function pintar(filtro = ""){
+      const b = Buscador.norm(filtro.trim());
+      visibles = !b ? opciones
+        : opciones.filter(o => !o.v ? true : Buscador.puntaje(o.t, b) > 0)
+            .sort((x, y) => (y.v ? Buscador.puntaje(y.t, b) : 0) - (x.v ? Buscador.puntaje(x.t, b) : 0));
+      caja.innerHTML = visibles.length ? visibles.map((o, i) => `
+        <button type="button" data-i="${i}"
+          class="${i === marcada ? "marcada " : ""}${o.v === input.dataset.v ? "actual" : ""}">
+          ${Buscador.resaltar(o.t, b)}${o.x ? `<small>${o.x}</small>` : ""}
+        </button>`).join("") : `<div class="combo-vacio">Nada que empiece así</div>`;
+      caja.hidden = false;
+    }
+
+    function elegir(o){
+      input.dataset.v = o.v;
+      input.value = o.t;
+      caja.hidden = true; marcada = -1;
+      alCambiar(o.v);
+    }
+
+    input.addEventListener("focus", () => { input.select(); pintar(""); });
+    input.addEventListener("input", () => { marcada = 0; pintar(input.value); });
+    input.addEventListener("blur", () => setTimeout(cerrar, 140));
+    input.addEventListener("keydown", e => {
+      if (caja.hidden && e.key !== "Escape") pintar(input.value);
+      if (e.key === "ArrowDown" || e.key === "ArrowUp"){
+        e.preventDefault();
+        const n = visibles.length; if (!n) return;
+        marcada = (marcada + (e.key === "ArrowDown" ? 1 : -1) + n) % n;
+        pintar(input.value === etiqueta() ? "" : input.value);
+      } else if (e.key === "Enter"){
+        e.preventDefault();
+        if (visibles.length) elegir(visibles[Math.max(0, marcada)]);
+      } else if (e.key === "Escape") cerrar();
+    });
+    caja.addEventListener("mousedown", e => {
+      const b = e.target.closest("[data-i]");
+      if (b){ e.preventDefault(); elegir(visibles[+b.dataset.i]); }
+    });
+  }
+  return {crear};
+})();

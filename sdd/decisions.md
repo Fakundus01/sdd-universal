@@ -90,6 +90,18 @@
 
 ---
 
+## ADR-011 · El tema tiene una sola fuente de verdad — 2026-08-15 · Vigente
+
+**El bug reportado:** elegir un tema en la app no seguía a la guía, el demo ni el tablero — quedaban en oscuro o claro.
+
+**Causa raíz — dos fuentes de verdad:** la app guardaba el tema dentro de `sdd-prefs` y lo aplicaba directo al DOM, pero las páginas de contenido leían la clave vieja `sdd-theme` al cargar. Cada mitad funcionaba; juntas mentían. Es el mismo patrón que ADR-004 previene con los datos generados: dos lugares que dicen lo mismo terminan diciendo cosas distintas.
+
+**Decisión:** `sdd-theme` es la única fuente. La app la escribe cada vez que aplica preferencias, y todas las páginas la leen al cargar. `sdd-prefs.tema` queda como copia de trabajo del panel, nunca como origen.
+
+**Corolario que salió de acá:** los recursos propios (`.js`/`.css`) llevan versión en la URL (`?v=18`). Sin build no hay fingerprinting, y un navegador con un `tema.js` viejo en caché reproduce exactamente este bug aunque el código esté arreglado — pasó durante la verificación.
+
+---
+
 ## ADR-010 · Qué limita no tener cuenta — 2026-08-15 · Vigente
 
 **Pedido:** que quien no inicia sesión pueda usar la app, pero limitada.

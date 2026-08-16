@@ -4,6 +4,24 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ---
 
+## [0.18.0] — 2026-08-15
+
+### Corregido
+- El tema no seguía a la guía, el demo ni el tablero. **Causa raíz:** dos fuentes de verdad (`sdd-prefs.tema` y `sdd-theme`); quedó una sola (ADR-011).
+- El tablero en oscuro era ilegible: tarjetas con `#fff` fijo bajo texto claro. Todos los blancos pasaron a tokens, y los chips ya no desbordan la tarjeta.
+
+### Agregado
+- **Configuración** como vista con pestañas: temas (9, con Jungla/Océano/Desierto animables), tamaño de texto global, animación y sonido, secciones visibles, y pestaña **Admin** para el owner con los números del onboarding.
+- Barra lateral comprimible: botón, o arrastre del borde; comprimida, sus accesos pasan a la barra superior.
+- 3 logos animados a elección (Trazos, Órbita, Pulso), SVG + CSS, sin dependencias.
+- Combos tipeables en los filtros de tecnologías: escribir «d» filtra la lista en el lugar.
+- Métricas anónimas del onboarding (`tipo='perfil'`) para saber qué clase de gente llega — nunca quién.
+
+### Modificado
+- Recursos propios versionados (`?v=18`): sin build, es la única garantía de que un release no conviva con archivos viejos en caché.
+
+---
+
 ## [0.8.0] — 2026-08-15
 
 ### Agregado

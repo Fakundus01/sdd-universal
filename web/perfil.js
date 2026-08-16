@@ -95,8 +95,16 @@ const Perfil = (() => {
   }
 
   async function terminar(){
+    // Solo la primera vez: es la foto de quien llega, no de cada edicion.
+    // Sin usuario, sin IP: entra al mismo contador anonimo que el resto.
+    const primeraVez = !p.onboarding;
     p.onboarding = true;
     await guardar();
+    if (primeraVez && typeof Sesion !== "undefined"){
+      Sesion.contar("perfil", "nivel:" + (p.nivel || "nc"));
+      Sesion.contar("perfil", "interes:" + (p.interes || "nc"));
+      Sesion.contar("perfil", "agente:" + (p.agente || "nc"));
+    }
     $("obdlg").close();
     if (alTerminar) alTerminar(p);
   }

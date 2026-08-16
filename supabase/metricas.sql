@@ -81,3 +81,12 @@ begin
   return borrados;
 end;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- v0.18: se suma el tipo 'perfil' — las respuestas del onboarding, agregadas
+-- y anonimas (nivel:NOVATO, interes:webapp, agente:claude...). Permite saber
+-- QUE clase de gente llega, nunca quien. Volver a correr este archivo alcanza.
+-- ---------------------------------------------------------------------------
+alter table public.eventos drop constraint if exists eventos_tipo_check;
+alter table public.eventos add constraint eventos_tipo_check
+  check (tipo in ('visita','descarga','combinacion','paquete','perfil'));

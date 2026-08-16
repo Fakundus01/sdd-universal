@@ -13,15 +13,24 @@ const App = (() => {
     {id: "light",    n: "Claro",          c: ["#f5f6fa", "#ffffff", "#4f46e5"]},
     {id: "noche",    n: "Medianoche",     c: ["#05060d", "#0e1120", "#5b8cff"]},
     {id: "bosque",   n: "Bosque",         c: ["#0c1613", "#132420", "#4ade80"]},
+    {id: "jungla",   n: "Jungla",         c: ["#08160e", "#102619", "#7be26a"], vivo: true},
+    {id: "oceano",   n: "Océano",         c: ["#04121f", "#0a2036", "#3fc5ff"], vivo: true},
+    {id: "desierto", n: "Desierto",       c: ["#190f08", "#2b1c10", "#ffb45c"], vivo: true},
     {id: "contraste",n: "Alto contraste", c: ["#000000", "#141414", "#ffd400"]},
     {id: "sepia",    n: "Sepia",          c: ["#f4ecd8", "#fffaf0", "#8a5a2b"]}
   ];
 
-  const base = () => ({tema: "dark", animaciones: true, sonido: false, vistas: {}});
+  const base = () => ({tema: "dark", animaciones: true, sonido: false, vistas: {},
+                       texto: "normal", vivo: true, logo: "trazos"});
   let prefs = base();
 
   const leer = () => { try { return {...base(), ...JSON.parse(localStorage.getItem(CLAVE))}; } catch { return base(); } };
-  const guardar = () => localStorage.setItem(CLAVE, JSON.stringify(prefs));
+  const guardar = () => {
+    let disco = {};
+    try { disco = JSON.parse(localStorage.getItem(CLAVE)) || {}; } catch { /* nada */ }
+    // sidebarMini lo administra Shell: no lo pisamos con nuestro snapshot.
+    localStorage.setItem(CLAVE, JSON.stringify({...disco, ...prefs, sidebarMini: disco.sidebarMini}));
+  };
 
   /* ---------------- sonido ---------------- */
   // Generado con WebAudio: un archivo de sonido serían kilobytes y una
@@ -42,8 +51,15 @@ const App = (() => {
 
   /* ---------------- aplicar preferencias ---------------- */
   function aplicar(){
-    Tema.aplicar(prefs.tema === "light" ? "light" : prefs.tema, false);
+    Tema.aplicar(prefs.tema, false);
+    // El tema vive en sdd-theme: es lo que leen guia, demo y tablero al cargar.
+    // Sin esta línea había dos fuentes de verdad y las otras páginas quedaban
+    // en el tema viejo — el bug reportado.
+    localStorage.setItem("sdd-theme", prefs.tema);
     document.documentElement.dataset.anim = prefs.animaciones ? "on" : "off";
+    document.documentElement.dataset.vivo = prefs.vivo ? "on" : "off";
+    if (prefs.texto && prefs.texto !== "normal") document.documentElement.dataset.fs = prefs.texto;
+    else delete document.documentElement.dataset.fs;
     for (const [v, oculta] of Object.entries(prefs.vistas)){
       const link = document.querySelector(`.side-nav a[data-vista="${v}"]`);
       if (link) link.hidden = Boolean(oculta);
@@ -52,7 +68,7 @@ const App = (() => {
 
   /* ---------------- ruteo ---------------- */
   const TITULOS = {inicio: "Inicio", catalogo: "Catálogo", combinador: "Combinador",
-                   perfil: "Mi perfil", comunidad: "Feedback"};
+                   perfil: "Mi perfil", comunidad: "Feedback", configuracion: "Configuración"};
 
   function ir(vista, empujar = true){
     if (!TITULOS[vista]) vista = "inicio";
@@ -61,6 +77,7 @@ const App = (() => {
       a.classList.toggle("act", a.dataset.vista === vista));
     $("barraTitulo").textContent = TITULOS[vista];
     if (vista === "perfil" && typeof PerfilVista !== "undefined") PerfilVista.refrescar();
+    if (vista === "configuracion" && typeof ConfigVista !== "undefined") ConfigVista.abrir();
     if (empujar && location.hash !== "#/" + vista) history.pushState(null, "", "#/" + vista);
     cerrarCajon();
     scrollTo({top: 0, behavior: prefs.animaciones ? "smooth" : "auto"});
@@ -88,8 +105,18 @@ const App = (() => {
       </button>`).join("");
     $("cfgAnim").checked = prefs.animaciones;
     $("cfgSonido").checked = prefs.sonido;
+    $("cfgVivo").checked = prefs.vivo;
+    const FS = [["chico","Chico",".8rem"],["normal","Normal","1rem"],["grande","Grande","1.18rem"],["maxi","Muy grande","1.35rem"]];
+    $("cfgTexto").innerHTML = FS.map(([v, t, tam]) => `
+      <button class="fs-op${(prefs.texto || "normal") === v ? " sel" : ""}" type="button" data-fs-op="${v}">
+        <span class="aa" style="font-size:${tam}">Aa</span><small>${t}</small>
+      </button>`).join("");
+    $("cfgLogos").innerHTML = Object.entries(Shell.LOGOS).map(([v, l]) => `
+      <button class="logo-op${(prefs.logo || "trazos") === v ? " sel" : ""}" type="button" data-logo="${v}">
+        ${Shell.logoHTML(v)}<b>${l.n}</b><small>${l.d}</small>
+      </button>`).join("");
     $("cfgVistas").innerHTML = Object.entries(TITULOS)
-      .filter(([v]) => v !== "inicio" && v !== "perfil").map(([v, n]) => `
+      .filter(([v]) => v !== "inicio" && v !== "perfil" && v !== "configuracion").map(([v, n]) => `
       <div class="cfg-fila">
         <div class="txt"><b>${n}</b></div>
         <label class="sw"><input type="checkbox" data-vista-visible="${v}"
@@ -110,10 +137,14 @@ const App = (() => {
         e.preventDefault(); sonar(); cerrarCajon();
         ({tech: () => openTech(), reglas: () => ReglasUI.abrir(),
           perfil: () => Perfil.abrir(window.aplicarPerfil),
-          config: () => { pintarConfig(); $("cfgdlg").showModal(); }})[a.dataset.abre]?.();
+          config: () => ir("configuracion")})[a.dataset.abre]?.();
       };
     });
-    $("btnConfig").onclick = () => { sonar(); cerrarCajon(); pintarConfig(); $("cfgdlg").showModal(); };
+    $("btnConfig").onclick = () => { sonar(); ir("configuracion"); };
+    $("barraNav").addEventListener("click", e => {
+      const a = e.target.closest("a[data-vista]");
+      if (a){ e.preventDefault(); sonar(); ir(a.dataset.vista); }
+    });
     $("avatar").onclick = () => { sonar(); ir("perfil"); };
     $("hamb").onclick = () => $("side").classList.contains("abierta") ? cerrarCajon() : abrirCajon();
     $("sideCerrar").onclick = cerrarCajon;
@@ -129,6 +160,15 @@ const App = (() => {
     });
     $("cfgAnim").onchange = e => { prefs.animaciones = e.target.checked; guardar(); aplicar(); };
     $("cfgSonido").onchange = e => { prefs.sonido = e.target.checked; guardar(); if (prefs.sonido) sonar(); };
+    $("cfgVivo").onchange = e => { prefs.vivo = e.target.checked; guardar(); aplicar(); };
+    $("cfgTexto").addEventListener("click", e => {
+      const b = e.target.closest("[data-fs-op]"); if (!b) return;
+      prefs.texto = b.dataset.fsOp; guardar(); aplicar(); pintarConfig();
+    });
+    $("cfgLogos").addEventListener("click", e => {
+      const b = e.target.closest("[data-logo]"); if (!b) return;
+      prefs.logo = b.dataset.logo; guardar(); Shell.setLogo(prefs.logo); pintarConfig(); sonar(700);
+    });
     $("cfgVistas").addEventListener("change", e => {
       const cb = e.target.closest("[data-vista-visible]"); if (!cb) return;
       prefs.vistas[cb.dataset.vistaVisible] = !cb.checked;
@@ -139,11 +179,8 @@ const App = (() => {
       if (!confirm("¿Volver todas las preferencias a como venían?")) return;
       prefs = base(); guardar(); aplicar(); pintarConfig();
     };
-    $("cfgx").onclick = () => $("cfgdlg").close();
-    $("cfgdlg").addEventListener("click", e => { if (e.target === $("cfgdlg")) $("cfgdlg").close(); });
-
     ir(vistaDeHash(), false);
   }
 
-  return {iniciar, ir, sonar, prefs: () => prefs, TEMAS};
+  return {iniciar, ir, sonar, pintarConfig, prefs: () => prefs, TEMAS};
 })();

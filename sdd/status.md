@@ -14,8 +14,10 @@
 | F6 | Guía navegable | Complete | 100% | Índice lateral con seguimiento de sección |
 | F7 | Demo comparativo con/sin SDD | Complete | 100% | Los tres casos borde verificados en los dos widgets |
 | F8 | Deploy en Vercel | Complete | 100% | Live, con headers y redirect verificados en producción |
+| F9 | Configuración (temas, texto, sonido, secciones, admin) | Complete | 100% | Vista con pestañas; el tema con fuente única (ADR-011) |
+| F10 | Barra lateral comprimible con arrastre | Complete | 100% | Comprimida, los accesos pasan a la barra superior |
 
-**Avance total: 7.8 / 8 features ≈ 98%**
+**Avance total: 9.8 / 10 features ≈ 98%**
 
 ## Bloqueos
 

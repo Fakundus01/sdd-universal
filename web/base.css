@@ -73,6 +73,80 @@
   --shadow:0 1px 2px rgba(90,70,40,.12); --shadow-lg:0 10px 30px rgba(90,70,40,.18);
 }
 
+/* Temas de naturaleza: pueden llevar fondo animado (data-vivo="on"). */
+:root[data-theme="jungla"]{
+  --bg:#08160e; --bg-soft:#0e2114; --card:#102619; --ink:#ecf9ee; --ink-soft:#c8e6cf;
+  --muted:#82ab8d; --line:#1c3524; --line-strong:#2d4f37;
+  --accent:#7be26a; --accent-ink:#a3f193; --accent-soft:#153521; --on-accent:#05230d;
+  --green:#7be26a; --green-soft:#113020; --amber:#f0c05f; --amber-soft:#2c250c;
+  --red:#ff9b8f; --red-soft:#2e1614; --red-line:#4c2723;
+  --panel:#102619; --panel-2:#173323; --panel-line:#2d4f37;
+  --panel-ink:#ecf9ee; --panel-muted:#82ab8d;
+  --shadow:0 1px 2px rgba(0,0,0,.4); --shadow-lg:0 10px 30px rgba(0,0,0,.5);
+}
+:root[data-theme="oceano"]{
+  --bg:#04121f; --bg-soft:#081c30; --card:#0a2036; --ink:#e8f4ff; --ink-soft:#bcd9ef;
+  --muted:#7aa0bf; --line:#12304a; --line-strong:#1e4668;
+  --accent:#3fc5ff; --accent-ink:#7ad8ff; --accent-soft:#0b2c44; --on-accent:#03222f;
+  --green:#5ee8c4; --green-soft:#0b2f26; --amber:#ffc46b; --amber-soft:#2e2410;
+  --red:#ff8f9b; --red-soft:#331418; --red-line:#5c2731;
+  --panel:#0a2036; --panel-2:#0f2b47; --panel-line:#1e4668;
+  --panel-ink:#e8f4ff; --panel-muted:#7aa0bf;
+  --shadow:0 1px 2px rgba(0,0,0,.45); --shadow-lg:0 10px 30px rgba(0,0,0,.55);
+}
+:root[data-theme="desierto"]{
+  --bg:#190f08; --bg-soft:#26180d; --card:#2b1c10; --ink:#fdf1e3; --ink-soft:#ead7bd;
+  --muted:#b3926f; --line:#3b2917; --line-strong:#573e24;
+  --accent:#ffb45c; --accent-ink:#ffc98a; --accent-soft:#3a2812; --on-accent:#2b1500;
+  --green:#a8e08a; --green-soft:#1e2e14; --amber:#ffb45c; --amber-soft:#3a2812;
+  --red:#ff9382; --red-soft:#361712; --red-line:#5c2a20;
+  --panel:#2b1c10; --panel-2:#382513; --panel-line:#573e24;
+  --panel-ink:#fdf1e3; --panel-muted:#b3926f;
+  --shadow:0 1px 2px rgba(0,0,0,.45); --shadow-lg:0 10px 30px rgba(0,0,0,.55);
+}
+
+/* Tamaño global del texto: todo usa rem, así que mover la raíz mueve la app. */
+:root[data-fs="chico"]{font-size:14px}
+:root[data-fs="grande"]{font-size:18px}
+:root[data-fs="maxi"]{font-size:20px}
+
+/* Fondo con vida: un resplandor que deriva despacio detrás del contenido.
+   Solo en los temas de naturaleza; data-anim="off" y prefers-reduced-motion
+   lo congelan (la regla global de animaciones ya lo cubre). */
+@keyframes vivo-flotar{
+  0%{background-position:10% 15%,88% 78%,50% 108%}
+  50%{background-position:24% 32%,68% 58%,44% 88%}
+  100%{background-position:6% 22%,94% 84%,56% 100%}
+}
+:root[data-vivo="on"] body::before{
+  content:"";position:fixed;inset:-12%;z-index:-1;pointer-events:none;opacity:0;
+  background-repeat:no-repeat;background-size:62% 62%,55% 55%,130% 46%;
+}
+:root[data-vivo="on"][data-theme="bosque"] body::before,
+:root[data-vivo="on"][data-theme="jungla"] body::before,
+:root[data-vivo="on"][data-theme="oceano"] body::before,
+:root[data-vivo="on"][data-theme="desierto"] body::before{
+  opacity:.55;animation:vivo-flotar 28s ease-in-out infinite alternate;
+}
+:root[data-vivo="on"][data-theme="bosque"] body::before{
+  background-image:radial-gradient(circle,rgba(74,222,128,.14),transparent 62%),
+    radial-gradient(circle,rgba(30,110,70,.20),transparent 66%),
+    radial-gradient(ellipse,rgba(16,55,36,.38),transparent 72%);}
+:root[data-vivo="on"][data-theme="jungla"] body::before{
+  background-image:radial-gradient(circle,rgba(123,226,106,.16),transparent 60%),
+    radial-gradient(circle,rgba(40,130,70,.22),transparent 66%),
+    radial-gradient(ellipse,rgba(14,60,32,.42),transparent 72%);}
+:root[data-vivo="on"][data-theme="oceano"] body::before{
+  background-image:radial-gradient(circle,rgba(63,197,255,.13),transparent 60%),
+    radial-gradient(circle,rgba(30,90,160,.22),transparent 66%),
+    radial-gradient(ellipse,rgba(10,45,80,.45),transparent 72%);}
+:root[data-vivo="on"][data-theme="desierto"] body::before{
+  background-image:radial-gradient(circle,rgba(255,180,92,.13),transparent 60%),
+    radial-gradient(circle,rgba(170,100,40,.18),transparent 66%),
+    radial-gradient(ellipse,rgba(80,45,15,.42),transparent 72%);}
+@media (prefers-reduced-motion:reduce){body::before{animation:none!important}}
+
+
 *{box-sizing:border-box;margin:0;padding:0}
 
 /* El [hidden] del navegador es display:none con la MISMA especificidad que
