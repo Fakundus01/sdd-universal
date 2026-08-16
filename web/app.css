@@ -22,15 +22,28 @@
 .side-nav .badge{margin-left:auto;font-size:.66rem;font-weight:800;background:var(--accent);
                  color:var(--on-accent);border-radius:999px;padding:1px 7px;min-width:19px;text-align:center}
 .side-nav .badge:empty{display:none}
-.side-pie{padding:14px 16px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center}
-.side-pie .authbtn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side-pie{padding:10px 12px 14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.pie-btn{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;cursor:pointer;
+         padding:9px 11px;border-radius:10px;font-family:inherit;font-size:.86rem;color:var(--ink-soft);text-align:left}
+.pie-btn:hover{background:var(--card);color:var(--ink)}
+.pie-btn .i{font-size:.95rem;width:19px;text-align:center;flex:none;filter:grayscale(.35)}
+.pie-btn .mail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.pie-btn .ava{width:22px;height:22px;flex:none;border-radius:50%;background:var(--accent);color:var(--on-accent);
+              font-size:.62rem;font-weight:800;display:grid;place-items:center;letter-spacing:.02em}
+.pie-btn .ava.anon{background:var(--line-strong);color:var(--muted)}
 
 /* ---------- área de contenido ---------- */
 .area{min-width:0;display:flex;flex-direction:column}
-.barra{display:none;align-items:center;gap:12px;padding:12px 16px;
+.barra{display:flex;align-items:center;gap:12px;padding:11px 20px;
        border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:20}
 .barra b{font-size:.95rem;letter-spacing:-.01em}
-.hamb{background:none;border:1px solid var(--line-strong);color:var(--ink);border-radius:9px;
+.barra-acciones{margin-left:auto;display:flex;align-items:center;gap:8px}
+.avatar{width:34px;height:34px;border-radius:50%;border:1px solid var(--line-strong);flex:none;
+        background:var(--accent);color:var(--on-accent);font-size:.74rem;font-weight:800;
+        cursor:pointer;font-family:inherit;letter-spacing:.02em}
+.avatar:hover{filter:brightness(1.12)}
+.avatar.anon{background:var(--bg-soft);color:var(--muted);font-size:.95rem}
+.hamb{display:none;background:none;border:1px solid var(--line-strong);color:var(--ink);border-radius:9px;
       width:36px;height:36px;font-size:1rem;cursor:pointer;font-family:inherit;flex:none}
 .side-fondo{position:fixed;inset:0;background:rgba(5,8,18,.6);z-index:39}
 
@@ -50,7 +63,8 @@
 /* ---------- celular y tablet: la barra se vuelve cajón ---------- */
 @media (max-width:900px){
   .app{grid-template-columns:1fr}
-  .barra{display:flex}
+  .hamb{display:block}
+  .barra{padding:11px 14px}
   .side{position:fixed;top:0;left:0;z-index:40;width:266px;
         transform:translateX(-100%);transition:transform .22s ease;border-right:1px solid var(--line)}
   /* translateX(0) y no `none`: transicionar hacia `none` es ambiguo para el
@@ -96,6 +110,30 @@
 .sw input:checked + .pista{background:var(--accent)}
 .sw input:checked + .pista::after{transform:translateX(18px)}
 .sw input:focus-visible + .pista{outline:3px solid var(--accent);outline-offset:2px}
+
+/* ---------- vista Mi perfil ---------- */
+.perfil-cab{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:26px 0 22px;
+            border-bottom:1px solid var(--line);margin-bottom:22px}
+.perfil-ava{width:60px;height:60px;border-radius:50%;flex:none;background:var(--accent);
+            color:var(--on-accent);font-size:1.25rem;font-weight:800;display:grid;place-items:center;
+            letter-spacing:.02em}
+.perfil-ava.anon{background:var(--bg-soft);color:var(--muted);border:1px solid var(--line-strong);font-size:1.5rem}
+.perfil-cab h2{font-size:1.4rem;letter-spacing:-.02em}
+.perfil-cab p{color:var(--muted);font-size:.88rem}
+.perfil-cab .btn{margin-left:auto}
+.perfil-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;align-items:start}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:19px 20px}
+.pcard h3{font-size:1rem;letter-spacing:-.01em;margin-bottom:3px}
+.pcard p.d{color:var(--muted);font-size:.84rem;margin-bottom:14px}
+.pcard code{font-family:var(--mono);font-size:.79rem;color:var(--accent-ink)}
+.pfila{margin-bottom:12px}
+.plbl{display:block;font-size:.75rem;font-weight:700;color:var(--ink-soft);margin-bottom:5px}
+.pcard select,.pcard input{width:100%;padding:9px 11px;border:1px solid var(--line-strong);border-radius:9px;
+     background:var(--bg-soft);color:var(--ink);font-size:.86rem;font-family:inherit}
+.phint{font-size:.78rem;color:var(--muted);margin-top:7px}
+.pventajas{list-style:none;display:flex;flex-direction:column;gap:5px;margin:12px 0 16px}
+.pventajas li{font-size:.84rem;color:var(--ink-soft)}
+.pcard .btn{width:100%;margin-top:4px}
 
 /* ---------- sugerencias de búsqueda ---------- */
 .buscador{position:relative;flex:1;min-width:150px}

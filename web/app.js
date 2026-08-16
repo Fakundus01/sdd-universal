@@ -51,7 +51,8 @@ const App = (() => {
   }
 
   /* ---------------- ruteo ---------------- */
-  const TITULOS = {inicio: "Inicio", catalogo: "Catálogo", combinador: "Combinador", comunidad: "Feedback"};
+  const TITULOS = {inicio: "Inicio", catalogo: "Catálogo", combinador: "Combinador",
+                   perfil: "Mi perfil", comunidad: "Feedback"};
 
   function ir(vista, empujar = true){
     if (!TITULOS[vista]) vista = "inicio";
@@ -59,10 +60,11 @@ const App = (() => {
     document.querySelectorAll(".side-nav a[data-vista]").forEach(a =>
       a.classList.toggle("act", a.dataset.vista === vista));
     $("barraTitulo").textContent = TITULOS[vista];
+    if (vista === "perfil" && typeof PerfilVista !== "undefined") PerfilVista.refrescar();
     if (empujar && location.hash !== "#/" + vista) history.pushState(null, "", "#/" + vista);
     cerrarCajon();
     scrollTo({top: 0, behavior: prefs.animaciones ? "smooth" : "auto"});
-    if (window.Sesion) Sesion.contar("visita", "#/" + vista);
+    if (typeof Sesion !== "undefined") Sesion.contar("visita", "#/" + vista);
   }
 
   const vistaDeHash = () => (location.hash.replace("#/", "") || "inicio");
@@ -86,7 +88,8 @@ const App = (() => {
       </button>`).join("");
     $("cfgAnim").checked = prefs.animaciones;
     $("cfgSonido").checked = prefs.sonido;
-    $("cfgVistas").innerHTML = Object.entries(TITULOS).filter(([v]) => v !== "inicio").map(([v, n]) => `
+    $("cfgVistas").innerHTML = Object.entries(TITULOS)
+      .filter(([v]) => v !== "inicio" && v !== "perfil").map(([v, n]) => `
       <div class="cfg-fila">
         <div class="txt"><b>${n}</b></div>
         <label class="sw"><input type="checkbox" data-vista-visible="${v}"
@@ -107,9 +110,11 @@ const App = (() => {
         e.preventDefault(); sonar(); cerrarCajon();
         ({tech: () => openTech(), reglas: () => ReglasUI.abrir(),
           perfil: () => Perfil.abrir(window.aplicarPerfil),
-          config: () => { pintarConfig(); $("cfgdlg").showModal(); }})[a.dataset.abre]();
+          config: () => { pintarConfig(); $("cfgdlg").showModal(); }})[a.dataset.abre]?.();
       };
     });
+    $("btnConfig").onclick = () => { sonar(); cerrarCajon(); pintarConfig(); $("cfgdlg").showModal(); };
+    $("avatar").onclick = () => { sonar(); ir("perfil"); };
     $("hamb").onclick = () => $("side").classList.contains("abierta") ? cerrarCajon() : abrirCajon();
     $("sideCerrar").onclick = cerrarCajon;
     $("sideFondo").onclick = cerrarCajon;
@@ -120,7 +125,7 @@ const App = (() => {
     $("cfgTemas").addEventListener("click", e => {
       const b = e.target.closest("[data-tema]"); if (!b) return;
       prefs.tema = b.dataset.tema; guardar(); aplicar(); pintarConfig(); sonar(780);
-      if (window.Sesion) Sesion.guardarTema(prefs.tema === "light" ? "light" : "dark");
+      if (typeof Sesion !== "undefined") Sesion.guardarTema(prefs.tema === "light" ? "light" : "dark");
     });
     $("cfgAnim").onchange = e => { prefs.animaciones = e.target.checked; guardar(); aplicar(); };
     $("cfgSonido").onchange = e => { prefs.sonido = e.target.checked; guardar(); if (prefs.sonido) sonar(); };

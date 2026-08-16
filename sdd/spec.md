@@ -32,7 +32,7 @@ El paquete SDD Universal son 20 archivos Markdown en un repo. Para quien ya sabe
 - **C1** · **Sin build.** HTML, CSS y JS que se abren y andan. Un paquete que predica simplicidad no puede necesitar `npm install` para mostrar su propia web.
 - **C2** · **Sin dependencias de terceros en el front.** Ni CDN, ni frameworks, ni librerías. Todo lo que se carga sale de este repo.
 - **C3** · **USD 0/mes** (R14). Ver `costs.md`.
-- **C4** · **Tiene que funcionar sin cuenta.** El login suma, no habilita: alguien que entra por primera vez tiene que poder hacer todo sin registrarse.
+- **C4** · **Tiene que funcionar sin cuenta** — revisado el 2026-08-15 (ADR-010). El login suma, no habilita: catálogo, descargas, paquete `.zip`, combinador, tecnologías y reglas funcionan completos sin registrarse. **Lo único que la cuenta habilita es persistencia:** sin ella se guardan hasta 3 combinaciones y solo en ese navegador.
 - **S1** · *Supuesto:* la gente llega desde GitHub o desde un link compartido, no desde buscadores. Por eso importan las metaetiquetas OG más que el SEO.
 
 ## 5 · Decisiones ya tomadas

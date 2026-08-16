@@ -11,6 +11,7 @@
 const Sesion = (() => {
   const CLAVE = "sdd-sesion";
   const LOCAL = "sdd-combinaciones";
+  const TOPE_SIN_CUENTA = 3;
   const activo = () => Boolean(SUPABASE?.url && SUPABASE?.key);
 
   let s = null;                        // {access_token, refresh_token, expires_at, user}
@@ -246,6 +247,11 @@ const Sesion = (() => {
     if (!usuario() || sinTablas){
       const todas = localLeer().filter(x => x.nombre.toLowerCase() !== c.nombre.toLowerCase());
       todas.unshift({...c, id: crypto.randomUUID(), actualizado_en: new Date().toISOString()});
+      // Sin cuenta se guardan pocas y solo en este navegador. No es una
+      // traba artificial: sin servidor donde ponerlas, más de esto es
+      // prometer una persistencia que no tenemos.
+      if (todas.length > TOPE_SIN_CUENTA)
+        throw new Error(`Sin cuenta podés guardar hasta ${TOPE_SIN_CUENTA} combinaciones. Borrá una, o entrá con tu mail para tenerlas ilimitadas y en cualquier dispositivo.`);
       localEscribir(todas);
       return todas[0];
     }
@@ -321,19 +327,19 @@ const Sesion = (() => {
   /* Guarda las respuestas del onboarding. Solo manda las columnas que
      conoce: si el esquema todavía no tiene las nuevas, falla en silencio
      y el perfil sigue viviendo en localStorage. */
-  async function guardarPerfil({nivel, interes, perfil_sdd, agente, onboarding}){
+  async function guardarPerfil({nivel, interes, perfil_sdd, agente, nombre, onboarding}){
     if (!usuario()) return;
     await rest(`perfiles?id=eq.${usuario().id}`, {
       method: "PATCH",
       body: JSON.stringify({nivel: nivel || "PRO", interes, perfil_sdd: perfil_sdd || "ESTRICTO",
-                            agente, onboarding})
+                            agente, nombre: nombre || "", onboarding})
     }).catch(() => {});
   }
 
   return {
     activo, usuario, iniciar, salir,
     registrar, entrar, recuperar, pedirLink, cambiarPassword,
-    contar, metricas, esAdmin,
+    contar, metricas, esAdmin, TOPE_SIN_CUENTA,
     listar, guardarCombinacion, borrarCombinacion, migrarLocales,
     guardarTema, traerPerfil, guardarPerfil,
     alCambiar: f => oyentes.push(f)

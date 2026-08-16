@@ -10,7 +10,7 @@
  */
 const Perfil = (() => {
   const CLAVE = "sdd-perfil";
-  const base = () => ({nivel: "", interes: "", perfil_sdd: "", agente: "", onboarding: false});
+  const base = () => ({nivel: "", interes: "", perfil_sdd: "", agente: "", nombre: "", onboarding: false});
   let p = base();
   let paso = 0;
   let alTerminar = null;

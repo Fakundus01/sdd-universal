@@ -90,6 +90,20 @@
 
 ---
 
+## ADR-010 · Qué limita no tener cuenta — 2026-08-15 · Vigente
+
+**Pedido:** que quien no inicia sesión pueda usar la app, pero limitada.
+
+**La tensión:** C4 de la spec decía que el login *suma, no habilita*. Poner límites lo contradice, así que se revisa el constraint en vez de romperlo en silencio.
+
+**Decisión — el límite es de persistencia, no de funcionalidad.** Sin cuenta funcionan completos el catálogo, las descargas, el paquete `.zip`, el combinador, las tecnologías, las reglas, la guía y el demo. Lo único limitado: **hasta 3 combinaciones guardadas, y solo en ese navegador.**
+
+**Por qué ahí y no en otro lado:** trabar el catálogo o el ZIP sería trabar *el producto* — lo que la gente vino a buscar, y lo que hace que el SDD se difunda. En cambio la persistencia es lo único que de verdad **requiere** una cuenta: sin servidor donde poner los datos, guardar más es prometer algo que no podemos cumplir. El tope no castiga: describe la realidad de `localStorage`.
+
+**Lo que se descartó:** limitar los temas, o esconder secciones detrás del login. Son palancas que molestan sin dar nada a cambio, y contradicen el espíritu de un paquete que se regala.
+
+---
+
 ## ADR-009 · El `[hidden]` se refuerza globalmente — 2026-08-15 · Vigente
 
 **Contexto — un bug reportado por el owner:** en toda la página aparecía un cartel verde vacío, con solo una ✕.

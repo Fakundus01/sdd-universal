@@ -17,6 +17,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="app.css">
 <style>
   .layout{display:grid;grid-template-columns:236px 1fr;gap:40px;align-items:start;padding-top:32px}
   @media (max-width:900px){.layout{grid-template-columns:1fr;gap:22px;padding-top:22px}}
@@ -99,19 +100,14 @@
 <body>
 <a class="skip" href="#contenido">Saltar al contenido</a>
 
-<div class="wrap">
+<div class="app">
 
-<div class="top">
-  <a class="brand" href="./"><span class="mark"><span></span></span>SDD Hub</a>
-  <nav>
-    <a href="./" class="hide-s">Catálogo</a>
-    <a href="guia.html" aria-current="page">Guía</a>
-    <a href="demo.html">Demo</a>
-    <a href="../sdd-universal-tablero.html" class="hide-s">Tablero</a>
-    <a href="https://github.com/Fakundus01/sdd-universal" class="hide-s">GitHub</a>
-    <button class="tbtn" id="theme" type="button" aria-label="Cambiar a tema claro" title="Cambiar tema">◐</button>
-  </nav>
-</div>
+<aside class="side" id="side" aria-label="Navegación principal"></aside>
+<div class="side-fondo" id="sideFondo" hidden></div>
+
+<div class="area">
+  <header class="barra" id="barra"></header>
+  <div class="wrap">
 
 <div class="layout">
 
@@ -134,7 +130,7 @@
       <p class="kick">Guía de uso</p>
       <h1>Cómo se usa el SDD Universal</h1>
       <p>Para humanos. Los agentes no leen esta guía salvo que se la pidas — a ellos les alcanza con el master.</p>
-      <p class="meta">Versión 0.15 · 2026-08-15 · lectura de ~8 minutos</p>
+      <p class="meta">Versión 0.16 · 2026-08-15 · lectura de ~8 minutos</p>
     </header>
 
     <section id="que-es">
@@ -282,7 +278,7 @@
 </div>
 
 <footer>
-  <div>SDD Universal <b>v0.15</b> · licencia MIT</div>
+  <div>SDD Universal <b>v0.16</b> · licencia MIT</div>
   <nav>
     <a href="./">Catálogo</a>
     <a href="demo.html">Demo</a>
@@ -291,10 +287,30 @@
   </nav>
 </footer>
 
+  </div>
+</div>
 </div>
 
+<script src="shell.js"></script>
 <script src="tema.js"></script>
 <script>
+Shell.montar({pagina: "contenido", actual: "guia.html", titulo: "Guía"});
+Tema.iniciar();
+document.getElementById("hamb").onclick = () => {
+  const lado = document.getElementById("side"), fondo = document.getElementById("sideFondo");
+  const abierta = lado.classList.toggle("abierta");
+  fondo.hidden = !abierta;
+};
+document.getElementById("sideCerrar").onclick =
+document.getElementById("sideFondo").onclick = () => {
+  document.getElementById("side").classList.remove("abierta");
+  document.getElementById("sideFondo").hidden = true;
+};
+// El avatar y el pie llevan al perfil de la app, que es donde vive la cuenta.
+document.getElementById("avatar").onclick = () => location.href = "index.html#/perfil";
+document.getElementById("btnConfig").onclick = () => location.href = "index.html#/perfil";
+document.getElementById("authbtn").onclick = () => location.href = "index.html#/perfil";
+
 /* Marca en el índice la sección que se está leyendo.
    Con posiciones y no con IntersectionObserver: el observer depende del
    pipeline de render y no dispara en contextos sin compositing. Esto anda

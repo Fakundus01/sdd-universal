@@ -380,47 +380,12 @@
 <a class="skip" href="#catalogo">Saltar al catálogo</a>
 <div class="app">
 
-<aside class="side" id="side" aria-label="Navegación principal">
-  <div class="side-marca">
-    <a class="brand" href="#/inicio"><span class="mark"><span></span></span>SDD Hub</a>
-    <button class="side-cerrar" id="sideCerrar" type="button" aria-label="Cerrar el menú">✕</button>
-  </div>
-
-  <nav class="side-nav">
-    <p class="side-grupo">Empezar</p>
-    <a data-vista="inicio"><span class="i">🏠</span>Inicio</a>
-    <a data-vista="catalogo"><span class="i">📦</span>Catálogo<span class="badge" id="badgeCat"></span></a>
-    <a data-vista="combinador"><span class="i">🧩</span>Combinador</a>
-
-    <p class="side-grupo">Tu configuración</p>
-    <a data-abre="tech"><span class="i">⚙️</span>Tecnologías<span class="badge" id="badgeTech"></span></a>
-    <a data-abre="reglas"><span class="i">📐</span>Mis reglas<span class="badge" id="badgeReglas"></span></a>
-    <a data-abre="perfil"><span class="i">👤</span>Mi perfil</a>
-    <a data-abre="config"><span class="i">🎨</span>Preferencias</a>
-
-    <p class="side-grupo">Aprender</p>
-    <a href="guia.html"><span class="i">📖</span>Guía</a>
-    <a href="demo.html"><span class="i">🔬</span>Demo con/sin SDD</a>
-    <a href="../sdd-universal-tablero.html"><span class="i">🗺️</span>Tablero</a>
-
-    <p class="side-grupo">Comunidad</p>
-    <a data-vista="comunidad"><span class="i">💬</span>Feedback</a>
-    <a href="https://github.com/Fakundus01/sdd-universal"><span class="i">🐙</span>GitHub</a>
-  </nav>
-
-  <div class="side-pie">
-    <button class="authbtn" id="authbtn" type="button" hidden>Entrar</button>
-    <button class="tbtn" id="theme" type="button" aria-label="Cambiar a tema claro" title="Cambiar tema">◐</button>
-  </div>
-</aside>
+<aside class="side" id="side" aria-label="Navegación principal"></aside>
 
 <div class="side-fondo" id="sideFondo" hidden></div>
 
 <div class="area">
-  <header class="barra">
-    <button class="hamb" id="hamb" type="button" aria-label="Abrir el menú" aria-expanded="false">☰</button>
-    <b id="barraTitulo">Inicio</b>
-  </header>
+  <header class="barra" id="barra"></header>
 
   <div class="wrap">
 <div class="aviso" id="aviso" role="status" hidden>
@@ -609,6 +574,39 @@
 </section>
 </section>
 
+<section class="vista" data-vista="perfil" hidden>
+  <div class="perfil-cab">
+    <span class="perfil-ava" id="perfilAva">··</span>
+    <div>
+      <h2 id="perfilNombre">Invitado</h2>
+      <p id="perfilMail">Estás usando la app sin cuenta</p>
+    </div>
+    <button class="btn b-go" id="perfilAccion" type="button">Entrar</button>
+  </div>
+
+  <div class="perfil-grid">
+    <div class="pcard">
+      <h3>Cómo trabajás</h3>
+      <p class="d">Esto define cómo te habla tu agente y precarga el combinador.</p>
+      <div id="perfilForm"></div>
+      <button class="btn b-alt" id="perfilRehacer" type="button">Volver a hacer las preguntas</button>
+    </div>
+
+    <div class="pcard">
+      <h3>Tu identidad</h3>
+      <p class="d">El nombre solo se usa para armar tu avatar. Si lo dejás vacío, se usan las dos primeras letras de tu mail.</p>
+      <label class="plbl" for="perfilNombreInput">Nombre y apellido</label>
+      <input id="perfilNombreInput" type="text" maxlength="60" placeholder="Facundo Moreno" autocomplete="name">
+      <p class="phint" id="perfilNombreHint"></p>
+    </div>
+
+    <div class="pcard" id="pcardCuenta">
+      <h3>Tu cuenta</h3>
+      <div id="perfilCuenta"></div>
+    </div>
+  </div>
+</section>
+
 <section class="vista" data-vista="comunidad" hidden>
 <section class="comunidad" id="comunidad">
   <h2>¿Te hizo fricción? Contámelo</h2>
@@ -642,7 +640,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.15</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.16</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -821,6 +819,7 @@
   </div>
 </dialog>
 
+<script src="shell.js"></script>
 <script src="tema.js"></script>
 <script src="buscador.js"></script>
 <script src="zip.js"></script>
@@ -831,9 +830,15 @@
 <script src="supabase-config.js"></script>
 <script src="sesion.js"></script>
 <script src="perfil.js"></script>
+<script src="perfil-vista.js"></script>
 <script src="app.js"></script>
 <script>
 const $ = id => document.getElementById(id);
+
+// El shell se monta primero: todo lo de abajo busca #avatar, #authbtn,
+// #theme y #hamb, que no existen hasta que Shell los escribe.
+Shell.montar({pagina: "app"});
+Tema.iniciar();
 
 /* ---------- tema ---------- */
 // Tema vive en tema.js (compartido con guia.html y demo.html);
@@ -1437,18 +1442,13 @@ $("combolist").addEventListener("click", async e => {
 });
 
 Sesion.alCambiar(u => {
-  const b = $("authbtn");
-  b.hidden = !Sesion.activo();
-  b.textContent = u ? u.email : "Entrar";
-  b.classList.toggle("dentro", Boolean(u));
-  b.title = u ? "Tocá para salir de tu cuenta" : "Entrar con tu email";
+  Shell.pintarCuenta(u, Perfil.datos());
+  if (typeof PerfilVista !== "undefined" && !$("perfilAva").closest(".vista").hidden) PerfilVista.refrescar();
 });
 
-$("authbtn").onclick = async () => {
-  if (Sesion.usuario()){
-    if (confirm("¿Cerrar sesión?")) { await Sesion.salir(); await renderGuardadas(); }
-  } else $("authdlg").showModal();
-};
+// El botón del pie lleva al perfil: cerrar sesión vive ahí, junto con todo
+// lo demás de la cuenta, en vez de escondido detrás de un confirm().
+$("authbtn").onclick = () => Sesion.usuario() ? App.ir("perfil") : $("authdlg").showModal();
 $("authx").onclick = () => $("authdlg").close();
 
 /* --- avisos de la barra superior --- */
@@ -1554,6 +1554,7 @@ $("authlink").onclick = () => {
 };
 
 /* ---------- init ---------- */
+PerfilVista.iniciar();
 ReglasUI.iniciar();
 // si venís desde el link de la guía, abrimos el configurador directo
 if (sessionStorage.getItem("sdd-abrir-reglas")){
