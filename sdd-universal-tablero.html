@@ -3,24 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SDD Universal · Tablero v0.16</title>
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0b0f1f" id="themecolor">
+<title>SDD Universal · Tablero v0.17</title>
+<link rel="stylesheet" href="web/base.css">
+<link rel="stylesheet" href="web/app.css">
 <style>
-  :root{
-    --bg:#f5f6fa; --card:#ffffff; --ink:#1a2233; --muted:#5b6478; --line:#e4e7ef;
-    --accent:#4f46e5; --accent-soft:#eef0ff; --green:#15803d; --green-soft:#eaf7ef;
-    --amber:#b45309; --amber-soft:#fdf3e3; --red:#b91c1c; --red-soft:#fdecec;
-    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;line-height:1.55}
-  .wrap{max-width:1100px;margin:0 auto;padding:0 20px 80px}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 20px 80px;min-width:0}
   header.hero{padding:42px 0 18px}
   .hero h1{font-size:1.9rem;letter-spacing:-.02em}
   .hero h1 span{color:var(--accent)}
   .hero p.sub{color:var(--muted);margin-top:6px;max-width:70ch}
   .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-  .chip{font-size:.78rem;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);border:1px solid #dcdffb}
-  nav.toc{position:sticky;top:0;background:rgba(245,246,250,.94);backdrop-filter:blur(6px);z-index:9;border-bottom:1px solid var(--line);margin:18px -20px 26px;padding:10px 20px;display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:.78rem;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);border:1px solid var(--line-strong)}
+  nav.toc{position:sticky;top:0;background:color-mix(in srgb, var(--bg) 94%, transparent);backdrop-filter:blur(6px);z-index:9;border-bottom:1px solid var(--line);margin:18px 0 26px;padding:10px 0;display:flex;gap:6px;flex-wrap:wrap}
   nav.toc a{font-size:.82rem;font-weight:600;color:var(--muted);text-decoration:none;padding:5px 11px;border-radius:8px}
   nav.toc a:hover{background:#fff;color:var(--accent)}
   section{margin-bottom:46px}
@@ -37,13 +35,13 @@
   .fbox .r{font-family:var(--mono);font-size:.7rem;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:1px 6px;margin-left:4px}
   .fstart{border-color:var(--accent);background:var(--accent-soft)}
   .fstart b{color:var(--accent)}
-  .floop-title{border-color:var(--ink);background:#1a2233;color:#fff}
-  .floop-title small{color:#c7cbe0}
-  .arrow{color:#9aa1b5;font-size:1.15rem;line-height:1;padding:7px 0}
+  .floop-title{border-color:var(--ink);background:var(--panel);color:var(--panel-ink)}
+  .floop-title small{color:var(--panel-muted)}
+  .arrow{color:var(--muted);font-size:1.15rem;line-height:1;padding:7px 0}
   .split{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:860px;margin:4px 0}
   .lane{border-radius:14px;padding:14px;border:1.5px dashed var(--line)}
-  .lane.green{background:var(--green-soft);border-color:#bfe3cc}
-  .lane.amber{background:var(--amber-soft);border-color:#eed9b0}
+  .lane.green{background:var(--green-soft);border-color:var(--green)}
+  .lane.amber{background:var(--amber-soft);border-color:var(--amber)}
   .lane h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;text-align:center}
   .lane.green h3{color:var(--green)} .lane.amber h3{color:var(--amber)}
   .lane .fbox{max-width:none;margin:0 auto}
@@ -52,11 +50,11 @@
   .loopnote b{color:var(--accent)}
 
   /* ---- arquitectura ---- */
-  .tree{font-family:var(--mono);font-size:.83rem;line-height:1.75;white-space:pre;overflow-x:auto;background:#101527;color:#dbe1f5;border-radius:12px;padding:18px 22px}
-  .tree .c{color:#7f8db0}
-  .tree .hl{color:#a5b4fc;font-weight:700}
-  .tree .nw{color:#6ee7a0}
-  .tree .us{color:#fbbf6d}
+  .tree{font-family:var(--mono);font-size:.83rem;line-height:1.75;white-space:pre;overflow-x:auto;background:var(--panel);color:var(--panel-ink);border-radius:12px;padding:18px 22px}
+  .tree .c{color:var(--panel-muted)}
+  .tree .hl{color:var(--accent-ink);font-weight:700}
+  .tree .nw{color:var(--green)}
+  .tree .us{color:var(--amber)}
   .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:.8rem;color:var(--muted)}
   .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 
@@ -69,13 +67,13 @@
   .tag{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:999px;letter-spacing:.03em}
   .on{background:var(--green-soft);color:var(--green)}
   .sw{background:var(--amber-soft);color:var(--amber)}
-  .fx{background:#eef1f6;color:var(--muted)}
+  .fx{background:var(--bg-soft);color:var(--muted)}
   .rule p{font-size:.84rem;color:var(--muted)}
   .profilebar{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
   .profile{border-radius:12px;padding:12px 16px;font-size:.86rem}
   .profile b{display:block;margin-bottom:2px}
-  .p-strict{background:var(--red-soft);color:var(--red);border:1px solid #f3c6c6}
-  .p-trust{background:var(--green-soft);color:var(--green);border:1px solid #bfe3cc}
+  .p-strict{background:var(--red-soft);color:var(--red);border:1px solid var(--red-line)}
+  .p-trust{background:var(--green-soft);color:var(--green);border:1px solid var(--green)}
 
   /* ---- extras ---- */
   .extras{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
@@ -84,7 +82,7 @@
   .extra p{font-size:.84rem;color:var(--muted);margin-top:3px}
   .st{float:right;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:999px}
   .in01{background:var(--accent-soft);color:var(--accent)}
-  .in02{background:#eef1f6;color:var(--muted)}
+  .in02{background:var(--bg-soft);color:var(--muted)}
 
   /* ---- roadmap ---- */
   .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
@@ -97,20 +95,27 @@
 
   details{margin-top:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 16px}
   summary{cursor:pointer;font-weight:600;font-size:.88rem;color:var(--accent)}
-  details pre{margin-top:10px;font-family:var(--mono);font-size:.78rem;line-height:1.6;overflow-x:auto;background:#101527;color:#dbe1f5;border-radius:10px;padding:14px 16px}
+  details pre{margin-top:10px;font-family:var(--mono);font-size:.78rem;line-height:1.6;overflow-x:auto;background:var(--panel);color:var(--panel-ink);border-radius:10px;padding:14px 16px}
   footer{color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);padding-top:16px}
   footer a{color:var(--accent);text-decoration:none}
   @media(max-width:720px){.split,.profilebar{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="app">
+
+<aside class="side" id="side" aria-label="Navegación principal"></aside>
+<div class="side-fondo" id="sideFondo" hidden></div>
+
+<div class="area">
+  <header class="barra" id="barra"></header>
+  <div class="wrap">
 
 <header class="hero">
   <h1>SDD <span>Universal</span> · Tablero de Gobernanza</h1>
   <p class="sub">Un paquete portable de Specification-Driven Development: se lo pasás a cualquier agente de IA (Claude, Cursor, Copilot…) como primer mensaje y conduce todo el proyecto — con el mínimo gasto de tokens.</p>
   <div class="chips">
-    <span class="chip">v0.16 · 2026-08-15</span>
+    <span class="chip">v0.17 · 2026-08-15</span>
     <span class="chip">Fuente: Markdown</span>
     <span class="chip">Español · nombres de archivo en inglés</span>
     <span class="chip">27 reglas con toggle</span>
@@ -226,9 +231,9 @@
         ├── start-prompt.md   <span class="c"># plantillas greenfield / brownfield</span>
         └── loop-prompt.md    <span class="c"># loop + formato HANDBACK</span></div>
     <div class="legend">
-      <span><i style="background:#a5b4fc"></i>Conductor (lectura obligatoria)</span>
-      <span><i style="background:#6ee7a0"></i>Nuevos que sumé en v0.1</span>
-      <span><i style="background:#fbbf6d"></i>Por usuario (multi-equipo); con 1 persona son archivos planos</span>
+      <span><i style="background:var(--accent)"></i>Conductor (lectura obligatoria)</span>
+      <span><i style="background:var(--green)"></i>Nuevos que sumé en v0.1</span>
+      <span><i style="background:var(--amber)"></i>Por usuario (multi-equipo); con 1 persona son archivos planos</span>
     </div>
   </div>
 </section>
@@ -335,6 +340,22 @@
   Basado en: tu doc <b>Gobernanza_SDD_Automation.docx</b> · <a href="https://github.com/github/spec-kit">GitHub Spec-Kit</a> · <a href="https://github.com/SpillwaveSolutions/sdd-skill">sdd-skill</a> · estándar <a href="https://www.morphllm.com/agents-md-guide">AGENTS.md</a> · <a href="https://code.claude.com/docs/en/best-practices">Claude Code best practices</a>
 </footer>
 
+  </div>
 </div>
+</div>
+
+<script src="web/shell.js"></script>
+<script src="web/tema.js"></script>
+<script>
+Shell.montar({pagina: "contenido", base: "web/", actual: "../sdd-universal-tablero.html", titulo: "Tablero"});
+Tema.iniciar();
+const lado = document.getElementById("side"), fondo = document.getElementById("sideFondo");
+document.getElementById("hamb").onclick = () => { fondo.hidden = !lado.classList.toggle("abierta"); };
+document.getElementById("sideCerrar").onclick =
+document.getElementById("sideFondo").onclick = () => { lado.classList.remove("abierta"); fondo.hidden = true; };
+document.getElementById("avatar").onclick =
+document.getElementById("btnConfig").onclick =
+document.getElementById("authbtn").onclick = () => location.href = "web/index.html#/perfil";
+</script>
 </body>
 </html>

@@ -196,17 +196,18 @@
   /* margin:auto es lo que centra un <dialog> modal — el reset global de arriba lo pisaba
      y por eso quedaba clavado arriba a la izquierda. */
   dialog.tech{border:1px solid var(--line);border-radius:18px;padding:0;background:var(--card);
-       color:var(--ink);width:min(760px,94vw);max-height:88vh;box-shadow:var(--shadow-lg);
+       color:var(--ink);width:min(920px,95vw);max-height:90vh;box-shadow:var(--shadow-lg);
        margin:auto;display:none;flex-direction:column;overflow:hidden}
   dialog.tech[open]{display:flex}
   dialog.tech::backdrop{background:rgba(5,8,18,.72)}
-  .dlg-head{padding:18px 22px 13px;border-bottom:1px solid var(--line);position:relative;flex:none;
+  .dlg-head{padding:20px 24px 15px;border-bottom:1px solid var(--line);position:relative;flex:none;
        cursor:grab;user-select:none;touch-action:none}
   .dlg-head:active{cursor:grabbing}
   .dlg-head h2{font-size:1.15rem;letter-spacing:-.02em;padding-right:70px}
   .dlg-head p{font-size:.83rem;color:var(--muted);margin-top:4px;max-width:64ch}
-  .dlg-head .grip{position:absolute;top:19px;right:54px;color:var(--muted);font-size:.9rem;
-       letter-spacing:-2px;opacity:.6}
+  .dlg-head .grip{position:absolute;top:21px;right:56px;color:var(--muted);font-size:.78rem;
+       letter-spacing:-1px;opacity:.35;cursor:grab}
+  .dlg-head:hover .grip{opacity:.65}
   .dlg-x{position:absolute;top:15px;right:16px;background:none;border:1px solid var(--line-strong);
        color:var(--muted);width:30px;height:30px;border-radius:9px;cursor:pointer;font-family:inherit}
   .dlg-x:hover{color:var(--ink)}
@@ -215,26 +216,57 @@
     .dlg-head{cursor:default}
     .dlg-head .grip{display:none}
   }
-  .dlg-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px 22px;
-       border-bottom:1px solid var(--line);background:var(--bg-soft)}
-  .dlg-filters input,.dlg-filters select{padding:8px 11px;border:1px solid var(--line-strong);
-       border-radius:9px;font-size:.83rem;background:var(--card);color:var(--ink);font-family:inherit}
-  .dlg-filters input{flex:1;min-width:150px}
-  .dlg-filters .os{display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--muted);cursor:pointer}
-  .dlg-filters .os input{flex:none;accent-color:var(--accent);width:15px;height:15px}
-  .dlg-list{overflow-y:auto;padding:8px 14px;flex:1;min-height:0}
-  @media (min-width:641px){.dlg-list{max-height:min(46vh,420px)}}
-  .dlg-grp{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;
-       color:var(--muted);padding:12px 8px 6px}
-  .trow{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:10px;cursor:pointer}
+  .dlg-filters{padding:15px 24px;border-bottom:1px solid var(--line);background:var(--bg-soft)}
+  .dlg-filters input,.dlg-filters select{padding:10px 12px;border:1px solid var(--line-strong);
+       border-radius:10px;font-size:.86rem;background:var(--card);color:var(--ink);font-family:inherit}
+  .tech-filtros .fila-busq{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .tech-filtros .buscador{flex:1;min-width:0;position:relative}
+  .tech-filtros .lupa{position:absolute;left:12px;top:50%;transform:translateY(-50%);
+       font-size:.82rem;opacity:.5;pointer-events:none}
+  .tech-filtros .fila-busq input{width:100%;padding-left:34px}
+  .tech-filtros .cuantas{font-size:.78rem;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+  .tech-filtros .fila-selects{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .tech-filtros .fila-selects select{flex:1;min-width:150px}
+  .dlg-filters .os{display:flex;align-items:center;gap:8px;font-size:.83rem;color:var(--ink-soft);
+       cursor:pointer;background:var(--card);border:1px solid var(--line-strong);border-radius:10px;
+       padding:9px 13px;flex:none;white-space:nowrap}
+  .dlg-filters .os:hover{border-color:var(--muted)}
+  .dlg-filters .os input{accent-color:var(--accent);width:16px;height:16px;flex:none;margin:0}
+
+  .dlg-list{overflow-y:auto;padding:8px 14px 4px;flex:1;min-height:0}
+  @media (min-width:641px) and (min-height:700px){.dlg-list{max-height:min(52vh,470px)}}
+  /* En pantallas bajas (notebooks chicas, celular apaisado) el encabezado se
+     come la lista. Se achica el chrome para que quede lugar donde importa. */
+  @media (max-height:700px){
+    .dlg-head{padding:13px 24px 9px}
+    .dlg-head p{display:none}
+    .dlg-head h2{padding-right:70px}
+    .dlg-filters{padding:11px 24px}
+    .tech-filtros .fila-busq{margin-bottom:8px}
+    .dlg-foot{padding:10px 24px}
+    .dlg-grp{padding:9px 10px 5px}
+  }
+  .dlg-grp{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
+       color:var(--muted);padding:15px 10px 7px;position:sticky;top:-8px;background:var(--card);z-index:1}
+
+  .trow{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:11px;cursor:pointer;
+        border:1px solid transparent}
   .trow:hover{background:var(--bg-soft)}
-  .trow input{accent-color:var(--accent);width:16px;height:16px;flex:none}
-  .trow .nm{font-weight:600;font-size:.89rem;flex:none}
+  .trow.elegida{background:var(--accent-soft);border-color:var(--accent)}
+  .trow input{position:absolute;opacity:0;width:0;height:0}
+  .trow .tick{width:20px;height:20px;flex:none;border-radius:6px;border:1.5px solid var(--line-strong);
+       background:var(--card);display:grid;place-items:center}
+  .trow .tick::after{content:"✓";font-size:.72rem;font-weight:900;color:var(--on-accent);opacity:0}
+  .trow.elegida .tick{background:var(--accent);border-color:var(--accent)}
+  .trow.elegida .tick::after{opacity:1}
+  .trow input:focus-visible + .tick{outline:3px solid var(--accent);outline-offset:2px}
+  .trow .datos{min-width:0;display:flex;flex-direction:column;gap:1px}
+  .trow .nm{font-weight:650;font-size:.9rem;color:var(--ink)}
   .trow .meta{font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .trow .os{font-size:.63rem;font-weight:700;color:var(--green);background:var(--green-soft);
-       border-radius:999px;padding:2px 7px;margin-left:auto;flex:none}
+  .trow .os{font-size:.6rem;font-weight:800;letter-spacing:.05em;color:var(--green);
+       background:var(--green-soft);border-radius:6px;padding:3px 7px;margin-left:auto;flex:none}
   .dlg-empty{padding:34px 10px;text-align:center;color:var(--muted);font-size:.87rem}
-  .dlg-foot{display:flex;align-items:center;gap:9px;padding:13px 22px;border-top:1px solid var(--line);
+  .dlg-foot{display:flex;align-items:center;gap:9px;padding:14px 24px;border-top:1px solid var(--line);
        flex-wrap:wrap;flex:none;background:var(--bg-soft)}
   .dlg-foot .n{font-size:.84rem;color:var(--muted);margin-right:auto}
 
@@ -640,7 +672,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.16</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.17</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -798,17 +830,23 @@
     <span class="grip" title="Arrastrá desde acá para mover la ventana" aria-hidden="true">⠿⠿</span>
     <button class="dlg-x" id="techx" type="button" aria-label="Cerrar el catálogo">✕</button>
   </div>
-  <div class="dlg-filters">
-    <label class="sr" for="tq">Buscar tecnología</label>
-    <span class="buscador">
-      <input id="tq" type="search" placeholder="Escribí py… y aparece Python" autocomplete="off">
-      <div class="sugerencias" id="tqsug" hidden role="listbox" aria-label="Sugerencias"></div>
-    </span>
-    <label class="sr" for="tcat">Categoría</label>
-    <select id="tcat"></select>
-    <label class="sr" for="tfam">Ecosistema</label>
-    <select id="tfam"></select>
-    <label class="os"><input type="checkbox" id="tos"> Solo open source</label>
+  <div class="dlg-filters tech-filtros">
+    <div class="fila-busq">
+      <label class="sr" for="tq">Buscar tecnología</label>
+      <span class="buscador">
+        <span class="lupa" aria-hidden="true">🔍</span>
+        <input id="tq" type="search" placeholder="Escribí py… y aparece Python" autocomplete="off">
+        <div class="sugerencias" id="tqsug" hidden role="listbox" aria-label="Sugerencias"></div>
+      </span>
+      <span class="cuantas" id="techCuantas"></span>
+    </div>
+    <div class="fila-selects">
+      <label class="sr" for="tcat">Categoría</label>
+      <select id="tcat"></select>
+      <label class="sr" for="tfam">Ecosistema</label>
+      <select id="tfam"></select>
+      <label class="os"><input type="checkbox" id="tos"><span>Solo open source</span></label>
+    </div>
   </div>
   <div class="dlg-list" id="techlist" role="group" aria-label="Tecnologías disponibles"></div>
   <div class="dlg-foot">
@@ -1103,12 +1141,15 @@ function renderTech(){
     let html = "", grupo = null;
     for (const t of pagina){
       if (agrupar && t.c !== grupo){ grupo = t.c; html += `<p class="dlg-grp">${esc(grupo)}</p>`; }
-      const meta = [t.t, t.e, t.u].filter(Boolean).join(" · ");
-      html += `<label class="trow">
+      const meta = [t.u, t.e].filter(Boolean).join(" · ");
+      html += `<label class="trow${sel.has(t.n) ? " elegida" : ""}">
         <input type="checkbox" value="${esc(t.n)}"${sel.has(t.n) ? " checked" : ""}>
-        <span class="nm">${esc(t.n)}</span>
-        <span class="meta">${esc(meta)}</span>
-        ${t.os ? '<span class="os">open source</span>' : ""}
+        <span class="tick" aria-hidden="true"></span>
+        <span class="datos">
+          <span class="nm">${esc(t.n)}</span>
+          <span class="meta">${esc(meta)}</span>
+        </span>
+        ${t.os ? '<span class="os" title="Open source">OSS</span>' : ""}
       </label>`;
     }
     $("techlist").innerHTML = html + pager(list.length, techPage, TECH_POR_PAGINA, "tech");
@@ -1116,6 +1157,9 @@ function renderTech(){
   const n = sel.size;
   $("techsel").textContent = n === 0 ? "Ninguna elegida"
     : n === 1 ? "1 tecnología elegida" : `${n} tecnologías elegidas`;
+  $("techCuantas").textContent = list.length === TECH.length
+    ? `${TECH.length} tecnologías`
+    : `${list.length} de ${TECH.length}`;
 }
 
 function renderSel(){

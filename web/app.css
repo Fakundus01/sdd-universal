@@ -22,18 +22,35 @@
 .side-nav .badge{margin-left:auto;font-size:.66rem;font-weight:800;background:var(--accent);
                  color:var(--on-accent);border-radius:999px;padding:1px 7px;min-width:19px;text-align:center}
 .side-nav .badge:empty{display:none}
-.side-pie{padding:10px 12px 14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.side-pie{padding:10px 12px 14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:7px}
 .pie-btn{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;cursor:pointer;
          padding:9px 11px;border-radius:10px;font-family:inherit;font-size:.86rem;color:var(--ink-soft);text-align:left}
 .pie-btn:hover{background:var(--card);color:var(--ink)}
 .pie-btn .i{font-size:.95rem;width:19px;text-align:center;flex:none;filter:grayscale(.35)}
-.pie-btn .mail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.pie-btn .ava{width:22px;height:22px;flex:none;border-radius:50%;background:var(--accent);color:var(--on-accent);
-              font-size:.62rem;font-weight:800;display:grid;place-items:center;letter-spacing:.02em}
-.pie-btn .ava.anon{background:var(--line-strong);color:var(--muted)}
+
+/* La cuenta es el elemento más importante del pie: sin sesión tiene que
+   invitar, y con sesión tiene que decir quién sos sin cortar el mail. */
+.cuenta-btn{display:flex;align-items:center;gap:11px;width:100%;cursor:pointer;font-family:inherit;
+      padding:10px 12px;border-radius:12px;text-align:left;
+      background:var(--accent);border:1px solid var(--accent);color:var(--on-accent)}
+.cuenta-btn:hover{filter:brightness(1.08)}
+.cuenta-btn.dentro{background:var(--card);border-color:var(--line-strong);color:var(--ink)}
+.cuenta-btn.dentro:hover{border-color:var(--accent);filter:none}
+.cuenta-btn .ava{width:30px;height:30px;flex:none;border-radius:50%;font-size:.7rem;font-weight:800;
+      display:grid;place-items:center;letter-spacing:.02em;
+      background:rgba(255,255,255,.22);color:inherit}
+.cuenta-btn.dentro .ava{background:var(--accent);color:var(--on-accent)}
+.cuenta-btn .ava.anon{background:rgba(255,255,255,.22)}
+.cuenta-btn .quien{min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.cuenta-btn .quien b{font-size:.86rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cuenta-btn .quien small{font-size:.72rem;opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ---------- área de contenido ---------- */
-.area{min-width:0;display:flex;flex-direction:column}
+/* min-width:0 no alcanza: un hijo con contenido ancho igual estira el área y
+   genera scroll horizontal en toda la página. El clip lo contiene sin romper
+   los scrollers internos (tablas, bloques de código). */
+.area{min-width:0;display:flex;flex-direction:column;overflow-x:clip}
+.area > .wrap{width:100%;min-width:0}
 .barra{display:flex;align-items:center;gap:12px;padding:11px 20px;
        border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:20}
 .barra b{font-size:.95rem;letter-spacing:-.01em}

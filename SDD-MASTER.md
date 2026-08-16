@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.16 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
+**Versión:** 0.17 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -344,6 +344,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.17 | 2026-08-15 | El **tablero** pasa a usar los tokens compartidos y la barra lateral: era la única página que ignoraba el tema. Rediseñado el pie de la barra (el mail largo se cortaba y el botón «Entrar» casi no se veía) y el catálogo de tecnologías, ahora más ancho y con las filas legibles. |
 | 0.16 | 2026-08-15 | El shell (barra lateral y barra superior) se renderiza desde un solo archivo y es igual en las tres páginas: antes había tres copias del menú y la tercera siempre quedaba vieja. Nuevos: sección **Mi perfil** con avatar de iniciales, y el límite de la app sin cuenta documentado en ADR-010 — se limita la persistencia, nunca la funcionalidad. |
 | 0.15 | 2026-08-15 | La web pasa de página larga a aplicación con barra lateral y vistas por pestaña, con ruteo por hash. Panel de **Preferencias**: 6 temas, animaciones y sonido on/off, y secciones que se pueden sacar del menú. Buscadores con ranking por relevancia y sugerencias — escribir `py` ahora trae Python primero. Corregido un bug de CSS que mostraba un cartel vacío en toda la página. |
 | 0.14 | 2026-08-15 | El combinador pregunta si el proyecto **ya existe** y genera el prompt brownfield (R15) en vez del greenfield. Hasta acá, a un repo con código andando se le mandaba un prompt que arrancaba diciendo "creá la carpeta del repo" — y la mayoría de los proyectos reales ya existen. |
