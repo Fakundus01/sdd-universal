@@ -27,7 +27,59 @@
   --shadow:0 1px 2px rgba(16,24,40,.05); --shadow-lg:0 10px 30px rgba(16,24,40,.09);
 }
 
+/* Paletas extra. Cada una redefine SOLO tokens: ninguna regla de color vive
+   fuera de estos bloques, que es lo que permite agregar temas sin tocar
+   ni una línea del resto de la hoja. */
+:root[data-theme="noche"]{
+  --bg:#05060d; --bg-soft:#0e1120; --card:#0e1120; --ink:#e8ecff; --ink-soft:#b9c2e0;
+  --muted:#7e88ab; --line:#1a1f36; --line-strong:#272e4c;
+  --accent:#5b8cff; --accent-ink:#8fb0ff; --accent-soft:#101a35; --on-accent:#fff;
+  --green:#4ade80; --green-soft:#0c2418; --amber:#f0b45f; --amber-soft:#2b1f0c;
+  --red:#ff8f8f; --red-soft:#2b1214; --red-line:#4a2225;
+  --panel:#0e1120; --panel-2:#141a30; --panel-line:#252c48;
+  --panel-ink:#e8ecff; --panel-muted:#7e88ab;
+  --shadow:0 1px 2px rgba(0,0,0,.5); --shadow-lg:0 10px 30px rgba(0,0,0,.6);
+}
+:root[data-theme="bosque"]{
+  --bg:#0c1613; --bg-soft:#132420; --card:#132420; --ink:#e6f5ee; --ink-soft:#bcd8cc;
+  --muted:#7fa294; --line:#1e332d; --line-strong:#2c473e;
+  --accent:#4ade80; --accent-ink:#7ce8a6; --accent-soft:#122c1f; --on-accent:#052014;
+  --green:#7ce8a6; --green-soft:#122c1f; --amber:#f0c05f; --amber-soft:#2c250c;
+  --red:#ff9b8f; --red-soft:#2e1614; --red-line:#4c2723;
+  --panel:#132420; --panel-2:#1a3129; --panel-line:#2c473e;
+  --panel-ink:#e6f5ee; --panel-muted:#7fa294;
+  --shadow:0 1px 2px rgba(0,0,0,.4); --shadow-lg:0 10px 30px rgba(0,0,0,.5);
+}
+/* Pensado para baja visión: contraste máximo y foco muy marcado. */
+:root[data-theme="contraste"]{
+  --bg:#000; --bg-soft:#141414; --card:#0a0a0a; --ink:#fff; --ink-soft:#f2f2f2;
+  --muted:#c8c8c8; --line:#4a4a4a; --line-strong:#7a7a7a;
+  --accent:#ffd400; --accent-ink:#ffe14d; --accent-soft:#2e2600; --on-accent:#000;
+  --green:#4dff88; --green-soft:#00250f; --amber:#ffb300; --amber-soft:#2e1f00;
+  --red:#ff5f5f; --red-soft:#2e0000; --red-line:#7a0000;
+  --panel:#0a0a0a; --panel-2:#161616; --panel-line:#4a4a4a;
+  --panel-ink:#fff; --panel-muted:#c8c8c8;
+  --shadow:0 0 0 1px #4a4a4a; --shadow-lg:0 10px 30px rgba(0,0,0,.9);
+}
+:root[data-theme="contraste"] :focus-visible{outline-width:4px}
+:root[data-theme="sepia"]{
+  --bg:#f4ecd8; --bg-soft:#eadfc4; --card:#fffaf0; --ink:#3a2f1e; --ink-soft:#5a4a33;
+  --muted:#7d6b52; --line:#ddd0b4; --line-strong:#c9b894;
+  --accent:#8a5a2b; --accent-ink:#7a4f24; --accent-soft:#efe2ca; --on-accent:#fffaf0;
+  --green:#3f6b3f; --green-soft:#e2ecdb; --amber:#8a6a1f; --amber-soft:#f0e6c8;
+  --red:#9b3b2f; --red-soft:#f2ded9; --red-line:#d9b7ae;
+  --panel:#3a2f1e; --panel-2:#4a3d29; --panel-line:#5f5138;
+  --panel-ink:#f4ecd8; --panel-muted:#c2b294;
+  --shadow:0 1px 2px rgba(90,70,40,.12); --shadow-lg:0 10px 30px rgba(90,70,40,.18);
+}
+
 *{box-sizing:border-box;margin:0;padding:0}
+
+/* El [hidden] del navegador es display:none con la MISMA especificidad que
+   cualquier clase nuestra, y nuestra hoja va después: sin esta línea, una
+   regla como .aviso{display:flex} muestra el elemento aunque tenga hidden.
+   Pasó de verdad — un cartel vacío arriba de la página. No la borres. */
+[hidden]{display:none!important}
 html{scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
 body{background:var(--bg);color:var(--ink);line-height:1.55;

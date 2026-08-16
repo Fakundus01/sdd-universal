@@ -49,4 +49,4 @@ Detalle completo en [`CONTRIBUTING.md`](CONTRIBUTING.md). Tus personalizaciones 
 
 ## Estado
 
-**v0.14** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.
+**v0.15** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.

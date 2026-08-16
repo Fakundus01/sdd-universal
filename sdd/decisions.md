@@ -90,6 +90,18 @@
 
 ---
 
+## ADR-009 · El `[hidden]` se refuerza globalmente — 2026-08-15 · Vigente
+
+**Contexto — un bug reportado por el owner:** en toda la página aparecía un cartel verde vacío, con solo una ✕.
+
+**Causa raíz:** el atributo `hidden` del navegador es `display:none` con especificidad (0,1,0) — **la misma** que cualquier clase nuestra. Como nuestra hoja se carga después, una regla tan inocente como `.aviso{display:flex}` gana y el elemento se muestra igual, vacío. Le pasaba también a `#authtabs`.
+
+**Decisión:** `[hidden]{display:none!important}` en `base.css`, una sola vez, con el comentario de por qué no se puede borrar.
+
+**Por qué global y no puntual:** parchear `.aviso[hidden]` arreglaba un caso y dejaba viva la trampa para el siguiente. Es la misma familia que ADR-007: reglas del user-agent que un reset o una clase pisan sin que nadie lo note.
+
+---
+
 ## ADR-007 · El `<dialog>` va con `margin:auto` explícito — 2026-08-15 · Vigente
 
 **Contexto — un bug real.** El diálogo de tecnologías aparecía pegado arriba a la izquierda en vez de centrado.

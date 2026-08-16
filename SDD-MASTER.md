@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.14 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
+**Versión:** 0.15 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -344,6 +344,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.15 | 2026-08-15 | La web pasa de página larga a aplicación con barra lateral y vistas por pestaña, con ruteo por hash. Panel de **Preferencias**: 6 temas, animaciones y sonido on/off, y secciones que se pueden sacar del menú. Buscadores con ranking por relevancia y sugerencias — escribir `py` ahora trae Python primero. Corregido un bug de CSS que mostraba un cartel vacío en toda la página. |
 | 0.14 | 2026-08-15 | El combinador pregunta si el proyecto **ya existe** y genera el prompt brownfield (R15) en vez del greenfield. Hasta acá, a un repo con código andando se le mandaba un prompt que arrancaba diciendo "creá la carpeta del repo" — y la mayoría de los proyectos reales ya existen. |
 | 0.13 | 2026-08-15 | R04 suma la regla del dictado: ante una palabra que no cierra, preguntar en vez de adivinar — el transcriptor de voz deforma nombres técnicos y el malentendido se paga tres pasos después. Nuevos: playbook `git-basico` (cierra un pendiente del catálogo) y onboarding de 4 preguntas que precarga el combinador, editable después desde «Mi perfil». |
 | 0.12 | 2026-08-15 | Canal de feedback sobre GitHub Issues: tres plantillas, y la de "escenario" tiene como campos las columnas de `scenarios.md`, así lo que reporta la comunidad entra directo al motor de R20. Nuevos: `CONTRIBUTING.md`, sección de comunidad en la web, métricas anónimas (`supabase/metricas.sql`) con panel propio — sin usuario, sin IP y sin cookies de seguimiento, para no contradecir la spec ni activar el nivel N2. |

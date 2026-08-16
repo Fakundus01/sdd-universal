@@ -27,6 +27,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
 <link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="app.css">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -377,39 +378,64 @@
 </head>
 <body>
 <a class="skip" href="#catalogo">Saltar al catálogo</a>
+<div class="app">
 
-<div class="wrap">
+<aside class="side" id="side" aria-label="Navegación principal">
+  <div class="side-marca">
+    <a class="brand" href="#/inicio"><span class="mark"><span></span></span>SDD Hub</a>
+    <button class="side-cerrar" id="sideCerrar" type="button" aria-label="Cerrar el menú">✕</button>
+  </div>
 
-<div class="top">
-  <a class="brand" href="./"><span class="mark"><span></span></span>SDD Hub</a>
-  <nav>
-    <a href="guia.html" class="hide-s">Guía</a>
-    <a href="demo.html" class="hide-s">Demo</a>
-    <a href="https://github.com/Fakundus01/sdd-universal/tree/main/examples/turnos/sdd" class="hide-s">Ejemplo</a>
-    <a href="../sdd-universal-tablero.html" class="hide-s">Tablero</a>
-    <a href="#" id="navtech">Tecnologías</a>
-    <a href="#" id="navreglas">Mis reglas</a>
-    <a href="#" id="navperfil" class="hide-s">Mi perfil</a>
-    <a href="https://github.com/Fakundus01/sdd-universal" class="hide-s">GitHub</a>
-    <button class="authbtn" id="authbtn" type="button" hidden>Entrar</button>
-    <button class="tbtn" id="theme" type="button" aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">◐</button>
+  <nav class="side-nav">
+    <p class="side-grupo">Empezar</p>
+    <a data-vista="inicio"><span class="i">🏠</span>Inicio</a>
+    <a data-vista="catalogo"><span class="i">📦</span>Catálogo<span class="badge" id="badgeCat"></span></a>
+    <a data-vista="combinador"><span class="i">🧩</span>Combinador</a>
+
+    <p class="side-grupo">Tu configuración</p>
+    <a data-abre="tech"><span class="i">⚙️</span>Tecnologías<span class="badge" id="badgeTech"></span></a>
+    <a data-abre="reglas"><span class="i">📐</span>Mis reglas<span class="badge" id="badgeReglas"></span></a>
+    <a data-abre="perfil"><span class="i">👤</span>Mi perfil</a>
+    <a data-abre="config"><span class="i">🎨</span>Preferencias</a>
+
+    <p class="side-grupo">Aprender</p>
+    <a href="guia.html"><span class="i">📖</span>Guía</a>
+    <a href="demo.html"><span class="i">🔬</span>Demo con/sin SDD</a>
+    <a href="../sdd-universal-tablero.html"><span class="i">🗺️</span>Tablero</a>
+
+    <p class="side-grupo">Comunidad</p>
+    <a data-vista="comunidad"><span class="i">💬</span>Feedback</a>
+    <a href="https://github.com/Fakundus01/sdd-universal"><span class="i">🐙</span>GitHub</a>
   </nav>
-</div>
 
+  <div class="side-pie">
+    <button class="authbtn" id="authbtn" type="button" hidden>Entrar</button>
+    <button class="tbtn" id="theme" type="button" aria-label="Cambiar a tema claro" title="Cambiar tema">◐</button>
+  </div>
+</aside>
+
+<div class="side-fondo" id="sideFondo" hidden></div>
+
+<div class="area">
+  <header class="barra">
+    <button class="hamb" id="hamb" type="button" aria-label="Abrir el menú" aria-expanded="false">☰</button>
+    <b id="barraTitulo">Inicio</b>
+  </header>
+
+  <div class="wrap">
+<div class="aviso" id="aviso" role="status" hidden>
+  <span id="avisotexto"></span>
+  <button type="button" id="avisox" aria-label="Cerrar el aviso">✕</button>
+</div>
+<main id="contenido">
+
+<section class="vista" data-vista="inicio">
 <header class="hero">
   <p class="kicker">Spec-Driven Development</p>
   <h1>La especificación va <em>antes</em> que el código</h1>
   <p class="lead">Catálogo abierto de paquetes de gobernanza para construir con agentes de IA (Claude, Codex, Cursor, Copilot, Gemini…). Descargás el que necesitás, se lo das a tu agente, y trabaja con estructura, buenas prácticas y pocos tokens — <b>sepas programar o no</b>.</p>
   <p class="mini">Nosotros no te hacemos el proyecto: te damos las herramientas para que lo haga tu agente, bajo tus reglas y con tu OK.</p>
 </header>
-
-<div class="aviso" id="aviso" role="status" hidden>
-  <span id="avisotexto"></span>
-  <button type="button" id="avisox" aria-label="Cerrar el aviso">✕</button>
-</div>
-
-<main>
-
 <div class="paths">
   <div class="path primary">
     <span class="num">CAMINO 1</span>
@@ -430,7 +456,6 @@
     <a class="go ghost" href="../SDD-COMPACT.md" download>Descargar SDD-COMPACT.md</a>
   </div>
 </div>
-
 <section class="how">
   <h2>Cómo funciona, en cuatro pasos</h2>
   <p>El agente nunca toca código antes de que la especificación esté escrita y aprobada por vos. Ese es todo el truco — el resto son detalles de implementación.</p>
@@ -441,7 +466,9 @@
     <li><b>HANDBACK</b>Cierra el ciclo en 20 líneas y espera tu <code>OK</code>, tu corrección o un <code>STOP</code>.</li>
   </ol>
 </section>
+</section>
 
+<section class="vista" data-vista="catalogo" hidden>
 <section class="cat" id="catalogo">
   <div class="sechead">
     <div>
@@ -474,7 +501,10 @@
     <div class="chips" id="chips" role="group" aria-label="Filtrar por categoría"></div>
     <div class="tools">
       <label class="sr" for="q">Buscar en el catálogo</label>
-      <input id="q" type="search" placeholder="Buscar: chatbot, Vercel, deploy, calculadora…" autocomplete="off">
+      <span class="buscador">
+        <input id="q" type="search" placeholder="Buscar: chatbot, Vercel, deploy…" autocomplete="off">
+        <div class="sugerencias" id="qsug" hidden role="listbox" aria-label="Sugerencias"></div>
+      </span>
       <label class="sr" for="lvl">Filtrar por nivel</label>
       <select id="lvl">
         <option value="">Nivel: todos</option>
@@ -493,7 +523,9 @@
     <div class="roadbody" id="roadbody"></div>
   </details>
 </section>
+</section>
 
+<section class="vista" data-vista="combinador" hidden>
 <section class="comb" id="comb">
   <h2>🧩 Combinador de bloques</h2>
   <p class="sub">Elegí tipo de proyecto, stack y nivel, sumale playbooks, y te genero el <b>prompt de arranque</b> exacto para pegar en tu agente — más la lista de archivos que tenés que descargar para esa combinación. Los bloques se combinan con precedencia (<a href="../blocks.md" style="color:#a9a4ff">blocks.md</a>): lo específico pisa lo general y tu agente resuelve el resto con el cuestionario.</p>
@@ -575,7 +607,9 @@
     </div>
   </div>
 </section>
+</section>
 
+<section class="vista" data-vista="comunidad" hidden>
 <section class="comunidad" id="comunidad">
   <h2>¿Te hizo fricción? Contámelo</h2>
   <p class="sub">El SDD crece de una sola manera: <b>casos reales</b>. Ninguna regla entra "porque suena bien" — es la regla R20, y es lo que evita que esto termine siendo un documento de 2000 líneas que nadie lee.</p>
@@ -603,8 +637,62 @@
     · <a href="https://github.com/Fakundus01/sdd-universal/security/advisories/new">Reportar algo de seguridad (privado)</a>
   </p>
 </section>
+</section>
 
 </main>
+
+<footer>
+  <div>SDD Universal <b>v0.15</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <nav>
+    <a href="../SDD-MASTER.md">Master</a>
+    <a href="../GUIDE.md">Guía</a>
+    <a href="https://github.com/Fakundus01/sdd-universal/tree/main/examples/turnos/sdd">Ejemplo real</a>
+    <a href="../scenarios.md">Cómo crece</a>
+    <a href="#comunidad">Feedback</a>
+    <a href="https://github.com/Fakundus01/sdd-universal">GitHub</a>
+  </nav>
+</footer>
+  </div>
+</div>
+</div>
+
+<dialog class="tech cfg" id="cfgdlg" aria-labelledby="cfgtitle">
+  <div class="dlg-head" style="cursor:default">
+    <h2 id="cfgtitle">Preferencias</h2>
+    <p>Se guardan en este navegador. Si entrás con tu cuenta, el tema viaja con vos.</p>
+    <button class="dlg-x" id="cfgx" type="button" aria-label="Cerrar">✕</button>
+  </div>
+
+  <div class="dlg-list">
+    <div class="cfg-bloque">
+      <h3>Tema</h3>
+      <div class="temas" id="cfgTemas"></div>
+    </div>
+
+    <div class="cfg-bloque">
+      <h3>Comportamiento</h3>
+      <div class="cfg-fila">
+        <div class="txt"><b>Animaciones</b><small>Transiciones y desplazamiento suave. Apagalas si te marean o si la máquina va lenta.</small></div>
+        <label class="sw"><input type="checkbox" id="cfgAnim"><span class="pista"></span></label>
+      </div>
+      <div class="cfg-fila">
+        <div class="txt"><b>Sonido</b><small>Un clic corto al navegar. Viene apagado.</small></div>
+        <label class="sw"><input type="checkbox" id="cfgSonido"><span class="pista"></span></label>
+      </div>
+    </div>
+
+    <div class="cfg-bloque">
+      <h3>Secciones visibles</h3>
+      <p style="font-size:.8rem;color:var(--muted);margin-bottom:4px">Sacá del menú lo que no uses. No se borra nada: se puede volver a prender acá.</p>
+      <div id="cfgVistas"></div>
+    </div>
+  </div>
+
+  <div class="dlg-foot">
+    <span class="n"></span>
+    <button class="clear" id="cfgReset" type="button">Volver a los valores por defecto</button>
+  </div>
+</dialog>
 
 <dialog class="tech ob" id="obdlg" aria-labelledby="obTitulo">
   <div class="ob-progreso"><div class="ob-barra" id="obBarra"></div></div>
@@ -714,7 +802,10 @@
   </div>
   <div class="dlg-filters">
     <label class="sr" for="tq">Buscar tecnología</label>
-    <input id="tq" type="search" placeholder="Buscar: React, Postgres, Rust…" autocomplete="off">
+    <span class="buscador">
+      <input id="tq" type="search" placeholder="Escribí py… y aparece Python" autocomplete="off">
+      <div class="sugerencias" id="tqsug" hidden role="listbox" aria-label="Sugerencias"></div>
+    </span>
     <label class="sr" for="tcat">Categoría</label>
     <select id="tcat"></select>
     <label class="sr" for="tfam">Ecosistema</label>
@@ -730,21 +821,8 @@
   </div>
 </dialog>
 
-<footer>
-  <div>SDD Universal <b>v0.14</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
-  <nav>
-    <a href="../SDD-MASTER.md">Master</a>
-    <a href="../GUIDE.md">Guía</a>
-    <a href="https://github.com/Fakundus01/sdd-universal/tree/main/examples/turnos/sdd">Ejemplo real</a>
-    <a href="../scenarios.md">Cómo crece</a>
-    <a href="#comunidad">Feedback</a>
-    <a href="https://github.com/Fakundus01/sdd-universal">GitHub</a>
-  </nav>
-</footer>
-
-</div>
-
 <script src="tema.js"></script>
+<script src="buscador.js"></script>
 <script src="zip.js"></script>
 <script src="paquete.js"></script>
 <script src="tecnologias.js"></script>
@@ -753,6 +831,7 @@
 <script src="supabase-config.js"></script>
 <script src="sesion.js"></script>
 <script src="perfil.js"></script>
+<script src="app.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -889,12 +968,11 @@ let catPage = 1;
 
 function render(){
   renderChips();
-  const q = $("q").value.trim().toLowerCase(), lvl = $("lvl").value;
-  const todas = CARDS.filter(x =>
-    (cat === "Todos" || x.c === cat) &&
-    (!lvl || x.n === lvl) &&
-    (!q || (x.t + " " + x.d).toLowerCase().includes(q))
-  );
+  const q = $("q").value.trim(), lvl = $("lvl").value;
+  // Primero se acota por categoría y nivel; después el buscador ordena por
+  // relevancia, para que "py" traiga Python arriba y no en la fila 12.
+  const base = CARDS.filter(x => (cat === "Todos" || x.c === cat) && (!lvl || x.n === lvl));
+  const todas = Buscador.filtrar(base, q, ["t", "d"]);
   const paginas = Math.max(1, Math.ceil(todas.length / CARDS_POR_PAGINA));
   if (catPage > paginas) catPage = paginas;
   const list = todas.slice((catPage - 1) * CARDS_POR_PAGINA, catPage * CARDS_POR_PAGINA);
@@ -998,9 +1076,8 @@ document.addEventListener("click", e => {
 function techRows(){
   const q = $("tq").value.trim().toLowerCase(),
         c = $("tcat").value, f = $("tfam").value, onlyOS = $("tos").checked;
-  return TECH.filter(t =>
-    (!c || t.c === c) && (!f || t.f === f) && (!onlyOS || t.os) &&
-    (!q || (t.n + " " + t.u + " " + t.e + " " + t.t).toLowerCase().includes(q)));
+  const base = TECH.filter(t => (!c || t.c === c) && (!f || t.f === f) && (!onlyOS || t.os));
+  return Buscador.filtrar(base, q, ["n", "u", "e", "t"]);
 }
 
 const TECH_POR_PAGINA = 20;
@@ -1015,9 +1092,12 @@ function renderTech(){
     $("techlist").innerHTML = `<p class="dlg-empty">Ninguna tecnología coincide con esos filtros.<br>El catálogo arranca con lo que ya relevamos y crece con casos reales (R20).</p>`;
   } else {
     const pagina = list.slice((techPage - 1) * TECH_POR_PAGINA, techPage * TECH_POR_PAGINA);
+    // Con búsqueda activa el orden es por relevancia, así que agrupar por
+    // categoría partiría el ranking en pedazos sin sentido.
+    const agrupar = !$("tq").value.trim();
     let html = "", grupo = null;
     for (const t of pagina){
-      if (t.c !== grupo){ grupo = t.c; html += `<p class="dlg-grp">${esc(grupo)}</p>`; }
+      if (agrupar && t.c !== grupo){ grupo = t.c; html += `<p class="dlg-grp">${esc(grupo)}</p>`; }
       const meta = [t.t, t.e, t.u].filter(Boolean).join(" · ");
       html += `<label class="trow">
         <input type="checkbox" value="${esc(t.n)}"${sel.has(t.n) ? " checked" : ""}>
@@ -1055,7 +1135,6 @@ $("techlist").addEventListener("change", e => {
 });
 function openTech(){ renderTech(); dlg.showModal(); $("tq").focus(); }
 $("opentech").onclick = openTech;
-$("navtech").onclick = e => { e.preventDefault(); openTech(); };
 $("techx").onclick = () => dlg.close();
 $("techdone").onclick = () => dlg.close();
 $("techclear").onclick = () => { sel.clear(); renderTech(); renderSel(); };
@@ -1476,7 +1555,6 @@ $("authlink").onclick = () => {
 
 /* ---------- init ---------- */
 ReglasUI.iniciar();
-$("navreglas").onclick = e => { e.preventDefault(); ReglasUI.abrir(); };
 // si venís desde el link de la guía, abrimos el configurador directo
 if (sessionStorage.getItem("sdd-abrir-reglas")){
   sessionStorage.removeItem("sdd-abrir-reglas");
@@ -1486,10 +1564,23 @@ readURL();
 render();
 renderRoadmap();
 renderSel();
+App.iniciar();
+
+// Sugerencias: el catálogo salta a la card, las tecnologías la marcan directo.
+Buscador.sugerir({
+  input: $("q"), caja: $("qsug"), datos: () => CARDS, campo: "t",
+  detalle: x => x.c,
+  alElegir: x => { $("q").value = x.t; catPage = 1; render(); }
+});
+Buscador.sugerir({
+  input: $("tq"), caja: $("tqsug"), datos: () => TECH, campo: "n",
+  detalle: x => [x.t, x.e].filter(Boolean).join(" · "),
+  alElegir: x => { sel.add(x.n); renderSel(); renderTech(); $("tq").value = ""; techPage = 1; renderTech(); }
+});
 
 /* Lo que contestó en el onboarding precarga el combinador. Es todo el punto:
    si preguntamos y después no cambia nada, preguntamos al pedo. */
-function aplicarPerfil(p){
+window.aplicarPerfil = function aplicarPerfil(p){
   if (p.nivel) $("clvl").value = p.nivel;
   if (p.perfil_sdd) $("cperf").value = p.perfil_sdd;
   if (p.interes && TYPES[p.interes]) $("ctype").value = p.interes;
@@ -1498,8 +1589,7 @@ function aplicarPerfil(p){
                      cursor: ".cursor/rules/", copilot: "copilot-instructions.md"};
     $("techhint").dataset.espejo = espejos[p.agente] || "";
   }
-}
-$("navperfil").onclick = e => { e.preventDefault(); Perfil.abrir(aplicarPerfil); };
+};
 
 (async () => {
   Sesion.contar("visita", location.pathname);

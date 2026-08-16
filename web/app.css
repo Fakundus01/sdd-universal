@@ -1,0 +1,110 @@
+/* Shell de la aplicación: barra lateral + vistas por pestaña.
+   Va después de base.css y antes del <style> de la página. */
+
+.app{display:grid;grid-template-columns:246px 1fr;min-height:100vh}
+
+/* ---------- barra lateral ---------- */
+.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;
+      background:var(--bg-soft);border-right:1px solid var(--line);overflow-y:auto}
+.side-marca{display:flex;align-items:center;justify-content:space-between;gap:8px;
+            padding:18px 18px 14px}
+.side-cerrar{display:none;background:none;border:0;color:var(--muted);font-size:1rem;cursor:pointer;
+             padding:4px 8px;border-radius:8px;font-family:inherit}
+.side-nav{flex:1;padding:0 12px 12px;display:flex;flex-direction:column;gap:1px}
+.side-grupo{font-size:.64rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;
+            color:var(--muted);padding:16px 10px 6px;opacity:.75}
+.side-nav a{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;
+            text-decoration:none;color:var(--ink-soft);font-size:.875rem;font-weight:500;cursor:pointer}
+.side-nav a .i{font-size:.95rem;width:19px;text-align:center;flex:none;filter:grayscale(.35)}
+.side-nav a:hover{background:var(--card);color:var(--ink)}
+.side-nav a.act{background:var(--accent-soft);color:var(--accent-ink);font-weight:700}
+.side-nav a.act .i{filter:none}
+.side-nav .badge{margin-left:auto;font-size:.66rem;font-weight:800;background:var(--accent);
+                 color:var(--on-accent);border-radius:999px;padding:1px 7px;min-width:19px;text-align:center}
+.side-nav .badge:empty{display:none}
+.side-pie{padding:14px 16px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.side-pie .authbtn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- área de contenido ---------- */
+.area{min-width:0;display:flex;flex-direction:column}
+.barra{display:none;align-items:center;gap:12px;padding:12px 16px;
+       border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:20}
+.barra b{font-size:.95rem;letter-spacing:-.01em}
+.hamb{background:none;border:1px solid var(--line-strong);color:var(--ink);border-radius:9px;
+      width:36px;height:36px;font-size:1rem;cursor:pointer;font-family:inherit;flex:none}
+.side-fondo{position:fixed;inset:0;background:rgba(5,8,18,.6);z-index:39}
+
+/* La vista activa se muestra; el resto queda fuera del DOM visible.
+   [hidden] global de base.css hace el trabajo — no repetir display acá. */
+.vista{animation:aparece .18s ease}
+@keyframes aparece{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* La primera sección de cada vista no necesita el margen superior que traía
+   cuando todas vivían en la misma página, una debajo de la otra. */
+.vista > section:first-child,
+.vista > .how:first-child{margin-top:0}
+.vista[data-vista="catalogo"] .cat,
+.vista[data-vista="combinador"] .comb,
+.vista[data-vista="comunidad"] .comunidad{margin-top:26px}
+
+/* ---------- celular y tablet: la barra se vuelve cajón ---------- */
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .barra{display:flex}
+  .side{position:fixed;top:0;left:0;z-index:40;width:266px;
+        transform:translateX(-100%);transition:transform .22s ease;border-right:1px solid var(--line)}
+  /* translateX(0) y no `none`: transicionar hacia `none` es ambiguo para el
+     motor y el cajón se quedaba trabado en la posición cerrada. */
+  .side.abierta{transform:translateX(0);box-shadow:var(--shadow-lg)}
+  .side-cerrar{display:block}
+}
+@media (min-width:901px){
+  .side-fondo{display:none!important}
+}
+
+/* Sin animaciones: preferencia del usuario, o del sistema. */
+:root[data-anim="off"] *,
+:root[data-anim="off"] *::before,
+:root[data-anim="off"] *::after{
+  animation-duration:.001ms!important;animation-iteration-count:1!important;
+  transition-duration:.001ms!important;scroll-behavior:auto!important}
+
+/* ---------- panel de preferencias ---------- */
+.cfg-bloque{padding:16px 22px;border-bottom:1px solid var(--line)}
+.cfg-bloque:last-child{border-bottom:0}
+.cfg-bloque h3{font-size:.72rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+               color:var(--muted);margin-bottom:11px}
+.temas{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:9px}
+.tema-op{border:1px solid var(--line);background:var(--card);border-radius:11px;padding:9px;
+         cursor:pointer;font-family:inherit;text-align:left}
+.tema-op:hover{border-color:var(--muted)}
+.tema-op.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tema-muestra{display:flex;gap:3px;margin-bottom:7px}
+.tema-muestra i{flex:1;height:22px;border-radius:5px;border:1px solid rgba(128,128,128,.22)}
+.tema-op b{font-size:.78rem;color:var(--ink);font-weight:600}
+.cfg-fila{display:flex;align-items:center;gap:12px;padding:9px 0}
+.cfg-fila:not(:last-child){border-bottom:1px solid var(--line)}
+.cfg-fila .txt{flex:1;min-width:0}
+.cfg-fila .txt b{display:block;font-size:.87rem;color:var(--ink)}
+.cfg-fila .txt small{font-size:.79rem;color:var(--muted)}
+.sw{position:relative;width:42px;height:24px;flex:none;cursor:pointer}
+.sw input{position:absolute;opacity:0;width:0;height:0}
+.sw .pista{display:block;width:42px;height:24px;border-radius:999px;background:var(--line-strong);
+           transition:background .15s}
+.sw .pista::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+                  background:#fff;transition:transform .15s}
+.sw input:checked + .pista{background:var(--accent)}
+.sw input:checked + .pista::after{transform:translateX(18px)}
+.sw input:focus-visible + .pista{outline:3px solid var(--accent);outline-offset:2px}
+
+/* ---------- sugerencias de búsqueda ---------- */
+.buscador{position:relative;flex:1;min-width:150px}
+.sugerencias{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:30;background:var(--card);
+             border:1px solid var(--line-strong);border-radius:11px;box-shadow:var(--shadow-lg);
+             overflow:hidden;max-height:260px;overflow-y:auto}
+.sugerencias button{display:flex;align-items:baseline;gap:9px;width:100%;background:none;border:0;
+                    padding:9px 13px;cursor:pointer;font-family:inherit;text-align:left;color:var(--ink)}
+.sugerencias button:hover,.sugerencias button.marcada{background:var(--accent-soft)}
+.sugerencias b{font-size:.86rem;font-weight:600}
+.sugerencias b u{text-decoration:none;color:var(--accent-ink);font-weight:800}
+.sugerencias small{font-size:.75rem;color:var(--muted);margin-left:auto;flex:none}
