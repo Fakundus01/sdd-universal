@@ -16,8 +16,12 @@
 | F8 | Deploy en Vercel | Complete | 100% | Live, con headers y redirect verificados en producción |
 | F9 | Configuración (temas, texto, sonido, secciones, admin) | Complete | 100% | Vista con pestañas; el tema con fuente única (ADR-011) |
 | F10 | Barra lateral comprimible con arrastre | Complete | 100% | Comprimida, los accesos pasan a la barra superior |
+| F11 | Compartir combinaciones por link | Complete | 100% | `#/combinador?c=…`, restaura todo y genera el prompt |
+| F12 | Buscador global (Ctrl+K) | Complete | 100% | Cards + tecnologías + reglas + páginas |
+| F13 | PWA instalable | Complete | 100% | SW sin caché a propósito (ver changelog 0.19) |
+| F14 | Núcleo en inglés | Complete | 100% | Cierra la deuda D4 |
 
-**Avance total: 9.8 / 10 features ≈ 98%**
+**Avance total: 13.8 / 14 features ≈ 99%**
 
 ## Bloqueos
 
@@ -30,7 +34,7 @@
 | D1 | `index.html` pasa las 300 líneas de JS que pide R05 | 2026-08-15 | 2026-09-15 | Si entra una feature más al combinador, se parte en `catalogo.js` + `combinador.js` |
 | D2 | Sin tests automatizados: todo se verifica en navegador | 2026-08-15 | 2026-10-01 | La primera regresión que llegue a producción. Ahí deja de ser barato |
 | D3 | Los outcomes O1–O4 de la spec no se están midiendo | 2026-08-15 | 2026-09-30 | Sin analytics no hay dato. Decidir si se suma algo que respete la spec (sin píxeles de terceros) o si se bajan los outcomes a algo observable |
-| D4 | Traducción al inglés sin decidir | 2026-08-15 | 2026-10-15 | Es el mayor multiplicador de alcance y el mayor costo de mantenimiento. Va a ADR cuando se decida, no antes |
+| ~~D4~~ | ~~Traducción al inglés~~ — **cerrada el 2026-08-15**: núcleo (master + compact) en inglés como espejo del canónico. El resto del paquete queda en español a propósito | — | — | El espejo se actualiza con cada release del master |
 | D5 | `web/og.png` se generó con un script que no quedó en el repo | 2026-08-15 | 2026-09-15 | El día que haya que cambiar el texto de la imagen. Contradice ADR-004 en chiquito |
 | D6 | Sin SMTP propio: el recupero de contraseña y la confirmación dependen del mailer del free tier, que manda pocos correos por hora y cae en spam | 2026-08-15 | 2026-09-30 | **Procedimiento ya escrito** en `playbooks/resend-smtp.md`. Lo que falta es ejecutarlo, y para salir del modo prueba hace falta un dominio propio (~USD 15/año) — ese es el verdadero bloqueo, no el código |
 

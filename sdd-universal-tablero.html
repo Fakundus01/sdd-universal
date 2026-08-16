@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#0b0f1f" id="themecolor">
-<title>SDD Universal · Tablero v0.18</title>
-<link rel="stylesheet" href="web/base.css?v=18">
-<link rel="stylesheet" href="web/app.css?v=18">
+<link rel="manifest" href="web/manifest.webmanifest">
+<link rel="apple-touch-icon" href="web/icono-192.png">
+<title>SDD Universal · Tablero v0.19</title>
+<link rel="stylesheet" href="web/base.css?v=19">
+<link rel="stylesheet" href="web/app.css?v=19">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;line-height:1.55}
@@ -115,7 +117,7 @@
   <h1>SDD <span>Universal</span> · Tablero de Gobernanza</h1>
   <p class="sub">Un paquete portable de Specification-Driven Development: se lo pasás a cualquier agente de IA (Claude, Cursor, Copilot…) como primer mensaje y conduce todo el proyecto — con el mínimo gasto de tokens.</p>
   <div class="chips">
-    <span class="chip">v0.18 · 2026-08-15</span>
+    <span class="chip">v0.19 · 2026-08-15</span>
     <span class="chip">Fuente: Markdown</span>
     <span class="chip">Español · nombres de archivo en inglés</span>
     <span class="chip">27 reglas con toggle</span>
@@ -344,8 +346,8 @@
 </div>
 </div>
 
-<script src="web/shell.js?v=18"></script>
-<script src="web/tema.js?v=18"></script>
+<script src="web/shell.js?v=19"></script>
+<script src="web/tema.js?v=19"></script>
 <script>
 Shell.montar({pagina: "contenido", base: "web/", actual: "../sdd-universal-tablero.html", titulo: "Tablero"});
 Tema.iniciar();
@@ -355,6 +357,7 @@ document.getElementById("sideCerrar").onclick =
 document.getElementById("sideFondo").onclick = () => { lado.classList.remove("abierta"); fondo.hidden = true; };
 document.getElementById("avatar").onclick =
 document.getElementById("authbtn").onclick = () => location.href = "web/index.html#/perfil";
+document.getElementById("btnBuscar").onclick = () => location.href = "web/index.html#/catalogo";
 document.getElementById("btnConfig").onclick = () => location.href = "web/index.html#/configuracion";
 </script>
 </body>

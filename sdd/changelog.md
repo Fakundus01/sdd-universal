@@ -4,6 +4,16 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ---
 
+## [0.19.0] — 2026-08-15
+
+### Agregado
+- **Compartir combinaciones por link**: `#/combinador?c=<combinación codificada>` — abrirlo restaura tipo, stack, nivel, playbooks y tecnologías, y genera el prompt.
+- **Buscador global** (Ctrl+K o la lupa): busca a la vez en las cards, las 101 tecnologías, las 27 reglas y las páginas, con ranking por relevancia.
+- **Instalable como app** (PWA): manifest + íconos. El service worker no cachea a propósito — acabamos de pelear contra un `tema.js` viejo de caché, y un SW cache-first es la versión industrial de ese problema.
+- **El núcleo en inglés**: `SDD-MASTER-EN.md` y `SDD-COMPACT-EN.md` en el catálogo (cierra D4).
+
+---
+
 ## [0.18.0] — 2026-08-15
 
 ### Corregido

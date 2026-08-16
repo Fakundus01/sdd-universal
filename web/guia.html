@@ -7,6 +7,8 @@
 <meta name="description" content="Cómo se usa el SDD Universal: quick start en tres caminos, la curva real de aprendizaje, cadencias de actualización y los errores más comunes con su antídoto.">
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#0b0f1f" id="themecolor">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icono-192.png">
 <link rel="canonical" href="https://sdd-universal.vercel.app/web/guia.html">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="SDD Hub">
@@ -16,8 +18,8 @@
 <meta property="og:image" content="https://sdd-universal.vercel.app/web/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="base.css?v=18">
-<link rel="stylesheet" href="app.css?v=18">
+<link rel="stylesheet" href="base.css?v=19">
+<link rel="stylesheet" href="app.css?v=19">
 <style>
   .layout{display:grid;grid-template-columns:236px 1fr;gap:40px;align-items:start;padding-top:32px}
   @media (max-width:900px){.layout{grid-template-columns:1fr;gap:22px;padding-top:22px}}
@@ -130,7 +132,7 @@
       <p class="kick">Guía de uso</p>
       <h1>Cómo se usa el SDD Universal</h1>
       <p>Para humanos. Los agentes no leen esta guía salvo que se la pidas — a ellos les alcanza con el master.</p>
-      <p class="meta">Versión 0.18 · 2026-08-15 · lectura de ~8 minutos</p>
+      <p class="meta">Versión 0.19 · 2026-08-15 · lectura de ~8 minutos</p>
     </header>
 
     <section id="que-es">
@@ -278,7 +280,7 @@
 </div>
 
 <footer>
-  <div>SDD Universal <b>v0.18</b> · licencia MIT</div>
+  <div>SDD Universal <b>v0.19</b> · licencia MIT</div>
   <nav>
     <a href="./">Catálogo</a>
     <a href="demo.html">Demo</a>
@@ -291,8 +293,8 @@
 </div>
 </div>
 
-<script src="shell.js?v=18"></script>
-<script src="tema.js?v=18"></script>
+<script src="shell.js?v=19"></script>
+<script src="tema.js?v=19"></script>
 <script>
 Shell.montar({pagina: "contenido", actual: "guia.html", titulo: "Guía"});
 Tema.iniciar();
@@ -308,6 +310,7 @@ document.getElementById("sideFondo").onclick = () => {
 };
 // El avatar y el pie llevan al perfil de la app, que es donde vive la cuenta.
 document.getElementById("avatar").onclick = () => location.href = "index.html#/perfil";
+document.getElementById("btnBuscar").onclick = () => location.href = "index.html#/catalogo";
 document.getElementById("btnConfig").onclick = () => location.href = "index.html#/configuracion";
 document.getElementById("authbtn").onclick = () => location.href = "index.html#/perfil";
 

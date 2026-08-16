@@ -8,6 +8,8 @@
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#0b0f1f" id="themecolor">
 <link rel="canonical" href="https://sdd-universal.vercel.app/web/">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icono-192.png">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="SDD Hub">
@@ -26,8 +28,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css?v=18">
-<link rel="stylesheet" href="app.css?v=18">
+<link rel="stylesheet" href="base.css?v=19">
+<link rel="stylesheet" href="app.css?v=19">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -288,6 +290,26 @@
        font-size:.82rem;color:var(--muted)}
   .cpie a{color:var(--accent-ink);text-decoration:none}
   .cpie a:hover{text-decoration:underline}
+
+  /* ---------- buscador global ---------- */
+  dialog.kbusca{width:min(600px,94vw);margin-top:9vh;margin-bottom:auto}
+  .k-in{display:flex;align-items:center;gap:11px;padding:15px 18px;border-bottom:1px solid var(--line)}
+  .k-in input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--ink);
+       font-size:1rem;font-family:inherit}
+  .k-in kbd{font-family:var(--mono);font-size:.68rem;color:var(--muted);border:1px solid var(--line-strong);
+       border-radius:6px;padding:2px 7px}
+  .k-res{max-height:min(54vh,430px);overflow-y:auto;padding:7px}
+  .k-res button{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;
+       padding:10px 12px;border-radius:10px;cursor:pointer;font-family:inherit;text-align:left}
+  .k-res button:hover,.k-res button.marcada{background:var(--accent-soft)}
+  .k-res .tipo{font-size:.62rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+       color:var(--accent-ink);background:var(--accent-soft);border-radius:6px;padding:3px 8px;flex:none;min-width:76px;text-align:center}
+  .k-res button.marcada .tipo,.k-res button:hover .tipo{background:var(--card)}
+  .k-res b{font-size:.9rem;color:var(--ink);font-weight:600}
+  .k-res b u{text-decoration:none;color:var(--accent-ink);font-weight:800}
+  .k-res small{margin-left:auto;color:var(--muted);font-size:.76rem;flex:none;overflow:hidden;
+       text-overflow:ellipsis;white-space:nowrap;max-width:38%}
+  .k-vacio{padding:26px;text-align:center;color:var(--muted);font-size:.88rem}
 
   /* ---------- sesión ---------- */
   dialog.auth{width:min(440px,94vw)}
@@ -586,6 +608,7 @@
     <div class="outbtns">
       <button class="b-copy" id="cp" type="button">Copiar al portapapeles</button>
       <button class="b-dl" id="dl" type="button">Descargar .txt</button>
+      <button class="b-dl" id="share" type="button">🔗 Compartir link</button>
     </div>
 
     <div class="files">
@@ -744,7 +767,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.18</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.19</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -758,6 +781,16 @@
 </div>
 </div>
 
+
+<dialog class="tech kbusca" id="kdlg" aria-label="Buscar en todo">
+  <div class="k-in">
+    <span aria-hidden="true">🔍</span>
+    <label class="sr" for="kq">Buscar en todo</label>
+    <input id="kq" placeholder="Cards, tecnologías, reglas, páginas…" autocomplete="off">
+    <kbd>esc</kbd>
+  </div>
+  <div class="k-res" id="kres"></div>
+</dialog>
 
 <dialog class="tech ob" id="obdlg" aria-labelledby="obTitulo">
   <div class="ob-progreso"><div class="ob-barra" id="obBarra"></div></div>
@@ -892,20 +925,20 @@
   </div>
 </dialog>
 
-<script src="shell.js?v=18"></script>
-<script src="tema.js?v=18"></script>
-<script src="buscador.js?v=18"></script>
-<script src="zip.js?v=18"></script>
-<script src="paquete.js?v=18"></script>
-<script src="tecnologias.js?v=18"></script>
-<script src="reglas.js?v=18"></script>
-<script src="reglas-ui.js?v=18"></script>
-<script src="supabase-config.js?v=18"></script>
-<script src="sesion.js?v=18"></script>
-<script src="perfil.js?v=18"></script>
-<script src="perfil-vista.js?v=18"></script>
-<script src="app.js?v=18"></script>
-<script src="config-vista.js?v=18"></script>
+<script src="shell.js?v=19"></script>
+<script src="tema.js?v=19"></script>
+<script src="buscador.js?v=19"></script>
+<script src="zip.js?v=19"></script>
+<script src="paquete.js?v=19"></script>
+<script src="tecnologias.js?v=19"></script>
+<script src="reglas.js?v=19"></script>
+<script src="reglas-ui.js?v=19"></script>
+<script src="supabase-config.js?v=19"></script>
+<script src="sesion.js?v=19"></script>
+<script src="perfil.js?v=19"></script>
+<script src="perfil-vista.js?v=19"></script>
+<script src="app.js?v=19"></script>
+<script src="config-vista.js?v=19"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -926,6 +959,8 @@ const CARDS = [
  {c:"Base",n:"novato",s:"ok",t:"Guía de uso (para humanos)",d:"Quick start en tres caminos, la respuesta honesta a «¿es fácil?», cómo se actualiza cada proyecto y los 7 errores más comunes con su antídoto. Se lee en la web, sin descargar nada.",f:"guia.html",dl:false,cta:"Leer la guía →"},
  {c:"Base",n:"novato",s:"ok",t:"Demo: con SDD vs sin SDD",d:"El mismo formulario de reservas construido dos veces. Los dos andan y se ven igual — hasta que probás los tres casos borde. Con el código real de los dos al lado.",f:"demo.html",dl:false,cta:"Probar el demo →"},
  {c:"Base",n:"novato",s:"ok",t:"Ejemplo real: un sdd/ terminado",d:"La respuesta a «¿pero qué me va a generar exactamente?». Un proyecto chico y real con sus 12 archivos completos, incluido un caso de spec-drift (R25) documentado.",f:"https://github.com/Fakundus01/sdd-universal/tree/main/examples/turnos/sdd",dl:false,cta:"Ver el ejemplo en GitHub →"},
+ {c:"Base",n:"pro",  s:"ok",t:"SDD Universal (master) — English",d:"The full core in English: 27 toggleable rules, the token-saving Reading Protocol, start prompts and the HANDBACK loop. Mirror of the canonical Spanish.",f:"../SDD-MASTER-EN.md"},
+ {c:"Base",n:"pro",  s:"ok",t:"SDD Compact — English",d:"The whole system in ~45 lines of keywords, in English. For chat-only agents and cheap subagents.",f:"../SDD-COMPACT-EN.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Capa Enterprise (equipos)",d:"11 roles (PO, AF, SM, QA, devs, pasantes, RPA, infra): quién aprueba qué, ceremonias Scrum mapeadas y subagentes por rol.",f:"../teams.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Multi-agente & ahorro de tokens",d:"Espejos para Claude, Codex/ChatGPT, Cursor, Copilot y Gemini + técnicas de ahorro por tier de modelo.",f:"../models.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Bloques componibles",d:"Cómo se arma un SDD a medida combinando BASE + TYPE + STACK + PLAYBOOKS, con reglas de precedencia. Es el motor detrás del combinador.",f:"../blocks.md"},
@@ -1636,6 +1671,92 @@ $("authlink").onclick = () => {
   });
 };
 
+/* ---------- compartir la combinación por link ---------- */
+const b64url = {
+  cod: o => btoa(unescape(encodeURIComponent(JSON.stringify(o))))
+         .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
+  dec: t => JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g, "+").replace(/_/g, "/")))))
+};
+
+$("share").onclick = async () => {
+  const o = {n: $("comboname").value.trim(), t: $("ctype").value, s: $("cstack").value,
+             l: $("clvl").value, p: $("cperf").value, e: $("cexiste").value,
+             pb: [...document.querySelectorAll("#pbs input:checked")].map(x => x.value),
+             tec: [...sel]};
+  const url = location.origin + location.pathname + "#/combinador?c=" + b64url.cod(o);
+  try { await navigator.clipboard.writeText(url); } catch { /* sin portapapeles */ }
+  $("share").textContent = "¡Link copiado!";
+  setTimeout(() => $("share").textContent = "🔗 Compartir link", 2200);
+};
+
+function cargarComboDelLink(){
+  const m = location.hash.match(/[?&]c=([A-Za-z0-9_-]+)/);
+  if (!m) return;
+  try {
+    const o = b64url.dec(m[1]);
+    if (o.e) $("cexiste").value = o.e;
+    aplicarCombinacion({nombre: o.n, tipo: o.t, stack: o.s, nivel: o.l,
+                        perfil: o.p, playbooks: o.pb, tecnologias: o.tec});
+    avisar("Cargamos la combinación que venía en el link. Revisala y generá tu paquete.");
+  } catch { avisar("El link traía una combinación que no se pudo leer.", true); }
+}
+
+/* ---------- buscador global (Ctrl+K) ---------- */
+function itemsBusca(){
+  const arr = [];
+  CARDS.forEach(c => arr.push({t: c.t, d: c.c, tipo: "Catálogo",
+    run: () => { App.ir("catalogo"); $("q").value = c.t; catPage = 1; render(); }}));
+  TECH.forEach(x => arr.push({t: x.n, d: [x.t, x.e].filter(Boolean).join(" · "), tipo: "Tecnología",
+    run: () => { openTech(); const tq = $("tq"); tq.value = x.n; tq.dispatchEvent(new Event("input")); }}));
+  REGLAS.forEach(r => arr.push({t: r.id + " · " + r.nombre, d: r.tipo, tipo: "Regla",
+    run: () => ReglasUI.abrir()}));
+  [["Guía", "guia.html"], ["Demo con/sin SDD", "demo.html"], ["Tablero", "../sdd-universal-tablero.html"]]
+    .forEach(([t, h]) => arr.push({t, d: "página", tipo: "Ir a", run: () => location.href = h}));
+  [["Combinador", "combinador"], ["Mi perfil", "perfil"], ["Configuración", "configuracion"], ["Feedback", "comunidad"]]
+    .forEach(([t, v]) => arr.push({t, d: "sección", tipo: "Ir a", run: () => App.ir(v)}));
+  return arr;
+}
+
+let kMarcada = 0, kRes = [];
+function pintarBusca(){
+  const q = $("kq").value.trim();
+  kRes = q.length < 2 ? [] : Buscador.filtrar(itemsBusca(), q, ["t", "d"]).slice(0, 12);
+  $("kres").innerHTML = q.length < 2
+    ? `<p class="k-vacio">Escribí al menos dos letras. Busca en las cards, las 101 tecnologías, las 27 reglas y las páginas.</p>`
+    : kRes.length
+      ? kRes.map((r, i) => `<button type="button" data-k="${i}" class="${i === kMarcada ? "marcada" : ""}">
+          <span class="tipo">${r.tipo}</span><b>${Buscador.resaltar(r.t, q)}</b><small>${esc(r.d)}</small>
+        </button>`).join("")
+      : `<p class="k-vacio">Nada con «${esc(q)}».</p>`;
+}
+function abrirBusca(){
+  kMarcada = 0; $("kq").value = ""; pintarBusca();
+  $("kdlg").showModal(); $("kq").focus();
+}
+function ejecutarBusca(i){
+  const r = kRes[i]; if (!r) return;
+  $("kdlg").close();
+  r.run();
+}
+$("btnBuscar").onclick = abrirBusca;
+$("kq").addEventListener("input", () => { kMarcada = 0; pintarBusca(); });
+$("kq").addEventListener("keydown", e => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp"){
+    e.preventDefault();
+    if (kRes.length){ kMarcada = (kMarcada + (e.key === "ArrowDown" ? 1 : -1) + kRes.length) % kRes.length; pintarBusca(); }
+  } else if (e.key === "Enter"){ e.preventDefault(); ejecutarBusca(kMarcada); }
+});
+$("kres").addEventListener("click", e => {
+  const b = e.target.closest("[data-k]");
+  if (b) ejecutarBusca(+b.dataset.k);
+});
+$("kdlg").addEventListener("click", e => { if (e.target === $("kdlg")) $("kdlg").close(); });
+addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); abrirBusca(); }
+});
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
 /* ---------- init ---------- */
 PerfilVista.iniciar();
 ConfigVista.iniciar();
@@ -1697,6 +1818,7 @@ window.aplicarPerfil = function aplicarPerfil(p){
   }
   await renderGuardadas();
   await Perfil.iniciar(aplicarPerfil);
+  cargarComboDelLink();
 })();
 </script>
 </body>

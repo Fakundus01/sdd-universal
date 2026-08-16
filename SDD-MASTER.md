@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.18 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
+**Versión:** 0.19 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -344,6 +344,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.19 | 2026-08-15 | **El núcleo en inglés**: `SDD-MASTER-EN.md` y `SDD-COMPACT-EN.md`, espejos del canónico en español (cierra la deuda D4). La web suma: **compartir combinaciones por link** (`#/combinador?c=…`), **buscador global** con Ctrl+K sobre cards, tecnologías, reglas y páginas, e **instalable como app** (PWA con manifest e íconos; el service worker no cachea a propósito — la frescura ya la garantizan los `?v=` y `must-revalidate`). |
 | 0.18 | 2026-08-15 | El tema pasa a tener **una sola fuente de verdad** (`sdd-theme`): elegir Jungla en la app ahora sigue a la guía, el demo y el tablero — antes cada página leía una clave distinta y quedaba en el color viejo. **Configuración** es una vista con pestañas (temas, texto, animación y sonido, secciones, y Admin para el owner), con 3 temas de naturaleza nuevos con fondo animado, tamaño de texto global y 3 logos animados a elección. La barra lateral se comprime con un botón o **arrastrándola**, y sus accesos pasan a la barra superior. Los filtros del catálogo de tecnologías son combos tipeables. Recursos versionados (`?v=18`) para que ningún release conviva con archivos viejos en caché. |
 | 0.17 | 2026-08-15 | El **tablero** pasa a usar los tokens compartidos y la barra lateral: era la única página que ignoraba el tema. Rediseñado el pie de la barra (el mail largo se cortaba y el botón «Entrar» casi no se veía) y el catálogo de tecnologías, ahora más ancho y con las filas legibles. |
 | 0.16 | 2026-08-15 | El shell (barra lateral y barra superior) se renderiza desde un solo archivo y es igual en las tres páginas: antes había tres copias del menú y la tercera siempre quedaba vieja. Nuevos: sección **Mi perfil** con avatar de iniciales, y el límite de la app sin cuenta documentado en ADR-010 — se limita la persistencia, nunca la funcionalidad. |

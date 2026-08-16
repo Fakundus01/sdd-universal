@@ -146,6 +146,7 @@ const Shell = (() => {
       <b id="barraTitulo">${esc(opciones.titulo || "Inicio")}</b>
       <nav class="barra-nav" id="barraNav" aria-label="Navegación rápida">${navMini}</nav>
       <div class="barra-acciones">
+        <button class="tbtn" id="btnBuscar" type="button" aria-label="Buscar en todo (Ctrl+K)" title="Buscar en todo (Ctrl+K)">🔍</button>
         <button class="avatar" id="avatar" type="button" aria-label="Tu perfil" title="Tu perfil">··</button>
       </div>`;
 

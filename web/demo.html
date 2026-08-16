@@ -7,6 +7,8 @@
 <meta name="description" content="El mismo formulario de reservas, construido dos veces. Los dos funcionan y se ven igual. Probá los tres casos borde y mirá cuál se rompe en silencio.">
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#0b0f1f" id="themecolor">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icono-192.png">
 <link rel="canonical" href="https://sdd-universal.vercel.app/web/demo.html">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="SDD Hub">
@@ -16,8 +18,8 @@
 <meta property="og:image" content="https://sdd-universal.vercel.app/web/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="base.css?v=18">
-<link rel="stylesheet" href="app.css?v=18">
+<link rel="stylesheet" href="base.css?v=19">
+<link rel="stylesheet" href="app.css?v=19">
 <style>
   .hero{padding:44px 0 6px;max-width:78ch}
   .hero .kick{font-size:.72rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-ink)}
@@ -193,7 +195,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.18</b> · licencia MIT</div>
+  <div>SDD Universal <b>v0.19</b> · licencia MIT</div>
   <nav>
     <a href="./">Catálogo</a>
     <a href="guia.html">Guía</a>
@@ -205,8 +207,8 @@
 </div>
 </div>
 
-<script src="shell.js?v=18"></script>
-<script src="tema.js?v=18"></script>
+<script src="shell.js?v=19"></script>
+<script src="tema.js?v=19"></script>
 <script>
 Shell.montar({pagina: "contenido", actual: "demo.html", titulo: "Demo"});
 Tema.iniciar();
@@ -221,6 +223,7 @@ document.getElementById("sideFondo").onclick = () => {
   document.getElementById("sideFondo").hidden = true;
 };
 document.getElementById("avatar").onclick = () => location.href = "index.html#/perfil";
+document.getElementById("btnBuscar").onclick = () => location.href = "index.html#/catalogo";
 document.getElementById("btnConfig").onclick = () => location.href = "index.html#/configuracion";
 document.getElementById("authbtn").onclick = () => location.href = "index.html#/perfil";
 

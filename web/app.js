@@ -84,7 +84,7 @@ const App = (() => {
     if (typeof Sesion !== "undefined") Sesion.contar("visita", "#/" + vista);
   }
 
-  const vistaDeHash = () => (location.hash.replace("#/", "") || "inicio");
+  const vistaDeHash = () => (location.hash.replace("#/", "") || "inicio").split("?")[0];
 
   /* ---------------- cajón lateral ---------------- */
   function abrirCajon(){

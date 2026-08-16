@@ -16,6 +16,7 @@ Un paquete abierto de gobernanza: **la especificación va antes que el código**
 |---|---|
 | `SDD-MASTER.md` | El núcleo: 26 reglas con toggle (R01–R26), protocolo de lectura, prompts |
 | `SDD-COMPACT.md` | Todo el sistema en ~45 líneas de palabras clave |
+| `SDD-MASTER-EN.md` · `SDD-COMPACT-EN.md` | El núcleo en inglés — espejo del canónico en español |
 | `examples/` | **Un `sdd/` real y completo** de un proyecto chico — la mejor forma de entender qué genera el agente |
 | `GUIDE.md` | Guía de uso para humanos (con la respuesta honesta a "¿es fácil?") |
 | `scenarios.md` | Dónde funciona, dónde no, y cómo se adapta — el motor de crecimiento |
@@ -49,4 +50,4 @@ Detalle completo en [`CONTRIBUTING.md`](CONTRIBUTING.md). Tus personalizaciones 
 
 ## Estado
 
-**v0.18** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.
+**v0.19** · 2026-08 · Ver historial en cada archivo. Licencia MIT. Hecho en Argentina 🇦🇷 con la misma metodología que distribuye.
