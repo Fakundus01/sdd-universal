@@ -28,8 +28,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css?v=22">
-<link rel="stylesheet" href="app.css?v=22">
+<link rel="stylesheet" href="base.css?v=23">
+<link rel="stylesheet" href="app.css?v=23">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -334,6 +334,13 @@
        color:var(--muted);padding:9px 12px;border-bottom:1px solid var(--line-strong);background:var(--bg-soft)}
   .md-cuerpo td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
   .md-cuerpo tr:last-child td{border-bottom:0}
+
+  /* ---------- tecnologías y reglas como vista ---------- */
+  .pcard.sin-pad{padding:0;overflow:hidden}
+  .como-vista .dlg-list{max-height:none}
+  .como-vista .rextra{max-height:none}
+  /* en la vista no hay ventana que cerrar ni centrar */
+  .como-vista #techdone,.como-vista #techrecenter{display:none}
 
   /* ---------- buscador global ---------- */
   dialog.kbusca{width:min(600px,94vw);margin-top:9vh;margin-bottom:auto}
@@ -674,6 +681,22 @@
 </section>
 </section>
 
+<section class="vista" data-vista="tecnologias" hidden>
+  <div class="cfg-cab">
+    <h2>Tecnologías</h2>
+    <p>Las 101 del catálogo, con búsqueda y filtros. Lo que marques acá queda elegido y entra al prompt cuando armes tu paquete en el Combinador.</p>
+  </div>
+  <div class="pcard sin-pad" id="slotTech"></div>
+</section>
+
+<section class="vista" data-vista="reglas" hidden>
+  <div class="cfg-cab">
+    <h2>Mis reglas</h2>
+    <p>Prendé y apagá las 27 reglas, elegí perfil y modo, sumá las tuyas, y bajate el <code>custom.md</code> ya escrito. El núcleo nunca se edita: tu configuración sobrevive a cada actualización.</p>
+  </div>
+  <div class="pcard sin-pad" id="slotReglas"></div>
+</section>
+
 <section class="vista" data-vista="perfil" hidden>
   <div class="perfil-cab">
     <span class="perfil-ava" id="perfilAva">··</span>
@@ -821,7 +844,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.22</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.23</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -883,6 +906,7 @@
     <button class="dlg-x" id="reglasx" type="button" aria-label="Cerrar">✕</button>
   </div>
 
+  <div id="reglasCuerpo">
   <div class="dlg-filters">
     <label class="sr" for="rperfil">Perfil</label>
     <select id="rperfil"><option value="ESTRICTO">Perfil: Estricto</option><option value="CONFIANZA">Perfil: Confianza</option></select>
@@ -921,6 +945,7 @@
     <button class="clear" id="rreset" type="button">Reiniciar</button>
     <button class="clear" id="rcopy" type="button">Copiar</button>
     <button class="done" id="rdl" type="button">Descargar custom.md</button>
+  </div>
   </div>
 </dialog>
 
@@ -966,6 +991,7 @@
     <span class="grip" title="Arrastrá desde acá para mover la ventana" aria-hidden="true">⠿⠿</span>
     <button class="dlg-x" id="techx" type="button" aria-label="Cerrar el catálogo">✕</button>
   </div>
+  <div id="techCuerpo">
   <div class="dlg-filters tech-filtros">
     <div class="fila-busq">
       <label class="sr" for="tq">Buscar tecnología</label>
@@ -991,24 +1017,25 @@
     <button class="clear" id="techclear" type="button">Limpiar</button>
     <button class="done" id="techdone" type="button">Listo</button>
   </div>
+  </div>
 </dialog>
 
-<script src="shell.js?v=22"></script>
-<script src="tema.js?v=22"></script>
-<script src="buscador.js?v=22"></script>
-<script src="md.js?v=22"></script>
-<script src="feedback.js?v=22"></script>
-<script src="zip.js?v=22"></script>
-<script src="paquete.js?v=22"></script>
-<script src="tecnologias.js?v=22"></script>
-<script src="reglas.js?v=22"></script>
-<script src="reglas-ui.js?v=22"></script>
-<script src="supabase-config.js?v=22"></script>
-<script src="sesion.js?v=22"></script>
-<script src="perfil.js?v=22"></script>
-<script src="perfil-vista.js?v=22"></script>
-<script src="app.js?v=22"></script>
-<script src="config-vista.js?v=22"></script>
+<script src="shell.js?v=23"></script>
+<script src="tema.js?v=23"></script>
+<script src="buscador.js?v=23"></script>
+<script src="md.js?v=23"></script>
+<script src="feedback.js?v=23"></script>
+<script src="zip.js?v=23"></script>
+<script src="paquete.js?v=23"></script>
+<script src="tecnologias.js?v=23"></script>
+<script src="reglas.js?v=23"></script>
+<script src="reglas-ui.js?v=23"></script>
+<script src="supabase-config.js?v=23"></script>
+<script src="sesion.js?v=23"></script>
+<script src="perfil.js?v=23"></script>
+<script src="perfil-vista.js?v=23"></script>
+<script src="app.js?v=23"></script>
+<script src="config-vista.js?v=23"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -1169,7 +1196,7 @@ function render(){
       ? '<span class="tag t-ok">✓ disponible</span>'
       : '<span class="tag t-ok">✓ vía combinador</span>';
     const btn = x.f === "#reglas"
-      ? `<button class="btn b-alt" type="button" data-abrir-reglas="1">${esc(x.cta)}</button>`
+      ? `<button class="btn b-alt" type="button" data-ir-vista="reglas">${esc(x.cta)}</button>`
       : x.f && x.f.endsWith(".md")
         ? `<div class="cbtns">
              <a class="btn b-go" href="${x.f}" download>${esc(x.cta || "Descargar MD")}</a>
@@ -1223,7 +1250,9 @@ document.addEventListener("click", e => {
   if (pick) { $("ctype").value = pick.dataset.pick; $("comb").scrollIntoView({behavior:"smooth"}); return; }
   const jump = e.target.closest("[data-jump]");
   if (jump) { $(jump.dataset.jump).scrollIntoView({behavior:"smooth"}); return; }
-  if (e.target.closest("[data-abrir-reglas]")) { e.preventDefault(); ReglasUI.abrir(); return; }
+  if (e.target.closest("[data-abrir-reglas]")) { e.preventDefault(); reglasMontar("popup"); ReglasUI.abrir(); return; }
+  const iv = e.target.closest("[data-ir-vista]");
+  if (iv) { App.ir(iv.dataset.irVista); return; }
   if (e.target.closest("[data-reset]")) { cat = "Todos"; $("q").value = ""; $("lvl").value = ""; catPage = 1; render(); }
 });
 $("q").oninput = () => { catPage = 1; render(); };
@@ -1341,7 +1370,7 @@ $("techlist").addEventListener("change", e => {
 ["tq","tos"].forEach(id => {
   $(id).addEventListener(id === "tq" ? "input" : "change", () => { techPage = 1; renderTech(); });
 });
-function openTech(){ renderTech(); dlg.showModal(); $("tq").focus(); }
+function openTech(){ techMontar("popup"); renderTech(); dlg.showModal(); $("tq").focus(); }
 $("opentech").onclick = openTech;
 $("techx").onclick = () => dlg.close();
 $("techdone").onclick = () => dlg.close();
@@ -1857,9 +1886,9 @@ function itemsBusca(){
   CARDS.forEach(c => arr.push({t: c.t, d: c.c, tipo: "Catálogo",
     run: () => { App.ir("catalogo"); $("q").value = c.t; catPage = 1; render(); }}));
   TECH.forEach(x => arr.push({t: x.n, d: [x.t, x.e].filter(Boolean).join(" · "), tipo: "Tecnología",
-    run: () => { openTech(); const tq = $("tq"); tq.value = x.n; tq.dispatchEvent(new Event("input")); }}));
+    run: () => { App.ir("tecnologias"); const tq = $("tq"); tq.value = x.n; tq.dispatchEvent(new Event("input")); }}));
   REGLAS.forEach(r => arr.push({t: r.id + " · " + r.nombre, d: r.tipo, tipo: "Regla",
-    run: () => ReglasUI.abrir()}));
+    run: () => App.ir("reglas")}));
   [["Guía", "guia.html"], ["Demo con/sin SDD", "demo.html"], ["Tablero", "../sdd-universal-tablero.html"]]
     .forEach(([t, h]) => arr.push({t, d: "página", tipo: "Ir a", run: () => location.href = h}));
   [["Combinador", "combinador"], ["Mi perfil", "perfil"], ["Configuración", "configuracion"], ["Feedback", "comunidad"]]
@@ -1911,6 +1940,24 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 PerfilVista.iniciar();
 ConfigVista.iniciar();
 ReglasUI.iniciar();
+
+/* Tecnologías y Mis reglas viven en UN solo DOM que se muda: a la vista
+   cuando entrás por el menú, al diálogo cuando las abrís desde el
+   combinador. Mismo contenido, cero duplicación. */
+function techMontar(modo){
+  const c = $("techCuerpo");
+  if (modo === "popup"){ $("techdlg").appendChild(c); c.classList.remove("como-vista"); }
+  else { $("slotTech").appendChild(c); c.classList.add("como-vista"); }
+}
+function reglasMontar(modo){
+  const c = $("reglasCuerpo");
+  if (modo === "popup"){ $("reglasdlg").appendChild(c); c.classList.remove("como-vista"); }
+  else { $("slotReglas").appendChild(c); c.classList.add("como-vista"); }
+}
+const VISTA_HOOKS = {
+  tecnologias(){ if ($("techdlg").open) $("techdlg").close(); techMontar("vista"); renderTech(); },
+  reglas(){ if ($("reglasdlg").open) $("reglasdlg").close(); reglasMontar("vista"); ReglasUI.abrir(false); }
+};
 // si venís desde el link de la guía, abrimos el configurador directo
 if (sessionStorage.getItem("sdd-abrir-reglas")){
   sessionStorage.removeItem("sdd-abrir-reglas");

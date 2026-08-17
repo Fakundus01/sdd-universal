@@ -75,6 +75,7 @@ const App = (() => {
 
   /* ---------------- ruteo ---------------- */
   const TITULOS = {inicio: "Inicio", catalogo: "Catálogo", combinador: "Combinador",
+                   tecnologias: "Tecnologías", reglas: "Mis reglas",
                    perfil: "Mi perfil", comunidad: "Feedback", configuracion: "Configuración"};
 
   function ir(vista, empujar = true){
@@ -85,6 +86,7 @@ const App = (() => {
     $("barraTitulo").textContent = TITULOS[vista];
     if (vista === "perfil" && typeof PerfilVista !== "undefined") PerfilVista.refrescar();
     if (vista === "configuracion" && typeof ConfigVista !== "undefined") ConfigVista.abrir();
+    if (typeof VISTA_HOOKS !== "undefined") VISTA_HOOKS[vista]?.();
     if (empujar && location.hash !== "#/" + vista) history.pushState(null, "", "#/" + vista);
     cerrarCajon();
     scrollTo({top: 0, behavior: prefs.animaciones ? "smooth" : "auto"});

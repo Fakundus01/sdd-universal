@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.22 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
+**Versión:** 0.23 · **Fecha:** 2026-08-15 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -344,6 +344,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.23 | 2026-08-15 | «Tecnologías» y «Mis reglas» son **vistas** propias al entrar por el menú, y siguen siendo **popups** cuando se abren desde el Combinador: el mismo DOM se muda de contenedor según de dónde vengas, así no hay dos copias que se desincronicen. |
 | 0.22 | 2026-08-15 | «Mi perfil» sale del menú lateral (el avatar de la barra ya lleva ahí: estaba duplicado). Configuración crece: **color de acento** propio (con presets y selector libre, y el texto sobre el acento decidido por luminancia), **intensidad** del fondo animado, **velocidad** de las animaciones y **ancho del contenido**. Los fondos con vida ganan una segunda capa por tema: estrellas en Medianoche (que ahora también tiene aurora), olas en Océano, luciérnagas en Bosque y Jungla, y el calor que sube en Desierto. |
 | 0.21 | 2026-08-15 | Feedback de carga en toda la web: barra de progreso superior, toasts de «Descargando…» con confirmación, spinner en el preview y el panel de admin, botón de **recargar** en Mis combinaciones, y el armado del `.zip` con progreso real (sabe cuántos archivos busca). Tipos de proyecto nuevos: **Videojuego en Godot** y **Videojuego en Unity**, cada uno con las decisiones y riesgos propios de su engine — 18 tipos en total. |
 | 0.20 | 2026-08-15 | **Vista previa de los MD** en la web: el ojo 👁 de cada card y de la lista del combinador renderiza el archivo adentro de la app, con el tema puesto, antes de bajarlo. Renderer de Markdown propio (subset de lo que usan nuestros archivos, todo escapado antes de transformar) — cero dependencias, fiel a C2. Los links internos entre MD navegan dentro del preview. |

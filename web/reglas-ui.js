@@ -132,10 +132,11 @@ const ReglasUI = (() => {
     catch { cfg = base(); }
   }
 
-  function abrir(){
+  /* modal=false pinta el contenido donde esté (la vista) sin abrir el diálogo. */
+  function abrir(modal = true){
     pintarFormulario();
     render();
-    $("reglasdlg").showModal();
+    if (modal !== false) $("reglasdlg").showModal();
   }
 
   function iniciar(){
