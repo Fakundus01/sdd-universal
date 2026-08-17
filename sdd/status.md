@@ -21,8 +21,9 @@
 | F13 | PWA instalable | Complete | 100% | SW sin caché a propósito (ver changelog 0.19) |
 | F14 | Núcleo en inglés | Complete | 100% | Cierra la deuda D4 |
 | F15 | Vista previa de los MD | Complete | 100% | Renderer propio, links internos navegan dentro del preview |
+| F16 | Feedback de carga (loaders, descargando, recargando) | Complete | 100% | Un solo módulo; el zip con progreso real |
 
-**Avance total: 14.8 / 15 features ≈ 99%**
+**Avance total: 15.8 / 16 features ≈ 99%**
 
 ## Bloqueos
 

@@ -51,6 +51,8 @@ const ConfigVista = (() => {
   async function cargarAdmin(){
     adminCargado = true;
     const zona = $("admZona");
+    zona.innerHTML = Feedback.spinnerHTML("Trayendo los números…");
+    Feedback.empezar();
     try {
       const {resumen} = await Sesion.metricas();
       const de = t => resumen.filter(r => r.tipo === t).sort((a, b) => b.total - a.total);
@@ -78,6 +80,8 @@ const ConfigVista = (() => {
           <a href="admin.html">panel completo</a>.</p>`;
     } catch (e) {
       admin_error(zona, e);
+    } finally {
+      Feedback.terminar();
     }
   }
 

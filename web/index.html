@@ -28,8 +28,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css?v=20">
-<link rel="stylesheet" href="app.css?v=20">
+<link rel="stylesheet" href="base.css?v=21">
+<link rel="stylesheet" href="app.css?v=21">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -635,7 +635,8 @@
   <button class="gen" id="go" type="button">Generar mi paquete de arranque</button>
 
   <div class="guardadas" id="guardadas">
-    <h3>Mis combinaciones</h3>
+    <h3>Mis combinaciones <button class="recargar" id="comboRecargar" type="button"
+      title="Recargar desde tu cuenta" aria-label="Recargar combinaciones">⟳</button></h3>
     <p class="s" id="guardadassub"></p>
     <div class="fila">
       <label class="sr" for="comboname">Nombre de la combinación</label>
@@ -811,7 +812,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.20</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.21</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -983,21 +984,22 @@
   </div>
 </dialog>
 
-<script src="shell.js?v=20"></script>
-<script src="tema.js?v=20"></script>
-<script src="buscador.js?v=20"></script>
-<script src="md.js?v=20"></script>
-<script src="zip.js?v=20"></script>
-<script src="paquete.js?v=20"></script>
-<script src="tecnologias.js?v=20"></script>
-<script src="reglas.js?v=20"></script>
-<script src="reglas-ui.js?v=20"></script>
-<script src="supabase-config.js?v=20"></script>
-<script src="sesion.js?v=20"></script>
-<script src="perfil.js?v=20"></script>
-<script src="perfil-vista.js?v=20"></script>
-<script src="app.js?v=20"></script>
-<script src="config-vista.js?v=20"></script>
+<script src="shell.js?v=21"></script>
+<script src="tema.js?v=21"></script>
+<script src="buscador.js?v=21"></script>
+<script src="md.js?v=21"></script>
+<script src="feedback.js?v=21"></script>
+<script src="zip.js?v=21"></script>
+<script src="paquete.js?v=21"></script>
+<script src="tecnologias.js?v=21"></script>
+<script src="reglas.js?v=21"></script>
+<script src="reglas-ui.js?v=21"></script>
+<script src="supabase-config.js?v=21"></script>
+<script src="sesion.js?v=21"></script>
+<script src="perfil.js?v=21"></script>
+<script src="perfil-vista.js?v=21"></script>
+<script src="app.js?v=21"></script>
+<script src="config-vista.js?v=21"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -1041,7 +1043,8 @@ const CARDS = [
  {c:"Proyectos",n:"pro",  s:"comb",t:"App para celular",d:"PWA o nativa: es LA decisión del proyecto, con el costo de las tiendas puesto sobre la mesa antes de empezar.",k:"movil"},
  {c:"Proyectos",n:"novato",s:"comb",t:"Bot de Telegram / Discord / WhatsApp",d:"Comandos, token seguro y respuesta ante lo inesperado. Con la advertencia de por qué WhatsApp es el más difícil de los tres.",k:"bot"},
  {c:"Proyectos",n:"pro",  s:"comb",t:"Sistema de gestión (stock, clientes, turnos)",d:"Acá el modelo de datos ES el proyecto. Permisos desde el arranque y nada se borra de verdad: el histórico es el activo.",k:"gestion"},
- {c:"Proyectos",n:"pro",  s:"comb",t:"Videojuego (Godot / Unity)",d:"Variante GAME: playtest por build, y la regla de qué assets entran al repo antes de que se vuelva inmanejable.",k:"videojuego"},
+ {c:"Proyectos",n:"pro",  s:"comb",t:"Videojuego en Godot",d:"Escenas como texto que se revisan igual que código, la lógica en scripts testeables, y el .gitignore de Godot desde el paso 0.",k:"godot"},
+ {c:"Proyectos",n:"pro",  s:"comb",t:"Videojuego en Unity",d:"Force Text + .meta versionados o las referencias se rompen al clonar, Library/ afuera del repo, y prefabs chicos para poder mergear.",k:"unity"},
  {c:"Datos",n:"pro",     s:"comb",t:"Análisis de datos / informe",d:"Variante DATA: lógica en módulos testeables, notebook solo para explorar, y validación de datos como reemplazo de los tests.",k:"datos"},
  {c:"Estudio",n:"novato",s:"comb",t:"Juego HTML para estudiar",d:"Convertí un tema de estudio en un juego de preguntas/memoria jugable en el navegador.",k:"juego"},
  {c:"Estudio",n:"novato",s:"comb",t:"Guía de estudio / Trabajo práctico",d:"El agente arma la guía, los ejercicios y la rúbrica de corrección a partir de tu programa o apunte.",k:"guia"},
@@ -1086,6 +1089,8 @@ const TYPES = {
  bot:{name:"Bot de Telegram / Discord / WhatsApp",extra:"Decisiones base: el token del bot va a .env desde el minuto cero (R17); los comandos declarados en un solo lugar; qué pasa si el usuario escribe cualquier cosa, definido antes de programar. Riesgos: WhatsApp es el caso difícil — la API oficial exige verificación del negocio y cobra por conversación, y las librerías no oficiales te pueden hacer banear el número. Telegram y Discord son gratis y directos: si da lo mismo, empezá por ahí."},
  gestion:{name:"Sistema de gestión (stock, clientes, turnos)",extra:"Decisiones base: el modelo de datos primero, la pantalla después — acá el diseño de la base ES el proyecto. Quién puede ver y modificar qué, definido desde el arranque, no agregado al final. Nada se borra de verdad: se marca como inactivo, porque el histórico es el activo del negocio. Riesgos: crecimiento sin control ('ya que estamos, facturación'). Datos personales de clientes → security.md obligatorio."},
  videojuego:{name:"Videojuego (Godot / Unity)",extra:"Variante GAME automática: playtest.md con checklist de pruebas manuales por build complementa a R07, porque testear gameplay automáticamente es carísimo. Decisiones base: el loop principal jugable antes que cualquier arte; los contratos son las interfaces entre sistemas (input, combate, UI). Riesgos: los assets binarios no se diffean — definí desde el día 1 qué entra al repo y qué no, o el repositorio se vuelve inmanejable en un mes."},
+ godot:{name:"Videojuego en Godot",extra:"Variante GAME automática: playtest.md con checklist de pruebas manuales por build complementa a R07. Decisiones base: escenas chicas y componibles — una escena, una responsabilidad (es R05 aplicado al editor); GDScript salvo que ya vengas de C#; y una ventaja enorme de Godot: las escenas .tscn y los recursos .tres son TEXTO, así que se diffean y se revisan como código — jamás pasarlos a binario. El .gitignore de Godot desde el paso 0 (.godot/ afuera, y export_presets.cfg revisado antes de commitear porque puede traer claves de firma). Riesgos: la lógica desparramada en el árbol de nodos — la regla es lógica en scripts testeables, nodos para lo visual y lo físico."},
+ unity:{name:"Videojuego en Unity",extra:"Variante GAME automática: playtest.md con checklist de pruebas manuales por build complementa a R07. Decisiones base: Library/, Temp/ y obj/ NUNCA entran al repo — el .gitignore de Unity va desde el paso 0 o el repositorio pesa gigas en una semana; Asset Serialization en Force Text y los .meta SIEMPRE versionados, porque sin eso las referencias se rompen al clonar; escenas grandes son conflictos imposibles de mergear — prefabs chicos y escenas aditivas. Riesgos: dependencias del Asset Store sin registrar (van a decisions.md con versión y licencia) y el clásico proyecto que solo compila en TU máquina."},
  datos:{name:"Análisis de datos / informe",extra:"Variante DATA automática: la lógica va en módulos .py testeables y el notebook queda solo para explorar; R07 se cumple con validaciones de datos (esquema, rangos, nulos) en vez de tests clásicos; features.md se reemplaza por experiments.md. Decisiones base: de dónde salen los datos crudos y qué se considera un dato inválido, antes de la primera limpieza. Riesgos: conclusiones sacadas de datos sucios — el paso de validación no es opcional, es el que hace que el informe valga algo."}
 };
 
@@ -1189,10 +1194,17 @@ function renderRoadmap(){
 }
 
 /* ---------- eventos del catálogo ---------- */
-// Qué se descarga del catálogo, sin saber quién lo descarga.
+// Qué se descarga del catálogo, sin saber quién lo descarga — y el
+// "Descargando…" que se ve. Para un <a download> el navegador no avisa
+// cuándo terminó, así que el toast confirma tras un instante: honesto
+// para archivos de este tamaño.
 document.addEventListener("click", e => {
-  const desc = e.target.closest("a.btn[download]");
-  if (desc) Sesion.contar("descarga", desc.getAttribute("href").split("/").pop());
+  const desc = e.target.closest("a[download]");
+  if (!desc) return;
+  const nombre = (desc.getAttribute("href") || "").split("/").pop() || "archivo";
+  if (desc.matches("a.btn[download]")) Sesion.contar("descarga", nombre);
+  Feedback.toast(`Descargando ${nombre}…`, {spinner: true, duracion: 0, id: "descarga"});
+  setTimeout(() => Feedback.toast(`Listo: ${nombre}`, {tipo: "ok", id: "descarga", duracion: 2400}), 750);
 });
 
 document.addEventListener("click", e => {
@@ -1516,13 +1528,17 @@ async function bajar(boton, fn){
   const b = $(boton), original = b.textContent, msg = $("zipmsg");
   msg.className = "zipmsg"; msg.textContent = "";
   b.disabled = true; b.textContent = "Armando…";
+  Feedback.empezar();
+  Feedback.toast("Armando tu paquete…", {spinner: true, duracion: 0, id: "zip"});
   try {
-    const n = await fn(opcionesPaquete());
+    const n = await fn({...opcionesPaquete(), onPaso: (hecho, total) => Feedback.fijar(hecho / total)});
     msg.textContent = `Listo: ${n} archivos. Descomprimí y seguí el LEEME.`;
+    Feedback.toast(`Paquete listo: ${n} archivos`, {tipo: "ok", id: "zip", duracion: 2600});
   } catch (e) {
     msg.className = "zipmsg err";
     msg.textContent = "No se pudo armar el paquete: " + e.message;
-  } finally { b.disabled = false; b.textContent = original; }
+    Feedback.toast("No se pudo armar el paquete", {tipo: "err", id: "zip", duracion: 3200});
+  } finally { b.disabled = false; b.textContent = original; Feedback.terminar(); }
 }
 
 $("zipProyecto").onclick = () => {
@@ -1590,6 +1606,9 @@ async function renderGuardadas(){
     : Sesion.activo()
       ? "Se guardan en este navegador. Si entrás con tu mail, viajan con vos a cualquier dispositivo."
       : "Se guardan en este navegador.";
+  // el spinner solo cuando de verdad se va a la red: lo local es instantáneo
+  if (Sesion.usuario())
+    $("combolist").innerHTML = `<li class="cargando-centro" style="padding:14px"><span class="spin"></span> Recargando…</li>`;
   let lista = [];
   try { lista = await Sesion.listar(); } catch (e) { lista = []; }
   $("combolist").innerHTML = lista.length ? lista.map(c => {
@@ -1604,6 +1623,15 @@ async function renderGuardadas(){
   }).join("") : `<li><small>Todavía no guardaste ninguna. Armá una arriba y ponele nombre.</small></li>`;
   $("combolist").dataset.cache = JSON.stringify(lista);
 }
+
+$("comboRecargar").onclick = async () => {
+  const b = $("comboRecargar");
+  b.classList.add("girando");
+  await renderGuardadas();
+  b.classList.remove("girando");
+  Feedback.toast(Sesion.usuario() ? "Combinaciones actualizadas desde tu cuenta" : "Lista actualizada",
+                 {tipo: "ok", duracion: 2000, id: "recarga"});
+};
 
 $("combosave").onclick = async () => {
   const c = estadoActual();
@@ -1744,9 +1772,10 @@ async function abrirPreview(url, titulo){
   $("mdruta").textContent = url.replace(/^\.\.\//, "");
   $("mdraw").href = url;
   $("mddescargar").href = url;
-  $("mdcuerpo").innerHTML = '<p class="dlg-empty">Cargando…</p>';
+  $("mdcuerpo").innerHTML = Feedback.spinnerHTML("Cargando el documento…");
   $("mddlg").dataset.base = url;
   if (!$("mddlg").open) $("mddlg").showModal();
+  Feedback.empezar();
   try {
     const r = await fetch(url);
     if (!r.ok) throw new Error("HTTP " + r.status);
@@ -1757,6 +1786,8 @@ async function abrirPreview(url, titulo){
     Sesion.contar("visita", "md:" + url.split("/").pop());
   } catch (e) {
     $("mdcuerpo").innerHTML = `<p class="dlg-empty">No se pudo cargar el archivo (${esc(e.message)}).</p>`;
+  } finally {
+    Feedback.terminar();
   }
 }
 
@@ -1909,6 +1940,7 @@ window.aplicarPerfil = function aplicarPerfil(p){
 
 (async () => {
   Sesion.contar("visita", location.pathname);
+  if (Sesion.activo()) Feedback.empezar();
   const r = await Sesion.iniciar();
 
   // El link del mail vuelve acá con la sesión ya hecha: no se pide acceso de nuevo.
@@ -1929,6 +1961,7 @@ window.aplicarPerfil = function aplicarPerfil(p){
   await renderGuardadas();
   await Perfil.iniciar(aplicarPerfil);
   cargarComboDelLink();
+  Feedback.terminar();
 })();
 </script>
 </body>

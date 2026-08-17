@@ -90,26 +90,31 @@ SDD Universal · https://sdd-universal.vercel.app
   }
 
   /* Carpeta lista para trabajar: espejos, .gitignore, sdd/ y el prompt. */
-  async function proyecto({nombre, tipoNombre, nivel, prompt, playbooks, custom, conTecnologias, conGuia, brownfield}){
+  async function proyecto({nombre, tipoNombre, nivel, prompt, playbooks, custom, conTecnologias, conGuia, brownfield, onPaso}){
     const carpeta = slug(nombre);
+    // progreso real: quien arma el zip sabe cuantos archivos va a buscar
+    const total = 2 + (conTecnologias ? 1 : 0) + (conGuia ? 1 : 0) + playbooks.length;
+    let hecho = 0;
+    const paso = () => onPaso && onPaso(++hecho, total);
+    const traerP = async r => { const t = await traer(r); paso(); return t; };
     const archivos = [
       {nombre: `${carpeta}/LEEME.md`, contenido: leeme(nombre || carpeta, tipoNombre, nivel, playbooks, brownfield)},
       {nombre: `${carpeta}/PROMPT-DE-ARRANQUE.txt`, contenido: prompt},
       {nombre: `${carpeta}/.gitignore`, contenido: GITIGNORE},
       {nombre: `${carpeta}/AGENTS.md`, contenido: ESPEJO("sdd/SDD-MASTER.md")},
       {nombre: `${carpeta}/CLAUDE.md`, contenido: ESPEJO("sdd/SDD-MASTER.md")},
-      {nombre: `${carpeta}/sdd/SDD-MASTER.md`, contenido: await traer("../SDD-MASTER.md")},
+      {nombre: `${carpeta}/sdd/SDD-MASTER.md`, contenido: await traerP("../SDD-MASTER.md")},
       // seguridad.md va siempre: R27 lo necesita en el arranque para clasificar
       // la superficie, y es justo lo que nadie descarga si hay que elegirlo.
-      {nombre: `${carpeta}/sdd/seguridad.md`, contenido: await traer("../seguridad.md")}
+      {nombre: `${carpeta}/sdd/seguridad.md`, contenido: await traerP("../seguridad.md")}
     ];
 
     if (custom)           archivos.push({nombre: `${carpeta}/sdd/custom.md`, contenido: custom});
-    if (conTecnologias)   archivos.push({nombre: `${carpeta}/sdd/tecnologias.md`, contenido: await traer("../tecnologias.md")});
-    if (conGuia)          archivos.push({nombre: `${carpeta}/sdd/GUIDE.md`, contenido: await traer("../GUIDE.md")});
+    if (conTecnologias)   archivos.push({nombre: `${carpeta}/sdd/tecnologias.md`, contenido: await traerP("../tecnologias.md")});
+    if (conGuia)          archivos.push({nombre: `${carpeta}/sdd/GUIDE.md`, contenido: await traerP("../GUIDE.md")});
 
     for (const p of playbooks)
-      archivos.push({nombre: `${carpeta}/sdd/playbooks/${p}.md`, contenido: await traer(`../playbooks/${p}.md`)});
+      archivos.push({nombre: `${carpeta}/sdd/playbooks/${p}.md`, contenido: await traerP(`../playbooks/${p}.md`)});
 
     Zip.descargar(`${carpeta}.zip`, archivos);
     return archivos.length;
