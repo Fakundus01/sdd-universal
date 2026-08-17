@@ -17,6 +17,9 @@ const ReglasUI = (() => {
   });
   let cfg = base();
 
+  const POR_PAGINA = 5;
+  let pag = 1;
+
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 
@@ -80,14 +83,22 @@ const ReglasUI = (() => {
   function render(){
     const soloDesact = $("rsolo").checked;
     const lista = soloDesact ? REGLAS.filter(r => r.tipo === "desactivable") : REGLAS;
-    $("rlist").innerHTML = lista.map(r => {
+    const paginas = Math.max(1, Math.ceil(lista.length / POR_PAGINA));
+    if (pag > paginas) pag = paginas;
+    const visibles = lista.slice((pag - 1) * POR_PAGINA, pag * POR_PAGINA);
+    $("rlist").innerHTML = visibles.map(r => {
       const off = cfg.apagadas.includes(r.id);
       const fija = r.tipo === "fija";
+      // Las fijas muestran una sola pastilla: ofrecer un OFF que no existe
+      // sería mentir. Las demás muestran los dos estados, como un interruptor.
+      const sw = fija
+        ? '<span class="pill">ON</span>'
+        : '<span class="duo" aria-hidden="true"><span class="pill p-on">ON</span><span class="pill p-off">OFF</span></span>';
       return `<div class="rrow${fija ? " fija" : ""}${off ? " off" : ""}">
         <label class="rsw">
           <input type="checkbox" data-regla="${r.id}" ${fija ? "disabled" : ""} ${off ? "" : "checked"}
                  aria-label="${esc(r.id)} ${esc(r.nombre)}">
-          <span class="pill">${off ? "OFF" : "ON"}</span>
+          ${sw}
         </label>
         <div class="rtxt">
           <b>${r.id} · ${esc(r.nombre)}</b>
@@ -95,7 +106,7 @@ const ReglasUI = (() => {
           <p>${esc(r.d)}</p>
         </div>
       </div>`;
-    }).join("");
+    }).join("") + (typeof pager === "function" ? pager(lista.length, pag, POR_PAGINA, "reglas") : "");
     const n = cfg.apagadas.length;
     $("rcount").textContent = n === 0
       ? "Ninguna apagada — configuración por defecto"
@@ -153,7 +164,7 @@ const ReglasUI = (() => {
     ["rperfil","rmodo","rvariante","rmax","rstack"].forEach(id =>
       $(id).addEventListener("change", leerFormulario));
     ["rpropias","rnotas"].forEach(id => $(id).addEventListener("input", leerFormulario));
-    $("rsolo").addEventListener("change", render);
+    $("rsolo").addEventListener("change", () => { pag = 1; render(); });
 
     $("rreset").onclick = () => {
       if (!confirm("¿Volver todo a la configuración por defecto?")) return;
@@ -179,6 +190,8 @@ const ReglasUI = (() => {
     });
   }
 
-  return {iniciar, abrir, generar, hayCambios: () => cfg.apagadas.length > 0 ||
+  function irPagina(p){ pag = p; render(); $("rlist").scrollTop = 0; }
+
+  return {iniciar, abrir, generar, irPagina, hayCambios: () => cfg.apagadas.length > 0 ||
           cfg.perfil !== "ESTRICTO" || cfg.modo !== "FULL" || Boolean(cfg.maxLineas || cfg.stack || cfg.propias.trim())};
 })();

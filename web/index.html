@@ -28,8 +28,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css?v=23">
-<link rel="stylesheet" href="app.css?v=23">
+<link rel="stylesheet" href="base.css?v=24">
+<link rel="stylesheet" href="app.css?v=24">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -341,6 +341,20 @@
   .como-vista .rextra{max-height:none}
   /* en la vista no hay ventana que cerrar ni centrar */
   .como-vista #techdone,.como-vista #techrecenter{display:none}
+  /* la página entera es nuestra: el catálogo se abre a dos columnas */
+  .area > .wrap:has(.vista[data-vista="tecnologias"]:not([hidden])){max-width:1380px}
+  .como-vista #techlist{display:grid;grid-template-columns:1fr 1fr;column-gap:26px;
+       align-content:start;padding:10px 22px 16px}
+  .como-vista #techlist .dlg-grp,.como-vista #techlist .pager,
+  .como-vista #techlist .dlg-empty{grid-column:1/-1}
+  .como-vista #techlist .dlg-grp{position:static;background:none}
+  .como-vista .trow:not(.elegida){border-color:var(--line)}
+  @media (max-width:860px){.como-vista #techlist{grid-template-columns:1fr}}
+  /* dentro de la pcard los selects heredan width:100% y quedan apilados
+     sin aire: acá van en fila, repartidos */
+  #reglasCuerpo.como-vista .dlg-filters{display:flex;gap:14px;flex-wrap:wrap;
+       align-items:center;padding:16px 22px}
+  #reglasCuerpo.como-vista .dlg-filters select{flex:1;min-width:180px;width:auto}
 
   /* ---------- buscador global ---------- */
   dialog.kbusca{width:min(600px,94vw);margin-top:9vh;margin-bottom:auto}
@@ -446,6 +460,13 @@
   .rrow.off .rsw .pill{background:var(--bg-soft);color:var(--muted);border-color:var(--line-strong)}
   .rrow.fija .rsw .pill{background:var(--accent-soft);color:var(--accent-ink);opacity:.75}
   .rsw input:focus-visible + .pill{outline:3px solid var(--accent);outline-offset:2px}
+  /* ON arriba y OFF abajo: viendo los dos estados se entiende que es un interruptor */
+  .rsw .duo{display:flex;flex-direction:column;gap:3px}
+  .rsw .duo .pill{height:22px}
+  .rsw .duo .p-off{background:transparent;color:var(--muted);border-color:var(--line);opacity:.55}
+  .rrow.off .rsw .duo .pill{background:transparent;color:var(--muted);border-color:var(--line);opacity:.55}
+  .rrow.off .rsw .duo .p-off{background:var(--red-soft);color:var(--red);border-color:var(--red-line);opacity:1}
+  .rsw input:focus-visible + .duo{outline:3px solid var(--accent);outline-offset:2px;border-radius:14px}
   .rtxt{min-width:0}
   .rtxt b{font-size:.89rem}
   .rtxt .lock{font-size:.64rem;font-weight:700;color:var(--muted);margin-left:7px;white-space:nowrap}
@@ -844,7 +865,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.23</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.24</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -1020,22 +1041,22 @@
   </div>
 </dialog>
 
-<script src="shell.js?v=23"></script>
-<script src="tema.js?v=23"></script>
-<script src="buscador.js?v=23"></script>
-<script src="md.js?v=23"></script>
-<script src="feedback.js?v=23"></script>
-<script src="zip.js?v=23"></script>
-<script src="paquete.js?v=23"></script>
-<script src="tecnologias.js?v=23"></script>
-<script src="reglas.js?v=23"></script>
-<script src="reglas-ui.js?v=23"></script>
-<script src="supabase-config.js?v=23"></script>
-<script src="sesion.js?v=23"></script>
-<script src="perfil.js?v=23"></script>
-<script src="perfil-vista.js?v=23"></script>
-<script src="app.js?v=23"></script>
-<script src="config-vista.js?v=23"></script>
+<script src="shell.js?v=24"></script>
+<script src="tema.js?v=24"></script>
+<script src="buscador.js?v=24"></script>
+<script src="md.js?v=24"></script>
+<script src="feedback.js?v=24"></script>
+<script src="zip.js?v=24"></script>
+<script src="paquete.js?v=24"></script>
+<script src="tecnologias.js?v=24"></script>
+<script src="reglas.js?v=24"></script>
+<script src="reglas-ui.js?v=24"></script>
+<script src="supabase-config.js?v=24"></script>
+<script src="sesion.js?v=24"></script>
+<script src="perfil.js?v=24"></script>
+<script src="perfil-vista.js?v=24"></script>
+<script src="app.js?v=24"></script>
+<script src="config-vista.js?v=24"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -1301,6 +1322,7 @@ document.addEventListener("click", e => {
   const destino = b.closest(".pager").dataset.go;
   const p = +b.dataset.p;
   if (destino === "tech"){ techPage = p; renderTech(); $("techlist").scrollTop = 0; }
+  else if (destino === "reglas"){ ReglasUI.irPagina(p); }
   else { catPage = p; render(); $("catalogo").scrollIntoView({behavior:"smooth", block:"start"}); }
 });
 
@@ -1311,18 +1333,21 @@ function techRows(){
   return Buscador.filtrar(base, q, ["n", "u", "e", "t"]);
 }
 
-const TECH_POR_PAGINA = 20;
+/* En el popup entran 20 porque hay scroll; la vista muestra 8 y pagina,
+   que a pantalla completa se lee mejor que una columna eterna. */
+const techPorPagina = () => $("techCuerpo").classList.contains("como-vista") ? 8 : 20;
 let techPage = 1;
 
 function renderTech(){
   const list = techRows();
-  const paginas = Math.max(1, Math.ceil(list.length / TECH_POR_PAGINA));
+  const POR = techPorPagina();
+  const paginas = Math.max(1, Math.ceil(list.length / POR));
   if (techPage > paginas) techPage = paginas;
 
   if (!list.length){
     $("techlist").innerHTML = `<p class="dlg-empty">Ninguna tecnología coincide con esos filtros.<br>El catálogo arranca con lo que ya relevamos y crece con casos reales (R20).</p>`;
   } else {
-    const pagina = list.slice((techPage - 1) * TECH_POR_PAGINA, techPage * TECH_POR_PAGINA);
+    const pagina = list.slice((techPage - 1) * POR, techPage * POR);
     // Con búsqueda activa el orden es por relevancia, así que agrupar por
     // categoría partiría el ranking en pedazos sin sentido.
     const agrupar = !$("tq").value.trim();
@@ -1340,7 +1365,7 @@ function renderTech(){
         ${t.os ? '<span class="os" title="Open source">OSS</span>' : ""}
       </label>`;
     }
-    $("techlist").innerHTML = html + pager(list.length, techPage, TECH_POR_PAGINA, "tech");
+    $("techlist").innerHTML = html + pager(list.length, techPage, POR, "tech");
   }
   const n = sel.size;
   $("techsel").textContent = n === 0 ? "Ninguna elegida"
