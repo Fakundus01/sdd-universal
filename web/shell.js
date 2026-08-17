@@ -21,7 +21,6 @@ const Shell = (() => {
     {v: "catalogo",   i: "📦", t: "Catálogo"},
     {v: "combinador", i: "🧩", t: "Combinador"},
     {g: "Tu espacio"},
-    {v: "perfil",     i: "👤", t: "Mi perfil"},
     {a: "tech",       i: "🛠️", t: "Tecnologías"},
     {a: "reglas",     i: "📐", t: "Mis reglas"},
     {g: "Aprender"},
@@ -98,6 +97,10 @@ const Shell = (() => {
     // necesitan al cargar: tema de texto, fondo vivo y lateral comprimida.
     if (prefs.texto && prefs.texto !== "normal") document.documentElement.dataset.fs = prefs.texto;
     document.documentElement.dataset.vivo = prefs.vivo === false ? "off" : "on";
+    if (prefs.vel && prefs.vel !== "normal") document.documentElement.dataset.vel = prefs.vel;
+    if (prefs.fuerza && prefs.fuerza !== "media") document.documentElement.dataset.fuerza = prefs.fuerza;
+    if (prefs.ancho && prefs.ancho !== "normal") document.documentElement.dataset.ancho = prefs.ancho;
+    if (prefs.acento) Tema.acento(prefs.acento);
     if (prefs.sidebarMini && esEscritorio()) document.documentElement.classList.add("side-mini");
 
     $("side").innerHTML = `

@@ -196,16 +196,16 @@
 .brand .lg{display:grid;place-items:center;width:26px;height:26px;flex:none}
 .brand .lg svg{display:block}
 .logo .ln,.logo .caret,.logo .orbe,.logo .nucleo,.logo .onda{transform-box:fill-box}
-.l-trazos .ln{transform-origin:left center;animation:lgDibujar 3.6s ease-in-out infinite}
+.l-trazos .ln{transform-origin:left center;animation:lgDibujar calc(3.6s * var(--velf,1)) ease-in-out infinite}
 .l-trazos .ln.b{animation-delay:.22s}
 .l-trazos .ln.c{animation-delay:.44s}
 .l-trazos .caret{animation:lgTitilar 1.1s steps(2,start) infinite}
 @keyframes lgDibujar{0%{transform:scaleX(0)}22%{transform:scaleX(1)}78%{transform:scaleX(1)}100%{transform:scaleX(0)}}
 @keyframes lgTitilar{50%{opacity:0}}
-.l-orbita .orbe{transform-origin:center center;transform-box:view-box;animation:lgGirar 4.5s linear infinite}
-.l-orbita .nucleo{transform-origin:center center;animation:lgLatir 2.25s ease-in-out infinite}
+.l-orbita .orbe{transform-origin:center center;transform-box:view-box;animation:lgGirar calc(4.5s * var(--velf,1)) linear infinite}
+.l-orbita .nucleo{transform-origin:center center;animation:lgLatir calc(2.25s * var(--velf,1)) ease-in-out infinite}
 @keyframes lgGirar{to{transform:rotate(360deg)}}
-.l-pulso .onda{transform-origin:center center;transform-box:view-box;animation:lgOnda 2.6s ease-out infinite}
+.l-pulso .onda{transform-origin:center center;transform-box:view-box;animation:lgOnda calc(2.6s * var(--velf,1)) ease-out infinite}
 @keyframes lgOnda{0%{transform:scale(.72);opacity:.9}70%{transform:scale(1.06);opacity:0}100%{transform:scale(1.06);opacity:0}}
 @keyframes lgLatir{0%,100%{transform:scale(1)}50%{transform:scale(.82)}}
 
@@ -283,3 +283,17 @@
   vertical-align:middle;margin-left:7px;display:inline-grid;place-items:center}
 .recargar:hover{color:#fff;border-color:var(--accent)}
 .recargar.girando{animation:girarSpin .7s linear infinite}
+
+
+/* ---------- opciones nuevas de configuración ---------- */
+.fs-ops.mini .fs-op{padding:8px 6px}
+.acentos{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.acento-dot{width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;
+  padding:0;flex:none;box-shadow:inset 0 0 0 2px var(--card)}
+.acento-dot.sel{border-color:var(--ink)}
+.acento-dot.defecto{background:conic-gradient(#7b74f5,#4ade80,#3fc5ff,#ffb45c,#7b74f5);
+  display:grid;place-items:center;color:#fff;font-size:.7rem;font-weight:800}
+.acento-pico{width:34px;height:34px;padding:0;border:1px dashed var(--line-strong);border-radius:50%;
+  background:none;cursor:pointer;overflow:hidden;flex:none;display:grid;place-items:center;color:var(--muted)}
+.acento-pico input{position:absolute;opacity:0;width:0;height:0}
+.cfg-sub{font-size:.75rem;font-weight:700;color:var(--ink-soft);margin:14px 0 7px;display:block}

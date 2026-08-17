@@ -28,8 +28,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css?v=21">
-<link rel="stylesheet" href="app.css?v=21">
+<link rel="stylesheet" href="base.css?v=22">
+<link rel="stylesheet" href="app.css?v=22">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -724,7 +724,7 @@
   <div class="cfg-panel" data-panel="temas">
     <div class="pcard">
       <h3>Tema de color</h3>
-      <p class="d">Los de naturaleza (Bosque, Jungla, Océano, Desierto) pueden mover el fondo.</p>
+      <p class="d">Bosque, Jungla, Océano, Desierto y Medianoche tienen vida propia: luciérnagas, olas, estrellas y calor que sube.</p>
       <div class="temas" id="cfgTemas"></div>
     </div>
     <div class="pcard">
@@ -734,6 +734,10 @@
         <div class="txt"><b>Fondo animado</b><small>Se frena solo si apagás las animaciones.</small></div>
         <label class="sw"><input type="checkbox" id="cfgVivo"><span class="pista"></span></label>
       </div>
+      <span class="cfg-sub">Intensidad del fondo</span>
+      <div class="fs-ops mini" id="cfgFuerza"></div>
+      <span class="cfg-sub">Color de acento</span>
+      <div class="acentos" id="cfgAcento"></div>
       <h3 style="margin-top:18px">Logo</h3>
       <p class="d">Elegí cómo se mueve.</p>
       <div class="logos" id="cfgLogos"></div>
@@ -745,6 +749,9 @@
       <h3>Tamaño del texto</h3>
       <p class="d">Cambia toda la aplicación, no solo esta pantalla.</p>
       <div class="fs-ops" id="cfgTexto"></div>
+      <span class="cfg-sub">Ancho del contenido</span>
+      <p class="d">Cuánto ocupa la página en pantallas grandes.</p>
+      <div class="fs-ops mini" id="cfgAncho"></div>
     </div>
   </div>
 
@@ -759,6 +766,8 @@
         <div class="txt"><b>Sonido</b><small>Un clic corto al navegar. Viene apagado.</small></div>
         <label class="sw"><input type="checkbox" id="cfgSonido"><span class="pista"></span></label>
       </div>
+      <span class="cfg-sub">Velocidad de las animaciones</span>
+      <div class="fs-ops mini" id="cfgVel"></div>
     </div>
   </div>
 
@@ -812,7 +821,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.21</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.22</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -984,22 +993,22 @@
   </div>
 </dialog>
 
-<script src="shell.js?v=21"></script>
-<script src="tema.js?v=21"></script>
-<script src="buscador.js?v=21"></script>
-<script src="md.js?v=21"></script>
-<script src="feedback.js?v=21"></script>
-<script src="zip.js?v=21"></script>
-<script src="paquete.js?v=21"></script>
-<script src="tecnologias.js?v=21"></script>
-<script src="reglas.js?v=21"></script>
-<script src="reglas-ui.js?v=21"></script>
-<script src="supabase-config.js?v=21"></script>
-<script src="sesion.js?v=21"></script>
-<script src="perfil.js?v=21"></script>
-<script src="perfil-vista.js?v=21"></script>
-<script src="app.js?v=21"></script>
-<script src="config-vista.js?v=21"></script>
+<script src="shell.js?v=22"></script>
+<script src="tema.js?v=22"></script>
+<script src="buscador.js?v=22"></script>
+<script src="md.js?v=22"></script>
+<script src="feedback.js?v=22"></script>
+<script src="zip.js?v=22"></script>
+<script src="paquete.js?v=22"></script>
+<script src="tecnologias.js?v=22"></script>
+<script src="reglas.js?v=22"></script>
+<script src="reglas-ui.js?v=22"></script>
+<script src="supabase-config.js?v=22"></script>
+<script src="sesion.js?v=22"></script>
+<script src="perfil.js?v=22"></script>
+<script src="perfil-vista.js?v=22"></script>
+<script src="app.js?v=22"></script>
+<script src="config-vista.js?v=22"></script>
 <script>
 const $ = id => document.getElementById(id);
 

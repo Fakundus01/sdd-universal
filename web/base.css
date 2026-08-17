@@ -15,7 +15,15 @@
   --shadow:0 1px 2px rgba(0,0,0,.35); --shadow-lg:0 10px 30px rgba(0,0,0,.45);
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --radius:14px;
+  --velf:1;          /* factor de velocidad de las animaciones decorativas */
+  --vivo-op:.55;     /* intensidad del fondo animado */
 }
+:root[data-vel="tranquila"]{--velf:1.9}
+:root[data-vel="rapida"]{--velf:.55}
+:root[data-fuerza="sutil"]{--vivo-op:.3}
+:root[data-fuerza="alta"]{--vivo-op:.85}
+:root[data-ancho="amplio"] .wrap{max-width:1400px}
+:root[data-ancho="angosto"] .wrap{max-width:960px}
 :root[data-theme="light"]{
   --bg:#f5f6fa; --bg-soft:#eceef6; --card:#fff; --ink:#1a2233; --ink-soft:#3a465e;
   --muted:#5b6478; --line:#e4e7ef; --line-strong:#d3d8e6;
@@ -125,9 +133,15 @@
 :root[data-vivo="on"][data-theme="bosque"] body::before,
 :root[data-vivo="on"][data-theme="jungla"] body::before,
 :root[data-vivo="on"][data-theme="oceano"] body::before,
-:root[data-vivo="on"][data-theme="desierto"] body::before{
-  opacity:.55;animation:vivo-flotar 28s ease-in-out infinite alternate;
+:root[data-vivo="on"][data-theme="desierto"] body::before,
+:root[data-vivo="on"][data-theme="noche"] body::before{
+  opacity:var(--vivo-op);animation:vivo-flotar calc(28s * var(--velf)) ease-in-out infinite alternate;
 }
+/* Medianoche: una aurora fría que deriva despacio. */
+:root[data-vivo="on"][data-theme="noche"] body::before{
+  background-image:radial-gradient(circle,rgba(91,140,255,.14),transparent 62%),
+    radial-gradient(circle,rgba(120,80,220,.14),transparent 66%),
+    radial-gradient(ellipse,rgba(20,35,90,.4),transparent 72%);}
 :root[data-vivo="on"][data-theme="bosque"] body::before{
   background-image:radial-gradient(circle,rgba(74,222,128,.14),transparent 62%),
     radial-gradient(circle,rgba(30,110,70,.20),transparent 66%),
@@ -144,7 +158,46 @@
   background-image:radial-gradient(circle,rgba(255,180,92,.13),transparent 60%),
     radial-gradient(circle,rgba(170,100,40,.18),transparent 66%),
     radial-gradient(ellipse,rgba(80,45,15,.42),transparent 72%);}
-@media (prefers-reduced-motion:reduce){body::before{animation:none!important}}
+/* Segunda capa por tema: lo que hace que cada uno se sienta distinto. */
+@keyframes vivo-titilar{0%,100%{opacity:calc(var(--vivo-op) * .35)}50%{opacity:var(--vivo-op)}}
+@keyframes vivo-olas{from{background-position:0 100%}to{background-position:640px 100%}}
+@keyframes vivo-subir{from{background-position:0 110%}to{background-position:0 -10%}}
+:root[data-vivo="on"] body::after{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0}
+/* Medianoche: estrellas que titilan. */
+:root[data-vivo="on"][data-theme="noche"] body::after{
+  opacity:var(--vivo-op);animation:vivo-titilar calc(5s * var(--velf)) ease-in-out infinite;
+  background-image:
+    radial-gradient(1.4px 1.4px at 12% 18%,rgba(255,255,255,.8),transparent 60%),
+    radial-gradient(1.2px 1.2px at 78% 12%,rgba(200,215,255,.7),transparent 60%),
+    radial-gradient(1.6px 1.6px at 55% 30%,rgba(255,255,255,.6),transparent 60%),
+    radial-gradient(1.1px 1.1px at 32% 55%,rgba(200,215,255,.6),transparent 60%),
+    radial-gradient(1.5px 1.5px at 88% 45%,rgba(255,255,255,.7),transparent 60%),
+    radial-gradient(1.2px 1.2px at 66% 72%,rgba(200,215,255,.55),transparent 60%),
+    radial-gradient(1.4px 1.4px at 20% 82%,rgba(255,255,255,.6),transparent 60%)}
+/* Océano: una marejada que cruza despacio por abajo. */
+:root[data-vivo="on"][data-theme="oceano"] body::after{
+  opacity:calc(var(--vivo-op) * .7);
+  animation:vivo-olas calc(16s * var(--velf)) linear infinite;
+  background-image:repeating-linear-gradient(100deg,transparent 0 46px,rgba(63,197,255,.05) 46px 90px,transparent 90px 160px);
+  background-size:640px 100%;background-position:0 100%}
+/* Bosque y Jungla: luciérnagas. */
+:root[data-vivo="on"][data-theme="bosque"] body::after,
+:root[data-vivo="on"][data-theme="jungla"] body::after{
+  opacity:var(--vivo-op);animation:vivo-titilar calc(6s * var(--velf)) ease-in-out infinite;
+  background-image:
+    radial-gradient(2px 2px at 22% 68%,rgba(160,255,150,.65),transparent 60%),
+    radial-gradient(1.6px 1.6px at 70% 42%,rgba(160,255,150,.5),transparent 60%),
+    radial-gradient(1.8px 1.8px at 46% 84%,rgba(190,255,170,.55),transparent 60%),
+    radial-gradient(1.4px 1.4px at 86% 76%,rgba(160,255,150,.45),transparent 60%),
+    radial-gradient(1.7px 1.7px at 10% 38%,rgba(190,255,170,.5),transparent 60%)}
+/* Desierto: el calor que sube. */
+:root[data-vivo="on"][data-theme="desierto"] body::after{
+  opacity:calc(var(--vivo-op) * .55);
+  animation:vivo-subir calc(22s * var(--velf)) linear infinite;
+  background-image:repeating-linear-gradient(180deg,transparent 0 70px,rgba(255,180,92,.05) 70px 110px,transparent 110px 190px);
+  background-size:100% 640px}
+@media (prefers-reduced-motion:reduce){body::before,body::after{animation:none!important}}
 
 
 *{box-sizing:border-box;margin:0;padding:0}

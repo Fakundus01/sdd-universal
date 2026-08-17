@@ -39,7 +39,24 @@ const Tema = (() => {
     };
   }
 
-  return {iniciar, aplicar, actual, elegido, alCambiar: f => oyentes.push(f)};
+  /* Acento personalizado: pisa los tokens del tema con un color elegido.
+     El texto sobre el acento se decide por luminancia, para que un acento
+     claro no termine con letras blancas ilegibles. */
+  function acento(hex){
+    const r = document.documentElement.style;
+    if (!hex){
+      ["--accent", "--accent-ink", "--on-accent", "--accent-soft"].forEach(p => r.removeProperty(p));
+      return;
+    }
+    const n = parseInt(hex.slice(1), 16);
+    const lum = (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255;
+    r.setProperty("--accent", hex);
+    r.setProperty("--accent-ink", hex);
+    r.setProperty("--on-accent", lum > 0.62 ? "#101010" : "#ffffff");
+    r.setProperty("--accent-soft", hex + "2b");
+  }
+
+  return {iniciar, aplicar, actual, elegido, acento, alCambiar: f => oyentes.push(f)};
 })();
 
 Tema.iniciar();
