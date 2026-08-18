@@ -24,6 +24,7 @@ const Shell = (() => {
     {v: "tecnologias", i: "🛠️", t: "Tecnologías"},
     {v: "reglas",      i: "📐", t: "Mis reglas"},
     {g: "Aprender"},
+    {v: "manuales",   i: "📚", t: "Manuales"},
     {h: "guia.html",  i: "📖", t: "Guía"},
     {h: "demo.html",  i: "🔬", t: "Demo con/sin SDD"},
     {h: "../sdd-universal-tablero.html", i: "🗺️", t: "Tablero"},

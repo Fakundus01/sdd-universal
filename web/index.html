@@ -28,8 +28,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css?v=24">
-<link rel="stylesheet" href="app.css?v=24">
+<link rel="stylesheet" href="base.css?v=25">
+<link rel="stylesheet" href="app.css?v=25">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -355,6 +355,38 @@
   #reglasCuerpo.como-vista .dlg-filters{display:flex;gap:14px;flex-wrap:wrap;
        align-items:center;padding:16px 22px}
   #reglasCuerpo.como-vista .dlg-filters select{flex:1;min-width:180px;width:auto}
+
+  /* ---------- vista manuales ---------- */
+  .man-grupo{background:var(--card);border:1px solid var(--line);border-radius:18px;
+       padding:22px 24px;margin-bottom:16px}
+  .man-grupo h3{font-size:1.05rem;letter-spacing:-.015em}
+  .man-sub{color:var(--muted);font-size:.85rem;margin:5px 0 14px;max-width:90ch}
+  .man-sub code{font-family:var(--mono);font-size:.78rem;color:var(--accent-ink)}
+  .man-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:8px}
+  .man-fila{display:flex;align-items:center;gap:9px;background:var(--bg-soft);
+       border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .man-fila .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .man-fila b{font-size:.88rem;color:var(--ink)}
+  .man-fila small{font-size:.77rem;color:var(--muted)}
+  .man-fila .ver-mini{width:34px;height:32px;flex:none}
+  .man-dl{padding:6px 12px;font-size:.78rem}
+  .man-zip{margin-top:14px}
+
+  /* ---------- descarga rápida y skills ---------- */
+  .oschk{display:flex;align-items:center;gap:8px;font-size:.83rem;color:var(--ink-soft);
+       cursor:pointer;background:var(--card);border:1px solid var(--line-strong);
+       border-radius:10px;padding:9px 13px}
+  .oschk input{accent-color:var(--accent);width:16px;height:16px;flex:none;margin:0}
+  .oschk small{color:var(--muted);font-weight:400}
+  .files .oschk{margin-bottom:10px}
+  dialog.zipr{width:min(480px,94vw)}
+  .zipr-cuerpo{padding:16px 22px}
+  .zipr-cuerpo .lbl{display:block;font-size:.76rem;font-weight:700;color:var(--ink-soft);
+       margin:8px 0 4px}
+  .zipr-cuerpo select{width:100%;padding:10px 12px;border:1px solid var(--line-strong);
+       border-radius:10px;background:var(--card);color:var(--ink);font-family:inherit;font-size:.86rem}
+  .zipr-cuerpo .oschk{margin-top:12px}
+  .zipr-nota{font-size:.78rem;color:var(--muted);margin-top:11px}
 
   /* ---------- buscador global ---------- */
   dialog.kbusca{width:min(600px,94vw);margin-top:9vh;margin-bottom:auto}
@@ -687,6 +719,8 @@
     <div class="files">
       <h3>2 · Bajate todo de una</h3>
       <p>La carpeta ya armada, con el <code>.gitignore</code>, los espejos y el prompt adentro. Descomprimís, abrís tu agente y arrancás.</p>
+      <label class="oschk"><input type="checkbox" id="zipSkills" checked> Sumar skills de Claude
+        <small>— los atajos /sdd-arranque, /sdd-ciclo y /sdd-auditoria; con otro agente no molestan</small></label>
       <div class="zipbtns">
         <button class="b-zip" id="zipProyecto" type="button">📦 Descargar la carpeta del proyecto</button>
         <button class="b-zip alt" id="zipSolo" type="button">Solo los MD sueltos</button>
@@ -716,6 +750,24 @@
     <p>Prendé y apagá las 27 reglas, elegí perfil y modo, sumá las tuyas, y bajate el <code>custom.md</code> ya escrito. El núcleo nunca se edita: tu configuración sobrevive a cada actualización.</p>
   </div>
   <div class="pcard sin-pad" id="slotReglas"></div>
+</section>
+
+<section class="vista" data-vista="manuales" hidden>
+  <div class="cfg-cab">
+    <h2>Manuales</h2>
+    <p>Recetas paso a paso para tareas concretas, y los atajos para Claude. Todo se puede leer acá mismo antes de bajarlo.</p>
+  </div>
+  <div class="man-grupo">
+    <h3>📒 Playbooks</h3>
+    <p class="man-sub">Guías cortas que tu agente sigue comando a comando. Viajan dentro de <code>sdd/playbooks/</code> cuando armás el paquete en el Combinador, o bajalas sueltas desde acá.</p>
+    <div class="man-lista" id="manPlaybooks"></div>
+  </div>
+  <div class="man-grupo">
+    <h3>🤖 Skills para Claude</h3>
+    <p class="man-sub">Atajos que se instalan en <code>.claude/skills/</code>: abrís el repo con Claude Code y escribís <code>/sdd-arranque</code>, <code>/sdd-ciclo</code> o <code>/sdd-auditoria</code>. Vienen adentro del ZIP del Combinador si dejás marcada la opción, o bajalas sueltas para un repo que ya está andando. Con otro agente no aplican y no molestan — el SDD funciona igual sin ellas (R22).</p>
+    <div class="man-lista" id="manSkills"></div>
+    <button class="btn b-go man-zip" id="manSkillsZip" type="button">📦 Bajar las skills (ZIP)</button>
+  </div>
 </section>
 
 <section class="vista" data-vista="perfil" hidden>
@@ -865,7 +917,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.24</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.25</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -970,6 +1022,34 @@
   </div>
 </dialog>
 
+<dialog class="tech zipr" id="zipdlg" aria-labelledby="ziprtitle">
+  <div class="dlg-head" style="cursor:default">
+    <h2 id="ziprtitle">Descarga rápida</h2>
+    <p id="ziprsub"></p>
+    <button class="dlg-x" id="ziprx" type="button" aria-label="Cerrar">✕</button>
+  </div>
+  <div class="zipr-cuerpo">
+    <label class="lbl" for="zrexiste">¿El proyecto ya existe?</label>
+    <select id="zrexiste">
+      <option value="nuevo">No, arranco de cero</option>
+      <option value="brownfield">Sí, ya tengo código andando</option>
+    </select>
+    <label class="lbl" for="zrnivel">Tu nivel</label>
+    <select id="zrnivel">
+      <option value="NOVATO">Novato — sin experiencia en código</option>
+      <option value="PRO">Pro — con experiencia</option>
+    </select>
+    <label class="oschk"><input type="checkbox" id="zrskills" checked> Sumar skills de Claude
+      <small>— /sdd-arranque, /sdd-ciclo, /sdd-auditoria</small></label>
+    <p class="zipr-nota">El resto va con valores por defecto: stack recomendado por el agente y perfil estricto. Si querés afinar tecnologías, playbooks o perfil, usá el Combinador.</p>
+  </div>
+  <div class="dlg-foot">
+    <span class="n" id="zrmsg" role="status"></span>
+    <button class="clear" id="zrcomb" type="button">Mejor afinarlo</button>
+    <button class="done" id="zrdl" type="button">📦 Descargar ZIP</button>
+  </div>
+</dialog>
+
 <dialog class="tech auth" id="authdlg" aria-labelledby="authtitle">
   <div class="dlg-head" style="cursor:default">
     <h2 id="authtitle">Tu cuenta</h2>
@@ -1041,22 +1121,22 @@
   </div>
 </dialog>
 
-<script src="shell.js?v=24"></script>
-<script src="tema.js?v=24"></script>
-<script src="buscador.js?v=24"></script>
-<script src="md.js?v=24"></script>
-<script src="feedback.js?v=24"></script>
-<script src="zip.js?v=24"></script>
-<script src="paquete.js?v=24"></script>
-<script src="tecnologias.js?v=24"></script>
-<script src="reglas.js?v=24"></script>
-<script src="reglas-ui.js?v=24"></script>
-<script src="supabase-config.js?v=24"></script>
-<script src="sesion.js?v=24"></script>
-<script src="perfil.js?v=24"></script>
-<script src="perfil-vista.js?v=24"></script>
-<script src="app.js?v=24"></script>
-<script src="config-vista.js?v=24"></script>
+<script src="shell.js?v=25"></script>
+<script src="tema.js?v=25"></script>
+<script src="buscador.js?v=25"></script>
+<script src="md.js?v=25"></script>
+<script src="feedback.js?v=25"></script>
+<script src="zip.js?v=25"></script>
+<script src="paquete.js?v=25"></script>
+<script src="tecnologias.js?v=25"></script>
+<script src="reglas.js?v=25"></script>
+<script src="reglas-ui.js?v=25"></script>
+<script src="supabase-config.js?v=25"></script>
+<script src="sesion.js?v=25"></script>
+<script src="perfil.js?v=25"></script>
+<script src="perfil-vista.js?v=25"></script>
+<script src="app.js?v=25"></script>
+<script src="config-vista.js?v=25"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -1226,7 +1306,12 @@ function render(){
            </div>`
         : x.f
           ? `<a class="btn ${x.dl === false ? "b-alt" : "b-go"}" href="${x.f}"${x.dl === false ? "" : " download"}>${esc(x.cta || "Descargar MD")}</a>`
-          : `<button class="btn b-go" type="button" data-pick="${esc(x.k)}">Usar en el combinador ↓</button>`;
+          : `<div class="cbtns">
+               <button class="btn b-go" type="button" data-zip="${esc(x.k)}"
+                 title="Bajar la carpeta armada con valores por defecto">📦 Descargar ZIP</button>
+               <button class="btn b-alt" type="button" data-pick="${esc(x.k)}"
+                 title="Elegir stack, tecnologías y playbooks">Afinar ↓</button>
+             </div>`;
     return `<article class="c">
       <div class="top-tags"><span class="tag t-cat">${esc(x.c)}</span>
       <span class="tag ${x.n === "novato" ? "t-nov" : "t-pro"}">${esc(x.n)}</span>${estado}</div>
@@ -1558,7 +1643,8 @@ function opcionesPaquete(){
     custom: ReglasUI.hayCambios() ? ReglasUI.generar() : null,
     conTecnologias: sel.size > 0,
     conGuia: $("clvl").value === "NOVATO",
-    brownfield: $("cexiste").value === "brownfield"
+    brownfield: $("cexiste").value === "brownfield",
+    conSkills: $("zipSkills").checked
   };
 }
 
@@ -1572,10 +1658,13 @@ function renderArbol(){
     linea("├── .gitignore", "con .env adentro (R17)"),
     "├── AGENTS.md",
     "├── CLAUDE.md",
+  ];
+  if (o.conSkills) filas.push(linea("├── .claude/skills/", "atajos /sdd-* para Claude"));
+  filas.push(
     "└── sdd/",
     linea("    ├── SDD-MASTER.md", "el núcleo"),
     linea("    ├── seguridad.md", "controles según lo que hacés (R27)")
-  ];
+  );
   if (o.custom)         filas.push(linea("    ├── custom.md", "tus reglas"));
   if (o.conTecnologias) filas.push(linea("    ├── tecnologias.md", `${sel.size} elegidas`));
   if (o.conGuia)        filas.push(linea("    ├── GUIDE.md", "para vos"));
@@ -1604,6 +1693,7 @@ async function bajar(boton, fn){
   } finally { b.disabled = false; b.textContent = original; Feedback.terminar(); }
 }
 
+$("zipSkills").onchange = renderArbol;
 $("zipProyecto").onclick = () => {
   Sesion.contar("paquete", "proyecto:" + $("ctype").value);
   bajar("zipProyecto", Paquete.proyecto);
@@ -1611,6 +1701,88 @@ $("zipProyecto").onclick = () => {
 $("zipSolo").onclick = () => {
   Sesion.contar("paquete", "sueltos");
   bajar("zipSolo", Paquete.soloMd);
+};
+
+/* ---------- descarga rápida desde el catálogo ---------- */
+(() => {
+  let tipo = null;
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-zip]");
+    if (!b) return;
+    tipo = b.dataset.zip;
+    $("ziprsub").textContent = `${TYPES[tipo].name} — la carpeta lista para descomprimir y arrancar.`;
+    $("zrmsg").textContent = "";
+    $("zipdlg").showModal();
+  });
+  $("ziprx").onclick = () => $("zipdlg").close();
+  $("zipdlg").addEventListener("click", e => { if (e.target === $("zipdlg")) $("zipdlg").close(); });
+  $("zrcomb").onclick = () => {
+    $("zipdlg").close();
+    const btn = document.querySelector(`[data-pick="${tipo}"]`);
+    if (btn) btn.click(); else App.ir("combinador");
+  };
+  $("zrdl").onclick = async () => {
+    const b = $("zrdl"), original = b.textContent;
+    b.disabled = true; b.textContent = "Armando…";
+    Feedback.empezar();
+    Feedback.toast("Armando tu paquete…", {spinner: true, duracion: 0, id: "zip"});
+    // El combinador es el único que sabe armar prompts: se le prestan sus
+    // campos con los defaults, se genera, y se devuelven como estaban para
+    // no pisar una combinación que la persona tenga a medias.
+    const prestado = ["ctype", "cstack", "clvl", "cperf", "cexiste"].map(id => [id, $(id).value]);
+    try {
+      $("ctype").value = tipo; $("cstack").value = "reco"; $("cperf").value = "ESTRICTO";
+      $("clvl").value = $("zrnivel").value; $("cexiste").value = $("zrexiste").value;
+      const o = {...opcionesPaquete(), nombre: TYPES[tipo].name, prompt: buildPrompt(),
+                 playbooks: ["env-setup"], conSkills: $("zrskills").checked};
+      const n = await Paquete.proyecto({...o, onPaso: (h, t) => Feedback.fijar(h / t)});
+      $("zrmsg").textContent = `Listo: ${n} archivos.`;
+      Feedback.toast(`Paquete listo: ${n} archivos`, {tipo: "ok", id: "zip", duracion: 2600});
+      Sesion.contar("paquete", "rapido:" + tipo);
+    } catch (err) {
+      $("zrmsg").textContent = "No se pudo: " + err.message;
+      Feedback.toast("No se pudo armar el paquete", {tipo: "err", id: "zip", duracion: 3200});
+    } finally {
+      prestado.forEach(([id, v]) => $(id).value = v);
+      b.disabled = false; b.textContent = original; Feedback.terminar();
+    }
+  };
+})();
+
+/* ---------- vista manuales ---------- */
+const MANUALES = [
+  {t: "Deploy en Vercel",              d: "tu front online con URL propia en 20 minutos",      f: "../playbooks/deploy-vercel.md"},
+  {t: "Publicar en GitHub + Vercel",   d: "de carpeta local a repo público con web deployada", f: "../playbooks/publish-github-vercel.md"},
+  {t: "Inicio de sesión con Supabase", d: "cuentas de usuario en un sitio estático, con RLS",  f: "../playbooks/supabase-auth.md"},
+  {t: "Que los mails lleguen",         d: "Gmail gratis o Resend, con el DNS explicado",       f: "../playbooks/resend-smtp.md"},
+  {t: ".env y credenciales seguras",   d: "secretos fuera del repo desde el minuto cero",      f: "../playbooks/env-setup.md"},
+  {t: "React + Vite desde cero",       d: "node -v, npm create vite, npm run dev",             f: "../playbooks/create-react-vite.md"},
+  {t: "Git desde cero, sin miedo",     d: "el ciclo diario y cómo deshacer sin romper nada",   f: "../playbooks/git-basico.md"},
+  {t: "Catálogo de playbooks",         d: "el índice completo, con el estado de cada receta",  f: "../playbooks/catalog.md"}
+];
+$("manPlaybooks").innerHTML = MANUALES.map(x => `
+  <div class="man-fila">
+    <div class="txt"><b>${esc(x.t)}</b><small>${esc(x.d)}</small></div>
+    <button class="ver-mini" type="button" data-ver="${x.f}" data-vt="${esc(x.t)}"
+      aria-label="Ver ${esc(x.t)}" title="Leer acá">👁</button>
+    <a class="btn b-alt man-dl" href="${x.f}" download>Bajar</a>
+  </div>`).join("");
+$("manSkills").innerHTML = Paquete.SKILLS.map(s => `
+  <div class="man-fila">
+    <div class="txt"><b>/${esc(s.n)}</b><small>${esc(s.d)}</small></div>
+    <button class="ver-mini" type="button" data-ver="../skills/${s.n}/SKILL.md" data-vt="/${esc(s.n)}"
+      aria-label="Ver ${esc(s.n)}" title="Leer acá">👁</button>
+  </div>`).join("");
+$("manSkillsZip").onclick = async () => {
+  const b = $("manSkillsZip"), original = b.textContent;
+  b.disabled = true; b.textContent = "Armando…";
+  try {
+    const n = await Paquete.soloSkills();
+    Feedback.toast(`Listo: ${n} skills en el ZIP — descomprimilo en la raíz de tu repo`, {tipo: "ok", duracion: 3000});
+    Sesion.contar("paquete", "skills");
+  } catch {
+    Feedback.toast("No se pudieron bajar las skills", {tipo: "err", duracion: 3200});
+  } finally { b.disabled = false; b.textContent = original; }
 };
 
 $("go").onclick = () => {

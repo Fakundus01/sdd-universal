@@ -75,7 +75,7 @@ const App = (() => {
 
   /* ---------------- ruteo ---------------- */
   const TITULOS = {inicio: "Inicio", catalogo: "Catálogo", combinador: "Combinador",
-                   tecnologias: "Tecnologías", reglas: "Mis reglas",
+                   tecnologias: "Tecnologías", reglas: "Mis reglas", manuales: "Manuales",
                    perfil: "Mi perfil", comunidad: "Feedback", configuracion: "Configuración"};
 
   function ir(vista, empujar = true){

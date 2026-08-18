@@ -1,4 +1,4 @@
-# SDD-COMPACT v0.24 · cheat-sheet universal (cuadro de sintaxis)
+# SDD-COMPACT v0.25 · cheat-sheet universal (cuadro de sintaxis)
 # Uso: pegar como primer mensaje en agentes solo-chat, o como único contexto de subagentes baratos.
 # Toggle: "Rxx=OFF" apaga una regla. Overrides personales → custom.md.
 

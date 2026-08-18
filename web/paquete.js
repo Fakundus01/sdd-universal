@@ -19,6 +19,15 @@ const Paquete = (() => {
 
   const ESPEJO = raiz => `Leé \`${raiz}\` y obedecé sus reglas.\n`;
 
+  /* Skills para Claude Code: atajos /sdd-* que envuelven los prompts del
+     master. Van en .claude/skills/ y Claude las descubre solo al abrir el
+     repo. Son opcionales y solo-Claude: el SDD sigue siendo agnóstico (R22). */
+  const SKILLS = [
+    {n: "sdd-arranque",  d: "arranca el proyecto: cuestionario, MDs y OK"},
+    {n: "sdd-ciclo",     d: "un ciclo de trabajo con su HANDBACK"},
+    {n: "sdd-auditoria", d: "auditoría de mantenimiento (R19)"}
+  ];
+
   const GITIGNORE = `# Secretos — R17: esto va ANTES del primer commit.
 # Un .gitignore agregado después del primer secreto llega tarde: la clave
 # ya quedó en el historial de git y sacarla de ahí es reescribir la historia.
@@ -47,7 +56,7 @@ desktop.ini
 .idea/
 `;
 
-  function leeme(nombre, tipo, nivel, playbooks, brownfield){
+  function leeme(nombre, tipo, nivel, playbooks, brownfield, conSkills){
     return `# ${nombre}
 
 Carpeta generada desde el catálogo del SDD Universal. Ya viene con todo en su lugar.
@@ -74,7 +83,8 @@ ${brownfield
 | \`sdd/seguridad.md\` | Los controles según lo que tu proyecto hace (R27). El agente lo usa solo, no hace falta que lo leas |${playbooks.length ? `\n| \`sdd/playbooks/\` | ${playbooks.length} receta(s) paso a paso: ${playbooks.join(", ")} |` : ""}
 | \`PROMPT-DE-ARRANQUE.txt\` | Tu prompt, ya armado con las opciones que elegiste |
 | \`.gitignore\` | Con \`.env\` adentro desde el minuto cero (R17) |
-| \`AGENTS.md\` / \`CLAUDE.md\` | Una línea para que cualquier agente encuentre el SDD solo |
+| \`AGENTS.md\` / \`CLAUDE.md\` | Una línea para que cualquier agente encuentre el SDD solo |${conSkills ? `
+| \`.claude/skills/\` | Atajos para Claude Code: \`/sdd-arranque\`, \`/sdd-ciclo\`, \`/sdd-auditoria\`. Si usás otro agente, ignorala — no molesta |` : ""}
 
 **Lo que todavía no está:** \`spec.md\`, \`design.md\`, \`contracts.md\` y compañía. Esos **los escribe el agente** sobre tu idea, en el paso 3. No se descargan de ningún lado porque todavía no existen.
 
@@ -90,15 +100,16 @@ SDD Universal · https://sdd-universal.vercel.app
   }
 
   /* Carpeta lista para trabajar: espejos, .gitignore, sdd/ y el prompt. */
-  async function proyecto({nombre, tipoNombre, nivel, prompt, playbooks, custom, conTecnologias, conGuia, brownfield, onPaso}){
+  async function proyecto({nombre, tipoNombre, nivel, prompt, playbooks, custom, conTecnologias, conGuia, brownfield, conSkills, onPaso}){
     const carpeta = slug(nombre);
     // progreso real: quien arma el zip sabe cuantos archivos va a buscar
-    const total = 2 + (conTecnologias ? 1 : 0) + (conGuia ? 1 : 0) + playbooks.length;
+    const total = 2 + (conTecnologias ? 1 : 0) + (conGuia ? 1 : 0) + playbooks.length
+                + (conSkills ? SKILLS.length : 0);
     let hecho = 0;
     const paso = () => onPaso && onPaso(++hecho, total);
     const traerP = async r => { const t = await traer(r); paso(); return t; };
     const archivos = [
-      {nombre: `${carpeta}/LEEME.md`, contenido: leeme(nombre || carpeta, tipoNombre, nivel, playbooks, brownfield)},
+      {nombre: `${carpeta}/LEEME.md`, contenido: leeme(nombre || carpeta, tipoNombre, nivel, playbooks, brownfield, conSkills)},
       {nombre: `${carpeta}/PROMPT-DE-ARRANQUE.txt`, contenido: prompt},
       {nombre: `${carpeta}/.gitignore`, contenido: GITIGNORE},
       {nombre: `${carpeta}/AGENTS.md`, contenido: ESPEJO("sdd/SDD-MASTER.md")},
@@ -116,7 +127,23 @@ SDD Universal · https://sdd-universal.vercel.app
     for (const p of playbooks)
       archivos.push({nombre: `${carpeta}/sdd/playbooks/${p}.md`, contenido: await traerP(`../playbooks/${p}.md`)});
 
+    if (conSkills)
+      for (const s of SKILLS)
+        archivos.push({nombre: `${carpeta}/.claude/skills/${s.n}/SKILL.md`,
+                       contenido: await traerP(`../skills/${s.n}/SKILL.md`)});
+
     Zip.descargar(`${carpeta}.zip`, archivos);
+    return archivos.length;
+  }
+
+  /* Solo las skills, para sumarlas a un proyecto que ya está andando:
+     se descomprime en la raíz del repo y listo. */
+  async function soloSkills(){
+    const archivos = [];
+    for (const s of SKILLS)
+      archivos.push({nombre: `.claude/skills/${s.n}/SKILL.md`,
+                     contenido: await traer(`../skills/${s.n}/SKILL.md`)});
+    Zip.descargar("skills-claude-sdd.zip", archivos);
     return archivos.length;
   }
 
@@ -136,5 +163,5 @@ SDD Universal · https://sdd-universal.vercel.app
     return archivos.length;
   }
 
-  return {proyecto, soloMd, slug};
+  return {proyecto, soloMd, soloSkills, slug, SKILLS};
 })();

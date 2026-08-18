@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.24 · **Fecha:** 2026-08-17 · **Owner:** Facundo Moreno
+**Versión:** 0.25 · **Fecha:** 2026-08-17 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -221,7 +221,7 @@ repo/
 ```
 
 **Modo LITE:** todo lo anterior colapsa en un único `sdd-lite.md`. **Modo FEDERADO:** este árbol se repite por módulo y el `sdd/` raíz solo rutea (opcional: `api-catalog.md` con el índice de APIs entre módulos).
-**Del paquete, no por proyecto:** `blocks.md`, `tecnologias.md`, `seguridad.md`, `playbooks/`, `examples/`, `web/` y `README.md` viven en el repo del SDD Universal; a un proyecto solo se copian los playbooks que use. En `examples/` hay un `sdd/` real y completo para ver cómo se ve el resultado antes de generar el propio.
+**Del paquete, no por proyecto:** `blocks.md`, `tecnologias.md`, `seguridad.md`, `playbooks/`, `skills/`, `examples/`, `web/` y `README.md` viven en el repo del SDD Universal; a un proyecto solo se copian los playbooks que use (y `.claude/skills/` si el agente es Claude — atajos opcionales, el SDD funciona igual sin ellos). En `examples/` hay un `sdd/` real y completo para ver cómo se ve el resultado antes de generar el propio.
 **Opcionales enterprise (teams.md §8):** `team.md` · `environments.md` · `onboarding.md` · `incidents.md` (postmortems) · `metrics.md` (velocidad + gasto de tokens por ciclo).
 
 **Contrato de calidad de `spec.md` — los 6 elementos.** Una spec no pasa el OK si le falta alguno: (1) outcomes concretos y medibles, no nombres de features; (2) límites de alcance explícitos (qué NO entra); (3) constraints y supuestos técnicos; (4) decisiones ya tomadas (DB, librerías, patrones) para no re-discutir; (5) desglose en sub-tareas paralelizables; (6) criterios de verificación testeables. La spec es un contrato ejecutable que restringe lo que el agente puede generar — no un doc pasivo.
@@ -344,6 +344,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.25 | 2026-08-17 | `skills/` nuevo: tres atajos para Claude Code (`/sdd-arranque`, `/sdd-ciclo`, `/sdd-auditoria`) que envuelven los prompts del master sin duplicarlos — opcionales y solo-Claude, el SDD sigue agnóstico (R22). La web suma la vista «Manuales» (playbooks legibles y descargables + skills), descarga rápida por card del catálogo con popup de opciones, y el ZIP del Combinador puede incluir `.claude/skills/`. |
 | 0.24 | 2026-08-17 | Las vistas de «Tecnologías» y «Mis reglas» aprovechan el ancho: catálogo a dos columnas con páginas de 8, reglas paginadas de a 5 con selects en fila, e interruptor ON/OFF con los dos estados visibles. |
 | 0.23 | 2026-08-15 | «Tecnologías» y «Mis reglas» son **vistas** propias al entrar por el menú, y siguen siendo **popups** cuando se abren desde el Combinador: el mismo DOM se muda de contenedor según de dónde vengas, así no hay dos copias que se desincronicen. |
 | 0.22 | 2026-08-15 | «Mi perfil» sale del menú lateral (el avatar de la barra ya lleva ahí: estaba duplicado). Configuración crece: **color de acento** propio (con presets y selector libre, y el texto sobre el acento decidido por luminancia), **intensidad** del fondo animado, **velocidad** de las animaciones y **ancho del contenido**. Los fondos con vida ganan una segunda capa por tema: estrellas en Medianoche (que ahora también tiene aurora), olas en Océano, luciérnagas en Bosque y Jungla, y el calor que sube en Desierto. |
