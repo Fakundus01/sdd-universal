@@ -94,6 +94,13 @@ const Shell = (() => {
     const actual = opciones.actual || "";
     const prefs = leerPrefs();
 
+    // Todo link a otro dominio abre en pestaña nueva: el sitio no se navega
+    // afuera. Un solo lugar (captura) en vez de target= repartido por el HTML.
+    document.addEventListener("click", e => {
+      const a = e.target.closest("a[href^='http']");
+      if (a && a.host !== location.host && !a.target){ a.target = "_blank"; a.rel = "noopener"; }
+    }, true);
+
     // Estas marcas viven acá y no en App porque TODAS las páginas las
     // necesitan al cargar: tema de texto, fondo vivo y lateral comprimida.
     if (prefs.texto && prefs.texto !== "normal") document.documentElement.dataset.fs = prefs.texto;
@@ -120,7 +127,8 @@ const Shell = (() => {
             : `<a href="${base}index.html#/catalogo"><span class="i">${x.i}</span>${esc(x.t)}</a>`;
           const fuera = x.h.startsWith("http");
           const act = x.h === actual ? ' aria-current="page" class="act"' : "";
-          return `<a href="${ruta(x.h)}"${act}${fuera ? ' rel="noopener"' : ""}><span class="i">${x.i}</span>${esc(x.t)}</a>`;
+          // lo externo (GitHub) abre en pestaña nueva: que el sitio no se pierda
+          return `<a href="${ruta(x.h)}"${act}${fuera ? ' target="_blank" rel="noopener"' : ""}><span class="i">${x.i}</span>${esc(x.t)}</a>`;
         }).join("")}
       </nav>
       <div class="side-pie">
@@ -141,7 +149,8 @@ const Shell = (() => {
     const navMini = VISTAS.filter(x => x.v || x.h).map(x => {
       const href = x.v ? hrefVista(x.v) : ruta(x.h);
       const dv = x.v ? ` data-vista="${x.v}"` : "";
-      return `<a${dv} href="${href}" title="${esc(x.t)}"><span>${x.i}</span></a>`;
+      const fuera = x.h && x.h.startsWith("http") ? ' target="_blank" rel="noopener"' : "";
+      return `<a${dv} href="${href}" title="${esc(x.t)}"${fuera}><span>${x.i}</span></a>`;
     }).join("") + `<a data-vista="configuracion" href="${hrefVista("configuracion")}" title="Configuración"><span>⚙️</span></a>`;
 
     $("barra").innerHTML = `

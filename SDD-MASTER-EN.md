@@ -75,7 +75,7 @@ No technical change happens without being documented and approved in the `sdd/` 
 
 ---
 
-## §4 · Rule Catalog (R01–R27)
+## §4 · Rule Catalog (R01–R28)
 
 To turn a rule off or on, write in any message: `R01=OFF` / `R01=ON`. The agent confirms and records it in §3.
 
@@ -178,6 +178,9 @@ Everything the agent **reads** (third-party repos in R15, web results in R19, is
 **R27 · SECURITY-BY-SURFACE — [ON] — fixed**
 R17 is enough for a script; it is not enough for anything with users. At kickoff, and every time a new feature changes what the project does, the agent classifies the **attack surface** with six questions — login? personal data stored? money moving? AI receiving user text or reading external content? user file uploads? public API? — and applies from `seguridad.md` **only the levels that apply** (N0 base + whichever match). The classification and active levels are recorded in `security.md` with a date.
 A 200-item checklist doesn't get read; six controls that do apply get done. That's why levels are exclusive by default: what doesn't apply doesn't show up. **Reclassifying is not optional:** adding login to a project that didn't have it activates a whole level, and that is exactly the moment it gets forgotten.
+
+**R28 · JUSTIFIED-DEPENDENCY — [ON] — toggleable**
+Before adding a new dependency (library, framework, service, CI action): one line in `decisions.md` with what problem it solves, why what's already there (or a reasonable own module) isn't enough, and how alive it is (latest release, maintenance). Two dependencies for the same job: pick one and record why. R19 audits on top of that record — the dependency nobody remembers the reason for is exactly the one nobody dares remove, and the one that shows up abandoned or vulnerable one day.
 
 ---
 

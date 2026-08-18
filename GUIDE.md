@@ -22,6 +22,15 @@ Un paquete portable de gobernanza: la especificación va antes que el código, l
 
 En los tres casos el flujo es el mismo: elegís perfil (ESTRICTO/CONFIANZA), contestás el cuestionario socrático, das el OK a la propuesta, y el agente genera los MD y arranca el loop de HANDBACK.
 
+### El flujo completo, de punta a punta
+
+1. Armás tu paquete en la web (Combinador, o la descarga rápida de cualquier card) y lo descomprimís en tu carpeta.
+2. Abrís tu agente parado ahí y pegás `PROMPT-DE-ARRANQUE.txt` (con Claude alcanza `/sdd-arranque`: las skills vienen en el ZIP).
+3. Cuestionario (R04) → propuesta de spec y estructura → **tu OK** (acá corregir es gratis).
+4. Con el OK escribe los MD, los commitea (R01), y recién entonces el código.
+5. Desde ahí, loop: implementa → tests (R07) → MD al día → HANDBACK de ~20 líneas → OK / edición / STOP.
+6. Tus gustos van a `custom.md` («Mis reglas» en la web): el núcleo se actualiza sin perderlos.
+
 ---
 
 ## 3 · ¿Es fácil de usar? (respuesta honesta)

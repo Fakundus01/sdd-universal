@@ -19,8 +19,8 @@
 <meta property="og:image" content="https://sdd-universal.vercel.app/web/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="base.css?v=26">
-<link rel="stylesheet" href="app.css?v=26">
+<link rel="stylesheet" href="base.css?v=27">
+<link rel="stylesheet" href="app.css?v=27">
 <style>
   .layout{display:grid;grid-template-columns:236px 1fr;gap:40px;align-items:start;padding-top:32px}
   @media (max-width:900px){.layout{grid-template-columns:1fr;gap:22px;padding-top:22px}}
@@ -119,6 +119,7 @@
     <ol>
       <li><a href="#que-es">Qué es, en tres líneas</a></li>
       <li><a href="#quick-start">Quick start: tres caminos</a></li>
+      <li><a href="#flujo">El flujo, de punta a punta</a></li>
       <li><a href="#es-facil">¿Es fácil de usar?</a></li>
       <li><a href="#actualizar">Cómo se actualiza</a></li>
       <li><a href="#errores">Errores comunes</a></li>
@@ -133,7 +134,7 @@
       <p class="kick">Guía de uso</p>
       <h1>Cómo se usa el SDD Universal</h1>
       <p>Para humanos. Los agentes no leen esta guía salvo que se la pidas — a ellos les alcanza con el master.</p>
-      <p class="meta">Versión 0.26 · 2026-08-17 · lectura de ~8 minutos</p>
+      <p class="meta">Versión 0.27 · 2026-08-17 · lectura de ~8 minutos</p>
     </header>
 
     <section id="que-es">
@@ -160,8 +161,24 @@
       <p>En los tres casos el flujo es el mismo: elegís perfil (ESTRICTO o CONFIANZA), contestás el cuestionario socrático, das el OK a la propuesta, y el agente genera los MD y arranca el loop de HANDBACK.</p>
     </section>
 
+    <section id="flujo">
+      <h2><span class="n">03</span>El flujo completo, de punta a punta</h2>
+      <p class="intro">Qué pasa desde que abrís el catálogo hasta que el proyecto avanza solo, ciclo a ciclo. La web y el paquete son la misma cosa vista de dos lados: la web arma y explica; el paquete es lo que tu agente obedece.</p>
+      <table>
+        <thead><tr><th></th><th>Qué pasa</th><th>Quién aprueba</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Armás tu paquete en la web — el Combinador para afinar todo, o el «📦 Descargar ZIP» de cualquier card del catálogo — y lo descomprimís en tu carpeta.</td><td>Vos elegís las opciones</td></tr>
+          <tr><td>2</td><td>Abrís tu agente parado ahí y pegás <code>PROMPT-DE-ARRANQUE.txt</code> (con Claude alcanza <code>/sdd-arranque</code>: las skills vienen en el ZIP).</td><td>—</td></tr>
+          <tr><td>3</td><td>El agente te hace el cuestionario (R04) y propone spec, diseño y estructura. Todavía no hay una línea de código.</td><td>Vos — acá corregir es gratis</td></tr>
+          <tr><td>4</td><td>Con tu OK escribe los MD, los commitea (R01), y recién entonces empieza el código.</td><td>Vos, en cada commit</td></tr>
+          <tr><td>5</td><td>Desde ahí todo es el loop: implementa → tests (R07) → actualiza MD → bloque HANDBACK de ~20 líneas.</td><td>Leés 20 líneas: OK, editás el paso, o STOP</td></tr>
+          <tr><td>6</td><td>Tus gustos viven en <code>custom.md</code> (armalo en «Mis reglas»): cuando salga un núcleo nuevo lo reemplazás y tu configuración sobrevive.</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </section>
+
     <section id="es-facil">
-      <h2><span class="n">03</span>¿Es fácil de usar?</h2>
+      <h2><span class="n">04</span>¿Es fácil de usar?</h2>
       <p class="intro">La respuesta honesta, que no es "sí".</p>
 
       <h3>El día 1 tiene fricción real</h3>
@@ -193,7 +210,7 @@
     </section>
 
     <section id="actualizar">
-      <h2><span class="n">04</span>Cómo se actualiza</h2>
+      <h2><span class="n">05</span>Cómo se actualiza</h2>
       <p class="intro">Hay dos niveles y no hay que mezclarlos.</p>
 
       <h3>A · Los MD del proyecto</h3>
@@ -228,7 +245,7 @@
     </section>
 
     <section id="errores">
-      <h2><span class="n">05</span>Errores comunes</h2>
+      <h2><span class="n">06</span>Errores comunes</h2>
       <p class="intro">Los siete que aparecen una y otra vez, con su antídoto.</p>
       <ol class="errores">
         <li><b>Pegarle el paquete entero a un subagente</b>Solo su slice del Protocolo de Lectura (§2 del master). Es el error #1 de gasto de tokens.</li>
@@ -242,7 +259,7 @@
     </section>
 
     <section id="preguntas">
-      <h2><span class="n">06</span>Preguntas rápidas</h2>
+      <h2><span class="n">07</span>Preguntas rápidas</h2>
       <dl class="faq">
         <dt>¿No sé nada de código, puedo igual?</dt>
         <dd>Sí. En el arranque decí que sos NOVATO, o usá el combinador de la web que lo pone solo. El agente activa pensar-por-tres (R23): planifica, se autocritica buscando qué puede salir mal, corrige, y recién ahí ejecuta — explicándote todo en lenguaje simple y de a un paso.</dd>
@@ -281,7 +298,7 @@
 </div>
 
 <footer>
-  <div>SDD Universal <b>v0.26</b> · licencia MIT</div>
+  <div>SDD Universal <b>v0.27</b> · licencia MIT</div>
   <nav>
     <a href="./">Catálogo</a>
     <a href="demo.html">Demo</a>
@@ -294,11 +311,11 @@
 </div>
 </div>
 
-<script src="shell.js?v=26"></script>
-<script src="tema.js?v=26"></script>
-<script src="supabase-config.js?v=26"></script>
-<script src="sesion.js?v=26"></script>
-<script src="porton.js?v=26"></script>
+<script src="shell.js?v=27"></script>
+<script src="tema.js?v=27"></script>
+<script src="supabase-config.js?v=27"></script>
+<script src="sesion.js?v=27"></script>
+<script src="porton.js?v=27"></script>
 <script>
 Shell.montar({pagina: "contenido", actual: "guia.html", titulo: "Guía"});
 Tema.iniciar();

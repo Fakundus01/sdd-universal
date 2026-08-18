@@ -1,14 +1,14 @@
 # tecnologias.md · Catálogo de tecnologías
 
-**Versión:** 0.6 · 2026-08-15 · **Bloque:** `stack` · **Para agentes:** leer solo cuando la tarea sea elegir o justificar el stack (R12), o cuando el humano traiga tecnologías elegidas desde la web del catálogo.
+**Versión:** 0.7 · 2026-08-17 · **Bloque:** `stack` · **Para agentes:** leer solo cuando la tarea sea elegir o justificar el stack (R12), o cuando el humano traiga tecnologías elegidas desde la web del catálogo.
 
 > Este archivo dice **qué existe**, no qué usar. La recomendación por tarea la hace el agente con R12; las versiones se verifican contra la web al arrancar (R19), y por eso esta tabla no lleva números de versión: envejecerían mal y darían una falsa sensación de estar al día.
 
-**101 tecnologías** en 13 categorías. `OS` = open source.
+**120 tecnologías** en 13 categorías. `OS` = open source.
 
-**Cobertura, dicha de frente:** el relevamiento original está completo en lenguajes y frameworks, y es apenas un arranque en bases de datos, cloud, DevOps y seguridad (una o dos filas cada una). No es un error del archivo: es hasta dónde llegó el relevamiento. Se completa con casos reales, como todo acá (R20).
+**Cobertura, dicha de frente:** lenguajes y frameworks están completos; bases de datos, DevOps e IA ya tienen lo esencial (0.7), y cloud y seguridad siguen siendo un arranque. No es un error del archivo: es hasta dónde llegó el relevamiento. Se completa con casos reales, como todo acá (R20).
 
-## Lenguajes (25)
+## Lenguajes (28)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
@@ -37,8 +37,11 @@
 | **Swift** | Lenguaje | — | Apple/mobile | ✓ |
 | **TypeScript** | Lenguaje | — | Frontend/backend | ✓ |
 | **Visual Basic** | Lenguaje | — | Windows/enterprise | — |
+| **Elixir** | Lenguaje | — | Backend concurrente | ✓ |
+| **Julia** | Lenguaje | — | Ciencia/cálculo | ✓ |
+| **Zig** | Lenguaje | — | Sistemas | ✓ |
 
-## Frameworks (45)
+## Frameworks (49)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
@@ -87,6 +90,10 @@
 | **Vert.x** | Framework | Java/JVM | Reactive applications | ✓ |
 | **Vue.js** | Framework | JavaScript/TypeScript | Frontend | ✓ |
 | **Yii** | Framework | PHP | Web | ✓ |
+| **Astro** | Framework | JavaScript/TypeScript | Sitios de contenido | ✓ |
+| **Electron** | Framework | JavaScript/TypeScript | Apps de escritorio | ✓ |
+| **Svelte** | Framework | JavaScript/TypeScript | Frontend | ✓ |
+| **Tauri** | Framework | Rust + JS | Apps de escritorio livianas | ✓ |
 
 ## Bibliotecas (18)
 
@@ -111,17 +118,24 @@
 | **TensorFlow** | Biblioteca | Python / C++ | IA y Machine Learning | ✓ |
 | **Three.js** | Biblioteca | JavaScript | 3D/WebGL | ✓ |
 
-## Backend (1)
+## Backend (3)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
 | **Node.js · Runtime** | Runtime | JavaScript/TypeScript | Backend | ✓ |
+| **Bun** | Runtime | JavaScript/TypeScript | Backend/tooling rápido | ✓ |
+| **Deno** | Runtime | JavaScript/TypeScript | Backend seguro por default | ✓ |
 
-## Bases de datos (1)
+## Bases de datos (6)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
 | **PostgreSQL** | Base de datos | SQL | Relacional | ✓ |
+| **SQLite** | Base de datos | SQL | Embebida/local | ✓ |
+| **MongoDB** | Base de datos | — | Documentos/NoSQL | ✓ |
+| **Redis** | Base de datos | — | Cache/tiempo real | ✓ |
+| **DuckDB** | Base de datos | SQL | Análisis local | ✓ |
+| **Supabase** | BaaS | SQL | Postgres + auth + API | ✓ |
 
 ## Deployment/PaaS (1)
 
@@ -129,17 +143,20 @@
 |---|---|---|---|---|
 | **Vercel** | PaaS | JS/TS | Frontend/Full-stack | — |
 
-## Cloud (1)
+## Cloud (2)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
 | **AWS** | Cloud | Multilenguaje | Infraestructura | — |
+| **Azure** | Cloud | Multilenguaje | Infraestructura | — |
 
-## DevOps (1)
+## DevOps (3)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
 | **Kubernetes** | Tool | — | Orquestación | ✓ |
+| **Docker** | Tool | — | Contenedores | ✓ |
+| **GitHub Actions** | Tool | — | CI/CD | — |
 
 ## Testing (2)
 
@@ -154,11 +171,13 @@
 |---|---|---|---|---|
 | **OWASP ZAP** | Tool | — | Seguridad web | ✓ |
 
-## IA - Modelos (1)
+## IA - Modelos (3)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
 | **GPT** | Modelo IA | — | LLM | — |
+| **Claude** | Modelo IA | — | LLM/agentes | — |
+| **Ollama** | Tool | — | LLMs locales | ✓ |
 
 ## Videojuegos (3)
 
@@ -191,4 +210,5 @@ Igual que todo en este paquete (R20): una tecnología entra cuando alguien la us
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.7 | 2026-08-17 | +19 tecnologías donde el catálogo era más flaco: bases de datos (SQLite, MongoDB, Redis, DuckDB, Supabase), runtimes (Bun, Deno), escritorio (Electron, Tauri), lenguajes (Elixir, Julia, Zig), front (Svelte, Astro), infra (Azure, Docker, GitHub Actions) e IA (Claude, Ollama). Total: 120. |
 | 0.6 | 2026-08-15 | Primer catálogo: 101 tecnologías en 13 categorías, importadas del relevamiento propio. Integrado al combinador de la web con filtros y selección múltiple. |

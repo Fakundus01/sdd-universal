@@ -1,6 +1,6 @@
 # catalog.md · Catálogo de playbooks
 
-**Versión:** 0.4 · 2026-08-15 · Estados: `✓ disponible` · `⏳ pendiente` · `🧪 en desarrollo`. Los pendientes se van escribiendo a demanda (R24: si un agente resuelve una tarea repetible sin playbook, propone crearlo).
+**Versión:** 0.5 · 2026-08-17 · Estados: `✓ disponible` · `⏳ pendiente` · `🧪 en desarrollo`. Los pendientes se van escribiendo a demanda (R24: si un agente resuelve una tarea repetible sin playbook, propone crearlo).
 
 | ID | Playbook | Categoría | Nivel | Estado |
 |---|---|---|---|---|
@@ -11,6 +11,7 @@
 | supabase-auth | Inicio de sesión con Supabase (mail + contraseña) + RLS y datos por usuario | infra | novato+pro | ✓ |
 | resend-smtp | Que los mails de confirmación y recupero lleguen de verdad (Gmail o Resend como SMTP) | infra | novato+pro | ✓ |
 | git-basico | Git desde cero: init, add, commit, push, ramas y cómo deshacer sin miedo | herramientas | novato | ✓ |
+| consumir-api-externa | Consumir un repo o API de datos ajeno sin quedar rehén: copia propia, licencia, sincronización con registro | datos | novato+pro | ✓ |
 | pipelines-ci | CI/CD con GitHub Actions: tests + deploy automático + gate de spec (si el código diverge de la spec, el build falla) | infra | pro | ⏳ |
 | azure-fundamentos | Azure a fondo: Resource Groups, Storage, DNS, Policies, control de costos | infra | pro | ⏳ |
 | aws-fundamentos | AWS: IAM, S3, EC2/Lambda, costos y free tier | infra | pro | ⏳ |

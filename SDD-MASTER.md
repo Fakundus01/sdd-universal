@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.26 · **Fecha:** 2026-08-17 · **Owner:** Facundo Moreno
+**Versión:** 0.27 · **Fecha:** 2026-08-17 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -75,7 +75,7 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 
 ---
 
-## §4 · Catálogo de Reglas (R01–R27)
+## §4 · Catálogo de Reglas (R01–R28)
 
 Para apagar o prender una regla, escribí en cualquier mensaje: `R01=OFF` / `R01=ON`. El agente confirma y lo registra en §3.
 
@@ -179,6 +179,9 @@ Todo lo que el agente **lee** (repos ajenos en R15, resultados web en R19, issue
 R17 alcanza para un script; no alcanza para nada que tenga usuarios. En el arranque, y cada vez que una feature nueva cambie lo que el proyecto hace, el agente clasifica la **superficie de ataque** con seis preguntas —¿hay login? ¿se guardan datos de personas? ¿se mueve plata? ¿hay IA que recibe texto o lee contenido externo? ¿el usuario sube archivos? ¿hay API pública?— y aplica de `seguridad.md` **solo los niveles que correspondan** (N0 base + los que apliquen). La clasificación y los niveles activos se registran en `security.md` con fecha.
 
 Un checklist de 200 ítems no se lee; seis controles que sí aplican se cumplen. Por eso los niveles son excluyentes por defecto: lo que no aplica, no aparece. **Reclasificar no es opcional:** agregar login a un proyecto que no lo tenía activa un nivel entero, y ese es exactamente el momento en que se olvida.
+
+**R28 · DEPENDENCIA-JUSTIFICADA — [ON] — desactivable**
+Antes de sumar una dependencia nueva (librería, framework, servicio, action de CI): una línea en `decisions.md` con qué problema resuelve, por qué no alcanza con lo que ya hay (o con un módulo propio razonable), y qué tan viva está (última release, mantenimiento). Dos dependencias para lo mismo: se elige una y se anota por qué. R19 audita sobre ese registro — la dependencia que nadie recuerda por qué está es justo la que nadie se anima a sacar, y la que un día aparece abandonada o vulnerable.
 
 ---
 
@@ -344,6 +347,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.27 | 2026-08-17 | **R28 · DEPENDENCIA-JUSTIFICADA** (nace de S25): cada dependencia nueva deja una línea en `decisions.md` con qué resuelve, por qué no alcanza lo que hay y qué tan viva está; R19 audita sobre ese registro. Catálogo a **120 tecnologías** (+19 donde era flaco: bases, runtimes, escritorio, infra, IA). Tipo nuevo «Compendio de datos abiertos» + playbook `consumir-api-externa` (copia propia, licencia, sincronización). Web: el Combinador sigue el tema elegido, links externos en pestaña nueva, y recorrido guiado por secciones desde Configuración. |
 | 0.26 | 2026-08-17 | La web del catálogo pasa a ser **privada**: portón de login en todas las páginas (`porton.js`), registro cerrado (las cuentas las crea el admin en Supabase), `noindex` + `robots.txt`. El núcleo del SDD no cambia. |
 | 0.25 | 2026-08-17 | `skills/` nuevo: tres atajos para Claude Code (`/sdd-arranque`, `/sdd-ciclo`, `/sdd-auditoria`) que envuelven los prompts del master sin duplicarlos — opcionales y solo-Claude, el SDD sigue agnóstico (R22). La web suma la vista «Manuales» (playbooks legibles y descargables + skills), descarga rápida por card del catálogo con popup de opciones, y el ZIP del Combinador puede incluir `.claude/skills/`. |
 | 0.24 | 2026-08-17 | Las vistas de «Tecnologías» y «Mis reglas» aprovechan el ancho: catálogo a dos columnas con páginas de 8, reglas paginadas de a 5 con selects en fila, e interruptor ON/OFF con los dos estados visibles. |
