@@ -28,6 +28,22 @@ const Paquete = (() => {
     {n: "sdd-auditoria", d: "auditoría de mantenimiento (R19)"}
   ];
 
+  /* Skills sueltas: sirven en cualquier proyecto, con o sin SDD. Chicas a
+     propósito — cada una hace una cosa y se entiende en una leída. */
+  const SKILLS_EXTRA = [
+    {n: "plan-primero",     d: "mini-plan de 5–10 líneas y OK antes de codear"},
+    {n: "menos-tokens",     d: "modo económico: leer y responder lo justo"},
+    {n: "codigo-en-clases", d: "POO modular, archivos de 200–300 líneas"},
+    {n: "commit-prolijo",   d: "el mensaje sale del diff real, con tu OK"},
+    {n: "revisar-antes",    d: "pasada de bugs y secretos antes de cerrar"},
+    {n: "arreglar-error",   d: "causa raíz antes que parche, sin escopetazos"},
+    {n: "tests-minimos",    d: "pocos tests de alto valor, sin relleno"},
+    {n: "explicame-simple", d: "lenguaje llano, de a un paso, sin jerga"},
+    {n: "limpiar-repo",     d: "detecta lo muerto y propone; nunca borra solo"},
+    {n: "resumen-sesion",   d: "cierre en 15 líneas para retomar mañana"},
+    {n: "datos-ajenos",     d: "repos/APIs de terceros con copia propia"}
+  ];
+
   const GITIGNORE = `# Secretos — R17: esto va ANTES del primer commit.
 # Un .gitignore agregado después del primer secreto llega tarde: la clave
 # ya quedó en el historial de git y sacarla de ahí es reescribir la historia.
@@ -136,14 +152,14 @@ SDD Universal · https://sdd-universal.vercel.app
     return archivos.length;
   }
 
-  /* Solo las skills, para sumarlas a un proyecto que ya está andando:
-     se descomprime en la raíz del repo y listo. */
+  /* Todas las skills (SDD + sueltas), para sumarlas a un proyecto que ya
+     está andando: se descomprime en la raíz del repo y listo. */
   async function soloSkills(){
     const archivos = [];
-    for (const s of SKILLS)
+    for (const s of [...SKILLS, ...SKILLS_EXTRA])
       archivos.push({nombre: `.claude/skills/${s.n}/SKILL.md`,
                      contenido: await traer(`../skills/${s.n}/SKILL.md`)});
-    Zip.descargar("skills-claude-sdd.zip", archivos);
+    Zip.descargar("skills-claude.zip", archivos);
     return archivos.length;
   }
 
@@ -163,5 +179,5 @@ SDD Universal · https://sdd-universal.vercel.app
     return archivos.length;
   }
 
-  return {proyecto, soloMd, soloSkills, slug, SKILLS};
+  return {proyecto, soloMd, soloSkills, slug, SKILLS, SKILLS_EXTRA};
 })();

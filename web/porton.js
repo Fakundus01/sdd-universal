@@ -57,6 +57,9 @@ const Porton = (() => {
 
   function cerrar(){
     if (tapa) return;
+    // lo que haya quedado abierto (diálogos modales viven en el top layer,
+    // por encima de la tapa) se cierra: sin sesión no queda nada usable
+    document.querySelectorAll("dialog[open]").forEach(d => d.close());
     css();
     tapa = document.createElement("div");
     tapa.className = "porton-tapa";
@@ -120,6 +123,8 @@ const Porton = (() => {
 
   async function iniciar(){
     if (!activo()) return {usuario: null};
+    // si la sesión se cierra en cualquier momento, el portón vuelve solo
+    Sesion.alCambiar(u => { if (!u) cerrar(); });
     cerrar();
     const r = await Sesion.iniciar();
     if (Sesion.usuario()){

@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.27 · **Fecha:** 2026-08-17 · **Owner:** Facundo Moreno
+**Versión:** 0.28 · **Fecha:** 2026-08-17 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -347,6 +347,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.28 | 2026-08-17 | `skills/` crece a **14**: además de las 3 del SDD, 11 sueltas que sirven en cualquier proyecto (plan-primero, menos-tokens, codigo-en-clases, commit-prolijo, revisar-antes, arreglar-error, tests-minimos, explicame-simple, limpiar-repo, resumen-sesion, datos-ajenos). Web: al cerrar sesión el portón vuelve solo, cambio de contraseña desde Mi perfil, y las skills sueltas paginadas en Manuales con su ZIP. |
 | 0.27 | 2026-08-17 | **R28 · DEPENDENCIA-JUSTIFICADA** (nace de S25): cada dependencia nueva deja una línea en `decisions.md` con qué resuelve, por qué no alcanza lo que hay y qué tan viva está; R19 audita sobre ese registro. Catálogo a **120 tecnologías** (+19 donde era flaco: bases, runtimes, escritorio, infra, IA). Tipo nuevo «Compendio de datos abiertos» + playbook `consumir-api-externa` (copia propia, licencia, sincronización). Web: el Combinador sigue el tema elegido, links externos en pestaña nueva, y recorrido guiado por secciones desde Configuración. |
 | 0.26 | 2026-08-17 | La web del catálogo pasa a ser **privada**: portón de login en todas las páginas (`porton.js`), registro cerrado (las cuentas las crea el admin en Supabase), `noindex` + `robots.txt`. El núcleo del SDD no cambia. |
 | 0.25 | 2026-08-17 | `skills/` nuevo: tres atajos para Claude Code (`/sdd-arranque`, `/sdd-ciclo`, `/sdd-auditoria`) que envuelven los prompts del master sin duplicarlos — opcionales y solo-Claude, el SDD sigue agnóstico (R22). La web suma la vista «Manuales» (playbooks legibles y descargables + skills), descarga rápida por card del catálogo con popup de opciones, y el ZIP del Combinador puede incluir `.claude/skills/`. |

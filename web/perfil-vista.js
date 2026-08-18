@@ -35,10 +35,16 @@ const PerfilVista = (() => {
           <li>✓ Combinaciones ilimitadas y sincronizadas</li>
           <li>✓ El tema y tus respuestas viajan con vos</li>
         </ul>
-        <button class="btn b-alt" id="perfilSalir" type="button">Cerrar sesión</button>`;
+        <div class="pbotones">
+          <button class="btn b-go" id="perfilPass" type="button">Cambiar mi contraseña</button>
+          <button class="btn b-alt" id="perfilSalir" type="button">Cerrar sesión</button>
+        </div>`;
+      // la contraseña se cambia con la sesión abierta: ideal para pisar la
+      // clave provisoria que te dio el administrador
+      $("perfilPass").onclick = () => { if (window.abrirCambioPassword) abrirCambioPassword(); };
       $("perfilSalir").onclick = async () => {
         if (!confirm("¿Cerrar sesión? Lo que tengas guardado sigue en tu cuenta.")) return;
-        await Sesion.salir();
+        await Sesion.salir();   // el portón se pone solo al perder la sesión
         refrescar(); if (window.renderGuardadas) renderGuardadas();
       };
     } else if (Sesion.activo()){

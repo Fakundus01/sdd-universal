@@ -29,8 +29,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css?v=27">
-<link rel="stylesheet" href="app.css?v=27">
+<link rel="stylesheet" href="base.css?v=28">
+<link rel="stylesheet" href="app.css?v=28">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -374,6 +374,9 @@
   .man-fila .ver-mini{width:34px;height:32px;flex:none}
   .man-dl{padding:6px 12px;font-size:.78rem}
   .man-zip{margin-top:14px}
+  .man-sub2{font-size:.88rem;color:var(--ink);margin:16px 0 9px}
+  .man-sub2 small{font-weight:400;color:var(--muted);font-size:.79rem}
+  .man-lista .pager{grid-column:1/-1;padding-top:10px}
 
   /* ---------- recorrido guiado ---------- */
   .tut{position:fixed;right:18px;bottom:18px;z-index:9990;width:min(370px,calc(100vw - 36px));
@@ -785,9 +788,12 @@
   </div>
   <div class="man-grupo">
     <h3>🤖 Skills para Claude</h3>
-    <p class="man-sub">Atajos que se instalan en <code>.claude/skills/</code>: abrís el repo con Claude Code y escribís <code>/sdd-arranque</code>, <code>/sdd-ciclo</code> o <code>/sdd-auditoria</code>. Vienen adentro del ZIP del Combinador si dejás marcada la opción, o bajalas sueltas para un repo que ya está andando. Con otro agente no aplican y no molestan — el SDD funciona igual sin ellas (R22).</p>
+    <p class="man-sub">Atajos que se instalan en <code>.claude/skills/</code>: abrís el repo con Claude Code y las invocás por nombre (<code>/plan-primero</code>, <code>/sdd-arranque</code>…). Con otro agente no aplican y no molestan (R22).</p>
+    <h4 class="man-sub2">Para proyectos con SDD <small>— vienen adentro del ZIP del Combinador</small></h4>
     <div class="man-lista" id="manSkills"></div>
-    <button class="btn b-go man-zip" id="manSkillsZip" type="button">📦 Bajar las skills (ZIP)</button>
+    <h4 class="man-sub2">Sueltas, para cualquier proyecto <small>— con o sin SDD: economía de tokens, código por clases, commits, tests…</small></h4>
+    <div class="man-lista" id="manSkillsExtra"></div>
+    <button class="btn b-go man-zip" id="manSkillsZip" type="button">📦 Bajar todas las skills (ZIP)</button>
   </div>
 </section>
 
@@ -945,7 +951,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.27</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.28</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -1154,23 +1160,23 @@
   </div>
 </dialog>
 
-<script src="shell.js?v=27"></script>
-<script src="tema.js?v=27"></script>
-<script src="buscador.js?v=27"></script>
-<script src="md.js?v=27"></script>
-<script src="feedback.js?v=27"></script>
-<script src="zip.js?v=27"></script>
-<script src="paquete.js?v=27"></script>
-<script src="tecnologias.js?v=27"></script>
-<script src="reglas.js?v=27"></script>
-<script src="reglas-ui.js?v=27"></script>
-<script src="supabase-config.js?v=27"></script>
-<script src="sesion.js?v=27"></script>
-<script src="porton.js?v=27"></script>
-<script src="perfil.js?v=27"></script>
-<script src="perfil-vista.js?v=27"></script>
-<script src="app.js?v=27"></script>
-<script src="config-vista.js?v=27"></script>
+<script src="shell.js?v=28"></script>
+<script src="tema.js?v=28"></script>
+<script src="buscador.js?v=28"></script>
+<script src="md.js?v=28"></script>
+<script src="feedback.js?v=28"></script>
+<script src="zip.js?v=28"></script>
+<script src="paquete.js?v=28"></script>
+<script src="tecnologias.js?v=28"></script>
+<script src="reglas.js?v=28"></script>
+<script src="reglas-ui.js?v=28"></script>
+<script src="supabase-config.js?v=28"></script>
+<script src="sesion.js?v=28"></script>
+<script src="porton.js?v=28"></script>
+<script src="perfil.js?v=28"></script>
+<script src="perfil-vista.js?v=28"></script>
+<script src="app.js?v=28"></script>
+<script src="config-vista.js?v=28"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -1446,6 +1452,7 @@ document.addEventListener("click", e => {
   const p = +b.dataset.p;
   if (destino === "tech"){ techPage = p; renderTech(); $("techlist").scrollTop = 0; }
   else if (destino === "reglas"){ ReglasUI.irPagina(p); }
+  else if (destino === "manskills"){ manSkillsPag = p; renderManSkills(); }
   else { catPage = p; render(); $("catalogo").scrollIntoView({behavior:"smooth", block:"start"}); }
 });
 
@@ -1836,12 +1843,26 @@ $("manPlaybooks").innerHTML = MANUALES.map(x => `
       aria-label="Ver ${esc(x.t)}" title="Leer acá">👁</button>
     <a class="btn b-alt man-dl" href="${x.f}" download>Bajar</a>
   </div>`).join("");
-$("manSkills").innerHTML = Paquete.SKILLS.map(s => `
+const skillFila = s => `
   <div class="man-fila">
     <div class="txt"><b>/${esc(s.n)}</b><small>${esc(s.d)}</small></div>
     <button class="ver-mini" type="button" data-ver="../skills/${s.n}/SKILL.md" data-vt="/${esc(s.n)}"
       aria-label="Ver ${esc(s.n)}" title="Leer acá">👁</button>
-  </div>`).join("");
+  </div>`;
+$("manSkills").innerHTML = Paquete.SKILLS.map(skillFila).join("");
+
+const SKILLS_POR_PAGINA = 6;
+let manSkillsPag = 1;
+function renderManSkills(){
+  const lista = Paquete.SKILLS_EXTRA;
+  const paginas = Math.max(1, Math.ceil(lista.length / SKILLS_POR_PAGINA));
+  if (manSkillsPag > paginas) manSkillsPag = paginas;
+  $("manSkillsExtra").innerHTML =
+    lista.slice((manSkillsPag - 1) * SKILLS_POR_PAGINA, manSkillsPag * SKILLS_POR_PAGINA)
+         .map(skillFila).join("")
+    + pager(lista.length, manSkillsPag, SKILLS_POR_PAGINA, "manskills");
+}
+renderManSkills();
 $("manSkillsZip").onclick = async () => {
   const b = $("manSkillsZip"), original = b.textContent;
   b.disabled = true; b.textContent = "Armando…";
@@ -1992,6 +2013,14 @@ function pintarAuth(){
   $("authmsg").className = "authmsg"; $("authmsg").textContent = "";
 }
 pintarAuth();
+
+/* Cambiar la contraseña con la sesión abierta (p. ej. pisar la provisoria
+   que dio el admin). Lo usa Mi perfil; el diálogo vuelve a "entrar" al cerrarse
+   para que un cambio abandonado no deje el formulario en un modo raro. */
+window.abrirCambioPassword = () => {
+  modoAuth = "nueva"; pintarAuth(); $("authdlg").showModal(); $("authpass").focus();
+};
+$("authdlg").addEventListener("close", () => { modoAuth = "entrar"; pintarAuth(); });
 
 $("verpass").onclick = () => {
   const i = $("authpass");

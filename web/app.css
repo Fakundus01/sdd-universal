@@ -297,3 +297,7 @@
   background:none;cursor:pointer;overflow:hidden;flex:none;display:grid;place-items:center;color:var(--muted)}
 .acento-pico input{position:absolute;opacity:0;width:0;height:0}
 .cfg-sub{font-size:.75rem;font-weight:700;color:var(--ink-soft);margin:14px 0 7px;display:block}
+
+/* ---------- botones de la cuenta en Mi perfil ---------- */
+.pbotones{display:flex;gap:9px;flex-wrap:wrap;margin-top:6px}
+.pbotones .btn{width:auto;flex:1;margin-top:0;white-space:nowrap}
