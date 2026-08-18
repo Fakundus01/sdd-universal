@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SDD Hub · Spec-Driven Development para construir con IA</title>
-<meta name="description" content="Catálogo abierto de SDDs: paquetes de gobernanza para construir proyectos con agentes de IA (Claude, Codex, Cursor, Copilot, Gemini). La especificación va antes que el código — sepas programar o no.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Catálogo de SDDs: paquetes de gobernanza para construir proyectos con agentes de IA (Claude, Codex, Cursor, Copilot, Gemini). La especificación va antes que el código — sepas programar o no.">
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#0b0f1f" id="themecolor">
 <link rel="canonical" href="https://sdd-universal.vercel.app/web/">
@@ -28,8 +29,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css?v=25">
-<link rel="stylesheet" href="app.css?v=25">
+<link rel="stylesheet" href="base.css?v=26">
+<link rel="stylesheet" href="app.css?v=26">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -917,7 +918,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.25</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.26</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -1053,13 +1054,8 @@
 <dialog class="tech auth" id="authdlg" aria-labelledby="authtitle">
   <div class="dlg-head" style="cursor:default">
     <h2 id="authtitle">Tu cuenta</h2>
-    <p>Sirve para guardar tus combinaciones y encontrarlas después desde el celular o desde otra compu.</p>
+    <p>Sirve para guardar tus combinaciones y encontrarlas después desde el celular o desde otra compu. El acceso es privado: las cuentas las crea el administrador.</p>
     <button class="dlg-x" id="authx" type="button" aria-label="Cerrar">✕</button>
-  </div>
-
-  <div class="authtabs" role="tablist" id="authtabs">
-    <button role="tab" type="button" id="tabEntrar" aria-selected="true">Entrar</button>
-    <button role="tab" type="button" id="tabCrear" aria-selected="false">Crear cuenta</button>
   </div>
 
   <form class="authform" id="authform">
@@ -1079,9 +1075,8 @@
 
     <div class="authalt">
       <button type="button" id="autholvide">Olvidé mi contraseña</button>
-      <button type="button" id="authlink">Entrar con un link al mail</button>
     </div>
-    <p class="authnote">Guardamos tu email y las combinaciones que armes. Nada más, y podés borrarlas cuando quieras.</p>
+    <p class="authnote">Guardamos tu email y las combinaciones que armes. Nada más, y podés borrarlas cuando quieras. ¿Te falta cuenta? Pedísela al administrador — los registros están cerrados.</p>
   </form>
 </dialog>
 
@@ -1121,22 +1116,23 @@
   </div>
 </dialog>
 
-<script src="shell.js?v=25"></script>
-<script src="tema.js?v=25"></script>
-<script src="buscador.js?v=25"></script>
-<script src="md.js?v=25"></script>
-<script src="feedback.js?v=25"></script>
-<script src="zip.js?v=25"></script>
-<script src="paquete.js?v=25"></script>
-<script src="tecnologias.js?v=25"></script>
-<script src="reglas.js?v=25"></script>
-<script src="reglas-ui.js?v=25"></script>
-<script src="supabase-config.js?v=25"></script>
-<script src="sesion.js?v=25"></script>
-<script src="perfil.js?v=25"></script>
-<script src="perfil-vista.js?v=25"></script>
-<script src="app.js?v=25"></script>
-<script src="config-vista.js?v=25"></script>
+<script src="shell.js?v=26"></script>
+<script src="tema.js?v=26"></script>
+<script src="buscador.js?v=26"></script>
+<script src="md.js?v=26"></script>
+<script src="feedback.js?v=26"></script>
+<script src="zip.js?v=26"></script>
+<script src="paquete.js?v=26"></script>
+<script src="tecnologias.js?v=26"></script>
+<script src="reglas.js?v=26"></script>
+<script src="reglas-ui.js?v=26"></script>
+<script src="supabase-config.js?v=26"></script>
+<script src="sesion.js?v=26"></script>
+<script src="porton.js?v=26"></script>
+<script src="perfil.js?v=26"></script>
+<script src="perfil-vista.js?v=26"></script>
+<script src="app.js?v=26"></script>
+<script src="config-vista.js?v=26"></script>
 <script>
 const $ = id => document.getElementById(id);
 
@@ -1907,27 +1903,21 @@ function avisar(texto, esError = false){
 }
 $("avisox").onclick = () => $("aviso").hidden = true;
 
-/* --- pestañas entrar / crear cuenta / contraseña nueva --- */
+/* --- entrar / contraseña nueva (el registro no existe: cuentas por admin) --- */
 let modoAuth = "entrar";
 function pintarAuth(){
-  const crear = modoAuth === "crear", nueva = modoAuth === "nueva";
-  $("tabEntrar").setAttribute("aria-selected", modoAuth === "entrar");
-  $("tabCrear").setAttribute("aria-selected", crear);
-  $("authtabs").hidden = nueva;
+  const nueva = modoAuth === "nueva";
   $("authmail").closest(".authform").querySelectorAll("label")[0].hidden = nueva;
   $("authmail").hidden = nueva;
   $("authtitle").textContent = nueva ? "Elegí una contraseña nueva" : "Tu cuenta";
-  $("authsend").textContent = nueva ? "Guardar la contraseña" : crear ? "Crear mi cuenta" : "Entrar";
-  $("authpass").autocomplete = (crear || nueva) ? "new-password" : "current-password";
-  $("authhint").textContent = (crear || nueva)
+  $("authsend").textContent = nueva ? "Guardar la contraseña" : "Entrar";
+  $("authpass").autocomplete = nueva ? "new-password" : "current-password";
+  $("authhint").textContent = nueva
     ? "Elegí algo de 8 caracteres o más. No la reutilices de otro sitio."
     : "";
-  $("autholvide").hidden = crear || nueva;
-  $("authlink").hidden = nueva;
+  $("autholvide").hidden = nueva;
   $("authmsg").className = "authmsg"; $("authmsg").textContent = "";
 }
-$("tabEntrar").onclick = () => { modoAuth = "entrar"; pintarAuth(); };
-$("tabCrear").onclick  = () => { modoAuth = "crear";  pintarAuth(); };
 pintarAuth();
 
 $("verpass").onclick = () => {
@@ -1962,17 +1952,6 @@ $("authform").onsubmit = e => {
       $("authpass").value = "";
       setTimeout(() => { $("authdlg").close(); modoAuth = "entrar"; pintarAuth(); }, 1200);
     });
-  } else if (modoAuth === "crear") {
-    conBoton("Creando…", async () => {
-      const r = await Sesion.registrar(email, pass);
-      if (r.sesion) {
-        decirAuth("ok", "¡Listo! Ya estás dentro.");
-        await renderGuardadas();
-        setTimeout(() => $("authdlg").close(), 900);
-      } else {
-        decirAuth("ok", "Cuenta creada. Te mandamos un mail de confirmación: tocá el link y después entrá acá con tu contraseña.");
-      }
-    });
   } else {
     conBoton("Entrando…", async () => {
       await Sesion.entrar(email, pass);
@@ -1989,15 +1968,6 @@ $("autholvide").onclick = () => {
   conBoton("Mandando…", async () => {
     await Sesion.recuperar(email);
     decirAuth("ok", "Si ese mail tiene cuenta, te llega un link para poner una contraseña nueva.");
-  });
-};
-
-$("authlink").onclick = () => {
-  const email = $("authmail").value.trim();
-  if (!email) { $("authmail").focus(); return decirAuth("err", "Escribí tu mail primero."); }
-  conBoton("Mandando…", async () => {
-    await Sesion.pedirLink(email);
-    decirAuth("ok", "Te mandamos un link. Si no llega en unos minutos, revisá spam o usá la contraseña.");
   });
 };
 
@@ -2194,7 +2164,9 @@ window.aplicarPerfil = function aplicarPerfil(p){
 (async () => {
   Sesion.contar("visita", location.pathname);
   if (Sesion.activo()) Feedback.empezar();
-  const r = await Sesion.iniciar();
+  // El portón es quien arranca la sesión (y tapa la página si no hay);
+  // acá solo se espera su resultado para no llamar a Sesion.iniciar() dos veces.
+  const r = await (typeof Porton !== "undefined" ? Porton.arranque : Sesion.iniciar());
 
   // El link del mail vuelve acá con la sesión ya hecha: no se pide acceso de nuevo.
   if (r.error) avisar(r.error, true);

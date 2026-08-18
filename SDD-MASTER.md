@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.25 · **Fecha:** 2026-08-17 · **Owner:** Facundo Moreno
+**Versión:** 0.26 · **Fecha:** 2026-08-17 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -344,6 +344,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.26 | 2026-08-17 | La web del catálogo pasa a ser **privada**: portón de login en todas las páginas (`porton.js`), registro cerrado (las cuentas las crea el admin en Supabase), `noindex` + `robots.txt`. El núcleo del SDD no cambia. |
 | 0.25 | 2026-08-17 | `skills/` nuevo: tres atajos para Claude Code (`/sdd-arranque`, `/sdd-ciclo`, `/sdd-auditoria`) que envuelven los prompts del master sin duplicarlos — opcionales y solo-Claude, el SDD sigue agnóstico (R22). La web suma la vista «Manuales» (playbooks legibles y descargables + skills), descarga rápida por card del catálogo con popup de opciones, y el ZIP del Combinador puede incluir `.claude/skills/`. |
 | 0.24 | 2026-08-17 | Las vistas de «Tecnologías» y «Mis reglas» aprovechan el ancho: catálogo a dos columnas con páginas de 8, reglas paginadas de a 5 con selects en fila, e interruptor ON/OFF con los dos estados visibles. |
 | 0.23 | 2026-08-15 | «Tecnologías» y «Mis reglas» son **vistas** propias al entrar por el menú, y siguen siendo **popups** cuando se abren desde el Combinador: el mismo DOM se muda de contenedor según de dónde vengas, así no hay dos copias que se desincronicen. |
