@@ -44,6 +44,18 @@ const Paquete = (() => {
     {n: "datos-ajenos",     d: "repos/APIs de terceros con copia propia"}
   ];
 
+  /* Con N agentes o personas en paralelo, los archivos de historial chocan
+     en cada merge: union junta las dos versiones en vez de pedir resolución
+     a mano (S27, aprendido de IDA). */
+  const GITATTRIBUTES = `* text=auto
+
+# Los archivos de historial se escriben en cada ciclo: con trabajo en
+# paralelo chocan siempre. merge=union junta las dos versiones.
+sdd/changelog/*.md merge=union
+sdd/status.md merge=union
+CHANGELOG.md merge=union
+`;
+
   const GITIGNORE = `# Secretos — R17: esto va ANTES del primer commit.
 # Un .gitignore agregado después del primer secreto llega tarde: la clave
 # ya quedó en el historial de git y sacarla de ahí es reescribir la historia.
@@ -128,6 +140,7 @@ SDD Universal · https://sdd-universal.vercel.app
       {nombre: `${carpeta}/LEEME.md`, contenido: leeme(nombre || carpeta, tipoNombre, nivel, playbooks, brownfield, conSkills)},
       {nombre: `${carpeta}/PROMPT-DE-ARRANQUE.txt`, contenido: prompt},
       {nombre: `${carpeta}/.gitignore`, contenido: GITIGNORE},
+      {nombre: `${carpeta}/.gitattributes`, contenido: GITATTRIBUTES},
       {nombre: `${carpeta}/AGENTS.md`, contenido: ESPEJO("sdd/SDD-MASTER.md")},
       {nombre: `${carpeta}/CLAUDE.md`, contenido: ESPEJO("sdd/SDD-MASTER.md")},
       {nombre: `${carpeta}/sdd/SDD-MASTER.md`, contenido: await traerP("../SDD-MASTER.md")},

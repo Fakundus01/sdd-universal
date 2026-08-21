@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.28 · **Fecha:** 2026-08-17 · **Owner:** Facundo Moreno
+**Versión:** 0.29 · **Fecha:** 2026-08-17 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -133,7 +133,7 @@ Si el proyecto lleva infraestructura, completar `costs.md` priorizando free tier
 Repo existente sin SDD: prohibido tocar código. Primero subagentes analizan (estructura, `git log`, estilo y convenciones del equipo), después se genera `sdd/` completo reflejando lo que existe, más una prompt de arranque sintética. Se aprueba, y recién ahí se trabaja adaptándose al estilo detectado.
 
 **R16 · DEFINITION-OF-DONE — [ON] — fija**
-Una tarea se cierra solo si: código implementado + tests verdes (R07) + MDs al día (R08/R09) + changelog (R13) + OKs registrados (R01/R08). Checklist completo en §10.
+Una tarea se cierra solo si: código implementado + tests verdes (R07) + MDs al día (R08/R09) + changelog (R13) + OKs registrados (R01/R08). **Y los controles críticos de `security.md` bloquean**: con un crítico pendiente no hay done ni release — el override existe, pero solo con justificación registrada en `decisions.md`. Documentar sin frenar es tranquilidad, no seguridad. Checklist completo en §10.
 
 **R17 · SECURITY-BÁSICA — [ON] — fija**
 **Paso 0 de todo repo, antes del primer commit:** crear el `.gitignore` con `.env`, `.env.*` (salvo `.env.example`), carpetas de dependencias y artefactos de build. No es una tarea de higiene para después: un `.gitignore` que se agrega *después* del primer secreto llega tarde, porque la clave ya quedó en el historial de git y sacarla de ahí es reescribir la historia del repo. El agente lo propone en el arranque aunque el proyecto todavía no tenga ningún secreto — el día que aparezca, el hábito ya tiene que estar.
@@ -190,6 +190,7 @@ Antes de sumar una dependencia nueva (librería, framework, servicio, action de 
 ```
 repo/
 ├── AGENTS.md                      # espejo de 1 línea → apunta acá
+├── .gitattributes                 # merge=union para changelogs: N agentes sin conflictos (S27)
 ├── CLAUDE.md                      # espejo de 1 línea → apunta acá
 ├── README.md                      # instalación y puesta en marcha
 ├── src/ …                         # código
@@ -347,6 +348,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.29 | 2026-08-17 | Transferencia inversa desde IDA (la app hermana del mismo Word base), vía S26 y S27: **R16 ahora bloquea** — los críticos de `security.md` frenan el done y el release, con override solo justificado en `decisions.md`; y el scaffold suma **`.gitattributes`** con `merge=union` para los changelogs, para que N agentes o personas en paralelo no choquen en cada merge. |
 | 0.28 | 2026-08-17 | `skills/` crece a **14**: además de las 3 del SDD, 11 sueltas que sirven en cualquier proyecto (plan-primero, menos-tokens, codigo-en-clases, commit-prolijo, revisar-antes, arreglar-error, tests-minimos, explicame-simple, limpiar-repo, resumen-sesion, datos-ajenos). Web: al cerrar sesión el portón vuelve solo, cambio de contraseña desde Mi perfil, y las skills sueltas paginadas en Manuales con su ZIP. |
 | 0.27 | 2026-08-17 | **R28 · DEPENDENCIA-JUSTIFICADA** (nace de S25): cada dependencia nueva deja una línea en `decisions.md` con qué resuelve, por qué no alcanza lo que hay y qué tan viva está; R19 audita sobre ese registro. Catálogo a **120 tecnologías** (+19 donde era flaco: bases, runtimes, escritorio, infra, IA). Tipo nuevo «Compendio de datos abiertos» + playbook `consumir-api-externa` (copia propia, licencia, sincronización). Web: el Combinador sigue el tema elegido, links externos en pestaña nueva, y recorrido guiado por secciones desde Configuración. |
 | 0.26 | 2026-08-17 | La web del catálogo pasa a ser **privada**: portón de login en todas las páginas (`porton.js`), registro cerrado (las cuentas las crea el admin en Supabase), `noindex` + `robots.txt`. El núcleo del SDD no cambia. |

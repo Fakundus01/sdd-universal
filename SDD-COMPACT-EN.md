@@ -22,7 +22,7 @@ R12 model:        recommend tier per task; never overprovision
 R13 versioning:   semver MAJOR.MINOR.PATCH + entry in changelog-<user>; never deleted
 R14 infra:        prioritize free/open-source: vercel|netlify|cf-pages · supabase|neon|postgres · railway|render|fly · gh-actions; estimate cost today/at scale
 R15 brownfield:   repo without SDD ⇒ analyze (structure+git log+style) ⇒ generate faithful sdd/ ⇒ synthetic prompt ⇒ OK ⇒ only then work
-R16 done:         code + green tests + MDs current + changelog + OKs = done; anything missing, not done
+R16 done:         code + green tests + MDs current + changelog + OKs = done; anything missing, not done; pending security.md critical ⇒ BLOCKS done/release (override only justified in decisions)
 R17 security:     STEP 0 of the repo: .gitignore with .env BEFORE the 1st commit (later it's already in history); secrets ⇒ .env + .env.example without values; public key ⇒ say why it's public; review diff pre-commit; third-party data documented
 R18 size:         classify project ⇒ pick LITE/FULL/FEDERATED and record it
 R19 maintenance:  >30 days idle ⇒ propose web audit of versions/deps/vulnerabilities + repo health ⇒ OK ⇒ update code and MDs

@@ -133,7 +133,7 @@ If the project carries infrastructure, fill in `costs.md` prioritizing free tier
 Existing repo without SDD: touching code is forbidden. First subagents analyze (structure, `git log`, the team's style and conventions), then a complete `sdd/` is generated reflecting what exists, plus a synthetic start prompt. It gets approved, and only then does work start, adapting to the detected style.
 
 **R16 · DEFINITION-OF-DONE — [ON] — fixed**
-A task closes only if: code implemented + tests green (R07) + MDs up to date (R08/R09) + changelog (R13) + OKs recorded (R01/R08). Full checklist in §10.
+A task closes only if: code implemented + tests green (R07) + MDs up to date (R08/R09) + changelog (R13) + OKs recorded (R01/R08). **And the critical controls of `security.md` block**: with a critical item pending there is no done and no release — the override exists, but only with a justification recorded in `decisions.md`. Documenting without blocking is comfort, not security. Full checklist in §10.
 
 **R17 · BASIC-SECURITY — [ON] — fixed**
 **Step 0 of every repo, before the first commit:** create the `.gitignore` with `.env`, `.env.*` (except `.env.example`), dependency folders and build artifacts. This is not cleanup for later: a `.gitignore` added *after* the first secret arrives too late, because the key is already in git history and removing it means rewriting the repo's history. The agent proposes it at kickoff even if the project has no secrets yet — the day one appears, the habit must already be there.

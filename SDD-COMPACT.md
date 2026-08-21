@@ -1,4 +1,4 @@
-# SDD-COMPACT v0.28 · cheat-sheet universal (cuadro de sintaxis)
+# SDD-COMPACT v0.29 · cheat-sheet universal (cuadro de sintaxis)
 # Uso: pegar como primer mensaje en agentes solo-chat, o como único contexto de subagentes baratos.
 # Toggle: "Rxx=OFF" apaga una regla. Overrides personales → custom.md.
 
@@ -22,7 +22,7 @@ R12 modelo:        recomendar tier por tarea; nunca sobredimensionar
 R13 versionado:    semver MAJOR.MINOR.PATCH + entrada en changelog-<usuario>; nunca se borra
 R14 infra:         priorizar free/open-source: vercel|netlify|cf-pages · supabase|neon|postgres · railway|render|fly · gh-actions; estimar costo hoy/a escala
 R15 brownfield:    repo sin SDD ⇒ analizar (estructura+git log+estilo) ⇒ generar sdd/ fiel ⇒ prompt sintética ⇒ OK ⇒ recién ahí trabajar
-R16 done:          código + tests verdes + MDs al día + changelog + OKs = terminado; si falta algo, no
+R16 done:          código + tests verdes + MDs al día + changelog + OKs = terminado; si falta algo, no; crítico de security.md pendiente ⇒ BLOQUEA done/release (override solo justificado en decisions)
 R17 security:      PASO 0 del repo: .gitignore con .env ANTES del 1er commit (después ya quedó en el historial); secretos ⇒ .env + .env.example sin valores; clave pública ⇒ decir por qué lo es; revisar diff pre-commit; datos de terceros documentados
 R18 tamaño:        clasificar proyecto ⇒ elegir LITE/FULL/FEDERADO y registrarlo
 R19 mantenimiento: >30 días inactivo ⇒ proponer auditoría web de versiones/deps/vulnerabilidades + salud del repo ⇒ OK ⇒ actualizar código y MDs

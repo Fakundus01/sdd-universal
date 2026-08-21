@@ -4,6 +4,16 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ---
 
+## [0.29.0] — 2026-08-17
+
+### Modificado
+- **Transferencia inversa desde IDA** (la app hermana, nacida del mismo Word base), entrada por R20 como S26 y S27:
+  - **R16 ahora bloquea**: los controles críticos de `security.md` frenan el done y el release; el override existe pero solo con justificación registrada en `decisions.md`. Antes R27 clasificaba y `security.md` documentaba, pero nada impedía cerrar con un crítico pendiente — documentar sin frenar es tranquilidad, no seguridad. Actualizado en master ES/EN, COMPACT ES/EN, `reglas.js` y tablero.
+  - **`.gitattributes` en el scaffold** con `merge=union` para `sdd/changelog/*`, `sdd/status.md` y `CHANGELOG.md`: con N agentes o personas en paralelo esos archivos chocaban en cada merge. Entra al ZIP del Combinador y al árbol de vista previa.
+- `scenarios.md`: S24 y S25 se unieron a la tabla principal — habían quedado como filas sueltas separadas por líneas en blanco (no renderizaban como tabla).
+
+---
+
 ## [0.28.0] — 2026-08-17
 
 ### Agregado
