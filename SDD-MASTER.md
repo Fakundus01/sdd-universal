@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.29 · **Fecha:** 2026-08-17 · **Owner:** Facundo Moreno
+**Versión:** 0.30 · **Fecha:** 2026-10-02 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -43,7 +43,7 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 | Implementar código | `design.md` · `contracts/contracts-<usuario>.md` · `testing.md` |
 | Commit / push / versionar | `changelog/changelog-<usuario>.md` (+ R01, R13) |
 | Entender la arquitectura | `design.md` · `diagram.md` |
-| Infra, deploy o costos | `costs.md` · `security.md` |
+| Infra, deploy o costos | `costs.md` · `security.md` (+ R32 antes de desplegar) |
 | Dudas de dominio / vocabulario | `glossary.md` |
 | Repo existente sin SDD | nada: ejecutá el flujo Brownfield (§6.2) |
 | Mantenimiento / actualizar dependencias | `prompts/maintenance-prompt.md` · `costs.md` (R19) |
@@ -55,6 +55,8 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 | Proyecto que viene del catálogo web / combinar bloques | `blocks.md` |
 | Elegir o justificar el stack (R12), o el humano trae tecnologías del catálogo | `tecnologias.md` |
 | Clasificar la superficie de ataque, escribir `security.md`, o tocar login/datos/pagos/IA/archivos | `seguridad.md` (R27) |
+| Cerrar algo como done, escribir tests o checks, retomar tras un corte de contexto | `harness.md` (R29, R30) |
+| Repartir el trabajo entre agentes con roles (leader, implementer, reviewer…) | `orchestration.md` (R31) — cada rol, solo su fila |
 
 **Subagentes (R11):** cada subagente recibe únicamente su fila de esta tabla + la tarea puntual. Nunca el paquete completo.
 
@@ -75,7 +77,7 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 
 ---
 
-## §4 · Catálogo de Reglas (R01–R28)
+## §4 · Catálogo de Reglas (R01–R32)
 
 Para apagar o prender una regla, escribí en cualquier mensaje: `R01=OFF` / `R01=ON`. El agente confirma y lo registra en §3.
 
@@ -183,6 +185,18 @@ Un checklist de 200 ítems no se lee; seis controles que sí aplican se cumplen.
 **R28 · DEPENDENCIA-JUSTIFICADA — [ON] — desactivable**
 Antes de sumar una dependencia nueva (librería, framework, servicio, action de CI): una línea en `decisions.md` con qué problema resuelve, por qué no alcanza con lo que ya hay (o con un módulo propio razonable), y qué tan viva está (última release, mantenimiento). Dos dependencias para lo mismo: se elige una y se anota por qué. R19 audita sobre ese registro — la dependencia que nadie recuerda por qué está es justo la que nadie se anima a sacar, y la que un día aparece abandonada o vulnerable.
 
+**R29 · TDD-ROJO-PRIMERO — [ON] — desactivable**
+Rojo → verde → refactor: el test se escribe primero y se lo ve fallar por la razón correcta. El rojo se **mide** contra la base (con su hash), no se deduce. Todo check, guard o hook nuevo se prueba rompiéndolo a propósito una vez y pegando la salida: un check que nunca vio un rojo no se sabe si corre. Variantes DATA/GAME y detalle: `harness.md` §5.
+
+**R30 · LOOP-CERRADO — [ON] — fija**
+Nada es `done` sin **evidencia ejecutable** —comando + salida literal + hash del commit— y sin un **reviewer independiente** que re-ejecute la verificación (subagente `reviewer`, sesión nueva o el humano; nunca quien implementó), aunque el cambio parezca trivial. Lo propio del proyecto (test, lint, e2e) se declara en `harness.config.json`, nunca en el núcleo. El trabajo en vuelo vive en `sdd/progress/<rama>/`, no en el chat. Detalle: `harness.md`.
+
+**R31 · ORQUESTACIÓN-CON-ROLES — [AUTO: con subagentes o una feature de más de una tarjeta] — desactivable**
+Aplicar `orchestration.md`: `leader` (sesión principal, único escritor de `sdd/`), `implementer`, `reviewer`, `analytic`, `infra-implementer`, `looper`, `prompter`. Una tarjeta por agente con zona de archivos explícita; cada subagente escribe su resultado en un archivo y devuelve solo `done -> <ruta>`. OFF con NOVATO (R23).
+
+**R32 · PRODUCCIÓN-CON-OK — [ON] — fija**
+Antes de desplegar se miran los **datos** de producción con una consulta de solo lectura, no solo el código: a quién afecta el cambio. Escribir en producción o mergear a la rama de prod lo ejecuta el humano o lleva su OK explícito: R01 cubre el commit, esto cubre lo que no se deshace con un revert. Con carga nueva o jobs reactivados: `playbooks/go-live.md`.
+
 ---
 
 ## §5 · Mapa de archivos objetivo
@@ -192,6 +206,8 @@ repo/
 ├── AGENTS.md                      # espejo de 1 línea → apunta acá
 ├── .gitattributes                 # merge=union para changelogs: N agentes sin conflictos (S27)
 ├── CLAUDE.md                      # espejo de 1 línea → apunta acá
+├── harness.config.json            # comandos del proyecto: test, lint, e2e, prod de solo lectura (R30)
+├── harness/                       # verify.py por niveles + hooks + pre-commit (del scaffold)
 ├── README.md                      # instalación y puesta en marcha
 ├── src/ …                         # código
 └── sdd/
@@ -202,6 +218,10 @@ repo/
     ├── scenarios.md               # matriz: dónde funciona, dónde no, adaptaciones (R20)
     ├── teams.md                   # capa enterprise: roles, OKs, ceremonias, subagentes (R21)
     ├── models.md                  # espejos multi-agente + tiers + ahorro de tokens (R22)
+    ├── harness.md                 # arnés: evidencia, TDD, rojo forzado, memoria en disco (R29, R30)
+    ├── orchestration.md           # roles de agentes y loop cerrado (R31)
+    ├── cards/<ID>.md              # tarjetas: la cola de trabajo con aceptación y estado
+    ├── progress/<rama>/           # current.md + handbacks + reviews: el trabajo en vuelo
     ├── spec.md                    # qué es el proyecto, problema, alcance, features + estado
     ├── design.md                  # diseño técnico, capas, decisiones con su porqué
     ├── diagram.md                 # diagramas Mermaid: arquitectura + flujo
@@ -293,7 +313,7 @@ próximo paso, o "STOP".
 ```
 === HANDBACK · ciclo N · vX.Y.Z ===
 Hecho: [qué se implementó, archivos clave]
-Tests: [X pasan / Y fallan — o "pendiente"]
+Tests: [comando + resultado literal @ hash (R30) — o "pendiente"]
 MDs: [cuáles se actualizaron]
 Git: [commit hecho con tu OK / esperando OK / R01=OFF: commiteado]
 Próximo paso propuesto: [1–3 líneas concretas]
@@ -333,7 +353,8 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 - [ ] MDs actualizados **antes** que el código, y aprobados
 - [ ] Cambios de código aprobados antes de implementar
-- [ ] Tests verdes (back) / verificación en navegador (front)
+- [ ] Tests verdes (back) / verificación en navegador (front), con evidencia (comando + salida + hash) re-ejecutada por un reviewer independiente (R30)
+- [ ] Si se despliega: datos de producción revisados en solo lectura y la escritura en prod con OK humano (R32)
 - [ ] Archivos ≤300 líneas (o justificado ≤400) y sin comentarios redundantes
 - [ ] Changelog con la versión correcta, del usuario correcto
 - [ ] `.gitignore` existe y cubre `.env` — y sin secretos en el diff (R17)
@@ -348,6 +369,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.30 | 2026-10-02 | Capa de **ejecución verificable**, importada de Relay (usado en producción en chat-commerce-ai), vía S28–S31: **R29 TDD-ROJO-PRIMERO** (rojo medido y rojo forzado de checks), **R30 LOOP-CERRADO** (done = comando + salida literal + hash, re-ejecutado por un reviewer independiente), **R31 ORQUESTACIÓN-CON-ROLES** (siete roles de agente) y **R32 PRODUCCIÓN-CON-OK**. Nuevos: `harness.md`, `orchestration.md`, `harness.config.json` por proyecto, y `sdd/cards/` + `sdd/progress/<rama>/` como memoria en disco. El HANDBACK pide la evidencia literal. |
 | 0.29 | 2026-08-17 | Transferencia inversa desde IDA (la app hermana del mismo Word base), vía S26 y S27: **R16 ahora bloquea** — los críticos de `security.md` frenan el done y el release, con override solo justificado en `decisions.md`; y el scaffold suma **`.gitattributes`** con `merge=union` para los changelogs, para que N agentes o personas en paralelo no choquen en cada merge. |
 | 0.28 | 2026-08-17 | `skills/` crece a **14**: además de las 3 del SDD, 11 sueltas que sirven en cualquier proyecto (plan-primero, menos-tokens, codigo-en-clases, commit-prolijo, revisar-antes, arreglar-error, tests-minimos, explicame-simple, limpiar-repo, resumen-sesion, datos-ajenos). Web: al cerrar sesión el portón vuelve solo, cambio de contraseña desde Mi perfil, y las skills sueltas paginadas en Manuales con su ZIP. |
 | 0.27 | 2026-08-17 | **R28 · DEPENDENCIA-JUSTIFICADA** (nace de S25): cada dependencia nueva deja una línea en `decisions.md` con qué resuelve, por qué no alcanza lo que hay y qué tan viva está; R19 audita sobre ese registro. Catálogo a **120 tecnologías** (+19 donde era flaco: bases, runtimes, escritorio, infra, IA). Tipo nuevo «Compendio de datos abiertos» + playbook `consumir-api-externa` (copia propia, licencia, sincronización). Web: el Combinador sigue el tema elegido, links externos en pestaña nueva, y recorrido guiado por secciones desde Configuración. |

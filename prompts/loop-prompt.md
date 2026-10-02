@@ -13,7 +13,7 @@ próximo paso, o "STOP".
 ```
 === HANDBACK · ciclo N · vX.Y.Z ===
 Hecho: [qué se implementó, archivos clave]
-Tests: [X pasan / Y fallan — o "pendiente"]
+Tests: [comando + resultado literal @ hash (R30) — o "pendiente"]
 MDs: [cuáles se actualizaron]
 Git: [commit hecho con tu OK / esperando OK / R01=OFF: commiteado]
 Próximo paso propuesto: [1–3 líneas concretas]

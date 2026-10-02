@@ -1,6 +1,6 @@
 # SDD-MASTER · Universal Governance for AI-Agent Development
 
-**Version:** 0.19 · **Date:** 2026-08-15 · **Owner:** Facundo Moreno
+**Version:** 0.30 · **Date:** 2026-10-02 · **Owner:** Facundo Moreno
 **English mirror.** The canonical source of this package is the Spanish `SDD-MASTER.md`; this mirror tracks it release by release. File names and references are identical in both languages, so everything below works unchanged.
 
 > **If you are an AI agent (Claude, Cursor, Copilot, Gemini or other):**
@@ -43,7 +43,7 @@ No technical change happens without being documented and approved in the `sdd/` 
 | Implementing code | `design.md` · `contracts/contracts-<user>.md` · `testing.md` |
 | Commit / push / versioning | `changelog/changelog-<user>.md` (+ R01, R13) |
 | Understanding the architecture | `design.md` · `diagram.md` |
-| Infra, deploy or costs | `costs.md` · `security.md` |
+| Infra, deploy or costs | `costs.md` · `security.md` (+ R32 before deploying) |
 | Domain / vocabulary questions | `glossary.md` |
 | Existing repo without SDD | nothing: run the Brownfield flow (§6.2) |
 | Maintenance / dependency updates | `prompts/maintenance-prompt.md` · `costs.md` (R19) |
@@ -55,6 +55,8 @@ No technical change happens without being documented and approved in the `sdd/` 
 | Project coming from the web catalog / combining blocks | `blocks.md` |
 | Choosing or justifying the stack (R12), or the human brings catalog technologies | `tecnologias.md` |
 | Classifying the attack surface, writing `security.md`, or touching login/data/payments/AI/files | `seguridad.md` (R27) |
+| Closing something as done, writing tests or checks, resuming after a context cut | `harness.md` (R29, R30) |
+| Splitting work across agents with roles (leader, implementer, reviewer…) | `orchestration.md` (R31) — each role, only its row |
 
 **Subagents (R11):** each subagent receives only its row of this table plus the specific task. Never the whole package.
 
@@ -75,7 +77,7 @@ No technical change happens without being documented and approved in the `sdd/` 
 
 ---
 
-## §4 · Rule Catalog (R01–R28)
+## §4 · Rule Catalog (R01–R32)
 
 To turn a rule off or on, write in any message: `R01=OFF` / `R01=ON`. The agent confirms and records it in §3.
 
@@ -182,6 +184,18 @@ A 200-item checklist doesn't get read; six controls that do apply get done. That
 **R28 · JUSTIFIED-DEPENDENCY — [ON] — toggleable**
 Before adding a new dependency (library, framework, service, CI action): one line in `decisions.md` with what problem it solves, why what's already there (or a reasonable own module) isn't enough, and how alive it is (latest release, maintenance). Two dependencies for the same job: pick one and record why. R19 audits on top of that record — the dependency nobody remembers the reason for is exactly the one nobody dares remove, and the one that shows up abandoned or vulnerable one day.
 
+**R29 · RED-FIRST-TDD — [ON] — toggleable**
+Red → green → refactor: the test is written first and seen failing for the right reason. The red is **measured** against the base (with its hash), never inferred. Every new check, guard or hook is proven by breaking it on purpose once and pasting the output: a check that never saw a red may not be running at all. DATA/GAME variants and detail: `harness.md` §5.
+
+**R30 · CLOSED-LOOP — [ON] — fixed**
+Nothing is `done` without **executable evidence** —command + literal output + commit hash— and without an **independent reviewer** who re-runs the verification (a `reviewer` subagent, a fresh session or the human; never whoever implemented it), even if the change looks trivial. Project-specific commands (test, lint, e2e) are declared in `harness.config.json`, never in the core. In-flight work lives in `sdd/progress/<branch>/`, not in the chat. Detail: `harness.md`.
+
+**R31 · ROLE-ORCHESTRATION — [AUTO: with subagents or a feature of more than one card] — toggleable**
+Apply `orchestration.md`: `leader` (main session, sole writer of `sdd/`), `implementer`, `reviewer`, `analytic`, `infra-implementer`, `looper`, `prompter`. One card per agent with an explicit file zone; each subagent writes its result to a file and returns only `done -> <path>`. OFF for NOVICE (R23).
+
+**R32 · PRODUCTION-WITH-OK — [ON] — fixed**
+Before deploying, look at production **data** with a read-only query, not just the code: who does the change affect? Writing to production or merging into the prod branch is done by the human or carries their explicit OK: R01 covers the commit, this covers what a revert can't undo. With new load or reactivated jobs: `playbooks/go-live.md`.
+
 ---
 
 ## §5 · Target file map
@@ -190,6 +204,8 @@ Before adding a new dependency (library, framework, service, CI action): one lin
 repo/
 ├── AGENTS.md                      # 1-line mirror → points here
 ├── CLAUDE.md                      # 1-line mirror → points here
+├── harness.config.json            # project commands: test, lint, e2e, read-only prod (R30)
+├── harness/                       # verify.py by levels + hooks + pre-commit (from the scaffold)
 ├── README.md                      # install & getting started
 ├── src/ …                         # code
 └── sdd/
@@ -200,6 +216,10 @@ repo/
     ├── scenarios.md               # matrix: where it works, where it doesn't, adaptations (R20)
     ├── teams.md                   # enterprise layer: roles, OKs, ceremonies, subagents (R21)
     ├── models.md                  # multi-agent mirrors + tiers + token savings (R22)
+    ├── harness.md                 # harness: evidence, TDD, forced red, on-disk memory (R29, R30)
+    ├── orchestration.md           # agent roles and the closed loop (R31)
+    ├── cards/<ID>.md              # cards: the work queue with acceptance and state
+    ├── progress/<branch>/         # current.md + handbacks + reviews: in-flight work
     ├── spec.md                    # what the project is, problem, scope, features + status
     ├── design.md                  # technical design, layers, decisions with their why
     ├── diagram.md                 # Mermaid diagrams: architecture + flow
@@ -293,7 +313,7 @@ step, or "STOP".
 ```
 === HANDBACK · cycle N · vX.Y.Z ===
 Done: [what was implemented, key files]
-Tests: [X pass / Y fail — or "pending"]
+Tests: [command + literal result @ hash (R30) — or "pending"]
 MDs: [which were updated]
 Git: [commit made with your OK / awaiting OK / R01=OFF: committed]
 Proposed next step: [1–3 concrete lines]
@@ -333,7 +353,8 @@ Changelog entry: `## [X.Y.Z] — YYYY-MM-DD` with **Added / Changed / Fixed / Re
 
 - [ ] MDs updated **before** the code, and approved
 - [ ] Code changes approved before implementing
-- [ ] Tests green (back) / browser verification (front)
+- [ ] Tests green (back) / browser verification (front), with evidence (command + output + hash) re-run by an independent reviewer (R30)
+- [ ] If deploying: production data reviewed read-only, and the production write done with human OK (R32)
 - [ ] Files ≤300 lines (or justified ≤400) and no redundant comments
 - [ ] Changelog with the right version, from the right user
 - [ ] `.gitignore` exists and covers `.env` — and no secrets in the diff (R17)

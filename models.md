@@ -1,6 +1,6 @@
 # models.md · Multi-agente y ahorro de tokens por modelo
 
-**Versión:** 0.3 · 2026-08-15 · **Para agentes:** leer cuando la tarea sea configurar espejos (R22) o elegir tier de modelo (R03/R12). **Importante:** los nombres de modelos envejecen rápido — la auditoría R19 mantiene actualizado este archivo.
+**Versión:** 0.30 · 2026-10-02 · **Para agentes:** leer cuando la tarea sea configurar espejos (R22) o elegir tier de modelo (R03/R12). **Importante:** los nombres de modelos envejecen rápido — la auditoría R19 mantiene actualizado este archivo.
 
 ---
 
@@ -63,8 +63,27 @@ Si un ciclo típico empieza a gastar más que el anterior sin que el proyecto ha
 
 ---
 
+## 4 · Tier por rol de agente (R31)
+
+Cuando hay orquestación (`orchestration.md`), el `leader` elige modelo y esfuerzo **por tarjeta** y lo escribe en ella. Default por rol:
+
+| Rol | Tier | Esfuerzo | Por qué |
+|---|---|---|---|
+| `leader` | ALTO | alto | Descompone y decide: un error acá se propaga a todas las tarjetas |
+| `reviewer` | ALTO | medio–alto | Un revisor barato aprueba todo. El ahorro nunca va en quien verifica |
+| `prompter` | ALTO | alto | Escribe reglas y checks que van a gobernar a todos los demás |
+| `implementer` | MEDIO | alto | El grueso del trabajo; acá está el ahorro |
+| `infra-implementer` | MEDIO | alto | Toca CI, migraciones y servicios externos |
+| `analytic` | ECONÓMICO → MEDIO | medio | Búsquedas y lecturas acotadas; MEDIO si hay que diagnosticar |
+| `looper` | ECONÓMICO | medio | Corre, lee el resultado, re-despacha: mecánico |
+
+**Excepciones:** pagos, auth, multi-tenancy y migraciones → mínimo MEDIO con esfuerzo alto aunque el cambio parezca chico. Si un implementer falla dos veces la misma tarjeta, la tercera va un tier arriba o se parte la tarjeta. Cómo fijar el modelo depende de la herramienta: en Claude Code, el `model:` del frontmatter del agente es el default y el leader puede pedir otro al lanzarlo; en una sesión aparte, se elige al abrirla según la línea `Modelo / esfuerzo` de la tarjeta.
+
+---
+
 ## Historial
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.30 | 2026-10-02 | §4 nueva: tier y esfuerzo por rol de agente (R31), con el ahorro en los implementers y nunca en quien decide o verifica. |
 | 0.3 | 2026-08-15 | Primera versión: tabla de espejos por herramienta (Claude, Codex/ChatGPT, Cursor, Copilot, Gemini, Windsurf, Meta/solo-chat), tiers unificados marca-agnóstico y técnicas de ahorro por capa. |

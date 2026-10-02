@@ -10,7 +10,8 @@ description: Un ciclo del loop SDD - implementa el próximo paso acordado, corre
    master) dice qué slice trae cada tarea — releer todo es el error #1 de
    gasto de tokens.
 2. Implementá el próximo paso propuesto (o la edición que hizo la persona).
-3. Tests según R07. Actualizá los MD que correspondan: `status.md` y
+3. Tests según R07, con TDD (R29) y evidencia literal: comando + salida +
+   hash en el HANDBACK (R30). Actualizá los MD que correspondan: `status.md` y
    `changelog-<usuario>.md` siempre; `features`/`contracts`/`testing` si la
    tarea los tocó.
 4. Cerrá con el bloque HANDBACK (§7, máximo ~20 líneas) y esperá la
