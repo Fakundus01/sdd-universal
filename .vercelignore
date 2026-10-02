@@ -7,3 +7,6 @@ desktop.ini
 .DS_Store
 .vscode/
 .idea/
+
+# Material de trabajo importado de otros chats (no forma parte del sitio publicado)
+imports/
