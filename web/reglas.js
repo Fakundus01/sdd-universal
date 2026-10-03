@@ -1,5 +1,6 @@
-// Reglas del SDD · generado desde SDD-MASTER.md §4 — no editar a mano.
-// Regenerar cuando cambie el catálogo de reglas del master.
+// Reglas del SDD · espejo de SDD-MASTER.md §4 (ADR-004).
+// id, nombre, def, tipo y nota tienen que coincidir con los encabezados del
+// master: lo controla web/tests/paquete.test.mjs, en CI. «d» es un resumen para la UI.
 const REGLAS = [
   {"id": "R01", "nombre": "GIT-OK", "def": "ON", "tipo": "desactivable", "nota": "avisar siempre", "d": "Nunca git commit ni git push sin OK explícito del humano. El agente presenta el diff resumido y espera. Al iniciar sesión avisa que esta regla se puede desactivar (R01=OFF) para quien prefiera auto-commit."},
   {"id": "R02", "nombre": "GIT-LOG-PRIMERO", "def": "ON", "tipo": "fija", "nota": "", "d": "Antes de tocar código: git log --oneline -15 (+ git diff si hace falta) para conocer los cambios recientes y mantener un mini-historial de por dónde va el proyecto."},

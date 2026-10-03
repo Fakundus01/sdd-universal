@@ -42,6 +42,8 @@
 
 **Costo:** hay que volver a correr el generador cuando cambie la fuente. Barato comparado con una web que miente sobre sus propias reglas.
 
+**Revisión 2026-10-03 (0.31): lo que pasó de verdad.** El generador de `reglas.js` nunca quedó en el repo, igual que el script de `og.png` (D5). Pasó exactamente lo que este ADR anticipaba: R27 llegó tarde a la web (0.27) y R29–R32 también (0.30.1). Además, las descripciones de `reglas.js` no son una copia de la §4: son resúmenes escritos para la UI, así que regenerarlas las pisaría. Por eso, en vez de reconstruir el generador, la garantía pasa a ser **un test en CI** (`web/tests/paquete.test.mjs`): `id`, `nombre`, `def`, `tipo` y `nota` tienen que coincidir con los encabezados del master, el tablero tiene que listar las mismas reglas, y todo «N reglas» de la web tiene que decir el número real. El objetivo del ADR, que la desincronización no pueda pasar inadvertida, se cumple; cambia el medio. `tecnologias.js` sigue sin generador y sin test: el riesgo es menor, porque no lo cita ninguna regla.
+
 ---
 
 ## ADR-005 · Tema oscuro por default, sin consultar el sistema — 2026-08-15 · Vigente

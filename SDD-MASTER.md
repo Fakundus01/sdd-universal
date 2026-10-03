@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.30.1 · **Fecha:** 2026-10-02 · **Owner:** Facundo Moreno
+**Versión:** 0.31 · **Fecha:** 2026-10-03 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -369,6 +369,7 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.31 | 2026-10-03 | El ZIP del proyecto trae la capa de ejecución: `harness.md`, `orchestration.md` y las plantillas de `prompts/` siempre; `agents/` con nivel PRO; `harness/` opcional, con el pre-commit ejecutable; y las skills `relevo` y `harness-fix`. La web tiene sus primeros tests (`web/tests/`, en CI), que incluyen la sincronía de las reglas con esta §4: ADR-004 decía que `reglas.js` se generaba, pero el generador nunca estuvo en el repo. El JS de `index.html` se parte en seis archivos y `og.png` sale de un script. |
 | 0.30.1 | 2026-10-02 | La parte ejecutable de R29/R30: el scaffold **`harness/`** (Python 3.10+ sin dependencias) con `verify.py` por niveles, checks de integridad, hooks de Claude Code, pre-commit y CI de ejemplo, y 100 tests que se prueban con las mismas reglas que exigen. Pasó siete vueltas de un reviewer independiente (R30 aplicado a sí mismo), que encontraron entre otras cosas cinco formas de inyección por nombre de archivo: de ahí S32 y el invariante de `lint_file` (sin shell, `./` siempre). `harness.md` se ajusta a lo implementado (DRIFT resuelto, opción A). |
 | 0.30 | 2026-10-02 | Capa de **ejecución verificable**, importada de Relay (usado en producción en chat-commerce-ai), vía S28–S31: **R29 TDD-ROJO-PRIMERO** (rojo medido y rojo forzado de checks), **R30 LOOP-CERRADO** (done = comando + salida literal + hash, re-ejecutado por un reviewer independiente), **R31 ORQUESTACIÓN-CON-ROLES** (siete roles de agente) y **R32 PRODUCCIÓN-CON-OK**. Nuevos: `harness.md`, `orchestration.md`, `harness.config.json` por proyecto, y `sdd/cards/` + `sdd/progress/<rama>/` como memoria en disco. El HANDBACK pide la evidencia literal. |
 | 0.29 | 2026-08-17 | Transferencia inversa desde IDA (la app hermana del mismo Word base), vía S26 y S27: **R16 ahora bloquea** — los críticos de `security.md` frenan el done y el release, con override solo justificado en `decisions.md`; y el scaffold suma **`.gitattributes`** con `merge=union` para los changelogs, para que N agentes o personas en paralelo no choquen en cada merge. |

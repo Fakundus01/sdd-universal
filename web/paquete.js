@@ -27,7 +27,7 @@ const Paquete = (() => {
     {n: "sdd-ciclo",     d: "un ciclo de trabajo con su HANDBACK"},
     {n: "sdd-auditoria", d: "auditoría de mantenimiento (R19)"},
     {n: "relevo",        d: "guarda el trabajo en vuelo para seguir en sesión limpia"},
-    {n: "harness-fix",   d: "mejora el arnés cuando un agente falló por el entorno"}
+    {n: "harness-fix",   d: "mejora el arnés cuando un agente falló por el entorno", pro: true}
   ];
 
   /* El arnés ejecutable de R29/R30 (harness/ del paquete), sin sus tests:
@@ -40,6 +40,10 @@ const Paquete = (() => {
   ];
   // Sin el bit de ejecución, git ignora el pre-commit en Linux/macOS.
   const EJECUTABLES = new Set(["git-hooks/pre-commit"]);
+
+  /* Plantillas del loop de R30/R31 (tarjeta, handback, relevo): harness.md,
+     orchestration.md, agents/ y el hook de contexto las citan como prompts/. */
+  const PLANTILLAS = ["task-card", "handback", "relevo"];
 
   /* Prompts de rol de R31. Solo con nivel PRO: con NOVATO R31 va OFF. */
   const AGENTES = ["README", "leader", "implementer", "reviewer", "analytic",
@@ -112,7 +116,10 @@ Carpeta generada desde el catálogo del SDD Universal. Ya viene con todo en su l
 ## Qué hacer ahora (3 pasos)
 ${brownfield ? `
 > **Tu proyecto ya existe**, así que esta carpeta no reemplaza a la tuya:
-> copiá \`sdd/\`, \`AGENTS.md\` y \`CLAUDE.md\` **dentro** del repo que ya tenés.
+> copiá ${[ "\`sdd/\`", conAgentes && "\`agents/\`", conHarness && "\`harness/\`",
+             conSkills && "\`.claude/skills/\`", "\`.gitattributes\`", "\`AGENTS.md\`" ]
+             .filter(Boolean).join(", ")} y \`CLAUDE.md\` **dentro** del repo que ya tenés
+> (si ya tenés un \`.gitattributes\`, sumale las líneas del de acá).
 > Si tu repo no tiene \`.gitignore\`, llevate también el de acá.
 ` : ""}
 1. **Abrí tu agente de IA** (Claude, Codex/ChatGPT, Cursor, Copilot, Gemini…)${brownfield ? ", parado en tu repo" : ""}.
@@ -130,13 +137,14 @@ ${brownfield
 | \`sdd/SDD-MASTER.md\` | El núcleo: las reglas y el protocolo de lectura |
 | \`sdd/seguridad.md\` | Los controles según lo que tu proyecto hace (R27). El agente lo usa solo, no hace falta que lo leas |
 | \`sdd/harness.md\` | Cómo se demuestra que algo está terminado: test primero, evidencia literal y un reviewer que la re-ejecuta (R29, R30) |
-| \`sdd/orchestration.md\` | Cómo se reparte el trabajo entre agentes con roles, cuando hace falta (R31) |${playbooks.length ? `\n| \`sdd/playbooks/\` | ${playbooks.length} receta(s) paso a paso: ${playbooks.join(", ")} |` : ""}
+| \`sdd/orchestration.md\` | Cómo se reparte el trabajo entre agentes con roles, cuando hace falta (R31) |
+| \`sdd/prompts/\` | Plantillas de tarjeta, handback y relevo: las usa el agente al trabajar |${playbooks.length ? `\n| \`sdd/playbooks/\` | ${playbooks.length} receta(s) paso a paso: ${playbooks.join(", ")} |` : ""}
 | \`PROMPT-DE-ARRANQUE.txt\` | Tu prompt, ya armado con las opciones que elegiste |
 | \`.gitignore\` | Con \`.env\` adentro desde el minuto cero (R17) |
 | \`AGENTS.md\` / \`CLAUDE.md\` | Una línea para que cualquier agente encuentre el SDD solo |${conSkills ? `
 | \`.claude/skills/\` | Atajos para Claude Code: \`/sdd-arranque\`, \`/sdd-ciclo\`, \`/sdd-auditoria\`, \`/relevo\`, \`/harness-fix\`. Si usás otro agente, ignorala — no molesta |` : ""}${conAgentes ? `
 | \`agents/\` | Los prompts de cada rol (leader, implementer, reviewer…). En Claude Code se copian a \`.claude/agents/\`: ver \`agents/README.md\` |` : ""}${conHarness ? `
-| \`harness/\` | El arnés: \`verify.py\` por niveles, pre-commit, hooks y CI de ejemplo. Necesita Python 3.10+. **Lo instala el agente** siguiendo \`harness/README.md\` cuando haya código que verificar |` : ""}
+| \`harness/\` | El arnés: \`verify.py\` por niveles, pre-commit, hooks y CI de ejemplo. Necesita Python 3.10+. **Lo instala el agente** siguiendo \`harness/README.md\` cuando haya código que verificar (en Windows, con \`git update-index --chmod=+x harness/git-hooks/pre-commit\` para que el hook siga siendo ejecutable en Linux/macOS) |` : ""}
 
 **Lo que todavía no está:** \`spec.md\`, \`design.md\`, \`contracts.md\` y compañía. Esos **los escribe el agente** sobre tu idea, en el paso 3. No se descargan de ningún lado porque todavía no existen.
 
@@ -156,8 +164,9 @@ SDD Universal · https://sdd-universal.vercel.app
     const carpeta = slug(nombre);
     const conAgentes = nivel !== "NOVATO";
     // progreso real: quien arma el zip sabe cuantos archivos va a buscar
-    const total = 4 + (conTecnologias ? 1 : 0) + (conGuia ? 1 : 0) + playbooks.length
-                + (conSkills ? SKILLS.length : 0)
+    const skills = SKILLS.filter(s => conAgentes || !s.pro);
+    const total = 4 + PLANTILLAS.length + (conTecnologias ? 1 : 0) + (conGuia ? 1 : 0) + playbooks.length
+                + (conSkills ? skills.length : 0)
                 + (conHarness ? HARNESS.length : 0) + (conAgentes ? AGENTES.length : 0);
     let hecho = 0;
     const paso = () => onPaso && onPaso(++hecho, total);
@@ -179,6 +188,8 @@ SDD Universal · https://sdd-universal.vercel.app
       {nombre: `${carpeta}/sdd/harness.md`, contenido: await traerP("../harness.md")},
       {nombre: `${carpeta}/sdd/orchestration.md`, contenido: await traerP("../orchestration.md")}
     ];
+    for (const t of PLANTILLAS)
+      archivos.push({nombre: `${carpeta}/sdd/prompts/${t}.md`, contenido: await traerP(`../prompts/${t}.md`)});
 
     if (custom)           archivos.push({nombre: `${carpeta}/sdd/custom.md`, contenido: custom});
     if (conTecnologias)   archivos.push({nombre: `${carpeta}/sdd/tecnologias.md`, contenido: await traerP("../tecnologias.md")});
@@ -188,7 +199,7 @@ SDD Universal · https://sdd-universal.vercel.app
       archivos.push({nombre: `${carpeta}/sdd/playbooks/${p}.md`, contenido: await traerP(`../playbooks/${p}.md`)});
 
     if (conSkills)
-      for (const s of SKILLS)
+      for (const s of skills)
         archivos.push({nombre: `${carpeta}/.claude/skills/${s.n}/SKILL.md`,
                        contenido: await traerP(`../skills/${s.n}/SKILL.md`)});
 
@@ -225,6 +236,8 @@ SDD Universal · https://sdd-universal.vercel.app
       {nombre: "orchestration.md", contenido: await traer("../orchestration.md")},
       {nombre: "PROMPT-DE-ARRANQUE.txt", contenido: prompt}
     ];
+    for (const t of PLANTILLAS)
+      archivos.push({nombre: `prompts/${t}.md`, contenido: await traer(`../prompts/${t}.md`)});
     if (custom)         archivos.push({nombre: "custom.md", contenido: custom});
     if (conTecnologias) archivos.push({nombre: "tecnologias.md", contenido: await traer("../tecnologias.md")});
     if (conGuia)        archivos.push({nombre: "GUIDE.md", contenido: await traer("../GUIDE.md")});

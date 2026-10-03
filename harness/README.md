@@ -7,7 +7,7 @@ La parte ejecutable de `harness.md` (R29, R30): verificación por niveles, check
 1. Copiá esta carpeta a la raíz del repo como `harness/` (podés dejar afuera `tests/` si no vas a tocar el arnés).
 2. Copiá `harness.config.example.json` a la raíz como **`harness.config.json`** y poné los comandos de tu stack. Solo `test` es obligatorio.
 3. Corré `python harness/verify.py --quick`. Crea `sdd/progress/<rama>/current.md` y tiene que terminar en `VERDE`.
-4. **Pre-commit** (lo que hace cumplir el arnés con cualquier herramienta): `git config core.hooksPath harness/git-hooks`. Es por clon: anotalo en el README del proyecto.
+4. **Pre-commit** (lo que hace cumplir el arnés con cualquier herramienta): `git config core.hooksPath harness/git-hooks`. Es por clon: anotalo en el README del proyecto. Si el proyecto se commitea desde Windows, además `git update-index --chmod=+x harness/git-hooks/pre-commit`: Windows no guarda el bit de ejecución y sin él git ignora el hook en Linux/macOS.
 5. **CI:** copiá `ci/verify.yml` a `.github/workflows/` y sumale el setup de tu stack.
 6. **Claude Code (opcional):** fusioná `hooks/settings.example.json` con tu `.claude/settings.json`. En macOS/Linux, si no tenés `python`, cambialo por `python3`.
 

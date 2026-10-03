@@ -10,3 +10,5 @@ desktop.ini
 
 # Material de trabajo importado de otros chats (no forma parte del sitio publicado)
 imports/
+web/tests/
+web/og.py
