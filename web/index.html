@@ -744,7 +744,9 @@
       <h3>2 · Bajate todo de una</h3>
       <p>La carpeta ya armada, con el <code>.gitignore</code>, los espejos y el prompt adentro. Descomprimís, abrís tu agente y arrancás.</p>
       <label class="oschk"><input type="checkbox" id="zipSkills" checked> Sumar skills de Claude
-        <small>— los atajos /sdd-arranque, /sdd-ciclo y /sdd-auditoria; con otro agente no molestan</small></label>
+        <small>— los atajos /sdd-arranque, /sdd-ciclo, /sdd-auditoria, /relevo y /harness-fix; con otro agente no molestan</small></label>
+      <label class="oschk"><input type="checkbox" id="zipHarness" checked> Sumar el arnés ejecutable
+        <small>— harness/: verify.py, pre-commit y CI de ejemplo (R30). Necesita Python 3.10+; lo instala el agente</small></label>
       <div class="zipbtns">
         <button class="b-zip" id="zipProyecto" type="button">📦 Descargar la carpeta del proyecto</button>
         <button class="b-zip alt" id="zipSolo" type="button">Solo los MD sueltos</button>
@@ -1085,7 +1087,9 @@
       <option value="PRO">Pro — con experiencia</option>
     </select>
     <label class="oschk"><input type="checkbox" id="zrskills" checked> Sumar skills de Claude
-      <small>— /sdd-arranque, /sdd-ciclo, /sdd-auditoria</small></label>
+      <small>— /sdd-arranque, /sdd-ciclo, /sdd-auditoria, /relevo, /harness-fix</small></label>
+    <label class="oschk"><input type="checkbox" id="zrharness" checked> Sumar el arnés ejecutable
+      <small>— harness/ con verify.py y pre-commit; necesita Python 3.10+</small></label>
     <p class="zipr-nota">El resto va con valores por defecto: stack recomendado por el agente y perfil estricto. Si querés afinar tecnologías, playbooks o perfil, usá el Combinador.</p>
   </div>
   <div class="dlg-foot">
@@ -1664,6 +1668,8 @@ function renderFiles(){
   const files = [
     {f:"../SDD-MASTER.md", n:"SDD-MASTER.md", d:"el núcleo — siempre"},
     {f:"../seguridad.md", n:"seguridad.md", d:"controles por superficie (R27)"},
+    {f:"../harness.md", n:"harness.md", d:"evidencia y review para cerrar (R29, R30)"},
+    {f:"../orchestration.md", n:"orchestration.md", d:"roles de agentes (R31)"},
     ...pbs.map(p => ({f:PB_META[p].f, n:p + ".md", d:PB_META[p].d}))
   ];
   if (sel.size) files.push({f:"../tecnologias.md", n:"tecnologias.md", d:`${sel.size} tecnologías elegidas`});
@@ -1689,7 +1695,8 @@ function opcionesPaquete(){
     conTecnologias: sel.size > 0,
     conGuia: $("clvl").value === "NOVATO",
     brownfield: $("cexiste").value === "brownfield",
-    conSkills: $("zipSkills").checked
+    conSkills: $("zipSkills").checked,
+    conHarness: $("zipHarness").checked
   };
 }
 
@@ -1706,10 +1713,14 @@ function renderArbol(){
     "├── CLAUDE.md",
   ];
   if (o.conSkills) filas.push(linea("├── .claude/skills/", "atajos /sdd-* para Claude"));
+  if (o.nivel !== "NOVATO") filas.push(linea("├── agents/", "prompts de rol (R31)"));
+  if (o.conHarness) filas.push(linea("├── harness/", `${Paquete.HARNESS.length} archivos: verify.py, pre-commit…`));
   filas.push(
     "└── sdd/",
     linea("    ├── SDD-MASTER.md", "el núcleo"),
-    linea("    ├── seguridad.md", "controles según lo que hacés (R27)")
+    linea("    ├── seguridad.md", "controles según lo que hacés (R27)"),
+    linea("    ├── harness.md", "cómo se cierra algo (R29, R30)"),
+    linea("    ├── orchestration.md", "roles de agentes (R31)")
   );
   if (o.custom)         filas.push(linea("    ├── custom.md", "tus reglas"));
   if (o.conTecnologias) filas.push(linea("    ├── tecnologias.md", `${sel.size} elegidas`));
@@ -1740,6 +1751,7 @@ async function bajar(boton, fn){
 }
 
 $("zipSkills").onchange = renderArbol;
+$("zipHarness").onchange = renderArbol;
 $("zipProyecto").onclick = () => {
   Sesion.contar("paquete", "proyecto:" + $("ctype").value);
   bajar("zipProyecto", Paquete.proyecto);
@@ -1780,7 +1792,8 @@ $("zipSolo").onclick = () => {
       $("ctype").value = tipo; $("cstack").value = "reco"; $("cperf").value = "ESTRICTO";
       $("clvl").value = $("zrnivel").value; $("cexiste").value = $("zrexiste").value;
       const o = {...opcionesPaquete(), nombre: TYPES[tipo].name, prompt: buildPrompt(),
-                 playbooks: ["env-setup"], conSkills: $("zrskills").checked};
+                 playbooks: ["env-setup"], conSkills: $("zrskills").checked,
+                 conHarness: $("zrharness").checked};
       const n = await Paquete.proyecto({...o, onPaso: (h, t) => Feedback.fijar(h / t)});
       $("zrmsg").textContent = `Listo: ${n} archivos.`;
       Feedback.toast(`Paquete listo: ${n} archivos`, {tipo: "ok", id: "zip", duracion: 2600});

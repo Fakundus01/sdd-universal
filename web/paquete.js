@@ -25,8 +25,25 @@ const Paquete = (() => {
   const SKILLS = [
     {n: "sdd-arranque",  d: "arranca el proyecto: cuestionario, MDs y OK"},
     {n: "sdd-ciclo",     d: "un ciclo de trabajo con su HANDBACK"},
-    {n: "sdd-auditoria", d: "auditoría de mantenimiento (R19)"}
+    {n: "sdd-auditoria", d: "auditoría de mantenimiento (R19)"},
+    {n: "relevo",        d: "guarda el trabajo en vuelo para seguir en sesión limpia"},
+    {n: "harness-fix",   d: "mejora el arnés cuando un agente falló por el entorno"}
   ];
+
+  /* El arnés ejecutable de R29/R30 (harness/ del paquete), sin sus tests:
+     el README dice que se dejan afuera si no vas a tocar el arnés. Los
+     dotfiles no se traen — sus reglas ya están en GITIGNORE y GITATTRIBUTES. */
+  const HARNESS = [
+    "README.md", "verify.py", "checks.py", "config.py", "repo.py", "report.py",
+    "harness.config.example.json", "hooks/claude.py", "hooks/settings.example.json",
+    "templates/current.md", "ci/verify.yml", "git-hooks/pre-commit"
+  ];
+  // Sin el bit de ejecución, git ignora el pre-commit en Linux/macOS.
+  const EJECUTABLES = new Set(["git-hooks/pre-commit"]);
+
+  /* Prompts de rol de R31. Solo con nivel PRO: con NOVATO R31 va OFF. */
+  const AGENTES = ["README", "leader", "implementer", "reviewer", "analytic",
+                   "infra-implementer", "looper", "prompter"];
 
   /* Skills sueltas: sirven en cualquier proyecto, con o sin SDD. Chicas a
      propósito — cada una hace una cosa y se entiende en una leída. */
@@ -54,6 +71,9 @@ const Paquete = (() => {
 sdd/changelog/*.md merge=union
 sdd/status.md merge=union
 CHANGELOG.md merge=union
+
+# Los git hooks corren con sh: un CRLF en el shebang los rompe en Linux/macOS.
+harness/git-hooks/* text eol=lf
 `;
 
   const GITIGNORE = `# Secretos — R17: esto va ANTES del primer commit.
@@ -84,7 +104,7 @@ desktop.ini
 .idea/
 `;
 
-  function leeme(nombre, tipo, nivel, playbooks, brownfield, conSkills){
+  function leeme(nombre, tipo, nivel, playbooks, brownfield, conSkills, conHarness, conAgentes){
     return `# ${nombre}
 
 Carpeta generada desde el catálogo del SDD Universal. Ya viene con todo en su lugar.
@@ -108,11 +128,15 @@ ${brownfield
 | | |
 |---|---|
 | \`sdd/SDD-MASTER.md\` | El núcleo: las reglas y el protocolo de lectura |
-| \`sdd/seguridad.md\` | Los controles según lo que tu proyecto hace (R27). El agente lo usa solo, no hace falta que lo leas |${playbooks.length ? `\n| \`sdd/playbooks/\` | ${playbooks.length} receta(s) paso a paso: ${playbooks.join(", ")} |` : ""}
+| \`sdd/seguridad.md\` | Los controles según lo que tu proyecto hace (R27). El agente lo usa solo, no hace falta que lo leas |
+| \`sdd/harness.md\` | Cómo se demuestra que algo está terminado: test primero, evidencia literal y un reviewer que la re-ejecuta (R29, R30) |
+| \`sdd/orchestration.md\` | Cómo se reparte el trabajo entre agentes con roles, cuando hace falta (R31) |${playbooks.length ? `\n| \`sdd/playbooks/\` | ${playbooks.length} receta(s) paso a paso: ${playbooks.join(", ")} |` : ""}
 | \`PROMPT-DE-ARRANQUE.txt\` | Tu prompt, ya armado con las opciones que elegiste |
 | \`.gitignore\` | Con \`.env\` adentro desde el minuto cero (R17) |
 | \`AGENTS.md\` / \`CLAUDE.md\` | Una línea para que cualquier agente encuentre el SDD solo |${conSkills ? `
-| \`.claude/skills/\` | Atajos para Claude Code: \`/sdd-arranque\`, \`/sdd-ciclo\`, \`/sdd-auditoria\`. Si usás otro agente, ignorala — no molesta |` : ""}
+| \`.claude/skills/\` | Atajos para Claude Code: \`/sdd-arranque\`, \`/sdd-ciclo\`, \`/sdd-auditoria\`, \`/relevo\`, \`/harness-fix\`. Si usás otro agente, ignorala — no molesta |` : ""}${conAgentes ? `
+| \`agents/\` | Los prompts de cada rol (leader, implementer, reviewer…). En Claude Code se copian a \`.claude/agents/\`: ver \`agents/README.md\` |` : ""}${conHarness ? `
+| \`harness/\` | El arnés: \`verify.py\` por niveles, pre-commit, hooks y CI de ejemplo. Necesita Python 3.10+. **Lo instala el agente** siguiendo \`harness/README.md\` cuando haya código que verificar |` : ""}
 
 **Lo que todavía no está:** \`spec.md\`, \`design.md\`, \`contracts.md\` y compañía. Esos **los escribe el agente** sobre tu idea, en el paso 3. No se descargan de ningún lado porque todavía no existen.
 
@@ -128,16 +152,18 @@ SDD Universal · https://sdd-universal.vercel.app
   }
 
   /* Carpeta lista para trabajar: espejos, .gitignore, sdd/ y el prompt. */
-  async function proyecto({nombre, tipoNombre, nivel, prompt, playbooks, custom, conTecnologias, conGuia, brownfield, conSkills, onPaso}){
+  async function proyecto({nombre, tipoNombre, nivel, prompt, playbooks, custom, conTecnologias, conGuia, brownfield, conSkills, conHarness, onPaso}){
     const carpeta = slug(nombre);
+    const conAgentes = nivel !== "NOVATO";
     // progreso real: quien arma el zip sabe cuantos archivos va a buscar
-    const total = 2 + (conTecnologias ? 1 : 0) + (conGuia ? 1 : 0) + playbooks.length
-                + (conSkills ? SKILLS.length : 0);
+    const total = 4 + (conTecnologias ? 1 : 0) + (conGuia ? 1 : 0) + playbooks.length
+                + (conSkills ? SKILLS.length : 0)
+                + (conHarness ? HARNESS.length : 0) + (conAgentes ? AGENTES.length : 0);
     let hecho = 0;
     const paso = () => onPaso && onPaso(++hecho, total);
     const traerP = async r => { const t = await traer(r); paso(); return t; };
     const archivos = [
-      {nombre: `${carpeta}/LEEME.md`, contenido: leeme(nombre || carpeta, tipoNombre, nivel, playbooks, brownfield, conSkills)},
+      {nombre: `${carpeta}/LEEME.md`, contenido: leeme(nombre || carpeta, tipoNombre, nivel, playbooks, brownfield, conSkills, conHarness, conAgentes)},
       {nombre: `${carpeta}/PROMPT-DE-ARRANQUE.txt`, contenido: prompt},
       {nombre: `${carpeta}/.gitignore`, contenido: GITIGNORE},
       {nombre: `${carpeta}/.gitattributes`, contenido: GITATTRIBUTES},
@@ -146,7 +172,12 @@ SDD Universal · https://sdd-universal.vercel.app
       {nombre: `${carpeta}/sdd/SDD-MASTER.md`, contenido: await traerP("../SDD-MASTER.md")},
       // seguridad.md va siempre: R27 lo necesita en el arranque para clasificar
       // la superficie, y es justo lo que nadie descarga si hay que elegirlo.
-      {nombre: `${carpeta}/sdd/seguridad.md`, contenido: await traerP("../seguridad.md")}
+      {nombre: `${carpeta}/sdd/seguridad.md`, contenido: await traerP("../seguridad.md")},
+      // Mismo criterio: R30 es fija y el master manda a harness.md para todo
+      // cierre; orchestration.md lo cita R31. Un master que apunta a archivos
+      // que no vinieron en el ZIP es un agente que improvisa.
+      {nombre: `${carpeta}/sdd/harness.md`, contenido: await traerP("../harness.md")},
+      {nombre: `${carpeta}/sdd/orchestration.md`, contenido: await traerP("../orchestration.md")}
     ];
 
     if (custom)           archivos.push({nombre: `${carpeta}/sdd/custom.md`, contenido: custom});
@@ -160,6 +191,15 @@ SDD Universal · https://sdd-universal.vercel.app
       for (const s of SKILLS)
         archivos.push({nombre: `${carpeta}/.claude/skills/${s.n}/SKILL.md`,
                        contenido: await traerP(`../skills/${s.n}/SKILL.md`)});
+
+    if (conAgentes)
+      for (const a of AGENTES)
+        archivos.push({nombre: `${carpeta}/agents/${a}.md`, contenido: await traerP(`../agents/${a}.md`)});
+
+    if (conHarness)
+      for (const h of HARNESS)
+        archivos.push({nombre: `${carpeta}/harness/${h}`, contenido: await traerP(`../harness/${h}`),
+                       ejecutable: EJECUTABLES.has(h)});
 
     Zip.descargar(`${carpeta}.zip`, archivos);
     return archivos.length;
@@ -180,6 +220,9 @@ SDD Universal · https://sdd-universal.vercel.app
   async function soloMd({playbooks, custom, conTecnologias, conGuia, prompt}){
     const archivos = [
       {nombre: "SDD-MASTER.md", contenido: await traer("../SDD-MASTER.md")},
+      {nombre: "seguridad.md", contenido: await traer("../seguridad.md")},
+      {nombre: "harness.md", contenido: await traer("../harness.md")},
+      {nombre: "orchestration.md", contenido: await traer("../orchestration.md")},
       {nombre: "PROMPT-DE-ARRANQUE.txt", contenido: prompt}
     ];
     if (custom)         archivos.push({nombre: "custom.md", contenido: custom});
@@ -192,5 +235,5 @@ SDD Universal · https://sdd-universal.vercel.app
     return archivos.length;
   }
 
-  return {proyecto, soloMd, soloSkills, slug, SKILLS, SKILLS_EXTRA};
+  return {proyecto, soloMd, soloSkills, slug, SKILLS, SKILLS_EXTRA, HARNESS};
 })();

@@ -13,12 +13,24 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 ### Modificado
 - `harness.md` se ajusta a lo implementado (DRIFT, opción A).
 - **La web se pone al día con R29–R32**: estaban en el master, COMPACT y los espejos EN, pero no en `reglas.js` ni en el tablero, así que la web seguía mostrando 28 reglas. Es el mismo desfase que tuvo R27 en la 0.27. Se actualizaron los conteos («32 reglas», «R01–R32») y la versión en los pies, la guía, el tablero y el README.
-
-### Pendiente
+- **El ZIP del proyecto trae la capa de ejecución.** Antes el master citaba en R30/R31 archivos que no venían en el ZIP. Ahora:
+  - `sdd/harness.md` y `sdd/orchestration.md` van **siempre**, con el mismo criterio que `seguridad.md`: los piden reglas fijas.
+  - `agents/` va con nivel **PRO**: con NOVATO R31 queda en OFF.
+  - **`harness/`** entra con un checkbox nuevo, marcado por defecto, tanto en el Combinador como en la descarga rápida. Van 12 archivos, sin `tests/`.
+  - Se suman las skills **`relevo`** y **`harness-fix`** a las del SDD.
+  - «Solo los MD» ahora trae `seguridad.md`, `harness.md` y `orchestration.md`.
+- `zip.js` puede marcar archivos ejecutables (modo Unix 100755). Sin eso, el `pre-commit` llegaba sin `+x` a Linux y macOS y git lo ignoraba en silencio. El `.gitattributes` del scaffold suma `harness/git-hooks/* text eol=lf`.
+- Actions de CI a versiones que corren en Node 24 (`checkout@v5`, `setup-python@v6`), en `harness.yml` y en el `ci/verify.yml` del scaffold: Node 20 está deprecado en los runners.
+- `sdd/status.md` al día. F20 (el ZIP con la capa de ejecución) queda en 80% hasta verla en el navegador.
 
 ### Corregido
 - **La primera corrida de la matriz de `harness.yml`** (run 37136047518) pasó en Windows y falló en Linux y macOS por un solo test: `test_salida_no_utf8_se_decodifica_con_la_codepage` esperaba la decodificación cp1252 de Windows en todas las plataformas. El código estaba bien: fuera de Windows la codepage es UTF-8 y el byte suelto queda marcado con `�`, sin perder la línea. Ahora el test espera eso.
-- El ZIP del Combinador no incluye todavía `harness.md`, `orchestration.md`, `agents/` ni `harness/`, aunque el master los cita en R30/R31. Cómo empaquetarlos es una de las dudas abiertas del brief de Relay (R04).
+- **Este changelog tenía un byte NUL crudo** en la entrada de la 0.20, justo donde se contaba el mismo problema en otro archivo. Git lo trataba como binario: no mostraba diffs y lo guardaba con CRLF sin normalizar. Ahora es el texto literal `\x00`, y el archivo pasa a LF como el resto.
+
+### Verificado
+- ZIP armado en Node con el `paquete.js` y el `zip.js` reales, y leído con `zipfile` de Python. PRO trae 35 archivos y NOVATO 15; todos los CRC dan bien. `harness/` es idéntico byte a byte al repo, y `pre-commit` sale con modo `0o100755`, LF y shebang. Rojo forzado: sin la marca de ejecutable, el chequeo da `NO-EXEC`.
+- Smoke del arnés desde el ZIP descomprimido, en un repo nuevo: `verify.py --quick` y `verify.py` completo dan `VERDE`.
+- **No verificado:** los checkboxes y el árbol de vista previa en el navegador. El portón lo impide mientras el proyecto Supabase esté pausado (ver `status.md`).
 
 ---
 
@@ -139,7 +151,7 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ### Corregido
 - El renderer aprendió tablas y bloques de código **indentados dentro de listas** (los playbooks los anidan en pasos numerados): antes se aplanaban como texto.
-- El centinela de los code spans pasó de NUL crudo (git trataba el archivo como binario) a secuencia de escape ` `.
+- El centinela de los code spans pasó de NUL crudo (git trataba el archivo como binario) a secuencia de escape `\x00`.
 
 ---
 
