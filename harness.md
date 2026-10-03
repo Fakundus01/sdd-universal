@@ -156,7 +156,7 @@ sdd/
 5. `status.md` coherente con las tarjetas (una feature al 100% tiene todas sus tarjetas `done`).
 6. Lint de los archivos cambiados (`lint_file`).
 
-Cada uno de estos checks tiene su test **con rojo forzado** (`harness/tests/`). El arnés se prueba con las mismas reglas que exige.
+Cada uno de estos checks tiene su test **con rojo forzado** (`harness/tests/`, en el repo del SDD Universal: no viaja en el ZIP del proyecto). El arnés se prueba con las mismas reglas que exige.
 
 ### Checkpoints del reviewer
 

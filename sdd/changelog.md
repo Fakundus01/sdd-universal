@@ -19,9 +19,9 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 - **`web/og.py`** regenera `og.png` con el mismo diseño y toma el número de reglas del master (D5). La imagen decía «26 reglas» desde la 0.11.
 
 ### Modificado
-- **El JS de `index.html` se parte en seis archivos** (D1): `catalogo.js`, `tecnologias-vista.js`, `combinador.js`, `manuales.js`, `cuenta.js` e `inicio.js`, de 105 a 237 líneas, sin cambios en el código. Antes eran 1123 líneas inline y el límite de R05 es 300. Siguen siendo scripts clásicos en el mismo orden y con el mismo ámbito global.
+- **El JS de `index.html` se parte en seis archivos** (D1): `catalogo.js`, `tecnologias-vista.js`, `combinador.js`, `manuales.js`, `cuenta.js` e `inicio.js`, de 105 a 237 líneas sin la cabecera, sin cambios en el código. Antes eran 1123 líneas inline y el límite de R05 es 300. Siguen siendo scripts clásicos en el mismo orden y con el mismo ámbito global.
 - **ADR-004, revisión:** el generador de `reglas.js` nunca estuvo en el repo, y por eso R27 y R29–R32 llegaron tarde a la web. La garantía pasa a ser el test en CI; las descripciones de `reglas.js` son resúmenes curados y no se regeneran.
-- `?v=31` en todos los recursos propios: `zip.js`, `paquete.js` y `reglas.js` cambiaron, y el corolario de ADR-011 pide subir la versión para que un navegador no use la vieja en caché.
+- `?v=31` en las páginas de `web/`: `zip.js`, `paquete.js` y `reglas.js` cambiaron, y el corolario de ADR-011 pide subir la versión para que un navegador no use la vieja en caché. El tablero sigue en `?v=29`, porque carga recursos que no cambiaron.
 - El árbol de vista previa del Combinador sigue al nivel después de generar: `agents/` y `GUIDE.md` dependen de él.
 - Las actions de CI pasan a versiones que corren en Node 24 (`checkout@v5`, `setup-python@v6`), en `harness.yml` y en el `ci/verify.yml` del scaffold.
 - `sdd/status.md` (F17–F20, bloqueos, deudas), `design.md` y `testing.md` al día.
@@ -30,10 +30,11 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 - **Este changelog tenía un byte NUL crudo** en la entrada de la 0.20, justo donde se contaba el mismo problema en otro archivo. Git lo trataba como binario, así que no mostraba diffs y lo guardaba con CRLF sin normalizar. Ahora es texto (`\u0000`, que es lo que usa `md.js`) y el archivo pasa a LF.
 
 ### Verificado
-- `node --test "web/tests/*.test.mjs"`: 5/5. Rojos forzados: sin la marca de ejecutable, con el `reglas.js` de 0.29 y con R30 marcada como desactivable.
-- D1: smoke en Chrome headless por CDP, antes y después del corte. La salida es idéntica en carga, generar, lista de archivos, árbol, cambio de nivel, checkbox del arnés, popup de descarga rápida y vistas, con 0 excepciones. Rojo forzado: con `inicio.js` cargado antes que `catalogo.js`, salta `ReferenceError`.
+- `node --test "web/tests/*.test.mjs"`: 6/6. Rojos forzados: sin la marca de ejecutable; con el `reglas.js` de 0.29; con R30 marcada como desactivable; con «28 reglas» en `catalogo.js`; con `harness.md` citando un `prompts/nuevo.md` que no existe; y con el LEEME de NOVATO anunciando `/harness-fix`. Con `harness/` en CRLF, como queda en un clon de Windows, sigue en verde.
+- D1: smoke en Chrome headless por CDP, antes y después del corte. La salida es idéntica en carga, generar, lista de archivos, árbol, cambio de nivel, checkbox del arnés y vistas, con 0 excepciones. Rojo forzado: con `inicio.js` cargado antes que `catalogo.js`, salta `ReferenceError`.
+- La descarga rápida, en el navegador: el popup se abre con el arnés marcado, y la descarga real (interceptando `Zip.descargar`) trae 31 archivos, 12 de `harness/` y el pre-commit ejecutable. Con el arnés destildado no trae ninguno.
 - Arnés desde el ZIP descomprimido, en un repo nuevo: `verify.py --quick`, `verify.py` y el pre-commit real dan `VERDE`.
-- Reviewer independiente (R30) sobre el primer corte del empaquetado: CHANGES_REQUESTED, sin bloqueantes. Sus 4 menores y 4 nits se resolvieron en esta versión.
+- Reviewer independiente (R30), dos vueltas. La vuelta 1, sobre el primer corte del empaquetado, pidió 4 menores y 4 nits. La vuelta 2, sobre el commit con D1, D2 y D5, pidió 2 menores en el test (el chequeo de «N reglas» no veía los JS nuevos de D1, y había un rojo falso con CRLF) y 6 nits. Todo quedó resuelto en esta versión.
 
 ### Pendiente
 - El proyecto Supabase está pausado y el plan gratis no deja reactivarlo sin liberar un lugar: la web publicada está inaccesible (ver `status.md`).

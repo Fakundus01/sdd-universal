@@ -142,7 +142,7 @@ ${brownfield
 | \`PROMPT-DE-ARRANQUE.txt\` | Tu prompt, ya armado con las opciones que elegiste |
 | \`.gitignore\` | Con \`.env\` adentro desde el minuto cero (R17) |
 | \`AGENTS.md\` / \`CLAUDE.md\` | Una línea para que cualquier agente encuentre el SDD solo |${conSkills ? `
-| \`.claude/skills/\` | Atajos para Claude Code: \`/sdd-arranque\`, \`/sdd-ciclo\`, \`/sdd-auditoria\`, \`/relevo\`, \`/harness-fix\`. Si usás otro agente, ignorala — no molesta |` : ""}${conAgentes ? `
+| \`.claude/skills/\` | Atajos para Claude Code: ${SKILLS.filter(s => conAgentes || !s.pro).map(s => `\`/${s.n}\``).join(", ")}. Si usás otro agente, ignorala — no molesta |` : ""}${conAgentes ? `
 | \`agents/\` | Los prompts de cada rol (leader, implementer, reviewer…). En Claude Code se copian a \`.claude/agents/\`: ver \`agents/README.md\` |` : ""}${conHarness ? `
 | \`harness/\` | El arnés: \`verify.py\` por niveles, pre-commit, hooks y CI de ejemplo. Necesita Python 3.10+. **Lo instala el agente** siguiendo \`harness/README.md\` cuando haya código que verificar (en Windows, con \`git update-index --chmod=+x harness/git-hooks/pre-commit\` para que el hook siga siendo ejecutable en Linux/macOS) |` : ""}
 

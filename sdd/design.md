@@ -83,5 +83,5 @@ El código que muestra `demo.html` se **lee del archivo en vivo** entre los marc
 
 ## 8 · Deuda de diseño consciente
 
-- ~~`index.html` pasó las 300 líneas de JS que pide R05~~ — **resuelto en 0.31 (D1):** el JS inline se partió en seis archivos de 105 a 237 líneas, cortando por las secciones que ya tenía, sin cambiar el código. Para verificarlo se corrió un smoke en Chrome headless antes y después del corte, con salida idéntica, y un rojo forzado con el orden de carga invertido.
+- ~~`index.html` pasó las 300 líneas de JS que pide R05~~ — **resuelto en 0.31 (D1):** el JS inline se partió en seis archivos de 105 a 237 líneas sin la cabecera, cortando por las secciones que ya tenía, sin cambiar el código. Para verificarlo se corrió un smoke en Chrome headless antes y después del corte, con salida idéntica, y un rojo forzado con el orden de carga invertido.
 - Tests automatizados parciales desde 0.31 (D2): el ZIP y la sincronía de las reglas, sin navegador. El resto se sigue verificando en el navegador (R07, front). Ver `testing.md`.

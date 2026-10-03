@@ -8,19 +8,20 @@
 node --test "web/tests/*.test.mjs"
 ```
 
-Node 22+ y nada más: sin `node_modules` (ADR-001). Corre en CI (`.github/workflows/web.yml`). Carga `zip.js` y `paquete.js` como los carga el navegador, con el `fetch` servido desde el disco, y lee el ZIP con un lector propio que verifica los CRC.
+Node 22.2+ (por `zlib.crc32`) y nada más: sin `node_modules` (ADR-001). Corre en CI (`.github/workflows/web.yml`). Carga `zip.js` y `paquete.js` como los carga el navegador, con el `fetch` servido desde el disco, y lee el ZIP con un lector propio que verifica los CRC.
 
 | Test | Qué atrapa |
 |---|---|
-| PRO con arnés trae la capa de ejecución completa | Que el master cite archivos que no vienen en el ZIP; que la barra de progreso no cierre; que `harness/` salga distinto del repo |
+| PRO con arnés trae la capa de ejecución completa | Que falte una pieza fija de la lista; que la barra de progreso no cierre; que `harness/` salga distinto del repo (comparando texto, así un clon con CRLF no da rojo falso) |
+| La capa de ejecución no cita `prompts/` ni `agents/` que falten | Lo que encontró el reviewer en 0.31: archivos del ZIP que citan plantillas que no viajan |
 | El pre-commit sale ejecutable, y solo él | Un hook sin `+x` que git ignora en Linux/macOS |
-| NOVATO sin `agents/` ni `harness-fix` | Que viaje lo que R31 apaga |
+| NOVATO sin `agents/` ni `harness-fix` | Que viaje lo que R31 apaga, o que el LEEME anuncie una skill que no vino |
 | El LEEME brownfield nombra lo que hay que llevarse | Instrucciones que dejan afuera `harness/` o `agents/` |
-| La web tiene las mismas reglas que el master | Lo que pasó con R27 y R29–R32: `reglas.js`, el tablero y los «N reglas» contra los encabezados de la §4 |
+| La web tiene las mismas reglas que el master | Lo que pasó con R27 y R29–R32: `reglas.js`, el tablero, el README y todo «N reglas» de `web/*.html` y `web/*.js`, contra los encabezados de la §4 |
 
-Cada uno se vio fallar a propósito antes de darlo por bueno (R29): sin la marca de ejecutable, con el `reglas.js` de 0.29, y con R30 marcada como desactivable.
+Cada uno se vio fallar a propósito antes de darlo por bueno (R29): sin la marca de ejecutable, con el `reglas.js` de 0.29, con R30 marcada como desactivable, con «28 reglas» en `catalogo.js`, con una cita a `prompts/nuevo.md` y con el LEEME de NOVATO anunciando `/harness-fix`.
 
-**Smoke en navegador real (sin dependencias):** Chrome headless con `--remote-debugging-port` y un script de Node que habla CDP con el `WebSocket` nativo. Carga `index.html`, junta excepciones y errores de consola, y ejercita el combinador (generar, lista de archivos, árbol, cambio de nivel, checkbox del arnés, popup de descarga rápida, vistas). Se usó para D1. Todavía no está en el repo: es el próximo paso de D2 si la suite crece.
+**Smoke en navegador real (sin dependencias):** Chrome headless con `--remote-debugging-port` y un script de Node que habla CDP con el `WebSocket` nativo. Carga `index.html`, junta excepciones y errores de consola, y ejercita el combinador (generar, lista de archivos, árbol, cambio de nivel, checkbox del arnés, vistas). Para el popup de descarga rápida hay que elegir antes la categoría «Proyectos»: con la categoría por defecto no hay cards con «📦 Descargar ZIP». Desde ahí se intercepta `Zip.descargar` para ver qué baja de verdad. Se usó para D1. Todavía no está en el repo: es el próximo paso de D2 si la suite crece.
 
 ## Por qué la suite es chica
 

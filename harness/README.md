@@ -1,6 +1,6 @@
 # harness/ · El arnés del SDD, listo para copiar
 
-La parte ejecutable de `harness.md` (R29, R30): verificación por niveles, checks de integridad, hooks de Claude Code, pre-commit y CI de ejemplo. **Python 3.10+ y git, sin dependencias** (R28): probado en Windows con 3.11 y 3.14; el workflow `.github/workflows/harness.yml` del paquete corre la suite en Linux, macOS y Windows con 3.10 y 3.12.
+La parte ejecutable de `harness.md` (R29, R30): verificación por niveles, checks de integridad, hooks de Claude Code, pre-commit y CI de ejemplo. **Python 3.10+ y git, sin dependencias** (R28): probado en Windows con 3.11 y 3.14; el workflow `.github/workflows/harness.yml` del repo del SDD Universal (no del proyecto) corre la suite en Linux, macOS y Windows con 3.10 y 3.12.
 
 ## Instalar en un proyecto
 
@@ -39,6 +39,8 @@ La primera línea de la salida dice el comando, el hash y la rama: pegada entera
 - `e2e` declarado sin ninguna corrida verde registrada → WARN (S29).
 
 ## Tests del arnés
+
+Viven en el repo del SDD Universal: el ZIP del proyecto no trae `tests/`. Si copiaste `harness/` entero:
 
 ```
 python -m unittest discover -s harness/tests

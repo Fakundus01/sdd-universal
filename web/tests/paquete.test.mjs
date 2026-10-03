@@ -12,6 +12,8 @@ import {fileURLToPath} from "node:url";
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const WEB = path.join(RAIZ, "web");
 const leer = r => fs.readFileSync(path.join(RAIZ, r), "utf8");
+// Un clon de Windows con autocrlf deja CRLF en disco: se compara texto, no finales de línea.
+const lf = t => t.replace(/\r\n/g, "\n");
 
 /* Carga zip.js + paquete.js como los carga el navegador (scripts clásicos,
    globals), con fetch servido desde el disco y la descarga interceptada. */
@@ -75,7 +77,17 @@ test("PRO con arnés: trae la capa de ejecución completa", async () => {
   assert.deepEqual(ultimoPaso, [traidos.length, traidos.length], "la barra de progreso no cierra");
   // harness/ sale igual que en el repo
   for (const n of nombres.filter(n => n.startsWith("harness/")))
-    assert.equal(zip.get("prueba/" + n).datos.toString("utf8"), leer(n).replace(/\r\n/g, "\n"), n);
+    assert.equal(lf(zip.get("prueba/" + n).datos.toString("utf8")), lf(leer(n)), n);
+});
+
+test("lo que trae la capa de ejecución no cita prompts/ ni agents/ que falten", async () => {
+  const {zip, nombres} = await armar({nivel: "PRO"});
+  const capa = nombres.filter(n =>
+    /^(sdd\/(harness|orchestration)\.md|sdd\/prompts\/|agents\/|harness\/|\.claude\/skills\/(relevo|harness-fix)\/)/.test(n));
+  assert.ok(capa.length > 20, "el filtro no encontró la capa");
+  for (const n of capa)
+    for (const [, cita] of zip.get("prueba/" + n).datos.toString("utf8").matchAll(/\b((?:prompts|agents)\/[a-z-]+\.md)\b/g))
+      assert.ok(nombres.includes(cita) || nombres.includes("sdd/" + cita), `${n} cita ${cita}, que no viene en el ZIP`);
 });
 
 test("el pre-commit sale ejecutable y nada más lo es", async () => {
@@ -87,9 +99,11 @@ test("el pre-commit sale ejecutable y nada más lo es", async () => {
 });
 
 test("NOVATO: sin agents/ ni harness-fix (R31 va OFF)", async () => {
-  const {nombres} = await armar({nivel: "NOVATO", conHarness: false});
+  const {zip, nombres} = await armar({nivel: "NOVATO", conHarness: false});
   assert.ok(!nombres.some(n => n.startsWith("agents/") || n.startsWith("harness/")));
   assert.ok(!nombres.includes(".claude/skills/harness-fix/SKILL.md"));
+  assert.ok(!zip.get("prueba/LEEME.md").datos.toString("utf8").includes("/harness-fix"),
+            "el LEEME anuncia una skill que no viene");
   assert.ok(nombres.includes("sdd/harness.md"), "harness.md va siempre: R30 es fija");
 });
 
@@ -117,7 +131,9 @@ test("la web tiene las mismas reglas que el master", () => {
   const tablero = [...leer("sdd-universal-tablero.html").matchAll(/class="rid">(R\d\d)</g)].map(m => m[1]);
   assert.deepEqual(tablero, master);
   const n = master.length;
-  for (const f of ["web/index.html", "sdd-universal-tablero.html"])
+  const conTexto = ["sdd-universal-tablero.html", "README.md",
+    ...fs.readdirSync(WEB).filter(f => /\.(html|js)$/.test(f)).map(f => "web/" + f)];
+  for (const f of conTexto)
     for (const m of leer(f).matchAll(/(\d+) reglas/g))
       assert.equal(Number(m[1]), n, `${f} dice «${m[0]}» y el master tiene ${n}`);
 });
