@@ -24,7 +24,7 @@
 <meta property="og:image:alt" content="SDD Universal · Spec-Driven Development para construir con IA">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SDD Hub · Spec-Driven Development para construir con IA">
-<meta name="twitter:description" content="Catálogo de paquetes de gobernanza para construir con agentes de IA. 28 reglas, playbooks y un combinador que te arma el prompt de arranque.">
+<meta name="twitter:description" content="Catálogo de paquetes de gobernanza para construir con agentes de IA. 32 reglas, playbooks y un combinador que te arma el prompt de arranque.">
 <meta name="twitter:image" content="https://sdd-universal.vercel.app/web/og.png">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -586,7 +586,7 @@
   <div class="path primary">
     <span class="num">CAMINO 1</span>
     <h2>Sé programar</h2>
-    <p>Descargá el master, pegalo en el primer mensaje de tu agente y arrancá. 28 reglas con toggle, protocolo de lectura y loop HANDBACK.</p>
+    <p>Descargá el master, pegalo en el primer mensaje de tu agente y arrancá. 32 reglas con toggle, protocolo de lectura y loop HANDBACK.</p>
     <a class="go" href="../SDD-MASTER.md" download>Descargar SDD-MASTER.md</a>
   </div>
   <div class="path">
@@ -630,7 +630,7 @@
       <div class="faqgrid">
         <div>
           <h4>Los que descargás vos (1, a veces 2 o 3)</h4>
-          <p><b><code>SDD-MASTER.md</code> es el único imprescindible.</b> Es el conductor: adentro tiene las 28 reglas y una tabla que le dice al agente qué leer para cada tarea. Con ese archivo solo, ya funciona todo.</p>
+          <p><b><code>SDD-MASTER.md</code> es el único imprescindible.</b> Es el conductor: adentro tiene las 32 reglas y una tabla que le dice al agente qué leer para cada tarea. Con ese archivo solo, ya funciona todo.</p>
           <p>Los demás del catálogo son <b>opcionales y se suman según el caso</b>: un playbook si vas a deployar, <code>tecnologias.md</code> si elegiste tecnologías, <code>GUIDE.md</code> si sos novato. El combinador de acá abajo te dice exactamente cuáles necesitás para <i>tu</i> combinación — no hace falta que adivines.</p>
         </div>
         <div>
@@ -771,7 +771,7 @@
 <section class="vista" data-vista="reglas" hidden>
   <div class="cfg-cab">
     <h2>Mis reglas</h2>
-    <p>Prendé y apagá las 28 reglas, elegí perfil y modo, sumá las tuyas, y bajate el <code>custom.md</code> ya escrito. El núcleo nunca se edita: tu configuración sobrevive a cada actualización.</p>
+    <p>Prendé y apagá las 32 reglas, elegí perfil y modo, sumá las tuyas, y bajate el <code>custom.md</code> ya escrito. El núcleo nunca se edita: tu configuración sobrevive a cada actualización.</p>
   </div>
   <div class="pcard sin-pad" id="slotReglas"></div>
 </section>
@@ -951,7 +951,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.29</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.30.1</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -1192,7 +1192,7 @@ Tema.alCambiar(t => Sesion.guardarTema(t));
 
 /* ---------- datos ---------- */
 const CARDS = [
- {c:"Base",n:"pro",  s:"ok",t:"SDD Universal (master)",d:"El núcleo completo: 28 reglas con toggle, protocolo de lectura anti-gasto de tokens, prompts de arranque y loop HANDBACK.",f:"../SDD-MASTER.md"},
+ {c:"Base",n:"pro",  s:"ok",t:"SDD Universal (master)",d:"El núcleo completo: 32 reglas con toggle, protocolo de lectura anti-gasto de tokens, prompts de arranque y loop HANDBACK.",f:"../SDD-MASTER.md"},
  {c:"Base",n:"pro",  s:"ok",t:"SDD Compact (cuadro de sintaxis)",d:"Todo el sistema en 45 líneas de palabras clave. Para agentes solo-chat, subagentes baratos o gente que odia leer.",f:"../SDD-COMPACT.md"},
  {c:"Base",n:"novato",s:"ok",t:"Guía de uso (para humanos)",d:"Quick start en tres caminos, la respuesta honesta a «¿es fácil?», cómo se actualiza cada proyecto y los 7 errores más comunes con su antídoto. Se lee en la web, sin descargar nada.",f:"guia.html",dl:false,cta:"Leer la guía →"},
  {c:"Base",n:"novato",s:"ok",t:"Demo: con SDD vs sin SDD",d:"El mismo formulario de reservas construido dos veces. Los dos andan y se ven igual — hasta que probás los tres casos borde. Con el código real de los dos al lado.",f:"demo.html",dl:false,cta:"Probar el demo →"},
@@ -1203,7 +1203,7 @@ const CARDS = [
  {c:"Base",n:"pro",  s:"ok",t:"Multi-agente & ahorro de tokens",d:"Espejos para Claude, Codex/ChatGPT, Cursor, Copilot y Gemini + técnicas de ahorro por tier de modelo.",f:"../models.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Bloques componibles",d:"Cómo se arma un SDD a medida combinando BASE + TYPE + STACK + PLAYBOOKS, con reglas de precedencia. Es el motor detrás del combinador.",f:"../blocks.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Cómo crece el SDD (escenarios)",d:"La matriz de 23 situaciones reales: dónde funciona, dónde falla y qué adaptación resolvió cada caso. Nada entra al núcleo «porque suena bien».",f:"../scenarios.md"},
- {c:"Base",n:"novato",s:"ok",t:"Mis reglas: armá tu custom.md",d:"Prendé y apagá las 28 reglas, elegí perfil y modo, sumá las tuyas, y bajate el custom.md ya escrito. El núcleo no se toca nunca: por eso tu configuración sobrevive a cada actualización.",f:"#reglas",dl:false,cta:"Configurar mis reglas →"},
+ {c:"Base",n:"novato",s:"ok",t:"Mis reglas: armá tu custom.md",d:"Prendé y apagá las 32 reglas, elegí perfil y modo, sumá las tuyas, y bajate el custom.md ya escrito. El núcleo no se toca nunca: por eso tu configuración sobrevive a cada actualización.",f:"#reglas",dl:false,cta:"Configurar mis reglas →"},
  {c:"Base",n:"pro",  s:"ok",t:"Seguridad por superficie",d:"Los controles que hacen falta según lo que tu proyecto realmente hace: login, datos de personas, plata, IA, archivos o API pública. Seis preguntas, y solo aparecen los niveles que aplican — no un checklist de 200 ítems que nadie termina.",f:"../seguridad.md"},
  {c:"Base",n:"novato",s:"ok",t:"Catálogo de tecnologías",d:"120 tecnologías (lenguajes, frameworks, bibliotecas, bases, cloud, IA, testing…) con su ecosistema y para qué sirve cada una. Elegilas desde el combinador y entran solas al prompt.",f:"../tecnologias.md"},
 
@@ -1802,7 +1802,7 @@ $("zipSolo").onclick = () => {
     {v: "catalogo", t: "📦 Catálogo", d: "Todos los paquetes: el núcleo, los tipos de proyecto y los playbooks. Cada card tiene el ojito 👁 para leer antes de bajar, y las de proyecto traen «📦 Descargar ZIP» con la carpeta ya armada."},
     {v: "combinador", t: "🧩 Combinador", d: "El camino fino: tipo + stack + nivel + tecnologías + playbooks → tu prompt de arranque exacto y el ZIP del proyecto. Con cuenta podés guardar combinaciones y retomarlas desde cualquier dispositivo."},
     {v: "tecnologias", t: "🛠️ Tecnologías", d: "Las 120 del catálogo con búsqueda y filtros. Lo que marcás acá queda elegido y entra al prompt cuando armás tu paquete."},
-    {v: "reglas", t: "📐 Mis reglas", d: "Las 28 reglas del SDD con su interruptor ON/OFF. Apagá las que no van con vos y bajate el custom.md ya escrito — el núcleo nunca se toca, así tu configuración sobrevive a cada actualización."},
+    {v: "reglas", t: "📐 Mis reglas", d: "Las 32 reglas del SDD con su interruptor ON/OFF. Apagá las que no van con vos y bajate el custom.md ya escrito — el núcleo nunca se toca, así tu configuración sobrevive a cada actualización."},
     {v: "manuales", t: "📚 Manuales", d: "Los playbooks (recetas paso a paso: deploy, git, Supabase, datos ajenos…) para leer acá mismo o bajar, y las skills de Claude para instalar en tu repo."},
     {t: "📖 Aprender", d: "En el menú también están la Guía (cómo se usa el SDD, para humanos), el Demo (el mismo formulario con y sin SDD — probá los casos borde) y el Tablero (todo el sistema en una página). Son páginas aparte: se abren desde el menú."},
     {v: "comunidad", t: "💬 Feedback", d: "Errores, ideas y casos reales van a GitHub Issues con plantillas. Lo que se confirma termina alimentando el núcleo: nada entra «porque suena bien» (R20)."},
@@ -2171,7 +2171,7 @@ function pintarBusca(){
   const q = $("kq").value.trim();
   kRes = q.length < 2 ? [] : Buscador.filtrar(itemsBusca(), q, ["t", "d"]).slice(0, 12);
   $("kres").innerHTML = q.length < 2
-    ? `<p class="k-vacio">Escribí al menos dos letras. Busca en las cards, las 120 tecnologías, las 28 reglas y las páginas.</p>`
+    ? `<p class="k-vacio">Escribí al menos dos letras. Busca en las cards, las 120 tecnologías, las 32 reglas y las páginas.</p>`
     : kRes.length
       ? kRes.map((r, i) => `<button type="button" data-k="${i}" class="${i === kMarcada ? "marcada" : ""}">
           <span class="tipo">${r.tipo}</span><b>${Buscador.resaltar(r.t, q)}</b><small>${esc(r.d)}</small>

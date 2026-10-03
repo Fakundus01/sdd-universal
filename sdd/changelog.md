@@ -4,6 +4,38 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ---
 
+## [0.30.1] — 2026-10-02
+
+### Agregado
+- **`harness/`: el arnés ejecutable de R29/R30.** Scaffold en Python 3.10+ sin dependencias: `verify.py` por niveles (`--quick`, `--changed`, completo, `--e2e`), checks de integridad (tarjetas, reviews, status, rutas citadas, handbacks), hooks de Claude Code, pre-commit, CI de ejemplo (`.github/workflows/harness.yml`) y 100 tests con rojo forzado.
+- Pasó **siete vueltas de un reviewer independiente** (R30 aplicado al propio arnés); la traza queda en `imports/2026-10-02-relay-harness/reviews/`. Lo central que encontraron: cinco formas de inyección por nombre de archivo, de donde salen S32 y el invariante de `lint_file` (sin shell, toda ruta como `./`, ejecutable resuelto solo desde PATH o la raíz).
+
+### Modificado
+- `harness.md` se ajusta a lo implementado (DRIFT, opción A).
+- **La web se pone al día con R29–R32**: estaban en el master, COMPACT y los espejos EN, pero no en `reglas.js` ni en el tablero, así que la web seguía mostrando 28 reglas. Es el mismo desfase que tuvo R27 en la 0.27. Se actualizaron los conteos («32 reglas», «R01–R32») y la versión en los pies, la guía, el tablero y el README.
+
+### Pendiente
+- Sin verificar en macOS, Linux ni Python 3.10: la matriz de `harness.yml` corre con el primer push.
+- El ZIP del Combinador no incluye todavía `harness.md`, `orchestration.md`, `agents/` ni `harness/`, aunque el master los cita en R30/R31. Cómo empaquetarlos es una de las dudas abiertas del brief de Relay (R04).
+
+---
+
+## [0.30.0] — 2026-10-02
+
+### Agregado
+- **Capa de ejecución verificable**, importada de Relay (usado en producción en chat-commerce-ai) vía S28–S31:
+  - **R29 · TDD-ROJO-PRIMERO**: el rojo se mide contra la base, no se deduce, y todo check nuevo se prueba rompiéndolo una vez.
+  - **R30 · LOOP-CERRADO**: done = comando + salida literal + hash, re-ejecutado por un reviewer independiente.
+  - **R31 · ORQUESTACIÓN-CON-ROLES**: siete roles de agente (`agents/`), una tarjeta por agente con zona de archivos explícita.
+  - **R32 · PRODUCCIÓN-CON-OK**: datos de prod revisados en solo lectura y escritura en prod con OK humano.
+- Nuevos: `harness.md`, `orchestration.md`, `harness.config.json` por proyecto, y `sdd/cards/` + `sdd/progress/<rama>/` como memoria en disco.
+- Plantillas de tarjeta (`prompts/task-card.md`), handback y relevo; playbook `go-live`; skills `relevo` y `harness-fix`.
+
+### Modificado
+- El HANDBACK pide la evidencia literal. Espejos COMPACT (ES/EN) y master EN actualizados.
+
+---
+
 ## [0.29.0] — 2026-08-17
 
 ### Modificado
