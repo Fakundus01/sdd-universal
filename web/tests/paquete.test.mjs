@@ -86,7 +86,7 @@ test("lo que trae la capa de ejecución no cita prompts/ ni agents/ que falten",
     /^(sdd\/(harness|orchestration)\.md|sdd\/prompts\/|agents\/|harness\/|\.claude\/skills\/(relevo|harness-fix)\/)/.test(n));
   assert.ok(capa.length > 20, "el filtro no encontró la capa");
   for (const n of capa)
-    for (const [, cita] of zip.get("prueba/" + n).datos.toString("utf8").matchAll(/\b((?:prompts|agents)\/[a-z-]+\.md)\b/g))
+    for (const [, cita] of zip.get("prueba/" + n).datos.toString("utf8").matchAll(/\b((?:prompts|agents)\/[\w.-]+\.md)\b/g))
       assert.ok(nombres.includes(cita) || nombres.includes("sdd/" + cita), `${n} cita ${cita}, que no viene en el ZIP`);
 });
 

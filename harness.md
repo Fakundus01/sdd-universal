@@ -74,7 +74,7 @@ Un solo comando, tres niveles. Lo corre el agente al arrancar, mientras trabaja,
 
 La primera línea de la salida es el comando, el hash y la rama (`verify.py --changed @ 3f1c9a2e (rama feat/stock)`): pegada entera, ya es evidencia (§4). En CI, con HEAD detached, la rama sale de `GITHUB_HEAD_REF` o `CI_COMMIT_REF_NAME`. En un monorepo, la raíz es la carpeta que contiene `harness/` y los cambios se cuentan relativos a ella. Sin git, `--changed` corre los tests igual y avisa que no puede saber qué cambió.
 
-Exit distinto de 0 si algo falla. Pensado para Windows (Git Bash, PowerShell, cmd), macOS y Linux; probado en Windows, y el workflow `harness.yml` del paquete corre la suite en los tres.
+Exit distinto de 0 si algo falla. Pensado para Windows (Git Bash, PowerShell, cmd), macOS y Linux; probado en Windows, y el workflow `harness.yml` del repo del SDD Universal (no del proyecto) corre la suite en los tres.
 
 **Línea base medida.** `sdd/testing.md` anota la última corrida completa con su hash: `2026-10-01 @ a942c177 — 2245 passed, 9 skipped`. Toda cuenta de tests de un handback se explica contra esa base. Si la cuenta bajó, hay que decir qué test se fue y por qué.
 
