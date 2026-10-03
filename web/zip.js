@@ -65,7 +65,8 @@ const Zip = (() => {
       const cen = new Uint8Array(46 + nombre.length);
       const w = new DataView(cen.buffer);
       w.setUint32(0, 0x02014b50, true);   // firma de directorio central
-      w.setUint16(4, 20, true);
+      // ejecutable: "hecho en Unix" + modo 100755, o unzip lo deja sin +x
+      w.setUint16(4, a.ejecutable ? 0x0314 : 20, true);
       w.setUint16(6, 20, true);
       w.setUint16(8, 0x0800, true);
       w.setUint16(10, 0, true);
@@ -75,6 +76,7 @@ const Zip = (() => {
       w.setUint32(20, datos.length, true);
       w.setUint32(24, datos.length, true);
       w.setUint16(28, nombre.length, true);
+      if (a.ejecutable) w.setUint32(38, (0o100755 << 16) >>> 0, true);
       w.setUint32(42, offset, true);      // dónde empieza su cabecera local
       cen.set(nombre, 46);
       central.push(cen);

@@ -1,0 +1,22 @@
+# Tests del arnés (harness/) en los tres sistemas y en la versión mínima y una actual de Python:
+# la portabilidad que promete harness/README.md se prueba acá, no se declara.
+name: harness
+on:
+  push:
+    paths: ["harness/**", ".github/workflows/harness.yml"]
+  pull_request:
+    paths: ["harness/**", ".github/workflows/harness.yml"]
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.10", "3.12"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -s harness/tests -v

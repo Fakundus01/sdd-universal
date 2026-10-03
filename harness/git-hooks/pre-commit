@@ -1,0 +1,10 @@
+#!/bin/sh
+# Arnés SDD: lo que hace cumplir R30 en cualquier herramienta (harness.md §9).
+# Instalar una vez por clon: git config core.hooksPath harness/git-hooks
+# En Windows, `python3` puede ser el alias de la Microsoft Store que solo imprime un aviso:
+# se elige el primer intérprete que de verdad ejecuta.
+for PY in python3 python py; do
+  "$PY" -c "" >/dev/null 2>&1 && exec "$PY" "$(git rev-parse --show-toplevel)/harness/verify.py" --quick
+done
+echo "[arnés] No hay Python que funcione en el PATH: el pre-commit no puede verificar (harness/README.md)." >&2
+exit 1

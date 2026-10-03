@@ -16,19 +16,30 @@ No hay `package.json`, ni bundler, ni paso de compilación. Se abre `web/index.h
 web/
 ├── base.css            tokens de color, reset, barra superior y pie (compartido)
 ├── tema.js             claro/oscuro; oscuro por default; avisa a quien se enganche
-├── index.html          el catálogo, el combinador y los diálogos
+├── index.html          el catálogo, el combinador y los diálogos (solo HTML desde 0.31)
+├── catalogo.js         shell, datos de las cards, estado en la URL, render       ┐
+├── tecnologias-vista.js vista/popup de tecnologías, paginación, mover ventanas   │ el JS de
+├── combinador.js       prompt de arranque, lista de archivos, ZIP, descarga rápida │ index.html,
+├── manuales.js         recorrido guiado y vista Manuales                         │ en este orden
+├── cuenta.js           sesión, combinaciones guardadas, entrar, contraseña       │ (D1)
+├── inicio.js           vista previa de MD, compartir, buscador, init             ┘
+├── zip.js / paquete.js ZIP sin dependencias / qué va en la carpeta del proyecto
+├── og.py               genera og.png (Pillow); el número de reglas sale del master
+├── tests/              node --test web/tests/*.test.mjs — sin navegador, en CI
 ├── guia.html           la guía navegable
 ├── demo.html           la comparación con/sin SDD
 ├── demo-sin-sdd.html   widget de reservas construido sin spec
 ├── demo-con-sdd.html   el mismo widget, con los criterios de la spec
-├── tecnologias.js      DATO generado — 101 tecnologías
-├── reglas.js           DATO generado — las 26 reglas
+├── tecnologias.js      DATO — 120 tecnologías
+├── reglas.js           DATO — espejo de la §4 del master, controlado por tests/ (ADR-004)
 ├── reglas-ui.js        configurador de reglas → custom.md
 ├── sesion.js           auth y persistencia (Supabase o localStorage)
 └── supabase-config.js  las dos claves públicas; vacío por default
 ```
 
-Regla que sostiene el orden: **los archivos `.js` de datos no se editan a mano.** `tecnologias.js` sale de la planilla y `reglas.js` de parsear la §4 del master. Editarlos a mano crea dos fuentes de verdad que se van a desincronizar (ADR-004).
+Regla que sostiene el orden: **los archivos `.js` de datos tienen una sola fuente.** `tecnologias.js` sale de la planilla y `reglas.js` es espejo de la §4 del master. El generador de `reglas.js` nunca quedó en el repo, así que desde 0.31 la sincronía la controla un test en CI (ADR-004, revisión).
+
+Los seis archivos del JS de `index.html` son **scripts clásicos que comparten el ámbito global**, cargados en orden. Lo que se ejecuta al cargar solo puede usar lo declarado en ese archivo o en los anteriores; desde los handlers se puede usar cualquier cosa, porque cuando corren ya cargó todo.
 
 ## 3 · Tema
 
@@ -72,5 +83,5 @@ El código que muestra `demo.html` se **lee del archivo en vivo** entre los marc
 
 ## 8 · Deuda de diseño consciente
 
-- `index.html` pasó las 300 líneas de JS que pide R05. Se partió lo que tenía identidad propia (`sesion`, `reglas-ui`, `tema`); lo que queda es el pegamento del catálogo. Anotado en `status.md`.
-- No hay tests automatizados: se verifica en navegador (R07, front). Ver `testing.md`.
+- ~~`index.html` pasó las 300 líneas de JS que pide R05~~ — **resuelto en 0.31 (D1):** el JS inline se partió en seis archivos de 105 a 237 líneas sin la cabecera, cortando por las secciones que ya tenía, sin cambiar el código. Para verificarlo se corrió un smoke en Chrome headless antes y después del corte, con salida idéntica, y un rojo forzado con el orden de carga invertido.
+- Tests automatizados parciales desde 0.31 (D2): el ZIP y la sincronía de las reglas, sin navegador. El resto se sigue verificando en el navegador (R07, front). Ver `testing.md`.

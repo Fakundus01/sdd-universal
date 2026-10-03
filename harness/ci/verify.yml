@@ -1,0 +1,17 @@
+# Copiar a .github/workflows/verify.yml. Corre la verificación completa del arnés (harness.md §3)
+# en cada push y PR. Sumá acá los pasos de setup de tu stack (setup-node, setup-python, install…)
+# para que los comandos de harness.config.json tengan con qué correr.
+name: verify
+on:
+  push:
+  pull_request:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      # - <setup de tu stack>
+      - run: python harness/verify.py

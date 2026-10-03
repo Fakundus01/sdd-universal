@@ -1,0 +1,2 @@
+# Los git hooks corren con sh: un CRLF en el shebang los rompe en Linux/macOS.
+git-hooks/* text eol=lf

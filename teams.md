@@ -1,6 +1,6 @@
 # teams.md · Capa Enterprise: el SDD para equipos grandes
 
-**Versión:** 0.3 · 2026-08-15 · **Para agentes:** leer solo si la Identidad (§3 del master) dice equipo grande o la R21 está activa. **Para humanos:** cómo escala el SDD de individual a empresa.
+**Versión:** 0.30 · 2026-10-02 · **Para agentes:** leer solo si la Identidad (§3 del master) dice equipo grande o la R21 está activa. **Para humanos:** cómo escala el SDD de individual a empresa.
 
 ---
 
@@ -61,6 +61,8 @@ Las ceremonias **no generan documentos nuevos**: leen los que el SDD ya produce.
 
 El patrón de orquestación es **Coordinador / Implementadores / Verificador**: el coordinador descompone la spec en sub-tareas paralelizables (elemento 5 del contrato de spec), varios implementadores trabajan en paralelo (idealmente en git worktrees aislados para no pisarse), y un verificador **independiente** chequea contra la spec antes de dar nada por terminado. La clave es el incentivo opuesto: el implementador quiere terminar, el verificador quiere encontrar fallas — esa tensión mejora la calidad. Tiering: la spec se escribe con tier ALTO (un error ahí se propaga a todo), se implementa con MEDIO, y la verificación puede correr en un modelo rápido con instrucciones de refutar.
 
+**Con R31 activa, el patrón concreto es `orchestration.md`:** siete roles de agente (`leader`, `implementer`, `reviewer`, `analytic`, `infra-implementer`, `looper`, `prompter`) con tarjetas, evidencia y loop cerrado. Los subagentes de esta tabla son su versión por rol de *persona*: `review-agent` → `reviewer`, `qa-agent` → `looper`/`implementer`, `infra-agent` → `infra-implementer` en solo lectura, `doc-agent` → lo absorbe el `leader`. Si conviven, manda `orchestration.md` para *cómo* se ejecuta y esta capa para *a quién* va cada OK.
+
 Cada rol tiene su subagente espejo, con slice y tier fijos. **Un subagente jamás recibe el paquete completo (R11):** si necesita más contexto, vuelve al orquestador y lo pide.
 
 | Subagente | Slice exacto | Tier | Tarea típica |
@@ -107,4 +109,5 @@ El agente los genera solo si aplican (no por default): `team.md` (quién es qui�
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.30 | 2026-10-02 | §5 apunta a `orchestration.md` (R31) y mapea sus subagentes a los roles de agente; quedan claros los dos ejes: roles de persona acá, roles de agente allá. |
 | 0.3 | 2026-08-15 | Primera capa enterprise: 11 roles con RACI, OKs especializados por rol, autonomía escalonada por seniority, ceremonias Scrum mapeadas, 6 subagentes por rol, rutas de onboarding y secciones RPA/infra. |
