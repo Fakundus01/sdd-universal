@@ -1,0 +1,14 @@
+{
+  "test": "npm test",
+  "test_quick": "npm test -- --changed",
+  "lint": "npm run lint",
+  "lint_file": "npx eslint {file}",
+  "lint_ext": [".js", ".ts", ".tsx"],
+  "e2e": "npx playwright test",
+  "prod_readonly_query": "psql \"$PROD_RO_URL\" -c \"{sql}\"",
+  "deploy": "git push origin dev:main",
+  "base_branch": "dev",
+  "prod_branch": "main",
+  "context_threshold": 400000,
+  "cited_paths_docs": ["AGENTS.md", "CLAUDE.md", "sdd/testing.md"]
+}

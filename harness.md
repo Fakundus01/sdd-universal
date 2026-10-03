@@ -1,6 +1,6 @@
 # harness.md · El arnés: que lo que el agente dice que hizo sea cierto
 
-**Versión:** 0.30 · 2026-10-02 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
+**Versión:** 0.30.1 · 2026-10-02 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
 
 > Nace de **Relay**, el sistema que se usó en producción en `chat-commerce-ai` (features H-1 a H-11). Escenarios S28–S31.
 > El SDD gobierna *qué* se construye; el arnés hace cumplir *que esté construido*.
@@ -31,6 +31,7 @@ Se activa con **R29/R30** (ON por default). Funciona con un solo agente: no hace
   "test_quick": "npm test -- --changed",
   "lint": "npm run lint",
   "lint_file": "npx eslint {file}",
+  "lint_ext": [".js", ".ts", ".tsx"],
   "e2e": "npx playwright test",
   "prod_readonly_query": "psql \"$PROD_RO_URL\" -c \"{sql}\"",
   "deploy": "git push origin dev:main",
@@ -44,14 +45,19 @@ Se activa con **R29/R30** (ON por default). Funciona con un solo agente: no hace
 |---|---|---|
 | `test` | sí | La suite que define «verde». Sin esto no hay R30. |
 | `test_quick` | no | Subconjunto rápido para `--changed`. Si falta, se usa `test`. |
-| `lint` / `lint_file` | no | Lint completo / de un archivo (`{file}` se reemplaza). Lo usa el hook post-edición. |
-| `e2e` | no | End to end a demanda. Si existe y nunca corrió en verde, `verify.py` lo avisa (S29). |
+| `lint` | no | Lint completo (nivel completo). |
+| `lint_file` | no | Lint de lo cambiado: `{file}` corre una vez por archivo, `{files}` una sola vez con todos. **No pasa por un shell** (S32): ver abajo. Lo usan `--quick`, el pre-commit y el hook post-edición. |
+| `lint_ext` | no | Extensiones a las que se les pasa `lint_file` (ej. `[".ts", ".tsx"]`). Si falta: todo menos `.md` y `.json`. |
+| `e2e` | no | End to end a demanda (`verify.py --e2e`). Cada corrida verde se anota con su hash en `sdd/progress/e2e.md`; si `e2e` existe y ese registro está vacío, `--quick` avisa (S29). |
 | `prod_readonly_query` | no | Consulta de **solo lectura** a producción para R32. Las credenciales van en `.env` con un usuario sin permisos de escritura (R17). |
 | `deploy` | no | **Documental: el agente jamás lo ejecuta** (R32). Está para que el humano y el `infra-implementer` sepan cuál es el comando. |
 | `base_branch` / `prod_branch` | no | Ramas de integración y de producción (default: `main` / `main`). |
 | `context_threshold` | no | Tokens de *trabajo* de la sesión antes de pedir relevo (§6). Default 400000. |
+| `cited_paths_docs` | no | Docs cuyas rutas citadas tienen que existir (§7). Default `AGENTS.md`, `CLAUDE.md`, `sdd/testing.md`. |
 
-JSON y no YAML/TOML: lo leen la stdlib de Python y de Node sin dependencias (R28). Los comentarios van en `sdd/design.md`, no en el JSON.
+JSON y no YAML/TOML: lo leen la stdlib de Python y de Node sin dependencias (R28). Los comentarios van en `sdd/design.md`, no en el JSON. Tipos inválidos o claves desconocidas dan error o aviso, nunca un traceback.
+
+**`lint_file` y los nombres de archivo (S32).** Es el único comando que recibe datos que no escribió el usuario: nombres de archivo que salen de `git status`. Por eso se parte en argumentos y corre **sin shell**; `{file}` va como argumento entero (`eslint {file}`, `eslint "{file}"`) o como valor de una opción (`--stdin-filename={file}`), nunca dentro de `sh -c "…"` ni `python -c "…"` (se rechaza al cargar la config); y **toda ruta entra como `./…`**, para que el linter no tome `--config=x` como una opción ni `@x` como un response file. En Windows el linter se busca solo en el `PATH` o, si trae ruta, contra la raíz: nunca en la carpeta actual. Para encadenar linters, un script que reciba `"$1"`.
 
 ---
 
@@ -63,9 +69,12 @@ Un solo comando, tres niveles. Lo corre el agente al arrancar, mientras trabaja,
 |---|---|---|
 | `verify.py --quick` | Integridad del arnés (§7) + estado de tarjetas + lint de lo cambiado. Segundos. | Al arrancar; al cerrar cada respuesta (hook) |
 | `verify.py --changed` | `--quick` + `test_quick` sobre las áreas con cambios sin commitear | Mientras se trabaja; antes del handback |
-| `verify.py` | Todo, igual que CI: `lint` + `test` (+ `e2e` si la tarjeta lo pide) | Antes de pedir review; el reviewer siempre |
+| `verify.py` (o `--full`) | Todo, igual que CI: `lint` + `test` | Antes de pedir review; el reviewer siempre |
+| `… --e2e` | Además `e2e`, y registra el verde con su hash | Si la tarjeta lo pide; antes de desplegar |
 
-Exit distinto de 0 si algo falla. Funciona igual en Windows (Git Bash o PowerShell), macOS y Linux.
+La primera línea de la salida es el comando, el hash y la rama (`verify.py --changed @ 3f1c9a2e (rama feat/stock)`): pegada entera, ya es evidencia (§4). En CI, con HEAD detached, la rama sale de `GITHUB_HEAD_REF` o `CI_COMMIT_REF_NAME`. En un monorepo, la raíz es la carpeta que contiene `harness/` y los cambios se cuentan relativos a ella. Sin git, `--changed` corre los tests igual y avisa que no puede saber qué cambió.
+
+Exit distinto de 0 si algo falla. Pensado para Windows (Git Bash, PowerShell, cmd), macOS y Linux; probado en Windows, y el workflow `harness.yml` del paquete corre la suite en los tres.
 
 **Línea base medida.** `sdd/testing.md` anota la última corrida completa con su hash: `2026-10-01 @ a942c177 — 2245 passed, 9 skipped`. Toda cuenta de tests de un handback se explica contra esa base. Si la cuenta bajó, hay que decir qué test se fue y por qué.
 
@@ -141,7 +150,7 @@ sdd/
 ## 7 · Qué revisa el arnés (`verify.py --quick`)
 
 1. Existen los archivos base (`harness.config.json`, `sdd/SDD-MASTER.md`, `sdd/progress/<rama>/current.md` — lo crea si falta).
-2. Toda ruta citada en los MD del arnés y en las tarjetas existe.
+2. Toda ruta citada en los docs de `cited_paths_docs` y en las tarjetas `done` existe (`src/x.ts:120` y `#L3` se aceptan). Las tarjetas pendientes y `design.md` pueden citar archivos que todavía no existen: R08 los escribe antes que el código.
 3. Tarjetas: frontmatter válido, una sola `in_progress` por rama, toda `done` con criterios de aceptación y un `review_<ID>.md` en `APPROVED` con hash.
 4. Handbacks de la rama: commiteados, con hash real, sin TAB literal.
 5. `status.md` coherente con las tarjetas (una feature al 100% tiene todas sus tarjetas `done`).
@@ -208,4 +217,5 @@ Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.30.1 | 2026-10-02 | DRIFT resuelto al implementar `harness/` (opción A): §2 suma `lint_ext`, `cited_paths_docs`, `{files}` y la regla de `lint_file` sin shell (S32); §3 suma `--e2e` con registro, la primera línea como evidencia, CI con HEAD detached, monorepo y proyecto sin git; §7.2 acota las rutas citadas a los docs declarados y las tarjetas `done`. Lo de macOS/Linux pasa a «pensado para», hasta que corra el CI. |
 | 0.30 | 2026-10-02 | Primera versión, destilada de Relay (chat-commerce-ai, rama `dev`): config por proyecto, verificación por niveles, evidencia con hash, TDD con rojo medido, rojo forzado de checks, drift fuente↔realidad, memoria en disco por rama, checkpoints del reviewer, auto-mejora por nivel mecánico, degradación por herramienta. |
