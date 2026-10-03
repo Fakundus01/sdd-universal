@@ -231,7 +231,11 @@ class TestVerifyCli(BordesCase):
     def test_salida_no_utf8_se_decodifica_con_la_codepage(self):
         self.config(test=f'{PY} -c "import sys; sys.stdout.buffer.write(\'canci\\xf3n\'.encode(\'cp1252\'))"')
         _, out = self.verify()
-        self.assertIn("canción", out)
+        if sys.platform == "win32":
+            self.assertIn("canción", out)
+        else:
+            # Linux/macOS: la codepage es UTF-8 y el byte suelto no se adivina; se marca, no se pierde la línea.
+            self.assertIn("canci�n", out)
 
     def test_comando_que_pide_input_no_cuelga(self):
         self.config(test=f'{PY} -c "input()"')

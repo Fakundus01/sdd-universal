@@ -15,7 +15,9 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 - **La web se pone al día con R29–R32**: estaban en el master, COMPACT y los espejos EN, pero no en `reglas.js` ni en el tablero, así que la web seguía mostrando 28 reglas. Es el mismo desfase que tuvo R27 en la 0.27. Se actualizaron los conteos («32 reglas», «R01–R32») y la versión en los pies, la guía, el tablero y el README.
 
 ### Pendiente
-- Sin verificar en macOS, Linux ni Python 3.10: la matriz de `harness.yml` corre con el primer push.
+
+### Corregido
+- **La primera corrida de la matriz de `harness.yml`** (run 37136047518) pasó en Windows y falló en Linux y macOS por un solo test: `test_salida_no_utf8_se_decodifica_con_la_codepage` esperaba la decodificación cp1252 de Windows en todas las plataformas. El código estaba bien: fuera de Windows la codepage es UTF-8 y el byte suelto queda marcado con `�`, sin perder la línea. Ahora el test espera eso.
 - El ZIP del Combinador no incluye todavía `harness.md`, `orchestration.md`, `agents/` ni `harness/`, aunque el master los cita en R30/R31. Cómo empaquetarlos es una de las dudas abiertas del brief de Relay (R04).
 
 ---
