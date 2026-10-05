@@ -1,3 +1,28 @@
+# Review v0.33.2-evals @ 11b590f
+
+Veredicto: APPROVED
+
+Reviewer independiente (R30). Es un cambio solo de docs: el paso 23 de `playbooks/ia-en-el-producto.md` y H26. Base `a5ec186`. El reporte completo está en el scratchpad de la sesión: `reve-review-sdd-evals.md`.
+
+Lo contrasté con `sdd-ejemplos/chatbot`: `backend/evals/` (chequeos, juez, runner y `casos.json`), `tests/test_evals.py`, B-ADR-8 y el changelog 0.2.6–0.2.9. Todo lo que afirma el texto está implementado:
+- la capa determinista mira solo lo estructural: tarjetas, markdown y HTML, una moneda pegada a un monto, montos fuera del catálogo y el system copiado;
+- hay una rúbrica base en cada turno;
+- el juez recibe el catálogo con precios y stock;
+- la respuesta y el catálogo van escapados;
+- un veredicto malformado, cortado o sin criterio cuenta como «sin veredicto» y el caso falla;
+- el juez corre solo a pedido y su costo entra en el máximo que se muestra;
+- son seis vueltas de review.
+
+`node --test web/tests/*.test.mjs` → 37/37.
+
+**Menor (redacción):** el playbook dice «los casos grises **que se aceptan** (un total calculado, una viñeta)», y se puede leer como que esas respuestas pasan. En el ejemplo pasa al revés: **fallan a propósito**. Son falsos positivos asumidos (B-ADR-8, vuelta 4) y su test es `test_los_grises_documentados_fallan`. Conviene decir «que se decide hacer fallar igual».
+
+**Nits:**
+- El corte estructural se alcanzó en la vuelta 3, no en la sexta: la 6 fue la que lo aprobó.
+- En el ejemplo, B-ADR-8 conserva en su cuerpo original «Rechazos: un modelo como juez», aunque las revisiones posteriores sumaron el juez.
+
+---
+
 # Review v0.33.2 @ 958d61d
 
 Veredicto: APPROVED
