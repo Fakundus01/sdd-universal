@@ -116,7 +116,7 @@ Este nivel casi no existía hace unos años y hoy es de los más ignorados.
 | LLM06 | Agencia excesiva | El agente tiene más permisos o herramientas de los que necesita | Ver abajo: herramientas de solo lectura por defecto, el que lee no es el que actúa, aprobación humana para lo sensible |
 | LLM07 | Fuga del system prompt | Se exponen instrucciones o secretos del prompt | El system prompt no lleva secretos (se asume que se filtra) · las reglas que importan se hacen cumplir en el código, no solo en el prompt |
 | LLM08 | Debilidades en vectores y embeddings | Ataques o fugas a través de la base vectorial | Filtrar por permisos del usuario **antes** de buscar · un índice por inquilino o un filtro obligatorio en cada consulta · lo recuperado es dato |
-| LLM09 | Desinformación | Alucinaciones tomadas como verdad | Datos de la tienda solo desde herramientas o RAG, nunca «de memoria» · citar la fuente · evals que lo prueban · una persona aprueba lo que se manda a un cliente |
+| LLM09 | Desinformación | Alucinaciones tomadas como verdad | Datos del negocio (precios, stock, políticas) solo desde herramientas o RAG, nunca «de memoria» · citar la fuente · evals que lo prueban · una persona aprueba lo que se manda a un cliente |
 | LLM10 | Consumo ilimitado | Costos disparados o caída del servicio por uso sin límites | El tope como **reserva** (`playbooks/ia-en-el-producto.md` A–B) · rate limit · límite de mensajes · `max_tokens` |
 
 **Agentes que actúan (LLM06).** Si el modelo puede hacer algo además de contestar (publicar, mandar, cobrar, borrar, escribir en una base), tres reglas mínimas:
@@ -125,7 +125,7 @@ Este nivel casi no existía hace unos años y hoy es de los más ignorados.
 3. **La salida se valida antes de ejecutarse**, contra un esquema y una lista blanca de acciones, como cualquier entrada de usuario.
 
 **Cliente corporativo: NIST AI RMF 1.0.** OWASP es la lista técnica. El marco de gestión de riesgo de IA del NIST es lo que pide un cliente grande. Tiene cuatro funciones, y el SDD ya tiene dónde va cada una:
-- **Govern:** políticas y roles (R21, `teams.md`).
+- **Govern:** políticas y roles (R21 y `teams.md` en equipos; en un proyecto chico, el owner y `custom.md`, donde quedan las reglas que se apagaron y por qué).
 - **Map:** contexto y riesgos de cada caso de uso (§1 de este archivo y `spec.md`).
 - **Measure:** evals y métricas (los outcomes, el eval del producto).
 - **Manage:** priorizar y mitigar (la deuda aceptada en `status.md`, con fecha y disparador).

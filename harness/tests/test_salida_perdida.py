@@ -25,17 +25,20 @@ class LoseOutput:
     """Reemplaza a subprocess.run: a las llamadas que cumplen `match` les pierde la salida las primeras `times`
     veces (como el hilo lector muerto: stdout y stderr en None, returncode del proceso real)."""
 
-    def __init__(self, match, times: int) -> None:
+    def __init__(self, match, times: int, pipes: tuple[str, ...] = ("stdout", "stderr")) -> None:
         self.match = match
         self.left = times
         self.lost = 0
+        self.pipes = pipes      # en la práctica se suele perder uno solo (review de v0.33.2, R3c)
 
     def __call__(self, args, *a, **kw):
         proc = REAL_RUN(args, *a, **kw)
         if self.left > 0 and self.match(args, kw):
             self.left -= 1
             self.lost += 1
-            return subprocess.CompletedProcess(args, proc.returncode, None, None)
+            return subprocess.CompletedProcess(args, proc.returncode,
+                                               None if "stdout" in self.pipes else proc.stdout,
+                                               None if "stderr" in self.pipes else proc.stderr)
         return proc
 
 
@@ -77,6 +80,28 @@ class TestRepo(SalidaPerdidaCase):
         with mock.patch("subprocess.run", LoseOutput(is_git, times=10**6)):
             self.assertIsNone(repo.git("rev-parse", "--short", "HEAD"))
         self.assertTrue(any("salida no disponible" in e for e in repo.errors), repo.errors)
+
+
+class TestUnSoloPipe(SalidaPerdidaCase):
+    """R3c: una implementación que mira solo `stdout` pasaba la suite, y perder solo `stderr` es lo que se vio."""
+
+    def test_perder_solo_un_pipe_tambien_se_reintenta(self):
+        for pipe in ("stdout", "stderr"):
+            with self.subTest(pipe=pipe):
+                fake = LoseOutput(is_shell, times=1, pipes=(pipe,))
+                with mock.patch("subprocess.run", fake):
+                    code, out = self.verify()
+                self.assertEqual(code, 0, out)
+                self.assertIn("3 passed", out)
+                self.assertEqual(fake.lost, 1)
+
+    def test_perder_solo_un_pipe_dos_veces_es_fail_claro(self):
+        for pipe in ("stdout", "stderr"):
+            with self.subTest(pipe=pipe):
+                with mock.patch("subprocess.run", LoseOutput(is_shell, times=10**6, pipes=(pipe,))):
+                    code, out = self.verify()
+                self.assertNotEqual(code, 0, out)
+                self.assertIn("salida no disponible", out)
 
 
 class TestVerify(SalidaPerdidaCase):
