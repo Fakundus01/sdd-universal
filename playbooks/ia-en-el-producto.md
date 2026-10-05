@@ -50,13 +50,52 @@ Nace de cuatro proyectos reales hechos con el SDD (landing, tienda, mesa de ayud
 18. **Las tarjetas de producto salen de la herramienta** (datos del catálogo), nunca del texto del modelo.
 19. **El historial se agrega, no se edita.** Los bloques del asistente vuelven tal cual (con `to_dict()`, los de razonamiento incluidos con su firma): editarlos invalida el razonamiento preservado. El costo se acota con un límite de mensajes por conversación, que se toma de forma **atómica** antes de llamar (`update … where usados < N`). Si no, N pedidos en paralelo lo pasan.
 
-### E · Tests que no gastan y que no mienten
+### E · Tests que no gastan, evals que no mienten
 20. **El SDK real sobre un transporte simulado** (`httpx.MockTransport` o el equivalente), nunca un objeto escrito a mano que imita al SDK: uno falso ocultó el bug del paso 15.
 21. Un test por cada forma de romper el tope, con una API falsa que **cobra lo peor que la cota supone**: hilos de verdad, un fallback tardío, muchas herramientas, desconexión real, 529, timeout y error a mitad del stream.
-22. Los tests nunca llaman a la API real. Para la calidad hay un eval aparte, que corre contra el modo simulado gratis y contra el modelo real solo a pedido. Antes de llamar, muestra el costo máximo.
+22. Los tests nunca llaman a la API real. Para la calidad hay un **eval** aparte, que corre contra el modo simulado gratis y contra el modelo real solo a pedido. Antes de llamar, muestra el costo máximo.
+23. **Los chequeos de un eval tienen dos capas** (`scenarios.md` S38, H26):
+    - **Deterministas, de alta precisión.** Solo evidencia verificable: un precio que no está en el catálogo, un producto que no existe, formato prohibido. Preferí que se le escape algo a que falle una respuesta buena: con chequeos por palabras clave, en el chatbot de los ejemplos 14 de 15 respuestas **buenas** fallaban («nunca te voy a pedir el CVV» contaba como pedirlo).
+    - **Semánticos, con un juez.** Otro modelo con una rúbrica por caso y salida estructurada, y la respuesta como dato. Juzga si tomó un pedido, si ofreció algo que no hay o si salió del tema. Corre solo a pedido y su costo entra en el máximo que se muestra.
+    - **Fixtures con respuestas buenas y malas:** un chequeo que falla una buena está tan roto como uno que deja pasar una mala.
+24. **El eval es la habilidad que separa a un producto de una demo.** Se escribe junto con la feature, crece con cada error real que aparece, y se corre antes de cambiar de modelo, de prompt o de proveedor.
 
 ### F · Modo simulado
-23. Sin clave, el producto anda con un adaptador simulado que usa **las mismas herramientas** y hace streaming (con una pausa corta, si no en el navegador no se ve). Tiene que seguir la charla (el método o el gusto que se dijeron antes), si no, el humo en el navegador engaña.
+25. Sin clave, el producto anda con un adaptador simulado que usa **las mismas herramientas** y hace streaming (con una pausa corta, si no en el navegador no se ve). Tiene que seguir la charla (el método o el gusto que se dijeron antes), si no, el humo en el navegador engaña.
+
+### G · La arquitectura de referencia
+Así recorre una consulta un sistema con IA, y dónde va cada control (OWASP Top 10 para LLMs 2025, `seguridad.md` N4):
+
+```
+Usuario ──► [entrada: validación, límites, el texto como dato]    ← LLM01 · LLM10
+              ▼
+          [recuperación (RAG): filtrar por permisos ANTES]       ← LLM04 · LLM08 · LLM02
+              ▼
+          [modelo (por API): system sin secretos]                 ← LLM07
+              ▼
+          [herramientas: solo lectura; actuar = otro paso + OK]  ← LLM06
+              ▼
+          [salida: esquema, texto (no HTML), fuentes citadas]     ← LLM05 · LLM09
+              ▼
+          Respuesta
+Alrededor: tope de gasto (A–C), registro, evals (E), monitoreo
+Arriba:    gobierno del riesgo (NIST AI RMF, en seguridad.md N4)
+```
+
+El modelo no se construye: se consume por API. Entender cómo funciona (atención, alineación por RLHF) explica por qué alucina, por qué depende tanto del prompt y por qué a veces rechaza. Pero la palanca del ingeniero está alrededor del modelo: qué sabe (RAG), qué puede hacer (herramientas) y cómo se mide (evals).
+
+### H · Conocimiento propio con RAG
+26. **RAG** (recuperación + generación): antes de llamar al modelo, un buscador trae los fragmentos relevantes de tus documentos y van al prompt. Así el conocimiento se actualiza sin reentrenar, bajan las alucinaciones y se puede citar la fuente. Es el patrón estándar para «chatear con tus documentos».
+27. **Empezá sin vectores si alcanza.** Con una base de conocimiento chica (unas decenas de páginas), mandarla entera con `cache_control` es más simple y más barato que un índice: así lo hicieron la mesa de ayuda y el chatbot de los ejemplos. El índice vectorial (por ejemplo `pgvector`, en la misma base) se justifica cuando no entra en el contexto o cuesta demasiado mandarlo siempre (R28).
+28. **Permisos antes de buscar, no después** (LLM08 y LLM02): la consulta al índice lleva el filtro del usuario (inquilino, rol) como condición obligatoria. Filtrar lo recuperado después de buscar deja pasar fugas por el ranking y por los logs.
+29. **Lo recuperado es dato** (R26, LLM01 y LLM04): va escapado dentro de etiquetas del sistema, como el texto del usuario. Un documento cargado por un tercero puede traer instrucciones.
+30. **Cada fragmento con su fuente**, y la respuesta la cita. El eval mide también la recuperación: si la respuesta correcta no estaba en lo recuperado, el problema no es el modelo.
+31. **Cambiar el modelo de embeddings obliga a reindexar todo:** los vectores de dos modelos no se comparan. Anotá el modelo y la versión del índice en `decisions.md`.
+
+### I · Agentes que actúan
+32. Herramientas de **solo lectura** por defecto. Una herramienta que escribe, publica, manda o cobra es una decisión en `decisions.md`, con su porqué.
+33. **El que lee no es el que actúa** (LLM06): el agente que procesa contenido ajeno (comentarios, mensajes directos, mails) no tiene la herramienta que publica. Le deja una propuesta a otro paso, y ese paso lo aprueba una persona si sale hacia afuera o no se deshace.
+34. Cada acción propuesta se valida contra un esquema y una **lista blanca** de acciones antes de ejecutarse, y queda registrada: quién la propuso, quién la aprobó y qué se ejecutó.
 
 ## Verificación
 - Con un tope bajo y 8–16 pedidos en paralelo contra el servidor real, el gasto registrado nunca pasa el tope.
@@ -79,5 +118,13 @@ Nace de cuatro proyectos reales hechos con el SDD (landing, tienda, mesa de ayud
 ## Secretos
 - La clave del proveedor va en `.env` del **servidor**, nunca en el front, y el `.env.example` la trae vacía. Los tests corren sin clave.
 
+## Para profundizar
+- Vaswani et al., *Attention Is All You Need* (2017): el Transformer, el motor de todos los modelos actuales.
+- Ouyang et al., *Training language models to follow instructions with human feedback* (2022), y Bai et al., *Training a Helpful and Harmless Assistant with RLHF* (Anthropic, 2022): de autocompletar a asistente. En el uso real, alinear pesa más que el tamaño.
+- Lewis et al., *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks* (2020): RAG.
+- Chip Huyen, *AI Engineering* (O'Reilly): apps sobre modelos fundacionales (prompting, RAG, agentes, evals). Su *Designing Machine Learning Systems* sirve cuando se entrenan modelos propios.
+- OWASP, *Top 10 for Large Language Model Applications* (2025).
+- NIST, *AI Risk Management Framework 1.0* (2023).
+
 ## Nota para agentes
-Seguir literal. Los pasos 2, 3, 9 y 12 son los que más se rompieron: cada uno lleva su test con el mutante en rojo. Precios y nombres de modelos cambian: verificarlos contra la documentación del proveedor (R19) antes de escribir la tabla de precios.
+Seguir literal. Antes de escribir código, recorrer la arquitectura de G y anotar en `security.md` qué riesgos del OWASP aplican. Los pasos 2, 3, 9 y 12 son los que más se rompieron: cada uno lleva su test con el mutante en rojo. Precios y nombres de modelos cambian: verificarlos contra la documentación del proveedor (R19) antes de escribir la tabla de precios.

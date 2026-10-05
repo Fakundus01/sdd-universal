@@ -51,6 +51,14 @@ alter table public.eventos enable row level security;
 drop policy if exists "eventos: cualquiera suma"   on public.eventos;
 drop policy if exists "eventos: solo admin lee"    on public.eventos;
 
+-- v0.33.2 (R1 de la review): Supabase da INSERT sobre TODAS las columnas, así
+-- que un anónimo podía elegir el `id` y ocupar números por delante de la
+-- secuencia: el contador legítimo que caía ahí daba 409 y se perdía en
+-- silencio. Ahora solo se insertan `tipo` y `detalle`; `id` y `dia` los pone
+-- la base. La política de abajo queda como segunda capa para `dia`.
+revoke insert on public.eventos from anon, authenticated;
+grant insert (tipo, detalle) on public.eventos to anon, authenticated;
+
 -- El día lo pone la base (v0.33, M4): con `with check (true)` se podía
 -- mandar dia = 2099 y la vista de 30 días lo contaba para siempre.
 create policy "eventos: cualquiera suma" on public.eventos

@@ -77,7 +77,7 @@ Todo con header `apikey` y, salvo el primero, `Authorization: Bearer <access_tok
 | `POST /rest/v1/combinaciones?on_conflict=usuario_id,nombre` con `Prefer: resolution=merge-duplicates,return=representation` | Guardar o pisar | `201` con la fila |
 | `DELETE /rest/v1/combinaciones?id=eq.<id>` | Borrar una | `204` |
 | `PATCH /rest/v1/perfiles?id=eq.<id>` | Guardar el tema elegido | `204` |
-| `POST /rest/v1/eventos` (sin sesión, a propósito) | Sumar un contador anónimo | `201`. El `detalle` tiene que seguir el formato de su tipo (§6) y el `dia`, si se manda, tiene que ser hoy: si no, `400` (check) o `401`/`403` (RLS) |
+| `POST /rest/v1/eventos` (sin sesión, a propósito) | Sumar un contador anónimo | `201`. Solo se mandan `tipo` y `detalle`: `id` y `dia` los pone la base (con cualquiera de los dos en el cuerpo, `401`/`403`). El `detalle` tiene que seguir el formato de su tipo (§6): si no, `400` |
 | `GET /rest/v1/metricas_30_dias?select=*` | El reporte de outcomes del panel | `200`; vacío para quien no es admin (RLS). `tipo, detalle, total` de los últimos 30 días |
 
 **El contrato que no se ve:** las consultas **nunca** filtran por usuario en el query string. Lo hace RLS del lado del servidor. Si alguna vez se agrega un `&usuario_id=eq.…` "por las dudas", es señal de que alguien dudó de las políticas — y esa duda se resuelve arreglando las políticas, no el front.
@@ -133,4 +133,4 @@ La clase la calcula `Metricas.clase` con `matchMedia("(pointer: coarse)")`. **Nu
 | `paquete` | `^(sueltos\|skills\|(proyecto\|rapido):[a-z0-9-]{1,30})$` |
 | `perfil` | `^(nivel\|interes\|agente):[A-Za-z0-9-]{1,30}$` |
 
-Ninguno admite espacios, `@` ni saltos de línea. **Lo que no garantiza:** un slug corto puede ser un nombre de persona. Y la política de alta exige `dia = hoy (UTC)`; la vista `metricas_30_dias` además acota `dia <= hoy`.
+Ninguno admite espacios, `@` ni saltos de línea. **Lo que no garantiza:** un slug corto puede ser un nombre de persona. Permisos: `anon` y `authenticated` solo tienen `INSERT (tipo, detalle)`, así que `id` y `dia` no se eligen (0.33.2); la política de alta exige además `dia = hoy (UTC)`, y la vista `metricas_30_dias` acota `dia <= hoy`.

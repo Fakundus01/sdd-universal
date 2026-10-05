@@ -27,7 +27,7 @@ sys.path.insert(0, str(HARNESS))
 from checks import Card  # noqa: E402
 from config import ConfigError, HarnessConfig, sdd_mode  # noqa: E402
 from report import force_utf8  # noqa: E402
-from repo import Repo  # noqa: E402
+from repo import LOST, OutputLost, Repo, run_captured  # noqa: E402
 from verify import decode  # noqa: E402
 
 STEP_TOKENS = 50_000
@@ -151,7 +151,14 @@ class Hooks:
                   file=sys.stderr)
             return 1
         # Sin shell: la ruta entra como un argumento y ningún nombre de archivo se interpreta.
-        proc = subprocess.run(cmd, cwd=self.root, capture_output=True, timeout=55, stdin=subprocess.DEVNULL)
+        try:
+            proc = run_captured(cmd, cwd=self.root, timeout=55, stdin=subprocess.DEVNULL)
+        except OutputLost as exc:
+            if exc.returncode == 0:
+                return 0
+            print(f"[arnés] lint salió con {exc.returncode} en {rel}, pero {LOST} (se perdió dos veces). "
+                  "Volvé a correr el lint de ese archivo a mano.", file=sys.stderr)
+            return 2
         if proc.returncode == 0:
             return 0
         out = "\n".join((decode(proc.stdout) + decode(proc.stderr)).strip().splitlines()[-20:])
@@ -164,13 +171,21 @@ class Hooks:
     def stop(self) -> int:
         if self.payload.get("stop_hook_active"):
             return 0  # ya estamos continuando por este hook: no entrar en bucle
-        proc = subprocess.run([sys.executable, str(HARNESS / "verify.py"), "--quick", "--root", str(self.root)],
-                              cwd=self.root, capture_output=True, text=True, encoding="utf-8",
-                              errors="replace", timeout=110, stdin=subprocess.DEVNULL)
+        rel = self._memory().relative_to(self.root).as_posix()
+        try:
+            proc = run_captured([sys.executable, str(HARNESS / "verify.py"), "--quick", "--root", str(self.root)],
+                                cwd=self.root, text=True, encoding="utf-8", errors="replace", timeout=110,
+                                stdin=subprocess.DEVNULL)
+        except OutputLost as exc:
+            if exc.returncode == 0:
+                return 0  # en verde la salida no hace falta
+            print(f"[arnés] verify.py --quick salió con {exc.returncode}, pero {LOST} (se perdió dos veces). "
+                  f"Corrélo a mano y arreglá lo que diga antes de cerrar; si no es parte de tu tarea, anotalo en {rel}.",
+                  file=sys.stderr)
+            return 2
         if proc.returncode == 0:
             return 0
         tail = "\n".join((proc.stdout + proc.stderr).strip().splitlines()[-25:])
-        rel = self._memory().relative_to(self.root).as_posix()
         print(f"[arnés] verify.py --quick falló:\n{tail}\n\nNo cierres todavía: arreglalo. Si no es parte de tu "
               f"tarea, anotalo en {rel} y explicáselo a la persona.", file=sys.stderr)
         return 2

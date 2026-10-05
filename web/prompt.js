@@ -86,6 +86,10 @@ IA EN EL PRODUCTO: sí. El nivel N4 de seguridad.md queda activo desde el día 1
   comando, y nunca se ejecuta tal cual.
 - La API key solo en el servidor, rate limit por IP y por cuenta, y el usuario sabe que
   habla con una IA.
+- Recorré la tabla OWASP LLM01–LLM10 de seguridad.md (N4) y anotá en security.md cuáles
+  aplican, cada una con su control y su test, y cuáles no aplican y por qué.
+- Si el agente va a actuar (publicar, mandar, cobrar): el que lee no es el que actúa, y lo
+  sensible lleva aprobación humana.
 ${r12}
 Seguí el playbook ${PB_IA} (va adjunto) cuando toque implementarlo.
 `;

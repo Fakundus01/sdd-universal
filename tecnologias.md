@@ -1,10 +1,10 @@
 # tecnologias.md · Catálogo de tecnologías
 
-**Versión:** 0.8.1 · 2026-10-05 · **Bloque:** `stack` · **Para agentes:** leer solo cuando la tarea sea elegir o justificar el stack (R12), o cuando el humano traiga tecnologías elegidas desde la web del catálogo.
+**Versión:** 0.8.2 · 2026-10-05 · **Bloque:** `stack` · **Para agentes:** leer solo cuando la tarea sea elegir o justificar el stack (R12), o cuando el humano traiga tecnologías elegidas desde la web del catálogo.
 
 > Este archivo dice **qué existe**, no qué usar. La recomendación por tarea la hace el agente con R12; las versiones se verifican contra la web al arrancar (R19), y por eso esta tabla no lleva números de versión: envejecerían mal y darían una falsa sensación de estar al día.
 
-**128 tecnologías** en 14 categorías. `OS` = open source.
+**130 tecnologías** en 14 categorías. `OS` = open source.
 
 **Cobertura, dicha de frente:** lenguajes y frameworks están completos; bases de datos, DevOps e IA ya tienen lo esencial (0.7), y cloud y seguridad siguen siendo un arranque. No es un error del archivo: es hasta dónde llegó el relevamiento. Se completa con casos reales, como todo acá (R20).
 
@@ -128,7 +128,7 @@
 | **Bun** | Runtime | JavaScript/TypeScript | Backend/tooling rápido | ✓ |
 | **Deno** | Runtime | JavaScript/TypeScript | Backend seguro por default | ✓ |
 
-## Bases de datos (6)
+## Bases de datos (7)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
@@ -138,6 +138,7 @@
 | **Redis** | Base de datos | — | Cache/tiempo real | ✓ |
 | **DuckDB** | Base de datos | SQL | Análisis local | ✓ |
 | **Supabase** | BaaS | SQL | Postgres + auth + API | ✓ |
+| **pgvector** | Extensión | SQL | Búsqueda vectorial en Postgres (RAG sin otro servicio) · ver [lección](#lecciones-de-proyectos-reales) | ✓ |
 
 ## Deployment/PaaS (1)
 
@@ -175,7 +176,7 @@
 |---|---|---|---|---|
 | **OWASP ZAP** | Tool | — | Seguridad web | ✓ |
 
-## IA - Modelos (4)
+## IA - Modelos (5)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
@@ -183,6 +184,7 @@
 | **Claude** | Modelo IA | — | LLM/agentes | — |
 | **Ollama** | Tool | — | LLMs locales | ✓ |
 | **Anthropic API** | API/SDK | Python/TypeScript | Claude desde tu app (SDK oficial) · ver [lección](#lecciones-de-proyectos-reales) | — |
+| **Embeddings** | Concepto/API | Multilenguaje | Texto → vector, para buscar por significado (RAG) · ver [lección](#lecciones-de-proyectos-reales) | — |
 
 ## Videojuegos (3)
 
@@ -227,7 +229,7 @@ def ver_ticket(ticket_id: IdPositivo): ...
 def ver_cliente(cliente_id: IdPositivo): ...
 ```
 
-**FastAPI + Pydantic · el validador que se llama como el campo.** Un `@field_validator("prioridad")` cuyo método **también** se llama `prioridad` pisa el atributo de la clase: el campo pierde su default y un campo opcional pasa a ser obligatorio, o termina en un **500**. Pasó en la mesa de ayuda con un campo que casi nunca se mandaba, así que ningún test lo vio. El método va con otro nombre, y la API se testea también **sin** los campos opcionales:
+**FastAPI + Pydantic · el validador que se llama como el campo.** Un `@field_validator("prioridad")` cuyo método **también** se llama `prioridad` pisa el atributo de la clase: el método pasa a ser el **default** del campo. Un campo obligatorio pasa a opcional (un pedido que no lo trae ya no da 422) y, cuando la respuesta incluye ese valor, **revienta al serializar: el 500**. Medido con pydantic 2.13.5. Pasó en la mesa de ayuda, y ningún test lo vio porque todos mandaban el campo. El método va con otro nombre, y la API se testea también **sin** los campos opcionales y sin los obligatorios:
 
 ```python
 from pydantic import BaseModel, field_validator
@@ -243,6 +245,11 @@ class TicketNuevo(BaseModel):
             raise ValueError("prioridad inválida")
         return v
 ```
+
+**RAG · pgvector y embeddings.** Buscar en tus documentos y pasarle lo encontrado al modelo (detalle en `playbooks/ia-en-el-producto.md`, parte H, y los riesgos en `seguridad.md` N4):
+- **Lo recuperado es dato, no instrucción** (OWASP LLM01, LLM04 y LLM08): un documento indexado puede traer texto dirigido al modelo.
+- **El filtro por permisos va antes de buscar**, en el `WHERE` de la misma consulta de pgvector, no después: filtrando después, el top-k se llena de documentos ajenos y lo que sobra puede terminar en el prompt (LLM02).
+- **Los vectores dependen del modelo de embeddings:** cambiar de modelo, de versión o de dimensión obliga a re-indexar todo. Guardá qué modelo generó cada vector.
 
 **Anthropic API (SDK oficial).** Tres lecciones, detalladas en `playbooks/ia-en-el-producto.md`:
 - **Tests con el SDK real sobre un transporte falso**, no con un mock del cliente: `anthropic.Anthropic(http_client=httpx.Client(transport=httpx.MockTransport(responder)))`. Así se prueban el parseo, los errores y el `usage` de verdad, sin gastar. Un mock del objeto cliente prueba tu mock.
@@ -266,6 +273,7 @@ Igual que todo en este paquete (R20): una tecnología entra cuando alguien la us
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.8.2 | 2026-10-05 | +2: pgvector y Embeddings, con la lección de RAG (lo recuperado es dato; permisos antes de buscar; cambiar de modelo obliga a re-indexar), y RAG en la entrada de Anthropic API. La lección de Pydantic corregida: el validador homónimo vuelve **opcional** un campo obligatorio y el 500 sale al serializar (pydantic 2.13.5). Total: 130. |
 | 0.8.1 | 2026-10-05 | Lección de Pydantic (`@field_validator` con el mismo nombre que el campo), en FastAPI y en Pydantic. |
 | 0.8 | 2026-10-05 | +8 tecnologías que pidieron cuatro proyectos reales y el combinador perdía en silencio: Vite, Vitest, pytest, Tailwind CSS, React Router, Mercado Pago, Stripe (categoría nueva: Pagos) y Anthropic API. Sección «Lecciones de proyectos reales» (FastAPI y Anthropic API). Total: 128 en 14 categorías. |
 | 0.7 | 2026-08-17 | +19 tecnologías donde el catálogo era más flaco: bases de datos (SQLite, MongoDB, Redis, DuckDB, Supabase), runtimes (Bun, Deno), escritorio (Electron, Tauri), lenguajes (Elixir, Julia, Zig), front (Svelte, Astro), infra (Azure, Docker, GitHub Actions) e IA (Claude, Ollama). Total: 120. |

@@ -10,6 +10,8 @@ from pathlib import Path
 HARNESS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HARNESS))
 
+from repo import run_captured  # noqa: E402
+
 PY = f'"{sys.executable}"'
 PASS_CMD = f'{PY} -c "print(\'3 passed\')"'
 FAIL_CMD = f'{PY} -c "import sys; print(\'1 failed: test_x\'); sys.exit(1)"'
@@ -52,8 +54,10 @@ class Project:
         return path
 
     def git(self, *args: str) -> str:
-        proc = subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *args], cwd=self.root,
-                              capture_output=True, text=True, check=True)
+        # run_captured: bajo carga, en Windows la salida se puede perder (stdout=None) y el setUp reventaba.
+        proc = run_captured(["git", "-c", "user.email=t@t", "-c", "user.name=t", *args], cwd=self.root, text=True)
+        if proc.returncode:
+            raise subprocess.CalledProcessError(proc.returncode, proc.args, proc.stdout, proc.stderr)
         return proc.stdout.strip()
 
     def commit(self, msg: str) -> str:

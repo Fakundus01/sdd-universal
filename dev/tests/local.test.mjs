@@ -194,6 +194,67 @@ test("M4: un anónimo no puede meter texto identificante ni elegir el día", asy
   for (const c of aceptados) assert.equal((await sumar(c)).estado, 201, JSON.stringify(c));
 });
 
+/* R1 (review de 0.33.1): con INSERT sobre todas las columnas, un anónimo
+   elegía el id y ocupaba números por delante de la secuencia; el contador
+   legítimo que caía ahí daba 409 y se perdía en silencio. */
+test("R1: un anónimo no elige el id ni el día de un evento", async () => {
+  const sumar = c => pedir("/rest/v1/eventos", {metodo: "POST", headers: {Prefer: "return=minimal"}, cuerpo: c});
+  const siguiente = Number(entorno.cluster.script("select last_value + 1 from public.eventos_id_seq").trim().split("\n").pop()) + 5;
+  for (const token of [undefined, A.access_token]){
+    const r = await pedir("/rest/v1/eventos", {metodo: "POST", token, headers: {Prefer: "return=minimal"},
+      cuerpo: {tipo: "descarga", detalle: "SDD-MASTER.md", id: siguiente}});
+    assert.ok(r.estado >= 400 && r.estado < 500, `insert con id → ${r.estado}`);
+  }
+  for (let i = 0; i < 8; i++)
+    assert.equal((await sumar({tipo: "descarga", detalle: "SDD-MASTER.md"})).estado, 201, `contador legítimo ${i + 1}`);
+});
+
+/* Todo lo que la web puede mandar tiene que pasar el formato del SQL: un
+   tipo o una vista nueva con mayúscula o «_» perdería eventos sin avisar
+   (el barrido que el reviewer hizo a mano en 0.33.1). Una sola alta con
+   todas las filas; si falla, se prueban de a una para nombrar la culpable. */
+test("los valores que genera la web pasan todos el formato de eventos", async () => {
+  const leer = r => readFileSync(new URL("../../" + r, import.meta.url), "utf8").replace(/\r\n/g, "\n");
+  const cat = leer("web/catalogo.js");
+  const constante = n => Function(`return (${cat.match(new RegExp(`const ${n} = ([\\[{][\\s\\S]*?\\n[\\]}]);`))[1]})`)();
+  const TYPES = constante("TYPES"), STACKS = constante("STACKS");
+  const vistas = Object.keys(Function(`return (${leer("web/app.js").match(/const TITULOS = (\{[\s\S]*?\});/)[1]})`)());
+  const perfil = leer("web/perfil.js");
+  const campos = {nivel: [], interes: Object.keys(TYPES), agente: []};
+  for (const bloque of perfil.split(/campo: "/).slice(1)){
+    const campo = bloque.match(/^(\w+)"/)[1];
+    if (campos[campo]) campos[campo].push(...[...bloque.split(/\n\s*\}\s*,?\s*\{\s*\n?\s*campo/)[0].matchAll(/\{v: "([^"]+)"/g)].map(m => m[1]));
+  }
+  const web = ["web/index.html", ...["catalogo", "combinador", "manuales", "inicio", "paquete"].map(f => `web/${f}.js`)].map(leer).join("\n");
+  const archivos = [...new Set([...web.matchAll(/["'(]((?:\.\.\/)?[\w./-]+\.(?:md|html))["')#]/g)].map(m => m[1].split("/").pop()))];
+  assert.ok(archivos.includes("SDD-MASTER.md") && archivos.includes("ia-en-el-producto.md"), "no encontré los archivos de la web");
+
+  const filas = [];
+  for (const cls of ["movil", "escritorio"]){
+    for (const v of vistas) filas.push({tipo: "visita", detalle: `#/${v}|${cls}`});
+    for (const ruta of ["/web/", "/web/index.html"]) filas.push({tipo: "visita", detalle: `${ruta}|${cls}`});
+  }
+  for (const a of archivos) filas.push({tipo: "visita", detalle: "md:" + a}, {tipo: "descarga", detalle: a});
+  for (const t of Object.keys(TYPES)){
+    filas.push({tipo: "paquete", detalle: "proyecto:" + t}, {tipo: "paquete", detalle: "rapido:" + t});
+    for (const s of Object.keys(STACKS)) for (const n of ["NOVATO", "PRO"]) for (const e of ["nuevo", "brownfield"])
+      filas.push({tipo: "combinacion", detalle: `${t}/${s}/${n}/${e}`});
+  }
+  filas.push({tipo: "paquete", detalle: "sueltos"}, {tipo: "paquete", detalle: "skills"});
+  for (const [campo, valores] of Object.entries(campos)) for (const v of [...valores, "nc"]) filas.push({tipo: "perfil", detalle: `${campo}:${v}`});
+  assert.ok(campos.nivel.includes("NOVATO") && campos.agente.includes("otro"), JSON.stringify(campos));
+  // El mismo tope que aplica sesion.js al mandar.
+  for (const f of filas) f.detalle = f.detalle.slice(0, 120);
+
+  const todas = await pedir("/rest/v1/eventos", {metodo: "POST", headers: {Prefer: "return=minimal"}, cuerpo: filas});
+  if (todas.estado !== 201){
+    const malas = [];
+    for (const f of filas) if ((await pedir("/rest/v1/eventos", {metodo: "POST", headers: {Prefer: "return=minimal"}, cuerpo: f})).estado !== 201) malas.push(f);
+    assert.deepEqual(malas, [], `${malas.length} de ${filas.length} valores de la web no pasan el formato`);
+  }
+  assert.ok(filas.length > 400, `barrido demasiado chico: ${filas.length}`);
+});
+
 test("la combinación guarda si hay IA en el producto", async () => {
   const r = await guardar(A, {nombre: "Ticketera con IA", tipo: "ticketera", stack: "py-react", ia: true});
   assert.equal(r.estado, 201, JSON.stringify(r.datos));

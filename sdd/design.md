@@ -31,7 +31,7 @@ web/
 ├── demo.html           la comparación con/sin SDD
 ├── demo-sin-sdd.html   widget de reservas construido sin spec
 ├── demo-con-sdd.html   el mismo widget, con los criterios de la spec
-├── tecnologias.js      DATO — 128 tecnologías, con la lección de proyectos reales cuando hay
+├── tecnologias.js      DATO — 130 tecnologías, con la lección de proyectos reales cuando hay
 ├── metricas.js         clase de dispositivo y reporte de outcomes, puro (0.33, ADR-013)
 ├── reglas.js           DATO — espejo de la §4 del master, controlado por tests/ (ADR-004)
 ├── reglas-ui.js        configurador de reglas → custom.md

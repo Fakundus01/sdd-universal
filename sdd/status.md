@@ -8,7 +8,7 @@
 |---|---|---|---|---|
 | F1 | Catálogo con filtros, búsqueda y paginación | Complete | 100% | Filtros en la URL, compartibles |
 | F2 | Combinador de prompt de arranque | Complete | 100% | Lista además los archivos exactos a descargar. 0.33: el texto sale de `prompt.js` (puro, con tests); stack Python + React/TS; tipo Mesa de ayuda; «IA en el producto» (N4, R12, playbook); respeta `R01=OFF`; LITE con su plantilla. Review R30: prompt y ZIP del mismo estado, perfil con una sola fuente, tecnologías de afuera normalizadas y el link compartido, que no cargaba desde antes de 0.33, anda |
-| F3 | Catálogo de tecnologías con selección múltiple | Complete | 100% | 128 items (0.33), popup arrastrable. Lo que no está se puede sumar igual y llega al prompt marcado |
+| F3 | Catálogo de tecnologías con selección múltiple | Complete | 100% | 130 items (0.33.2), popup arrastrable. Lo que no está se puede sumar igual y llega al prompt marcado |
 | F4 | Configurador de reglas → `custom.md` | Complete | 100% | Las fijas con candado (ADR-006). 32 reglas desde 0.30.1 |
 | F5 | Cuentas y combinaciones guardadas | Complete | 100% | 0.32: la prueba de dos cuentas corre en `dev/tests/` con el esquema real, y encontró dos bugs que estaban en la nube (guardar con cuenta fallaba siempre; cualquiera podía hacerse admin). Corregidos en `schema.sql` y `metricas.sql` |
 | F6 | Guía navegable | Complete | 100% | Índice lateral con seguimiento de sección |

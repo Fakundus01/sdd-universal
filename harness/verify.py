@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from checks import HarnessChecks  # noqa: E402
 from config import ConfigError, HarnessConfig, e2e_record  # noqa: E402
 from report import Report, force_utf8  # noqa: E402
-from repo import Repo  # noqa: E402
+from repo import LOST, OutputLost, Repo, run_captured  # noqa: E402
 
 TAIL_OK = 3
 TAIL_FAIL = 25
@@ -114,8 +114,13 @@ class Verifier:
         start = time.monotonic()
         try:
             # stdin cerrado: un comando que pide input falla en vez de colgar el pre-commit.
-            proc = subprocess.run(command, shell=isinstance(command, str), cwd=self.root, capture_output=True,
-                                  stdin=subprocess.DEVNULL, timeout=COMMAND_TIMEOUT_S)
+            proc = run_captured(command, shell=isinstance(command, str), cwd=self.root, stdin=subprocess.DEVNULL,
+                                timeout=COMMAND_TIMEOUT_S)
+        except OutputLost as exc:
+            # Sin la salida no hay evidencia (R30), aunque el exit haya sido 0.
+            self.report.fail(f"{label} — `{cmd}` salió con {exc.returncode}, pero {LOST}: se perdió dos veces "
+                             "(Windows bajo carga). Volvé a correrlo; si se repite, corré una sola suite por vez")
+            return False
         except subprocess.TimeoutExpired:
             self.report.fail(f"{label}: `{cmd}` no terminó en {COMMAND_TIMEOUT_S}s")
             return False
@@ -133,6 +138,8 @@ class Verifier:
         return False
 
     def _finish(self) -> int:
+        for msg in self.repo.errors:
+            self.report.fail(msg)
         print(self.report.render())
         fails, warns = len(self.report.messages("FAIL")), len(self.report.messages("WARN"))
         print(f"\n{'ROJO' if fails else 'VERDE'} — {fails} FAIL, {warns} WARN")

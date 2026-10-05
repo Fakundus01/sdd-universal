@@ -6,7 +6,6 @@ import io
 import json
 import os
 import shutil
-import subprocess
 import sys
 import unittest
 from unittest import mock
@@ -17,7 +16,7 @@ import verify
 from checks import Card, HarnessChecks
 from config import ConfigError, HarnessConfig
 from report import Report
-from repo import Repo
+from repo import Repo, run_captured
 
 PACKAGE = HARNESS.parent
 ECHO_LINT = f'{PY} -c "import sys; print(\'LINT\', sys.argv[1:])" {{file}}'
@@ -93,8 +92,8 @@ class TestCambios(BordesCase):
         self.p.commit("arnés")
         script = str(self.p.root / "harness" / "verify.py")
         for _ in range(2):
-            proc = subprocess.run([sys.executable, script, "--quick"], cwd=self.p.root, capture_output=True,
-                                  text=True, encoding="utf-8", errors="replace")
+            proc = run_captured([sys.executable, script, "--quick"], cwd=self.p.root, text=True, encoding="utf-8",
+                                errors="replace")
         self.assertNotIn("__pycache__", proc.stdout)
         self.assertFalse((self.p.root / "harness" / "__pycache__").exists())
 

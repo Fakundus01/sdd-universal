@@ -1,6 +1,6 @@
 # harness.md · El arnés: que lo que el agente dice que hizo sea cierto
 
-**Versión:** 0.33 · 2026-10-05 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
+**Versión:** 0.33.2 · 2026-10-05 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
 
 > Nace de **Relay**, el sistema que se usó en producción en `chat-commerce-ai` (features H-1 a H-11). Escenarios S28–S31.
 > El SDD gobierna *qué* se construye; el arnés hace cumplir *que esté construido*.
@@ -75,6 +75,8 @@ Un solo comando, tres niveles. Lo corre el agente al arrancar, mientras trabaja,
 La primera línea de la salida es el comando, el hash y la rama (`verify.py --changed @ 3f1c9a2e (rama feat/stock)`): pegada entera, ya es evidencia (§4). En CI, con HEAD detached, la rama sale de `GITHUB_HEAD_REF` o `CI_COMMIT_REF_NAME`. En un monorepo, la raíz es la carpeta que contiene `harness/` y los cambios se cuentan relativos a ella. Sin git, `--changed` corre los tests igual y avisa que no puede saber qué cambió.
 
 Exit distinto de 0 si algo falla. Pensado para Windows (Git Bash, PowerShell, cmd), macOS y Linux; probado en Windows, y el workflow `harness.yml` del repo del SDD Universal (no del proyecto) corre la suite en los tres.
+
+**Salida perdida.** En Windows, bajo carga, el hilo que lee la salida de un subproceso puede morir (`OSError: [WinError 1]`) y la salida llega vacía aunque el comando haya andado. El arnés reintenta una vez; si se pierde de nuevo, es un `FAIL` que dice «salida no disponible» (sin salida no hay evidencia, aunque el exit sea 0), nunca un traceback. Los hooks dejan cerrar si el exit fue 0, y si no, bloquean con ese mismo aviso.
 
 **Línea base medida.** `sdd/testing.md` anota la última corrida completa con su hash: `2026-10-01 @ a942c177 — 2245 passed, 9 skipped`. Toda cuenta de tests de un handback se explica contra esa base. Si la cuenta bajó, hay que decir qué test se fue y por qué.
 
@@ -221,6 +223,7 @@ Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.33.2 | 2026-10-05 | Review R30 de v0.33.1 (R3): la salida perdida de un subproceso (`stdout=None` en Windows bajo carga) se reintenta una vez y, si se repite, es un `FAIL` «salida no disponible» en `verify.py` y un aviso en los hooks, en vez de un traceback (§3). También en `git` (`repo.py`) y en los tests (`support.py`), donde era el flaky de la suite. |
 | 0.33 | 2026-10-05 | Review R30 de v0.33: `sdd/spec.md` y `sdd/sdd-lite.md` entran a los `cited_paths_docs` por default, así H13 se dispara en el caso que lo originó (B1); en LITE, el relevo va a `sdd/sdd-lite.md` y el registro del e2e a `sdd/e2e.md`, sin crear `progress/` (M1). |
 | 0.32 | 2026-10-05 | Hallazgos de usar el paquete en 4 proyectos reales: en LITE, `verify.py` ya no crea `sdd/progress/<rama>/current.md` en cada pre-commit (§10, H7); las rutas citadas se revisan también como nombre suelto en celdas de tabla (§7.2, H13); la plantilla de tarjeta trae `rama: main` y el `FAIL` de una `done` sin `rama` dice cómo arreglarlo (§7.3, H23); el ejemplo de `lint_file` pasa a `oxlint`, el que trae `create-vite` (§2, H9). |
 | 0.30.1 | 2026-10-02 | DRIFT resuelto al implementar `harness/` (opción A): §2 suma `lint_ext`, `cited_paths_docs`, `{files}` y la regla de `lint_file` sin shell (S32); §3 suma `--e2e` con registro, la primera línea como evidencia, CI con HEAD detached, monorepo y proyecto sin git; §7.2 acota las rutas citadas a los docs declarados y las tarjetas `done`. Lo de macOS/Linux pasa a «pensado para», hasta que corra el CI. |

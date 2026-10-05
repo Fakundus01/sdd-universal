@@ -3,13 +3,12 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
 import sys
 import unittest
 from pathlib import Path
 from unittest import mock
 
-from support import HARNESS, PASS_CMD, PY
+from support import HARNESS, PASS_CMD, PY, run_captured
 from test_bordes import BordesCase
 
 from config import ConfigError, HarnessConfig, resolve_exe
@@ -79,7 +78,7 @@ class TestPlantillaSinShell(BordesCase):
                 with mock.patch("config.os.name", "posix"):
                     argv, skipped = cfg.lint_cmd([name])
                 self.assertEqual(skipped, [], f"{template} × {name}")
-                out = subprocess.run(argv, cwd=self.p.root, capture_output=True, text=True).stdout
+                out = run_captured(argv, cwd=self.p.root, text=True).stdout
                 self.assertIn(name, out.replace("\\\\", "\\"), f"{template} × {name}")
                 if "--x=" not in template:
                     self.assertIn(f"./{name}", argv, f"{template} × {name}")
@@ -121,9 +120,9 @@ class TestFormasDocumentadas(BordesCase):
             self.config(lint_file=template, lint_ext=[".py"])
             for cwd in (self.p.root, self.p.root / "src"):
                 self.p.write("src/a.py", f"x = {n}  # {cwd.name}\n")  # siempre un cambio sin commitear
-                out = subprocess.run(
+                out = run_captured(
                     [sys.executable, str(HARNESS / "verify.py"), "--quick", "--root", str(self.p.root)],
-                    cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout
+                    cwd=cwd, text=True, encoding="utf-8", errors="replace").stdout
                 self.assertIn("ARGS ./src/a.py", out, f"{template} desde {cwd.name}:\n{out}")
 
     @unittest.skipUnless(os.name == "nt", "shims .cmd de Windows")

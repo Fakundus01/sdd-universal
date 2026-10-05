@@ -27,7 +27,7 @@ Un paquete abierto de gobernanza: **la especificación va antes que el código**
 | `orchestration.md` | Siete roles de agente (leader, implementer, reviewer…) y el loop cerrado (R31) |
 | `agents/` | Los prompts de cada rol, agnósticos (en Claude Code van a `.claude/agents/`) |
 | `blocks.md` | Cómo se combinan los bloques (BASE + TYPE + STACK + TECNOLOGÍAS + PLAYBOOKS) |
-| `tecnologias.md` | Catálogo de 128 tecnologías con ecosistema y uso — elegibles desde la web |
+| `tecnologias.md` | Catálogo de 130 tecnologías con ecosistema y uso — elegibles desde la web |
 | `seguridad.md` | Controles de seguridad por superficie de ataque (R27): solo los que tu proyecto necesita |
 | `playbooks/` | Recetas paso a paso (deploy, env, React+Vite, GitHub+Vercel, IA en el producto…) con notas `[NOVATO]` |
 | `prompts/` | Start, loop/HANDBACK, mantenimiento, migración desde otro chat, tarjeta de tarea, handback en archivo, relevo |

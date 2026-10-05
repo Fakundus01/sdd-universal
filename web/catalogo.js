@@ -29,10 +29,10 @@ const CARDS = [
  {c:"Base",n:"pro",  s:"ok",t:"Capa Enterprise (equipos)",d:"11 roles (PO, AF, SM, QA, devs, pasantes, RPA, infra): quién aprueba qué, ceremonias Scrum mapeadas y subagentes por rol.",f:"../teams.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Multi-agente & ahorro de tokens",d:"Espejos para Claude, Codex/ChatGPT, Cursor, Copilot y Gemini + técnicas de ahorro por tier de modelo.",f:"../models.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Bloques componibles",d:"Cómo se arma un SDD a medida combinando BASE + TYPE + STACK + PLAYBOOKS, con reglas de precedencia. Es el motor detrás del combinador.",f:"../blocks.md"},
- {c:"Base",n:"pro",  s:"ok",t:"Cómo crece el SDD (escenarios)",d:"La matriz de 37 situaciones reales: dónde funciona, dónde falla y qué adaptación resolvió cada caso. Nada entra al núcleo «porque suena bien».",f:"../scenarios.md"},
+ {c:"Base",n:"pro",  s:"ok",t:"Cómo crece el SDD (escenarios)",d:"La matriz de 38 situaciones reales: dónde funciona, dónde falla y qué adaptación resolvió cada caso. Nada entra al núcleo «porque suena bien».",f:"../scenarios.md"},
  {c:"Base",n:"novato",s:"ok",t:"Mis reglas: armá tu custom.md",d:"Prendé y apagá las 32 reglas, elegí perfil y modo, sumá las tuyas, y bajate el custom.md ya escrito. El núcleo no se toca nunca: por eso tu configuración sobrevive a cada actualización.",f:"#reglas",dl:false,cta:"Configurar mis reglas →"},
  {c:"Base",n:"pro",  s:"ok",t:"Seguridad por superficie",d:"Los controles que hacen falta según lo que tu proyecto realmente hace: login, datos de personas, plata, IA, archivos o API pública. Seis preguntas, y solo aparecen los niveles que aplican — no un checklist de 200 ítems que nadie termina.",f:"../seguridad.md"},
- {c:"Base",n:"novato",s:"ok",t:"Catálogo de tecnologías",d:"128 tecnologías (lenguajes, frameworks, bibliotecas, bases, cloud, IA, testing…) con su ecosistema y para qué sirve cada una. Elegilas desde el combinador y entran solas al prompt.",f:"../tecnologias.md"},
+ {c:"Base",n:"novato",s:"ok",t:"Catálogo de tecnologías",d:"130 tecnologías (lenguajes, frameworks, bibliotecas, bases, cloud, IA, testing…) con su ecosistema y para qué sirve cada una. Elegilas desde el combinador y entran solas al prompt.",f:"../tecnologias.md"},
 
  {c:"Proyectos",n:"pro",  s:"comb",t:"Web app full-stack",d:"Front + back + DB con contratos entre capas. El clásico. Combinalo con tu stack en el combinador.",k:"webapp"},
  {c:"Proyectos",n:"pro",  s:"comb",t:"Chatbot con IA",d:"Historial, límite de gasto de API, personalidad configurable y evaluación de respuestas.",k:"chatbot"},
@@ -61,7 +61,7 @@ const CARDS = [
  {c:"Infraestructura",n:"novato",s:"ok",t:"Playbook: Que los mails lleguen",d:"El mailer incluido de Supabase manda poquísimo y cae en spam, y el síntoma es mudo: nadie se registra y no hay error. Tres caminos comparados — Gmail gratis sin dominio, o Resend — con la parte del DNS explicada.",f:"../playbooks/resend-smtp.md"},
 
  {c:"Infraestructura",n:"novato",s:"ok",t:"Playbook: Antes de desplegar (go-live)",d:"Una consulta de solo lectura a producción para saber a quién afecta el cambio, la capacidad contratada, el monitoreo y quién aprieta el botón (R32). El deploy lo ejecuta o lo aprueba el humano.",f:"../playbooks/go-live.md"},
- {c:"Herramientas",n:"pro",  s:"ok",t:"Playbook: IA en el producto",d:"Un modelo adentro de tu app sin sorpresas: tope de gasto como reserva antes de llamar, registro de cada llamada, la salida tratada como dato y tests que no gastan. Nace de cuatro proyectos reales donde el tope se rompió siete veces.",f:"../playbooks/ia-en-el-producto.md"},
+ {c:"Herramientas",n:"pro",  s:"ok",t:"Playbook: IA en el producto",d:"Un modelo adentro de tu app sin sorpresas: tope de gasto como reserva antes de llamar, la salida tratada como dato, RAG con permisos antes de buscar, agentes donde el que lee no es el que actúa, y evals en dos capas con tests que no gastan. Nace de cuatro proyectos reales donde el tope se rompió siete veces.",f:"../playbooks/ia-en-el-producto.md"},
  {c:"Herramientas",n:"novato",s:"ok",t:"Playbook: .env y credenciales seguras",d:"env local/development/production, entornos virtuales y la regla de oro: los secretos no se commitean.",f:"../playbooks/env-setup.md"},
  {c:"Herramientas",n:"novato",s:"ok",t:"Playbook: React + Vite desde cero",d:"node -v, npm create vite, npm run dev — explicado para que salga a la primera.",f:"../playbooks/create-react-vite.md"},
  {c:"Herramientas",n:"novato",s:"ok",t:"Playbook: Git desde cero, sin miedo",d:"Qué es git en criollo, las 4 palabras que hay que entender, el ciclo de todos los días y —lo más importante— cómo deshacer cosas sin romper nada.",f:"../playbooks/git-basico.md"},
@@ -123,7 +123,7 @@ const PB_META = {
  "resend-smtp":{f:"../playbooks/resend-smtp.md",d:"que los mails lleguen"},
  "git-basico":{f:"../playbooks/git-basico.md",d:"git desde cero"},
  "consumir-api-externa":{f:"../playbooks/consumir-api-externa.md",d:"datos ajenos con copia propia"},
- "ia-en-el-producto":{f:"../playbooks/ia-en-el-producto.md",d:"IA con tope de gasto y salida como dato"},
+ "ia-en-el-producto":{f:"../playbooks/ia-en-el-producto.md",d:"IA: tope, RAG, agentes y evals"},
  "go-live":{f:"../playbooks/go-live.md",d:"antes de desplegar (R32)"}
 };
 

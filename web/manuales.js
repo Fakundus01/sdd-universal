@@ -11,7 +11,7 @@
     {v: "inicio", t: "🏠 Inicio", d: "La portada: qué es el SDD en tres líneas, el master para descargar directo y las preguntas frecuentes."},
     {v: "catalogo", t: "📦 Catálogo", d: "Todos los paquetes: el núcleo, los tipos de proyecto y los playbooks. Cada card tiene el ojito 👁 para leer antes de bajar, y las de proyecto traen «📦 Descargar ZIP» con la carpeta ya armada."},
     {v: "combinador", t: "🧩 Combinador", d: "El camino fino: tipo + stack + nivel + tecnologías + playbooks → tu prompt de arranque exacto y el ZIP del proyecto. Con cuenta podés guardar combinaciones y retomarlas desde cualquier dispositivo."},
-    {v: "tecnologias", t: "🛠️ Tecnologías", d: "Las 128 del catálogo con búsqueda y filtros. Lo que marcás acá queda elegido y entra al prompt cuando armás tu paquete."},
+    {v: "tecnologias", t: "🛠️ Tecnologías", d: "Las 130 del catálogo con búsqueda y filtros. Lo que marcás acá queda elegido y entra al prompt cuando armás tu paquete."},
     {v: "reglas", t: "📐 Mis reglas", d: "Las 32 reglas del SDD con su interruptor ON/OFF. Apagá las que no van con vos y bajate el custom.md ya escrito — el núcleo nunca se toca, así tu configuración sobrevive a cada actualización."},
     {v: "manuales", t: "📚 Manuales", d: "Los playbooks (recetas paso a paso: deploy, git, Supabase, datos ajenos…) para leer acá mismo o bajar, y las skills de Claude para instalar en tu repo."},
     {t: "📖 Aprender", d: "En el menú también están la Guía (cómo se usa el SDD, para humanos), el Demo (el mismo formulario con y sin SDD — probá los casos borde) y el Tablero (todo el sistema en una página). Son páginas aparte: se abren desde el menú."},
@@ -44,7 +44,7 @@ const MANUALES = [
   {t: ".env y credenciales seguras",   d: "secretos fuera del repo desde el minuto cero",      f: "../playbooks/env-setup.md"},
   {t: "React + Vite desde cero",       d: "node -v, npm create vite, npm run dev",             f: "../playbooks/create-react-vite.md"},
   {t: "Git desde cero, sin miedo",     d: "el ciclo diario y cómo deshacer sin romper nada",   f: "../playbooks/git-basico.md"},
-  {t: "IA en el producto",             d: "tope de gasto reservado, salida como dato y tests que no gastan", f: "../playbooks/ia-en-el-producto.md"},
+  {t: "IA en el producto",             d: "tope de gasto reservado, RAG con permisos, agentes que actúan con aprobación y evals", f: "../playbooks/ia-en-el-producto.md"},
   {t: "Antes de desplegar (go-live)",  d: "datos de prod en solo lectura, capacidad y OK humano (R32)", f: "../playbooks/go-live.md"},
   {t: "Consumir un repo o API ajeno",  d: "copia propia, licencia y sincronización con registro", f: "../playbooks/consumir-api-externa.md"},
   {t: "Catálogo de playbooks",         d: "el índice completo, con el estado de cada receta",  f: "../playbooks/catalog.md"}

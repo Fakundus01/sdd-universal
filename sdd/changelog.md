@@ -4,6 +4,34 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ---
 
+## [0.33.2] — 2026-10-05 · web
+
+Lo que pidió la segunda vuelta del reviewer (0.33.1 aprobada, con un menor y nits), más material nuevo del owner sobre IA en el producto (OWASP Top 10 para LLMs 2025, RAG, agentes, evals).
+
+### Corregido
+- **R1 · Un anónimo elegía el `id` de `eventos`.** Con el INSERT sobre todas las columnas que Supabase da por defecto, ocupaba ids por delante de la secuencia, y el contador legítimo que caía ahí daba 409 y se perdía en silencio (`contar()` se traga el error). Ahora `anon` y `authenticated` solo tienen `INSERT (tipo, detalle)`: `id` y `dia` los pone la base. Idempotente, en `metricas.sql` (corre igual en `dev/`).
+- **R2 · La lección de Pydantic contaba el síntoma al revés.** Con pydantic 2.13.5, el validador que se llama como su campo pasa a ser el **default**: un campo obligatorio pasa a opcional y el 500 sale al serializar. Corregido en FastAPI y Pydantic (`tecnologias.js`) y en `tecnologias.md`.
+- Nit: se sacó del combinador la línea que sumaba R01 con CONFIANZA; con el configurador como única fuente, `Prompt.r01Apagada` ya lo resuelve.
+
+### Agregado
+- **pgvector y Embeddings** en el catálogo (130), con su lección: lo recuperado es dato, no instrucción (OWASP LLM01/04/08); el filtro por permisos va **antes** de buscar; cambiar el modelo de embeddings obliga a re-indexar. RAG en la entrada de Anthropic API.
+- **El bloque de IA del prompt** pide recorrer la tabla OWASP LLM01–LLM10 de `seguridad.md` (N4) y anotar en `security.md` cuáles aplican, con control y test, y cuáles no y por qué. Y suma: si el agente va a actuar (publicar, mandar, cobrar), el que lee no es el que actúa, y lo sensible lleva aprobación humana.
+- La card y Manuales del playbook `ia-en-el-producto` nombran RAG, agentes y evals. La card de escenarios dice 38 situaciones (S38).
+- **Tests:** R1 y el barrido de todo lo que la web puede mandar contra el formato de `eventos` (`dev/tests`); pgvector/Embeddings, la lección de Pydantic y el bloque OWASP (`web/tests/combinador-ui.test.mjs`).
+
+### Modificado
+- `?v=33.2` en las cuatro páginas.
+- `sdd/`: ADR-013 y contracts (qué columnas se insertan), testing, status, design.
+
+### Limpieza de la base de dev
+La sonda del reviewer dejó 11 filas en `eventos` de `dev/.data/` (ninguna en el repo): ids 351–354 (`juan.perez.30123456` como descarga y `md:`, `/juan.perez/dni-30123456|movil`, `interes:JuanPerez30123456`), 358–360 (`/web/|escritorio`, `ticketera\|escritorio`, `ticketera/py-react/PRO/nuevo`, `md:ia-en-el-producto.md`), 361–363 y 999999999 (`SDD-MASTER.md`; el 362 es el id ocupado por la sonda). Se borraron por id, más la 380 que dejó la prueba manual de R1 con `curl`.
+
+### Verificado
+- Rojo sobre `74ad57e`: `web/tests` 37 tests, 4 en rojo (N3 «37 situaciones» con S38 ya en `scenarios.md`, pgvector/Embeddings, la lección de Pydantic y el bloque OWASP); `dev/tests` 15, 1 en rojo (`insert con id → 201`). El barrido salió verde de entrada (cubre código que ya estaba bien): con un mutante del SQL que no acepta `-` en el stack, falla y nombra `py-react`.
+- Verde: `web/tests` 37/37, `dev/tests` 15/15. Contra :4321 reiniciado: insert con `id` → 401, sin `id` → 201.
+
+---
+
 ## [0.33.0] — 2026-10-05 · web
 
 Lo que encontró usar el paquete en cuatro proyectos reales (landing, tienda, mesa de ayuda con IA y chatbot, todos FastAPI + React/Vite/TS), en la parte que vive en `web/`. El resto de la 0.33 (núcleo, arnés, playbooks) está en el changelog del paquete.

@@ -208,3 +208,50 @@ test("H24: la lección de Pydantic sobre @field_validator viaja con FastAPI", ()
   assert.match(md, /field_validator/);
   assert.match(md, /validar_/);
 });
+
+test("RAG: pgvector y embeddings en el catálogo, con su lección (OWASP LLM)", () => {
+  const TECH = vm.runInNewContext(leer("web/tecnologias.js") + ";TECH");
+  const pg = TECH.find(t => t.n === "pgvector"), emb = TECH.find(t => t.n === "Embeddings");
+  assert.ok(pg && emb, "falta pgvector o Embeddings");
+  assert.match(pg.a, /permisos[^.]*ANTES/i);
+  assert.match(pg.a, /dato, no instrucción/);
+  assert.match(emb.a, /re-?indexar/i);
+  assert.match(TECH.find(t => t.n === "Anthropic API").a, /RAG/);
+  const md = leer("tecnologias.md");
+  for (const x of ["**pgvector**", "**Embeddings**", "LLM01", "re-indexar"]) assert.ok(md.includes(x), x);
+});
+
+test("R2/H24: la lección de Pydantic describe el síntoma real", () => {
+  const TECH = vm.runInNewContext(leer("web/tecnologias.js") + ";TECH");
+  for (const n of ["FastAPI", "Pydantic"]){
+    const a = TECH.find(t => t.n === n).a;
+    assert.match(a, /default/, n);
+    assert.match(a, /obligatorio pasa a (ser )?opcional/, n);
+    assert.match(a, /serializ/, n);
+    assert.doesNotMatch(a, /opcional pasa a ser obligatorio/, n);
+  }
+  const md = leer("tecnologias.md");
+  assert.match(md, /obligatorio pasa a (ser )?opcional/);
+  assert.doesNotMatch(md, /opcional pasa a ser obligatorio/);
+});
+
+test("IA: el prompt pide recorrer OWASP LLM01–LLM10 y separar al que lee del que actúa", () => {
+  const {ctx} = montar();
+  const TECH = vm.runInContext("TECH", ctx), TYPES = vm.runInContext("TYPES", ctx);
+  const base = {stack: "s", nivel: "PRO", perfil: "ESTRICTO", playbooks: [], tecnologias: [], catalogo: TECH, apagadas: []};
+  for (const tipo of ["ticketera", "chatbot", "webapp"]){
+    const p = ctx.Prompt.armar({...base, tipo: TYPES[tipo], ia: true});
+    assert.match(p, /LLM01[^\n]*LLM10/, tipo);
+    assert.match(p, /seguridad\.md/, tipo);
+    assert.match(p, /security\.md/, tipo);
+    assert.match(p, /no aplica|no aplican/, tipo);
+    assert.match(p, /el que lee no es el que actúa/, tipo);
+    assert.match(p, /aprobación humana/, tipo);
+  }
+  assert.doesNotMatch(ctx.Prompt.armar({...base, tipo: TYPES.webapp, ia: false}), /LLM01|el que lee no es el que actúa/);
+  assert.match(leer("web/manuales.js"), /ia-en-el-producto[\s\S]{0,0}|RAG/);
+  for (const f of ["web/catalogo.js", "web/manuales.js"]){
+    const linea = leer(f).split("\n").find(l => l.includes("playbooks/ia-en-el-producto.md"));
+    assert.match(linea, /RAG/, f); assert.match(linea, /agentes/, f); assert.match(linea, /evals/, f);
+  }
+});

@@ -102,7 +102,7 @@ function pintarBusca(){
   const q = $("kq").value.trim();
   kRes = q.length < 2 ? [] : Buscador.filtrar(itemsBusca(), q, ["t", "d"]).slice(0, 12);
   $("kres").innerHTML = q.length < 2
-    ? `<p class="k-vacio">Escribí al menos dos letras. Busca en las cards, las 128 tecnologías, las 32 reglas y las páginas.</p>`
+    ? `<p class="k-vacio">Escribí al menos dos letras. Busca en las cards, las 130 tecnologías, las 32 reglas y las páginas.</p>`
     : kRes.length
       ? kRes.map((r, i) => `<button type="button" data-k="${i}" class="${i === kMarcada ? "marcada" : ""}">
           <span class="tipo">${r.tipo}</span><b>${Buscador.resaltar(r.t, q)}</b><small>${esc(r.d)}</small>

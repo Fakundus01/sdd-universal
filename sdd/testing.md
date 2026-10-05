@@ -50,6 +50,8 @@ Necesita los binarios de Postgres en el PATH (`initdb`, `pg_ctl`, `psql`). Levan
 | Guardar dos veces el mismo nombre pisa, no duplica | El upsert del combinador contra el índice real |
 | Login, refresh, logout, cambio de contraseña y registro cerrado | Que el emulador de GoTrue se aparte de lo que espera `sesion.js` |
 | M4: un anónimo no mete texto identificante ni elige el día (0.33, review R30) | La sonda del reviewer: mail o user-agent en `detalle`, texto tras la barra en descarga y perfil, saltos de línea, `dia` en 2099 o en 2020. Todos `4xx`; lo que manda la web, `201` |
+| R1: un anónimo no elige el id ni el día (0.33.2) | El `INSERT` sobre todas las columnas: con un `id` en el cuerpo, `4xx`, y ocho contadores normales seguidos, todos `201` |
+| Los valores que genera la web pasan todos el formato (0.33.2) | Un tipo, stack, vista, archivo o respuesta del onboarding nuevo que no encaje en `eventos_detalle_formato_check` y pierda eventos sin avisar. Arma los valores desde `catalogo.js`, `app.js`, `perfil.js` y los links de la web (más de 400) y los manda en un solo alta |
 | La visita lleva solo la clase de dispositivo, y la vista de 30 días es del admin (0.33) | Un detalle con user-agent u otra cosa después de la barra (`400`), una vista que mire más de 30 días o que vea alguien que no es admin |
 | La combinación guarda si hay IA en el producto (0.33) | La columna `ia` que falte o que no arranque en `false` |
 | El servidor sirve la config local y no sale del repo | Path traversal, `dev/.data/` expuesto (también por su alias 8.3 `DATA~1`) y un `Host` ajeno |

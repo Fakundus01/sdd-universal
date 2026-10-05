@@ -23,9 +23,8 @@ const playbooksElegidos = () => Prompt.playbooks(playbooksTildados(), $("cia").c
    select del combinador escribe ahí y lo refleja, así el prompt y el
    custom.md adjunto nunca dicen dos perfiles distintos. */
 function opcionesPrompt(){
-  const perfil = ReglasUI.perfil();
-  const apagadas = ReglasUI.apagadas();
-  if (perfil === "CONFIANZA" && !apagadas.includes("R01")) apagadas.push("R01");
+  // CONFIANZA ya es R01=OFF para Prompt.r01Apagada: no hace falta sumarla acá.
+  const perfil = ReglasUI.perfil(), apagadas = ReglasUI.apagadas();
   return {
     tipo: TYPES[$("ctype").value], stack: STACKS[$("cstack").value],
     nivel: $("clvl").value, perfil,
