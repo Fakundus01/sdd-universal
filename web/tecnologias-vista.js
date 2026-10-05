@@ -124,6 +124,8 @@ function renderSel(){
   $("techaviso").textContent = fuera.length
     ? `⚠ ${fuera.length === 1 ? `«${fuera[0]}» no está` : `${fuera.map(x => `«${x}»`).join(", ")} no están`} en el catálogo. No se descarta${fuera.length === 1 ? "" : "n"}: va${fuera.length === 1 ? "" : "n"} al prompt aparte, para que tu agente confirme qué ${fuera.length === 1 ? "es" : "son"} y si encaja${fuera.length === 1 ? "" : "n"}.`
     : "";
+  // Si ya se generó el prompt, la selección nueva entra (M3).
+  if (typeof refrescarSalida === "function") refrescarSalida();
   const n = sel.size;
   $("techhint").textContent = n === 0 ? `${TECH.length} disponibles · opcional`
     : n === 1 ? "1 elegida" : `${n} elegidas`;

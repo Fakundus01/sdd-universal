@@ -9,7 +9,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 CONFIG_NAME = "harness.config.json"
-DEFAULT_CITED_DOCS = ["AGENTS.md", "CLAUDE.md", "sdd/testing.md"]
+# La spec también (H13 nació en una `sdd-lite.md`); los que no existen se saltean. El master y orchestration.md no:
+# citan archivos opcionales (`GEMINI.md`, `metrics.md`) y darían falsos positivos.
+DEFAULT_CITED_DOCS = ["AGENTS.md", "CLAUDE.md", "sdd/testing.md", "sdd/spec.md", "sdd/sdd-lite.md"]
 STR_KEYS = {"test", "test_quick", "lint", "lint_file", "e2e", "prod_readonly_query", "deploy",
             "base_branch", "prod_branch"}
 LIST_KEYS = {"lint_ext", "cited_paths_docs"}
@@ -49,6 +51,11 @@ def sdd_mode(root: Path) -> str:
         if found:
             return found[-1]
     return "FULL"
+
+
+def e2e_record(root: Path) -> Path:
+    """Dónde se anota cada e2e verde: `sdd/progress/e2e.md`, o `sdd/e2e.md` en LITE, que no tiene progress/."""
+    return root / "sdd" / ("e2e.md" if sdd_mode(root) == "LITE" else "progress/e2e.md")
 
 
 def split_template(template: str) -> list[str]:

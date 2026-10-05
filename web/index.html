@@ -29,8 +29,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css?v=33">
-<link rel="stylesheet" href="app.css?v=33">
+<link rel="stylesheet" href="base.css?v=33.1">
+<link rel="stylesheet" href="app.css?v=33.1">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -193,7 +193,8 @@
   .selchips:empty{display:none}
   .selchip{display:inline-flex;align-items:center;gap:7px;background:var(--card);
        border:1px solid var(--line);border-radius:999px;padding:5px 6px 5px 12px;font-size:.79rem}
-  .selchip b{font-weight:600}
+  .selchip{max-width:100%}
+  .selchip b{font-weight:600;min-width:0;overflow-wrap:anywhere}
   .selchip small{color:var(--muted)}
   .selchip button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.9rem;
        line-height:1;padding:2px 5px;border-radius:50%;font-family:inherit}
@@ -207,7 +208,11 @@
        border:1px dashed var(--amber);background:var(--amber-soft);color:var(--ink);font:inherit;font-size:.83rem;cursor:pointer}
   .tsumar small{display:block;color:var(--muted);font-size:.75rem;margin-top:2px}
   .iachk{margin-bottom:14px;align-items:flex-start}
+  .clitehint{font-size:.8rem;color:var(--ink-soft);margin:-4px 0 14px;padding:8px 11px;border-radius:9px;
+       background:var(--bg-soft);border:1px solid var(--line)}
   .iachk input{margin-top:2px}
+  .iachk{flex-wrap:wrap}
+  .iachk small{flex-basis:100%}
 
   /* margin:auto es lo que centra un <dialog> modal — el reset global de arriba lo pisaba
      y por eso quedaba clavado arriba a la izquierda. */
@@ -709,6 +714,7 @@
       <option value="brownfield">Sí, ya tengo código andando</option>
     </select></div>
   </div>
+  <p class="clitehint" id="clitehint" role="status" hidden></p>
   <label class="oschk iachk"><input type="checkbox" id="cia"> IA en el producto
     <small>— un modelo que lee lo que escribe la gente o contenido externo (chat, tickets, resúmenes). Suma el nivel N4 de seguridad, la recomendación de modelo (R12) y el playbook ia-en-el-producto</small></label>
   <div class="techpick">
@@ -1181,30 +1187,30 @@
   </div>
 </dialog>
 
-<script src="shell.js?v=33"></script>
-<script src="tema.js?v=33"></script>
-<script src="buscador.js?v=33"></script>
-<script src="md.js?v=33"></script>
-<script src="feedback.js?v=33"></script>
-<script src="zip.js?v=33"></script>
-<script src="paquete.js?v=33"></script>
-<script src="tecnologias.js?v=33"></script>
-<script src="reglas.js?v=33"></script>
-<script src="reglas-ui.js?v=33"></script>
-<script src="metricas.js?v=33"></script>
-<script src="supabase-config.js?v=33"></script>
-<script src="sesion.js?v=33"></script>
-<script src="porton.js?v=33"></script>
-<script src="perfil.js?v=33"></script>
-<script src="perfil-vista.js?v=33"></script>
-<script src="app.js?v=33"></script>
-<script src="config-vista.js?v=33"></script>
-<script src="catalogo.js?v=33"></script>
-<script src="tecnologias-vista.js?v=33"></script>
-<script src="prompt.js?v=33"></script>
-<script src="combinador.js?v=33"></script>
-<script src="manuales.js?v=33"></script>
-<script src="cuenta.js?v=33"></script>
-<script src="inicio.js?v=33"></script>
+<script src="shell.js?v=33.1"></script>
+<script src="tema.js?v=33.1"></script>
+<script src="buscador.js?v=33.1"></script>
+<script src="md.js?v=33.1"></script>
+<script src="feedback.js?v=33.1"></script>
+<script src="zip.js?v=33.1"></script>
+<script src="paquete.js?v=33.1"></script>
+<script src="tecnologias.js?v=33.1"></script>
+<script src="reglas.js?v=33.1"></script>
+<script src="reglas-ui.js?v=33.1"></script>
+<script src="metricas.js?v=33.1"></script>
+<script src="supabase-config.js?v=33.1"></script>
+<script src="sesion.js?v=33.1"></script>
+<script src="porton.js?v=33.1"></script>
+<script src="perfil.js?v=33.1"></script>
+<script src="perfil-vista.js?v=33.1"></script>
+<script src="app.js?v=33.1"></script>
+<script src="config-vista.js?v=33.1"></script>
+<script src="catalogo.js?v=33.1"></script>
+<script src="tecnologias-vista.js?v=33.1"></script>
+<script src="prompt.js?v=33.1"></script>
+<script src="combinador.js?v=33.1"></script>
+<script src="manuales.js?v=33.1"></script>
+<script src="cuenta.js?v=33.1"></script>
+<script src="inicio.js?v=33.1"></script>
 </body>
 </html>

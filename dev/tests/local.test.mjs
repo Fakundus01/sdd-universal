@@ -148,14 +148,50 @@ test("D3: la visita lleva solo la clase de dispositivo, y la vista de 30 días e
   // Lo que no es una de las dos clases no entra: ni un user-agent ni nada parecido.
   for (const detalle of ["#/combinador|Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)", "#/combinador|tablet", "/web/|movil|x"])
     assert.equal((await sumar({tipo: "visita", detalle})).estado, 400, detalle);
-  // Un evento viejo no cuenta para los 30 días.
-  assert.equal((await sumar({tipo: "visita", detalle: "#/combinador|escritorio", dia: "2020-01-01"})).estado, 201);
+  // Fuera de la ventana: uno viejo y uno «del futuro», metidos como superusuario
+  // (desde la API ya no se puede elegir el día: ver el test de M4).
+  entorno.cluster.script(`insert into public.eventos (tipo, detalle, dia) values
+    ('visita', '#/combinador|escritorio', '2020-01-01'), ('visita', '#/combinador|escritorio', '2099-01-01')`);
 
   assert.deepEqual((await pedir("/rest/v1/metricas_30_dias?select=*", {token: B.access_token})).datos, []);
   assert.deepEqual((await pedir("/rest/v1/metricas_30_dias?select=*")).datos, []);
   const filas = (await pedir("/rest/v1/metricas_30_dias?select=*", {token: ADMIN.access_token})).datos;
   assert.equal(filas.find(f => f.detalle === "#/combinador|movil")?.total, 1);
-  assert.equal(filas.find(f => f.detalle === "#/combinador|escritorio"), undefined, "la vista mira más de 30 días");
+  assert.equal(filas.find(f => f.detalle === "#/combinador|escritorio"), undefined, "la vista mira fuera de los últimos 30 días");
+});
+
+/* M4 (review R30 de 0.33): la sonda del reviewer metía texto identificante y
+   días a elección con la clave pública. Cada uno de esos 201 ahora es 4xx, y
+   lo que manda la web sigue entrando. */
+test("M4: un anónimo no puede meter texto identificante ni elegir el día", async () => {
+  const sumar = (c) => pedir("/rest/v1/eventos", {metodo: "POST", headers: {Prefer: "return=minimal"}, cuerpo: c});
+  const rechazados = [
+    {tipo: "visita", detalle: "juan.perez@gmail.com DNI 30123456"},
+    {tipo: "visita", detalle: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)"},
+    {tipo: "descarga", detalle: "x|Mozilla/5.0 (iPhone)"},
+    {tipo: "perfil", detalle: "nivel:PRO|juan@gmail.com"},
+    {tipo: "visita", detalle: "a\nb|movil"},
+    {tipo: "visita", detalle: "#/combinador"},
+    {tipo: "descarga", detalle: "juan.perez@gmail.com"},
+    {tipo: "combinacion", detalle: "webapp/reco/PRO/nuevo; llamame al 1155555555"},
+    {tipo: "paquete", detalle: "proyecto:Juan Pérez"},
+    {tipo: "descarga", detalle: "a".repeat(61) + ".md"},
+    {tipo: "visita", detalle: "#/combinador|movil", dia: "2099-01-01"},
+    {tipo: "visita", detalle: "#/combinador|movil", dia: "2020-01-01"}
+  ];
+  for (const c of rechazados){
+    const r = await sumar(c);
+    assert.ok(r.estado >= 400 && r.estado < 500, `${JSON.stringify(c)} → ${r.estado}`);
+  }
+  const aceptados = [
+    {tipo: "visita", detalle: "/web/|movil"}, {tipo: "visita", detalle: "/web/index.html|escritorio"},
+    {tipo: "visita", detalle: "#/configuracion|escritorio"}, {tipo: "visita", detalle: "md:deploy-vercel.md"},
+    {tipo: "descarga", detalle: "SDD-MASTER.md"}, {tipo: "combinacion", detalle: "ticketera/py-react/NOVATO/brownfield"},
+    {tipo: "paquete", detalle: "proyecto:ticketera"}, {tipo: "paquete", detalle: "rapido:chatbot"},
+    {tipo: "paquete", detalle: "sueltos"}, {tipo: "paquete", detalle: "skills"},
+    {tipo: "perfil", detalle: "interes:webapp"}, {tipo: "perfil", detalle: "nivel:nc"}
+  ];
+  for (const c of aceptados) assert.equal((await sumar(c)).estado, 201, JSON.stringify(c));
 });
 
 test("la combinación guarda si hay IA en el producto", async () => {

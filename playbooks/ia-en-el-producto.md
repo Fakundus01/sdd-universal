@@ -13,8 +13,8 @@ Nace de cuatro proyectos reales hechos con el SDD (landing, tienda, mesa de ayud
 ### A · El tope de gasto es una **reserva**, no un chequeo
 1. **Nunca «chequear y después llamar».** N pedidos en paralelo ven el mismo gasto y pasan todos: un reviewer midió 8 borradores con tope de USD 1 y gasto de USD 8. Bajo un lock: `gastado + cota ≤ tope` → se anota la cota en una fila `en_curso` → recién ahí se llama.
 2. **La cota es lo máximo que puede costar la llamada, calculado del prompt real.** Un número fijo («$0,06 por borrador») no acota nada: con un historial largo la entrada crece.
-   - **Entrada:** un token por **byte UTF-8** de todo lo que se manda (sistema + herramientas + mensajes). Es una cota dura para un tokenizador de bytes; «1,5 tokens por carácter» la pasan los emoji y el CJK.
-   - **Precio:** el peor. Toda la entrada como escritura de caché (1,25×), y un modelo de fallback que no está en tu tabla de precios a un precio alto.
+   - **Entrada:** un token por **byte UTF-8** de todo lo que se manda (sistema + herramientas + mensajes). Es una cota dura para el texto que mandás vos; «1,5 tokens por carácter» la pasan los emoji y el CJK. El proveedor suma tokens propios (el prompt interno de tool use, el formato de cada mensaje: cientos de tokens): sumá un margen fijo, o confiá en que el peor precio y el 1,25× lo absorben, y medilo con la clave real.
+   - **Precio:** el peor. Toda la entrada como escritura de caché (1,25× con TTL de 5 minutos; **2× con TTL de 1 hora**: si usás ese, la cota cambia), y un modelo de fallback que no está en tu tabla de precios a un precio alto.
    - **Salida:** `max_tokens` × precio de salida.
    - **Con fallback del lado del servidor** (`fallbacks: "default"` o similar): un rechazo tardío del modelo principal **se cobra igual** y el fallback se cobra aparte. La cota suma **los dos intentos**.
    - **Con un loop de herramientas:** la entrada se paga **en cada vuelta**. La cota suma las N vueltas, cada una con todo lo anterior, más lo que puede crecer (la salida de la vuelta anterior y los resultados de herramienta, que también tienen techo: como mucho K herramientas por vuelta).
@@ -25,7 +25,7 @@ Nace de cuatro proyectos reales hechos con el SDD (landing, tienda, mesa de ayud
 ### B · Se registra **siempre**, y lo que es ambiguo se cobra
 6. **El costo real se acumula mientras corre, no al final.** Un objeto «turno» que el adaptador va llenando: si algo se corta a mitad, lo ya gastado está ahí.
 7. **Cada intento a su precio.** Con fallback, el `usage` de arriba suele cubrir solo el intento que respondió. Los otros están en el desglose por intento (`usage.iterations` en Anthropic). Un intento sin modelo se cobra al modelo pedido.
-8. **El caché se cobra:** escritura 1,25× la entrada (TTL de 5 min) y lectura 0,1×. Sin sumarlos, el primer pedido de cada ventana se subestimaba en un ~44%.
+8. **El caché se cobra:** escritura 1,25× la entrada con TTL de 5 min (2× con TTL de 1 h) y lectura 0,1×. Sin sumarlos, el primer pedido de cada ventana se subestimaba en un ~44%.
 9. **Qué error cuesta qué:**
    - **La API rechazó el pedido antes de generar** (`APIStatusError`: 4xx, 529): costo 0. Si el usuario tenía un cupo de mensajes, se le devuelve.
    - **Ambiguo** (timeout, corte de red, un error que llega *a mitad* del stream, JSON de herramienta roto): pudo haberse cobrado, se conserva la cota de esa llamada o vuelta.

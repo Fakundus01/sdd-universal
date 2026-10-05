@@ -33,6 +33,19 @@ Lo que encontró usar el paquete en cuatro proyectos reales (landing, tienda, me
 - Verde: `node --test "web/tests/*.test.mjs"` 21/21; `node --test "dev/tests/*.test.mjs"` 12/12.
 - Smoke en Chrome headless por CDP contra `node dev/dev.mjs`, a 360 px (táctil) y 1280 px: ticketera + `py-react` + IA + FastAPI, Anthropic API y «Celery» sumada fuera del catálogo, con `R01=OFF` en el configurador. El prompt trae N4, R12, la reserva, el stack, la lección de FastAPI, el bloque de fuera del catálogo y `R01=OFF`, sin «R01 es desactivable» ni «commit (R01)»; `ia-en-el-producto.md` en la lista y en el árbol. Las visitas llegaron a la base como `#/combinador|movil` y `|escritorio`. El panel muestra las cuatro tarjetas. Sin scroll horizontal en ninguno de los dos anchos y cero errores de consola.
 
+### Review R30, vuelta 1 (sobre `bb6f168`, cambios pedidos)
+- **M3 · Prompt y ZIP del mismo estado.** Destildar «IA en el producto» después de generar dejaba un prompt que pedía un playbook que el ZIP ya no traía. Ahora el ZIP arma el prompt con el estado actual (nunca con el textarea), y si ya se generó, cualquier cambio (tipo, stack, nivel, perfil, IA, playbooks, tecnologías o «Mis reglas») regenera prompt, lista y árbol juntos.
+- **M4 · La base hace cumplir lo que dice la doc.** `eventos_detalle_formato_check` cierra el `detalle` por tipo (rutas, nombres de archivo e ids de `[A-Za-z0-9._/-]` con largo acotado: sin espacios, `@` ni saltos de línea), `NOT VALID` para no tocar filas viejas. La política de alta exige `dia = hoy` y la vista de 30 días además acota `dia <= hoy`. ADR-013 y contracts dicen exactamente eso, y lo que no garantiza (un slug corto puede ser un nombre). La sonda del reviewer (`revs-sonda-db.mjs`) pasó de 201 a 400/401 en los ocho casos.
+- **M6 · Tecnologías de afuera** (link, guardadas, base): `Prompt.limpiarTecnologia` las deja en una línea, sin control y con 60 caracteres como máximo, al cargar y al armar el prompt.
+- **Link compartido roto desde antes de 0.33:** `writeURL` (`catalogo.js`) borraba el hash `#/combinador?c=…` antes de que `inicio.js` lo leyera. Ahora lo conserva.
+- **N3:** README «101 tecnologías» → 128 y la card de escenarios «23 situaciones» → 37, con un test que mira los dos conteos en el README y la web.
+- **N4:** el perfil tiene una sola fuente, el configurador (`ReglasUI.fijarPerfil` / `alCambiar`). El prompt y el `custom.md` ya no pueden decir dos perfiles distintos.
+- **N5:** aviso en el combinador cuando un tipo (calc, guía, proceso) sale LITE con el configurador en FULL.
+- **N6:** `Metricas.visita` corta el lugar antes de pegar la clase.
+- **H24 (ticketera):** la lección de Pydantic sobre `@field_validator` con el mismo nombre que el campo, en FastAPI, en Pydantic y en `tecnologias.md` (0.8.1).
+- Un chip de tecnología muy larga desbordaba a 360 px; ahora corta la palabra.
+- Rojo medido sobre `8cfac06`: `web/tests` 34 tests, 10 en rojo (M3 ×2, W15/N4, N5, M6 ×2, link, N3, H24, N6); W10, W11 y W16 quedaron en verde porque cubren código que ya estaba bien, y se verificaron con sus mutantes. `dev/tests` 13, 2 en rojo (`{"tipo":"visita","detalle":"juan.perez@gmail.com DNI 30123456"} → 201` y `la vista mira fuera de los últimos 30 días`). Verde: 34/34 y 13/13. Mutantes W10, W11, W15, W16 (×2), M3, M6, N4, N6 y el del link: todos mueren.
+
 ---
 
 ## [0.32.0] — 2026-10-05

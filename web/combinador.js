@@ -18,13 +18,17 @@ const playbooksTildados = () => [...document.querySelectorAll("#pbs input:checke
 const playbooksElegidos = () => Prompt.playbooks(playbooksTildados(), $("cia").checked);
 
 /* El texto lo arma prompt.js (puro y testeado); acá solo se junta el estado:
-   los campos, las tecnologías y lo que dice el configurador de reglas. */
+   los campos, las tecnologías y lo que dice el configurador de reglas.
+   El perfil tiene UNA fuente, el configurador (N4 de la review de 0.33): el
+   select del combinador escribe ahí y lo refleja, así el prompt y el
+   custom.md adjunto nunca dicen dos perfiles distintos. */
 function opcionesPrompt(){
+  const perfil = ReglasUI.perfil();
   const apagadas = ReglasUI.apagadas();
-  if (ReglasUI.perfil() === "CONFIANZA" && !apagadas.includes("R01")) apagadas.push("R01");
+  if (perfil === "CONFIANZA" && !apagadas.includes("R01")) apagadas.push("R01");
   return {
     tipo: TYPES[$("ctype").value], stack: STACKS[$("cstack").value],
-    nivel: $("clvl").value, perfil: $("cperf").value,
+    nivel: $("clvl").value, perfil,
     brownfield: $("cexiste").value === "brownfield",
     playbooks: playbooksTildados(), tecnologias: [...sel], catalogo: TECH,
     custom: ReglasUI.hayCambios(), apagadas, ia: $("cia").checked,
@@ -34,9 +38,21 @@ function opcionesPrompt(){
 
 const buildPrompt = () => Prompt.armar(opcionesPrompt());
 
+/* N5: calc, guía y proceso salen en LITE aunque el configurador diga FULL,
+   que es el default y no se distingue de una elección. Se dice en pantalla. */
+function pintarAvisoLite(){
+  const lite = Prompt.TIPOS_LITE.has($("ctype").value) && ReglasUI.modo() === "FULL";
+  $("clitehint").hidden = !lite;
+  $("clitehint").textContent = lite
+    ? "Este tipo sale en modo LITE (R18): un solo sdd/sdd-lite.md, aunque «Mis reglas» diga FULL, que es el default. Si querés otro modo, elegilo ahí (COMPACT o FEDERADO); si el proyecto crece, el agente te propone pasar a FULL."
+    : "";
+}
+
 $("ctype").addEventListener("change", () => {
   if (TIPOS_CON_IA.has($("ctype").value)) $("cia").checked = true;
+  pintarAvisoLite();
 });
+$("cperf").addEventListener("change", () => ReglasUI.fijarPerfil($("cperf").value));
 
 function renderFiles(){
   const pbs = playbooksElegidos();
@@ -65,7 +81,9 @@ function opcionesPaquete(){
     nombre: $("comboname").value.trim() || TYPES[$("ctype").value].name,
     tipoNombre: TYPES[$("ctype").value].name,
     nivel: $("clvl").value,
-    prompt: $("ta").value || buildPrompt(),
+    // M3: siempre del estado actual, nunca del textarea. Así el ZIP no puede
+    // llevar un prompt de antes de un cambio.
+    prompt: buildPrompt(),
     playbooks: pbs,
     custom: ReglasUI.hayCambios() ? ReglasUI.generar() : null,
     conTecnologias: sel.size > 0,
@@ -127,16 +145,24 @@ async function bajar(boton, fn){
   } finally { b.disabled = false; b.textContent = original; Feedback.terminar(); }
 }
 
+/* M3 (review de 0.33): si ya se generó, cualquier cambio que toque el prompt
+   o los archivos (tipo, stack, nivel, perfil, IA, playbooks, tecnologías,
+   reglas) regenera las tres cosas juntas. Antes, destildar «IA en el
+   producto» dejaba un prompt que pedía un playbook que el ZIP ya no traía. */
+function refrescarSalida(){
+  pintarAvisoLite();
+  if ($("out").style.display !== "block") return;
+  $("ta").value = buildPrompt();
+  renderFiles(); renderArbol();
+}
+$("comb").addEventListener("change", e => {
+  if (e.target && e.target.id === "comboname") return;
+  refrescarSalida();
+});
+ReglasUI.alCambiar(() => { $("cperf").value = ReglasUI.perfil(); refrescarSalida(); });
+
 $("zipSkills").onchange = renderArbol;
-// IA en el producto suma un playbook: si ya se generó, la lista lo sigue.
-$("cia").addEventListener("change", () => {
-  if ($("out").style.display === "block"){ renderFiles(); renderArbol(); }
-});
 $("zipHarness").onchange = renderArbol;
-// El nivel decide GUIDE.md y agents/: si ya se generó, la vista previa lo sigue.
-$("clvl").addEventListener("change", () => {
-  if ($("out").style.display === "block"){ renderFiles(); renderArbol(); }
-});
 $("zipProyecto").onclick = () => {
   Sesion.contar("paquete", "proyecto:" + $("ctype").value);
   bajar("zipProyecto", Paquete.proyecto);
@@ -175,7 +201,8 @@ $("zipSolo").onclick = () => {
     const prestado = ["ctype", "cstack", "clvl", "cperf", "cexiste"].map(id => [id, $(id).value]);
     const iaPrestada = $("cia").checked;
     try {
-      $("ctype").value = tipo; $("cstack").value = "reco"; $("cperf").value = "ESTRICTO";
+      // El perfil no se presta: es el del configurador (una sola fuente).
+      $("ctype").value = tipo; $("cstack").value = "reco";
       $("clvl").value = $("zrnivel").value; $("cexiste").value = $("zrexiste").value;
       $("cia").checked = TIPOS_CON_IA.has(tipo);
       const o = {...opcionesPaquete(), nombre: TYPES[tipo].name, prompt: buildPrompt(),

@@ -175,5 +175,85 @@ class TestRamaDeLaTarjeta(CampoCase):
         self.assertTrue(any("review sin 'rama'" in w for w in warns), warns)
 
 
+# ── Review R30 de v0.33 (B1, M1, M2, N9): el arnés LITE contra el caso real ─────────────────────────
+LITE_REAL = ("# sdd-lite.md · Landing — captar consultas\n\n"
+             "**Versión:** 0.3.0 · **Fecha:** 2026-10-01 · **Owner:** Facu · **Modo:** LITE (R18) · **Variante:** WEB\n\n"
+             "## §3 · Identidad del proyecto\n- **Problema:** consultas que se pierden\n"
+             "- **Modo de autonomía:** CONFIANZA (R01=OFF: commitea y pushea solo)\n")
+
+
+class TestReviewV033(CampoCase):
+    def lite(self, extra: str = "") -> None:
+        self.p.write("sdd/sdd-lite.md", LITE_REAL + extra)
+
+    # B1 · H13 tal cual: LITE, config por defecto, la fila rota en sdd-lite.md
+    def test_h13_tal_cual_en_lite_con_config_por_defecto(self):
+        self.lite("\n## 7 · Contratos\n| Qué | Dónde |\n|---|---|\n| Consulta | `consultas_inexistente.py` |\n")
+        fails = self.fails(self.checks(), "`consultas_inexistente.py`")
+        self.assertTrue(fails)
+        self.assertIn("sdd/sdd-lite.md", fails[0])
+
+    def test_spec_md_se_revisa_por_defecto(self):
+        self.p.write("sdd/spec.md", "| Capa | Archivo |\n|---|---|\n| datos | `consultas.py` |\n")
+        self.assertTrue(self.fails(self.checks(), "sdd/spec.md → `consultas.py`"))
+
+    def test_master_y_orchestration_no_se_revisan_por_defecto(self):
+        # Citan archivos opcionales (`GEMINI.md`, `metrics.md`): serían falsos positivos.
+        fila = "| x | `GEMINI.md` | `metrics.md` |\n"
+        self.p.write("sdd/SDD-MASTER.md", "# master\n" + fila)
+        self.p.write("sdd/orchestration.md", fila)
+        self.assertEqual(self.checks().messages("FAIL"), [])
+
+    # M1 · en LITE el registro del e2e no crea progress/
+    def test_e2e_en_lite_registra_en_sdd_e2e(self):
+        self.lite()
+        self.p.write("harness.config.json", json.dumps({"test": PASS_CMD, "e2e": PASS_CMD}))
+        self.p.commit("lite con e2e")
+        code, out = self.verify("--quick", "--e2e")
+        self.assertEqual(code, 0, out)
+        self.assertFalse((self.p.root / "sdd" / "progress").exists())
+        self.assertIn("e2e verde", (self.p.root / "sdd" / "e2e.md").read_text(encoding="utf-8"))
+
+    def test_e2e_sin_registro_en_lite_avisa_con_sdd_e2e(self):
+        self.lite()
+        self.p.write("harness.config.json", json.dumps({"test": PASS_CMD, "e2e": PASS_CMD}))
+        warns = self.checks().messages("WARN")
+        self.assertTrue(any("sdd/e2e.md" in w for w in warns), warns)
+        self.p.write("sdd/e2e.md", "- 2026-10-05 @ a942c177 — e2e verde\n")
+        self.assertEqual(self.checks().messages("WARN"), [])
+
+    def test_relevo_en_lite_va_a_sdd_lite(self):
+        for rel in ("prompts/relevo.md", "skills/relevo/SKILL.md"):
+            path = PACKAGE / rel
+            if not path.is_file():
+                self.skipTest("fuera del paquete SDD Universal")
+            self.assertIn("sdd/sdd-lite.md", path.read_text(encoding="utf-8"), rel)
+
+    # M2 · el encabezado real trae `**Modo:** LITE` y también `**Modo de autonomía:** CONFIANZA`
+    def test_encabezado_real_con_modo_de_autonomia_sigue_siendo_lite(self):
+        self.lite()
+        self.assertTrue(self.is_lite())
+
+    # N9
+    def test_node_modules_no_tapa_una_cita_rota(self):
+        self.p.write("node_modules/paquete/index.js", "")
+        self.p.write("AGENTS.md", "| Entrada | `index.js` |\n|---|---|\n")
+        self.assertTrue(self.fails(self.checks(), "`index.js`"))
+
+    def test_modo_comentado_o_en_prosa_no_cuenta(self):
+        self.p.write("sdd/custom.md", "# MODO=LITE\nSi es chico, poné MODO=LITE en tus overrides.\n")
+        self.assertFalse(self.is_lite())
+
+    def test_md_suelto_en_tabla_se_revisa(self):
+        self.p.write("AGENTS.md", "| Doc | `notas-de-diseno.md` |\n|---|---|\n")
+        self.assertTrue(self.fails(self.checks(), "`notas-de-diseno.md`"))
+
+    def test_librerias_de_ia_y_documentos_no_son_rutas(self):
+        filas = "".join(f"| x | `{n}` |\n" for n in ("Transformers.js", "PDF.js", "TensorFlow.js", "Highlight.js",
+                                                     "Swiper.js"))
+        self.p.write("AGENTS.md", "| Capa | Librería |\n|---|---|\n" + filas)
+        self.assertEqual(self.checks().messages("FAIL"), [])
+
+
 if __name__ == "__main__":
     unittest.main()

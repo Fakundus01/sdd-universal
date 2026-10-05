@@ -2,13 +2,16 @@
 
 Cuándo: el arnés avisa que la sesión pasó `context_threshold` tokens de trabajo, antes de una pausa larga, o cuando el humano lo pide. El chat nuevo no va a saber nada de esta conversación: **solo lo que quede en disco**. Detalle: `harness.md` §6.
 
+**Modo LITE (R18):** no hay `sdd/progress/`, y no se crea. El relevo va en **`sdd/sdd-lite.md`**, en una sección `## Relevo` al final (una sola: se reescribe entera cada vez) con las mismas partes de la plantilla de abajo, menos «Tarjetas en vuelo». Todo lo demás es igual.
+
 ## Instrucción (la ejecuta el agente)
 
 ```
 Hacé el relevo:
 1. Ubicá la rama (git rev-parse --abbrev-ref HEAD) y el archivo
    sdd/progress/<rama-con-guiones>/current.md (si no existe, creálo
-   desde la plantilla de abajo).
+   desde la plantilla de abajo). En modo LITE no: el relevo va en la
+   sección "## Relevo" al final de sdd/sdd-lite.md (creala si falta).
 2. Reescribilo COMPLETO con la plantilla.
 3. Si hay código a medio hacer, commitealo en la rama como
    "wip: <qué>" (con R01=ON, pedí el OK antes).
@@ -45,4 +48,4 @@ Hacé el relevo:
 <Lo PRIMERO que hace la sesión nueva. Concreto: archivo, función, comando o decisión pendiente.>
 ```
 
-**No:** resumir la conversación entera, ni pegar salidas largas (comando + una línea de resultado alcanza). La sesión nueva arranca con: *«Leé `sdd/SDD-MASTER.md` y después `sdd/progress/<rama>/current.md`, y seguí desde el próximo paso.»* — en Claude Code, el hook de inicio se lo muestra solo.
+**No:** resumir la conversación entera, ni pegar salidas largas (comando + una línea de resultado alcanza). La sesión nueva arranca con: *«Leé `sdd/SDD-MASTER.md` y después `sdd/progress/<rama>/current.md` (en LITE, `sdd/sdd-lite.md`), y seguí desde el próximo paso.»* — en Claude Code, el hook de inicio se lo muestra solo.

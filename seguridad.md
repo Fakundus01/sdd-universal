@@ -75,6 +75,8 @@ Lo que `security.md` del proyecto tiene que contestar por escrito (R17 lo pide; 
 | Normativa local declarada | En Argentina, Ley 25.326. Nombrarla obliga a leerla una vez |
 | Logs sin datos personales | El lugar más común donde se filtra un mail o un token |
 
+**Borrar o anonimizar es en el archivo también** (`scenarios.md` S35, H25). En SQLite, un `UPDATE` o un `DELETE` deja los valores viejos en páginas libres del archivo: en dos de los ejemplos, después de «anonimizar» seguían ahí casi todos los nombres y mails. La base abre con `pragma secure_delete = on`, después de anonimizar se corre `VACUUM`, una base anonimizada con la versión anterior se limpia una vez, y el test lee los **bytes** del archivo, no las filas. Los backups no se anonimizan solos: retención corta (por ejemplo 30 días), y restaurar uno es anonimizar antes de volver a atender.
+
 ## 5 · N3 · Plata — hay cobros
 
 | Control | Por qué |
@@ -98,7 +100,7 @@ Este nivel casi no existía hace unos años y hoy es de los más ignorados.
 | La API key **nunca** en el front | Si está en el navegador, es pública. Va en el servidor |
 | Nada sensible en el prompt sin decidirlo | Lo que va al prompt sale de tu infraestructura hacia el proveedor |
 | Validar la **salida** antes de usarla | Si la respuesta se inserta en HTML, ejecuta SQL o corre como comando, es entrada no confiable |
-| El texto del usuario va **escapado** dentro de etiquetas que pone el sistema | Un reemplazo de una pasada se rompe con `</tick</ticket>et>`: el cliente cierra el bloque y escribe instrucciones |
+| El texto del usuario va **escapado** (`<`, `>` y `&`) dentro de etiquetas que pone el sistema | Si solo se borra la etiqueta de cierre en una pasada, `</tick</ticket>et>` queda como `</ticket>` después de borrar: el cliente cierra el bloque de «dato» y lo que sigue el modelo lo lee como instrucción. Escapar no tiene ese problema |
 | Tests con el **SDK real** sobre un transporte simulado | Un cliente falso escrito a mano ocultó que un helper validaba adentro de la llamada y perdía el registro del gasto |
 | Decirle al usuario que habla con una IA | Y qué se guarda de esa conversación |
 
@@ -168,5 +170,5 @@ Igual que todo el paquete (R20): un control entra cuando alguien se comió el pr
 
 | Versión | Fecha | Cambio |
 |---|---|---|
-| 0.12 | 2026-10-05 | Lecciones de los cuatro ejemplos (`scenarios.md` S33 y S35): N4 con el tope como **reserva** y el playbook `ia-en-el-producto`, escape del texto del usuario y tests con el SDK real; N6 con los estáticos por lista blanca; cada control declarado lleva un test que se vio fallar; error 9 «un control sin test». |
+| 0.12 | 2026-10-05 | Lecciones de los cuatro ejemplos (`scenarios.md` S33 y S35): N2 con el borrado en el archivo (`secure_delete` + `VACUUM`, backups); N4 con el tope como **reserva** y el playbook `ia-en-el-producto`, escape del texto del usuario y tests con el SDK real; N6 con los estáticos por lista blanca; cada control declarado lleva un test que se vio fallar; error 9 «un control sin test». |
 | 0.11 | 2026-08-15 | Primera versión: clasificación por superficie (N0–N6), controles con su porqué y su verificación, herramientas con lo que cada una **no** detecta, y los 8 errores que más se repiten. Nace de R27. |

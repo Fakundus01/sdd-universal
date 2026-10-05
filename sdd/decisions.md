@@ -166,10 +166,16 @@
 **Decisión:**
 - **O1, O2 y O4 se calculan sobre `eventos`**, en una vista `metricas_30_dias` (misma RLS: solo el admin lee), y el panel los muestra contra la meta. La lógica es pura (`web/metricas.js`) y tiene tests. Sin datos dice «sin datos», no 0%.
 - **O2:** «visitas» son cargas de la página (detalle que empieza con `/`), no cada cambio de vista ni cada vista previa: si no, el denominador crece con la navegación y el outcome se hunde solo.
-- **O4:** de las llegadas al combinador, la parte que vino de un celular. Para eso la visita lleva `|movil` o `|escritorio` pegado al detalle. **La clase la calcula el navegador con `matchMedia("(pointer: coarse)")`; el user-agent no se lee nunca.** Dos valores posibles no distinguen a nadie; un user-agent, con poco tráfico, casi sí. La base lo hace cumplir: `eventos_detalle_visita_check` rechaza cualquier otra cosa después de la barra. Una tablet cuenta como celular, y está bien: lo que mide O4 es si la página anda con el dedo.
+- **O4:** de las llegadas al combinador, la parte que vino de un celular. Para eso la visita lleva `|movil` o `|escritorio` pegado al detalle. **La clase la calcula el navegador con `matchMedia("(pointer: coarse)")`; el user-agent no se lee nunca.** Dos valores posibles no distinguen a nadie; un user-agent, con poco tráfico, casi sí. Una tablet cuenta como celular, y está bien: lo que mide O4 es si la página anda con el dedo.
 - **O3 queda manual.** No hay contador que diga si alguien entendió. El panel explica el procedimiento y deja anotarlo (en ese navegador), pero el registro que vale es una línea en `status.md`.
+
+- **Lo que hace cumplir la base, y lo que no** (revisado tras la review R30 de 0.33, M4). La primera versión decía «la base rechaza cualquier otra cosa después de la barra», y era cierto solo para eso: con la clave pública se podía guardar `juan.perez@gmail.com DNI 30123456` como visita sin barra, o una visita con `dia = 2099` que la vista contaba para siempre. Hoy:
+  - **`eventos_detalle_formato_check`**: el `detalle` tiene un formato cerrado por tipo. Visita: `/ruta|movil`, `#/vista|escritorio` o `md:archivo.md`; descarga: un nombre de archivo; combinación: `tipo/stack/NOVATO|PRO/nuevo|brownfield`; paquete y perfil: sus ids. Solo `[A-Za-z0-9._/-]`, con largo acotado (30 a 80): **no entran espacios, `@`, saltos de línea ni texto libre**. Lo que no garantiza: un slug corto podría ser un nombre (`juanperez`). Para eso no hay check posible, y con 30 letras sin espacios el abuso es caro y poco útil.
+  - **El día lo pone la base**: la política de alta exige `dia = hoy (UTC)` (`401`/`403` si no), y la vista de 30 días además acota `dia <= hoy`.
+  - **`NOT VALID`**: las filas viejas no se revisan (las visitas de antes de 0.33 quedan, sin clase); todo INSERT nuevo sí.
+  - Lo controla `dev/tests/local.test.mjs` con la sonda del reviewer: cada caso que daba `201` ahora es `4xx`, y lo que manda la web sigue entrando.
 
 **Descartado:** un evento aparte de tipo `dispositivo` (duplicaba cada visita y no se podía cruzar con el lugar sin guardar algo que las vincule), y el ancho de pantalla en píxeles (es más identificante y no dice si hay dedo o mouse).
 
-**Lo que cuesta:** las visitas anteriores a 0.33 no tienen clase y no cuentan para O4. En la nube hay que volver a correr `metricas.sql` (crea el check y la vista) cuando se reactive; hasta entonces el panel lo avisa en vez de romperse.
+**Lo que cuesta:** las visitas anteriores a 0.33 no tienen clase y no cuentan para O4. En la nube hay que volver a correr `metricas.sql` (crea el check, la política nueva y la vista) cuando se reactive; hasta entonces el panel lo avisa en vez de romperse.
 

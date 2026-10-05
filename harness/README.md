@@ -20,7 +20,7 @@ La parte ejecutable de `harness.md` (R29, R30): verificación por niveles, check
 | `python harness/verify.py --quick` | Integridad del arnés + lint de lo cambiado | Al arrancar; el pre-commit; el hook de cierre |
 | `python harness/verify.py --changed` | `--quick` + `test_quick` si hay cambios de código | Mientras trabajás; antes del handback |
 | `python harness/verify.py` | `lint` + `test`, igual que CI | Antes de pedir review; el reviewer siempre |
-| `… --e2e` | Además el `e2e`; si da verde, lo anota en `sdd/progress/e2e.md` | A demanda, y antes de desplegar |
+| `… --e2e` | Además el `e2e`; si da verde, lo anota en `sdd/progress/e2e.md` (en modo LITE, en `sdd/e2e.md`) | A demanda, y antes de desplegar |
 
 La primera línea de la salida dice el comando, el hash y la rama: pegada entera en un handback, ya es evidencia (R30).
 
@@ -34,7 +34,7 @@ La primera línea de la salida dice el comando, el hash y la rama: pegada entera
 - `sdd/SDD-MASTER.md` existe; `sdd/progress/<rama>/current.md` existe (si no, lo crea; en modo LITE ni lo crea ni lo pide).
 - Tarjetas de `sdd/cards/`: id = nombre del archivo, estado válido, `in_progress` con rama y una sola por rama, `review` sin rama → WARN, `done` con rama + criterios + `review_<ID>.md` en `APPROVED` con el hash en el título.
 - `sdd/status.md` no marca al 100% una feature con tarjetas abiertas.
-- Rutas citadas en `cited_paths_docs` y en las tarjetas `done` existen (las tarjetas pendientes pueden citar archivos por crear). En una celda de tabla, un nombre suelto entre backticks (`consultas.py`) tiene que existir en alguna carpeta del proyecto.
+- Rutas citadas en `cited_paths_docs` (default: `AGENTS.md`, `CLAUDE.md`, `sdd/testing.md`, `sdd/spec.md`, `sdd/sdd-lite.md`) y en las tarjetas `done` existen (las tarjetas pendientes pueden citar archivos por crear). En una celda de tabla, un nombre suelto entre backticks (`consultas.py`) tiene que existir en alguna carpeta del proyecto.
 - Handbacks de la rama: commiteados, con hash, sin TAB literal → WARN.
 - `e2e` declarado sin ninguna corrida verde registrada → WARN (S29).
 

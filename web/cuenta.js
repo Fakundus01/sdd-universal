@@ -24,10 +24,14 @@ function aplicarCombinacion(c){
   if (TYPES[c.tipo]) $("ctype").value = c.tipo;
   if (STACKS[c.stack]) $("cstack").value = c.stack;
   $("clvl").value = c.nivel || "PRO";
-  $("cperf").value = c.perfil || "ESTRICTO";
+  ReglasUI.fijarPerfil(c.perfil || "ESTRICTO");
+  $("cperf").value = ReglasUI.perfil();
   document.querySelectorAll("#pbs input").forEach(i => i.checked = (c.playbooks || []).includes(i.value));
   $("cia").checked = Boolean(c.ia);
-  sel.clear(); (c.tecnologias || []).forEach(t => sel.add(t));
+  // Texto ajeno (link, base): una línea, sin control y con tope (M6, R26).
+  sel.clear();
+  (Array.isArray(c.tecnologias) ? c.tecnologias : []).map(Prompt.limpiarTecnologia).filter(Boolean)
+    .slice(0, 40).forEach(t => sel.add(t));
   renderSel(); renderTech();
   $("go").click();
 }

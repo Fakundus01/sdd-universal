@@ -25,11 +25,21 @@ const Prompt = (() => {
      default), los tipos chicos van en LITE como ya dicen. */
   const esLite = ({modo, tipo}) => modo === "LITE" || (modo === "FULL" && TIPOS_LITE.has(tipo));
 
+  /* Una tecnología que viene de afuera (el link compartido, una combinación
+     guardada, la base) es texto ajeno que va a un prompt (R26): una sola
+     línea, sin caracteres de control y con el mismo tope que el buscador. */
+  const TOPE_TECNOLOGIA = 60;
+  const limpiarTecnologia = n => String(n ?? "")
+    .replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/g, " ")
+    .replace(/\s+/g, " ").trim().slice(0, TOPE_TECNOLOGIA).trim();
+
   /* Lo que no está en el catálogo no se tira: se separa y se avisa. */
   function separarTecnologias(nombres, catalogo){
     const conocidas = [], fuera = [];
-    for (const n of nombres){
-      const t = catalogo.find(x => x.n.toLowerCase() === String(n).trim().toLowerCase());
+    for (const crudo of nombres){
+      const n = limpiarTecnologia(crudo);
+      if (!n) continue;
+      const t = catalogo.find(x => x.n.toLowerCase() === n.toLowerCase());
       t ? conocidas.push(t) : fuera.push(n);
     }
     return {conocidas, fuera};
@@ -161,5 +171,5 @@ registralo en security.md. No me pases el checklist entero: solo lo que aplica.
 Arrancá con el cuestionario socrático (R04) sumando las preguntas propias de este tipo de proyecto. Después: propuesta de estructura y stack → mi OK → carpeta del repo (R10, con OK) → generás sdd/ → ${cierre}`;
   }
 
-  return {armar, playbooks, r01Apagada, esLite, separarTecnologias, PB_IA};
+  return {armar, playbooks, r01Apagada, esLite, separarTecnologias, limpiarTecnologia, TIPOS_LITE, PB_IA};
 })();

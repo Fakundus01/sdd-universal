@@ -23,6 +23,8 @@ Node 22.2+ (por `zlib.crc32`) y nada más: sin `node_modules` (ADR-001). Corre e
 
 **`combinador.test.mjs` (0.33)** carga `prompt.js` y `tecnologias.js` como el navegador, y las constantes de datos de `catalogo.js` (que toca el DOM al cargar, por eso se evalúan aparte). Atrapa: un stack o un tipo que falte (H1, H14); `tecnologias.js` y `tecnologias.md` desparejos, o un «120 tecnologías» viejo en la web; una tecnología fuera del catálogo que no llegue al prompt (H2); la lección de FastAPI (H17) o de Anthropic que no viaje; el prompt que con `R01=OFF` siga pidiendo esperar el OK (H3); «IA en el producto» sin N4, R12 o el playbook; playbooks del mapa que no existan en disco; y el modo LITE sin su plantilla.
 
+**`combinador-ui.test.mjs` (0.33, review R30)** carga `combinador.js` de verdad sobre un DOM mínimo (elementos con valor, `checked` y listeners) y un `ReglasUI` falso. Atrapa: un prompt o un ZIP que no siguen un cambio hecho después de generar (M3), el perfil leído de dos lados (N4) o sin apagar R01 con CONFIANZA (W15), el aviso de LITE (N5), una tecnología de varias líneas o de 5000 caracteres que entra al prompt (M6), el `esc()` del botón «Sumar igual» y de los chips (W16, evaluando el código real de `tecnologias-vista.js`), un `writeURL` que borra el hash del link compartido, conteos viejos en el README y la web («N tecnologías», «N situaciones», N3) y la lección de Pydantic (H24). Cada uno se vio en rojo antes del arreglo, y los mutantes de la review (W10, W11, W15, W16, M3, M6, N4, N6 y el del link) mueren todos.
+
 **`metricas.test.mjs` (0.33, ADR-013)**: O1, O2 y O4 contra sus metas con filas armadas a mano, «sin datos» en vez de 0%, la clase de dispositivo que solo puede ser `movil`/`escritorio`, y que ningún archivo que cuenta visitas lea el user-agent.
 
 Cada uno se vio fallar a propósito antes de darlo por bueno (R29): sin la marca de ejecutable, con el `reglas.js` de 0.29, con R30 marcada como desactivable, con «28 reglas» en `catalogo.js`, con una cita a `prompts/nuevo.md` y con el LEEME de NOVATO anunciando `/harness-fix`.
@@ -47,6 +49,7 @@ Necesita los binarios de Postgres en el PATH (`initdb`, `pg_ctl`, `psql`). Levan
 | Las métricas se suman sin sesión y solo las ve el admin | La asimetría de `eventos` |
 | Guardar dos veces el mismo nombre pisa, no duplica | El upsert del combinador contra el índice real |
 | Login, refresh, logout, cambio de contraseña y registro cerrado | Que el emulador de GoTrue se aparte de lo que espera `sesion.js` |
+| M4: un anónimo no mete texto identificante ni elige el día (0.33, review R30) | La sonda del reviewer: mail o user-agent en `detalle`, texto tras la barra en descarga y perfil, saltos de línea, `dia` en 2099 o en 2020. Todos `4xx`; lo que manda la web, `201` |
 | La visita lleva solo la clase de dispositivo, y la vista de 30 días es del admin (0.33) | Un detalle con user-agent u otra cosa después de la barra (`400`), una vista que mire más de 30 días o que vea alguien que no es admin |
 | La combinación guarda si hay IA en el producto (0.33) | La columna `ia` que falte o que no arranque en `false` |
 | El servidor sirve la config local y no sale del repo | Path traversal, `dev/.data/` expuesto (también por su alias 8.3 `DATA~1`) y un `Host` ajeno |

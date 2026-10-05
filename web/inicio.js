@@ -22,7 +22,7 @@ async function abrirPreview(url, titulo){
     $("mdcuerpo").innerHTML = Md.render(t);
     $("mdcuerpo").scrollTop = 0;
     $("mdinfo").textContent = `${t.split("\n").length} líneas · ${(t.length / 1024).toFixed(1)} KB`;
-    Sesion.contar("visita", "md:" + url.split("/").pop());
+    Sesion.contar("visita", "md:" + url.split("/").pop().split(/[?#]/)[0]);
   } catch (e) {
     $("mdcuerpo").innerHTML = `<p class="dlg-empty">No se pudo cargar el archivo (${esc(e.message)}).</p>`;
   } finally {
@@ -186,7 +186,8 @@ Buscador.sugerir({
    si preguntamos y después no cambia nada, preguntamos al pedo. */
 window.aplicarPerfil = function aplicarPerfil(p){
   if (p.nivel) $("clvl").value = p.nivel;
-  if (p.perfil_sdd) $("cperf").value = p.perfil_sdd;
+  // El onboarding no pisa una configuración que la persona ya armó en «Mis reglas».
+  if (p.perfil_sdd && !ReglasUI.hayCambios()){ ReglasUI.fijarPerfil(p.perfil_sdd); $("cperf").value = ReglasUI.perfil(); }
   if (p.interes && TYPES[p.interes]) $("ctype").value = p.interes;
   if (p.agente && p.agente !== "otro"){
     const espejos = {claude: "CLAUDE.md", codex: "AGENTS.md",

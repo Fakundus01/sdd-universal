@@ -73,3 +73,30 @@ test("el panel carga el reporte y usa la vista de 30 días", () => {
   assert.match(leer("web/sesion.js"), /metricas_30_dias/);
   assert.match(leer("dev/rest.mjs"), /"metricas_30_dias"/);
 });
+
+test("W10: O4 no cuenta las llegadas sin clase (las de antes de 0.33)", () => {
+  const r = Metricas.outcomes([
+    fila("visita", "#/combinador", 100),
+    fila("visita", "#/combinador|movil", 1), fila("visita", "#/combinador|escritorio", 3)
+  ]);
+  assert.equal(r.O4.num, 1);
+  assert.equal(r.O4.den, 4);
+});
+
+test("W11: la meta es «más de»: llegar justo no alcanza", () => {
+  const r = Metricas.outcomes([
+    fila("descarga", "SDD-MASTER.md", 6), fila("descarga", "otro.md", 4),
+    fila("visita", "/web/|movil", 4), fila("combinacion", "webapp/reco/PRO/nuevo", 1),
+    fila("visita", "#/combinador|movil", 3), fila("visita", "#/combinador|escritorio", 7)
+  ]);
+  for (const k of ["O1", "O2", "O4"]){
+    assert.equal(r[k].valor, r[k].meta, `${k} tendría que estar justo en la meta`);
+    assert.equal(r[k].cumple, false, k);
+  }
+});
+
+test("N6: un lugar largo se corta antes de pegar la clase, así la visita no se pierde", () => {
+  const d = Metricas.visita("/" + "a".repeat(200), "movil");
+  assert.ok(d.length <= 120, d.length);
+  assert.ok(d.endsWith("|movil"), d);
+});

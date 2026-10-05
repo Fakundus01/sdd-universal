@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from config import HarnessConfig, sdd_mode
+from config import HarnessConfig, e2e_record, sdd_mode
 from report import Report
 from repo import Repo
 
@@ -31,7 +31,8 @@ LIBRARY_NAMES = {f"{n}.js" for n in (
     "node", "next", "nuxt", "vue", "react", "express", "chart", "three", "d3", "p5", "alpine", "ember", "backbone",
     "moment", "day", "anime", "socket", "angular", "nest", "solid", "preact", "fastify", "koa", "hapi", "electron",
     "pixi", "phaser", "babylon", "matter", "tone", "paper", "fabric", "leaflet", "highcharts", "plotly", "video",
-    "howler", "lodash", "jquery", "require", "handlebars", "mustache", "mithril", "polymer", "htmx", "deno")}
+    "howler", "lodash", "jquery", "require", "handlebars", "mustache", "mithril", "polymer", "htmx", "deno",
+    "transformers", "pdf", "tensorflow", "highlight", "swiper", "brain", "ml5", "onnxruntime-web", "mermaid")}
 WALK_SKIP = {".git", "node_modules", "__pycache__", ".venv", "venv", ".next", ".nuxt", "dist", "build"}
 
 
@@ -312,9 +313,9 @@ class HarnessChecks:
     def check_e2e_registered(self) -> None:
         if not self.config.e2e or self.e2e_running:
             return
-        record = self.root / "sdd" / "progress" / "e2e.md"
+        record = e2e_record(self.root)
         if not record.is_file() or not record.read_text(encoding="utf-8").strip():
-            self.report.warn("e2e declarado pero sin ninguna corrida verde registrada en sdd/progress/e2e.md "
+            self.report.warn(f"e2e declarado pero sin ninguna corrida verde registrada en {self._rel(record)} "
                              "(corré `verify.py --e2e`): un E2E que nunca corrió no prueba nada")
 
     def _rel(self, path: Path) -> str:

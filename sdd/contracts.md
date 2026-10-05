@@ -77,7 +77,7 @@ Todo con header `apikey` y, salvo el primero, `Authorization: Bearer <access_tok
 | `POST /rest/v1/combinaciones?on_conflict=usuario_id,nombre` con `Prefer: resolution=merge-duplicates,return=representation` | Guardar o pisar | `201` con la fila |
 | `DELETE /rest/v1/combinaciones?id=eq.<id>` | Borrar una | `204` |
 | `PATCH /rest/v1/perfiles?id=eq.<id>` | Guardar el tema elegido | `204` |
-| `POST /rest/v1/eventos` (sin sesión, a propósito) | Sumar un contador anónimo | `201`. Una visita lleva `lugar\|movil` o `lugar\|escritorio`; cualquier otra cosa después de la barra es `400` (`eventos_detalle_visita_check`) |
+| `POST /rest/v1/eventos` (sin sesión, a propósito) | Sumar un contador anónimo | `201`. El `detalle` tiene que seguir el formato de su tipo (§6) y el `dia`, si se manda, tiene que ser hoy: si no, `400` (check) o `401`/`403` (RLS) |
 | `GET /rest/v1/metricas_30_dias?select=*` | El reporte de outcomes del panel | `200`; vacío para quien no es admin (RLS). `tipo, detalle, total` de los últimos 30 días |
 
 **El contrato que no se ve:** las consultas **nunca** filtran por usuario en el query string. Lo hace RLS del lado del servidor. Si alguna vez se agrega un `&usuario_id=eq.…` "por las dudas", es señal de que alguien dudó de las políticas — y esa duda se resuelve arreglando las políticas, no el front.
@@ -93,13 +93,17 @@ Todo con header `apikey` y, salvo el primero, `Authorization: Bearer <access_tok
 | Opción | De dónde sale |
 |---|---|
 | `tipo`, `stack` | `TYPES[ctype]` y `STACKS[cstack]` (`catalogo.js`) |
-| `nivel`, `perfil`, `brownfield` | los selects del combinador |
+| `nivel`, `brownfield` | los selects del combinador |
 | `playbooks`, `tecnologias`, `catalogo` | los tildados, la selección (`sel`) y `TECH` |
-| `custom`, `apagadas` | el configurador: `ReglasUI.hayCambios()` y `ReglasUI.apagadas()`, con `R01` sumada si su perfil es CONFIANZA |
+| `perfil`, `custom`, `apagadas` | el configurador, **única fuente del perfil**: `ReglasUI.perfil()`, `hayCambios()` y `apagadas()`, con `R01` sumada si el perfil es CONFIANZA. El select del combinador escribe con `ReglasUI.fijarPerfil` y se repinta con `ReglasUI.alCambiar` |
 | `ia` | el checkbox «IA en el producto» (`#cia`) |
 | `lite` | `Prompt.esLite({modo, tipo})`: el modo del configurador, o FULL + un tipo que ya es LITE (calc, guía, proceso) |
 
-Lo que promete el texto, y testea `web/tests/combinador.test.mjs`:
+**Tecnologías de afuera** (link compartido, combinación guardada, la base): `Prompt.limpiarTecnologia` las deja en una línea, sin caracteres de control y con 60 caracteres como máximo, al cargarlas (`cuenta.js`) y otra vez al armar el prompt. Las vacías se descartan.
+
+**Prompt y ZIP del mismo estado:** `opcionesPaquete()` arma el prompt con `buildPrompt()`, nunca con el textarea. Si ya se generó, cualquier cambio en el combinador, en la selección de tecnologías o en «Mis reglas» regenera el prompt, la lista de archivos y el árbol (`refrescarSalida`).
+
+Lo que promete el texto, y testean `web/tests/combinador.test.mjs` y `combinador-ui.test.mjs`:
 - **R01 apagada** (por `R01=OFF` o por perfil CONFIANZA): el prompt dice `R01=OFF` y no pide esperar el OK del commit ni avisa que R01 es desactivable.
 - **`ia`**: bloque `IA EN EL PRODUCTO` con N4 (R26, tope reservado antes de llamar, salida como dato), la recomendación de modelo de R12 salvo que esté apagada, y el playbook `ia-en-el-producto`, que además se suma solo a la lista de playbooks (`Prompt.playbooks`).
 - **`lite`**: `MODO: LITE` y que `sdd/sdd-lite.md` se arma con la plantilla `sdd/prompts/sdd-lite.md`, que el ZIP trae siempre.
@@ -115,4 +119,18 @@ Lo que promete el texto, y testea `web/tests/combinador.test.mjs`:
 | `combinacion` | `tipo/stack/nivel/existe` — clic en «Generar» | `manuales.js` |
 | `paquete` | `proyecto:<tipo>`, `rapido:<tipo>`, `sueltos`, `skills` | `combinador.js`, `manuales.js` |
 
-La clase la calcula `Metricas.clase` con `matchMedia("(pointer: coarse)")`. **Nunca se lee el user-agent**, y la base rechaza cualquier valor que no sea una de las dos clases.
+| `perfil` | `nivel:<x>`, `interes:<tipo>`, `agente:<x>` (onboarding) | `perfil.js` |
+
+La clase la calcula `Metricas.clase` con `matchMedia("(pointer: coarse)")`. **Nunca se lee el user-agent.** `Metricas.visita` corta el lugar antes de pegar la clase, para que el sufijo nunca quede roto.
+
+**Lo que hace cumplir la base** (`eventos_detalle_formato_check`, `NOT VALID`: solo filas nuevas). La fuente es `supabase/metricas.sql`; en esta tabla, la barra que separa la clase en las visitas va escapada en el SQL (`\|`) y Markdown la muestra como `|`:
+
+| Tipo | Patrón |
+|---|---|
+| `visita` | `^((/[A-Za-z0-9._/-]{0,80}\|#/[a-z]{1,20})\|(movil\|escritorio)\|md:[A-Za-z0-9._-]{1,80})$` |
+| `descarga` | `^[A-Za-z0-9._-]{1,60}$` |
+| `combinacion` | `^[a-z0-9-]{1,30}/[a-z0-9-]{1,20}/(NOVATO\|PRO)/(nuevo\|brownfield)$` |
+| `paquete` | `^(sueltos\|skills\|(proyecto\|rapido):[a-z0-9-]{1,30})$` |
+| `perfil` | `^(nivel\|interes\|agente):[A-Za-z0-9-]{1,30}$` |
+
+Ninguno admite espacios, `@` ni saltos de línea. **Lo que no garantiza:** un slug corto puede ser un nombre de persona. Y la política de alta exige `dia = hoy (UTC)`; la vista `metricas_30_dias` además acota `dia <= hoy`.

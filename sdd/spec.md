@@ -63,5 +63,6 @@ El paquete SDD Universal son 20 archivos Markdown en un repo. Para quien ya sabe
 - **V5** · El tema arranca en oscuro aunque el sistema esté en claro.
 - **V6** · El configurador de reglas no permite apagar ninguna regla marcada como `fija`.
 - **V7** · Los dos demos son operables y demuestran una diferencia observable en los tres casos borde (V1/V2/V3 de `examples/turnos`).
-- **V8** · El combinador respeta lo que configuró la persona: con `R01=OFF` (o perfil CONFIANZA) el prompt no promete esperar el OK del commit; con «IA en el producto» trae N4, R12 y el playbook `ia-en-el-producto`; una tecnología que no está en el catálogo llega al prompt marcada, no se pierde.
+- **V8** · El combinador respeta lo que configuró la persona: con `R01=OFF` (o perfil CONFIANZA) el prompt no promete esperar el OK del commit; con «IA en el producto» trae N4, R12 y el playbook `ia-en-el-producto`; una tecnología que no está en el catálogo llega al prompt marcada, no se pierde, y en una sola línea de 60 caracteres como máximo. El prompt y el ZIP salen siempre del mismo estado: si se cambia algo después de generar, se regeneran juntos. El perfil tiene una sola fuente, así que el prompt y el `custom.md` nunca dicen dos distintos.
+- **V10** · Un link `#/combinador?c=…` abre el combinador con esa combinación cargada y el prompt generado.
 - **V9** · El panel muestra O1, O2 y O4 de los últimos 30 días contra su meta, con «sin datos» cuando no hay eventos, y O3 como manual.

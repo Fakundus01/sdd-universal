@@ -20,7 +20,11 @@ const Metricas = (() => {
      cosa después de la barra (eventos_detalle_visita_check). */
   function visita(lugar, cls){
     if (!CLASES.includes(cls)) throw new Error(`Clase de dispositivo inválida: ${cls}`);
-    return `${String(lugar).replace(/\|/g, "")}|${cls}`;
+    // N6: se corta el lugar ANTES de pegar la clase. Cortado después (como
+    // hacía contar() con su tope de 120), el sufijo quedaba roto, la base lo
+    // rechazaba y la visita se perdía en silencio.
+    const sufijo = "|" + cls;
+    return String(lugar).replace(/\|/g, "").slice(0, 120 - sufijo.length) + sufijo;
   }
 
   /* filas: [{tipo, detalle, total}] de la vista metricas_30_dias. */

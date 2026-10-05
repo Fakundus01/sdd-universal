@@ -1,6 +1,6 @@
 # harness.md · El arnés: que lo que el agente dice que hizo sea cierto
 
-**Versión:** 0.32 · 2026-10-05 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
+**Versión:** 0.33 · 2026-10-05 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
 
 > Nace de **Relay**, el sistema que se usó en producción en `chat-commerce-ai` (features H-1 a H-11). Escenarios S28–S31.
 > El SDD gobierna *qué* se construye; el arnés hace cumplir *que esté construido*.
@@ -48,12 +48,12 @@ Se activa con **R29/R30** (ON por default). Funciona con un solo agente: no hace
 | `lint` | no | Lint completo (nivel completo). |
 | `lint_file` | no | Lint de lo cambiado con el linter que trae la plantilla del proyecto (`create-vite` trae `oxlint`, no eslint): `{file}` corre una vez por archivo, `{files}` una sola vez con todos. **No pasa por un shell** (S32): ver abajo. Lo usan `--quick`, el pre-commit y el hook post-edición. |
 | `lint_ext` | no | Extensiones a las que se les pasa `lint_file` (ej. `[".ts", ".tsx"]`). Si falta: todo menos `.md` y `.json`. |
-| `e2e` | no | End to end a demanda (`verify.py --e2e`). Cada corrida verde se anota con su hash en `sdd/progress/e2e.md`; si `e2e` existe y ese registro está vacío, `--quick` avisa (S29). |
+| `e2e` | no | End to end a demanda (`verify.py --e2e`). Cada corrida verde se anota con su hash en `sdd/progress/e2e.md` (en modo LITE, en `sdd/e2e.md`: ahí no hay `progress/`); si `e2e` existe y ese registro está vacío, `--quick` avisa (S29). |
 | `prod_readonly_query` | no | Consulta de **solo lectura** a producción para R32. Las credenciales van en `.env` con un usuario sin permisos de escritura (R17). |
 | `deploy` | no | **Documental: el agente jamás lo ejecuta** (R32). Está para que el humano y el `infra-implementer` sepan cuál es el comando. |
 | `base_branch` / `prod_branch` | no | Ramas de integración y de producción (default: `main` / `main`). |
 | `context_threshold` | no | Tokens de *trabajo* de la sesión antes de pedir relevo (§6). Default 400000. |
-| `cited_paths_docs` | no | Docs cuyas rutas citadas tienen que existir (§7). Default `AGENTS.md`, `CLAUDE.md`, `sdd/testing.md`. |
+| `cited_paths_docs` | no | Docs cuyas rutas citadas tienen que existir (§7). Default `AGENTS.md`, `CLAUDE.md`, `sdd/testing.md`, `sdd/spec.md` y `sdd/sdd-lite.md` (los que existan). El master y `orchestration.md` no van por default: citan archivos opcionales (`GEMINI.md`, `metrics.md`) y darían falsos positivos. |
 
 JSON y no YAML/TOML: lo leen la stdlib de Python y de Node sin dependencias (R28). Los comentarios van en `sdd/design.md`, no en el JSON. Tipos inválidos o claves desconocidas dan error o aviso, nunca un traceback.
 
@@ -147,7 +147,7 @@ sdd/
 
 - **Una carpeta por rama:** varias sesiones en paralelo no se pisan ni chocan al mergear. Se commitea con la rama: es la traza auditable.
 - **Tarjetas como cola:** un archivo por tarjeta en `sdd/cards/`, con frontmatter `estado: pending | in_progress | review | done | blocked`, `rama`, `feature` (la de `status.md`). `status.md` sigue siendo la vista humana y enlaza las tarjetas; el check §7 verifica que coincidan. Plantilla: `prompts/task-card.md`.
-- **Relevo:** cuando la sesión pasa `context_threshold` tokens de **trabajo** (el uso actual menos el de la primera respuesta: la base ya ocupa decenas de miles), el agente reescribe `current.md` completo —feature y rol, plan con lo hecho, decisiones con su porqué, qué se probó y no anduvo, próximo paso accionable, tarjetas en vuelo— commitea lo que esté a medias como `wip:` y le pide al humano que limpie el contexto. La sesión nueva arranca leyendo `current.md`. Plantilla: `prompts/relevo.md`.
+- **Relevo:** cuando la sesión pasa `context_threshold` tokens de **trabajo** (el uso actual menos el de la primera respuesta: la base ya ocupa decenas de miles), el agente reescribe `current.md` completo —feature y rol, plan con lo hecho, decisiones con su porqué, qué se probó y no anduvo, próximo paso accionable, tarjetas en vuelo— commitea lo que esté a medias como `wip:` y le pide al humano que limpie el contexto. La sesión nueva arranca leyendo `current.md`. Plantilla: `prompts/relevo.md`. En modo LITE no hay `current.md`: el relevo va en una sección `## Relevo` al final de `sdd/sdd-lite.md` (§10).
 
 ---
 
@@ -213,7 +213,7 @@ El scaffold trae los tres: `harness/hooks/` (Claude), `harness/git-hooks/pre-com
 | R31 ORQUESTACIÓN-CON-ROLES | AUTO | OFF — demasiadas piezas para supervisar | Un solo agente + reviewer en sesión nueva |
 | R32 PRODUCCIÓN-CON-OK | ON (fija) | ON | — |
 
-Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia en el HANDBACK; sin `cards/` ni `progress/`. `verify.py` lee el modo de `MODO=` en `sdd/custom.md` (manda la última línea), si no del `**Modo:**` de `sdd/sdd-lite.md` (plantilla `prompts/sdd-lite.md`), si no del §3 de `sdd/SDD-MASTER.md`; en LITE no crea ni pide `current.md`, y el hook de inicio muestra `sdd/sdd-lite.md`.
+Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia en el HANDBACK; sin `cards/` ni `progress/`. `verify.py` lee el modo de `MODO=` en `sdd/custom.md` (manda la última línea), si no del `**Modo:**` de `sdd/sdd-lite.md` (plantilla `prompts/sdd-lite.md`), si no del §3 de `sdd/SDD-MASTER.md`; en LITE no crea ni pide `current.md`, y el hook de inicio muestra `sdd/sdd-lite.md`. Lo que en FULL va a `progress/` en LITE va a `sdd-lite.md` o al lado: el relevo, a una sección `## Relevo` al final de `sdd/sdd-lite.md` (`prompts/relevo.md`); el registro de `verify.py --e2e`, a `sdd/e2e.md`. `MODO=` cuenta solo al principio de la línea: un `# MODO=LITE` comentado o en prosa no cambia el modo.
 
 ---
 
@@ -221,6 +221,7 @@ Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.33 | 2026-10-05 | Review R30 de v0.33: `sdd/spec.md` y `sdd/sdd-lite.md` entran a los `cited_paths_docs` por default, así H13 se dispara en el caso que lo originó (B1); en LITE, el relevo va a `sdd/sdd-lite.md` y el registro del e2e a `sdd/e2e.md`, sin crear `progress/` (M1). |
 | 0.32 | 2026-10-05 | Hallazgos de usar el paquete en 4 proyectos reales: en LITE, `verify.py` ya no crea `sdd/progress/<rama>/current.md` en cada pre-commit (§10, H7); las rutas citadas se revisan también como nombre suelto en celdas de tabla (§7.2, H13); la plantilla de tarjeta trae `rama: main` y el `FAIL` de una `done` sin `rama` dice cómo arreglarlo (§7.3, H23); el ejemplo de `lint_file` pasa a `oxlint`, el que trae `create-vite` (§2, H9). |
 | 0.30.1 | 2026-10-02 | DRIFT resuelto al implementar `harness/` (opción A): §2 suma `lint_ext`, `cited_paths_docs`, `{files}` y la regla de `lint_file` sin shell (S32); §3 suma `--e2e` con registro, la primera línea como evidencia, CI con HEAD detached, monorepo y proyecto sin git; §7.2 acota las rutas citadas a los docs declarados y las tarjetas `done`. Lo de macOS/Linux pasa a «pensado para», hasta que corra el CI. |
 | 0.30 | 2026-10-02 | Primera versión, destilada de Relay (chat-commerce-ai, rama `dev`): config por proyecto, verificación por niveles, evidencia con hash, TDD con rojo medido, rojo forzado de checks, drift fuente↔realidad, memoria en disco por rama, checkpoints del reviewer, auto-mejora por nivel mecánico, degradación por herramienta. |
