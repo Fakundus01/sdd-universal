@@ -139,3 +139,20 @@
 **Decisión:** `margin:auto` explícito en la regla del diálogo, y comentario en el CSS explicando por qué está ahí — sin eso, el próximo que "limpie" esa línea reintroduce el bug.
 
 **Por qué queda como ADR:** el síntoma (una ventana descentrada) no sugiere en nada la causa (un reset de tres palabras escrito 400 líneas más arriba). Es exactamente el tipo de cosa que se vuelve a debuggear desde cero en seis meses.
+
+---
+
+## ADR-012 · Entorno local sin nube: Postgres propio y un emulador chico de Supabase — 2026-10-05 · Vigente
+
+**Contexto:** el proyecto Supabase está pausado y el plan gratis no deja reactivarlo (ver `status.md`). Desde 0.26 el portón exige sesión, así que sin backend no se puede probar nada que pase por login. El owner decidió dejar Supabase inactivo, trabajar todo en local por ahora y dejar Vercel para cuando la web se abra a otros programadores.
+
+**Decisión:** `dev/` levanta un entorno completo en la máquina, con un solo comando (`node dev/dev.mjs`):
+- **Un clúster de Postgres propio**, con los binarios que ya estén en el PATH, en `dev/.data/` y en el puerto 54329, escuchando solo en `127.0.0.1`. No se usa el Postgres que ya pueda estar corriendo en el 5432: `anon` y `authenticated` son roles del clúster entero y no tienen por qué ensuciar otras bases.
+- **Las mismas políticas que en la nube.** Se corren `supabase/schema.sql` y `supabase/metricas.sql` sin tocarlos, sobre un `auth` mínimo (`auth.users`, `auth.uid()`, roles y permisos como los deja Supabase). Cada pedido corre en una transacción con `set local role` y los claims del JWT, así que **RLS la aplica Postgres de verdad**, no el emulador.
+- **Un servidor Node** que sirve el repo como Vercel (redirect `/` → `/web/` y los mismos headers) y responde el subconjunto de GoTrue y PostgREST que usa `sesion.js`. Reemplaza `web/supabase-config.js` al servirlo, así que **la web no cambia ni una línea** para correr en local.
+
+**Por qué no la CLI de Supabase:** necesita Docker, que no está instalado y en Windows es pesado (WSL2, varios GB). El emulador cubre los nueve pedidos que hace la web, y lo que importa probar, RLS, lo resuelve Postgres igual que en la nube.
+
+**R28, sin dependencias nuevas:** el servidor no usa `node_modules` (ADR-001). Habla con la base a través de `psql`, que viene con los mismos binarios, y pasa los valores en base64 por stdin. Así ningún dato del usuario entra al SQL como texto, y las tildes no dependen de la página de códigos de la consola de Windows. Cuesta un proceso por pedido, unos 50 ms, que en local no importa.
+
+**Lo que no cubre:** mails (recupero de contraseña y magic link, que responden con un aviso), registro público (cerrado igual que en la nube desde 0.26) y lo que PostgREST tiene y la web no usa. Si la web empieza a usar algo nuevo de Supabase, el emulador lo tiene que aprender en el mismo cambio, y el test de `dev/tests/` lo va a marcar en rojo si no.

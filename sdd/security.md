@@ -48,6 +48,12 @@ Esta es la confusión más peligrosa del proyecto, así que va explícita:
 5. **Los iframes del demo.** Cargan archivos propios del mismo origen, sin entrada del usuario.
 6. **Headers.** `vercel.json` fija `nosniff`, `X-Frame-Options: SAMEORIGIN` y `Referrer-Policy: strict-origin-when-cross-origin`.
 
+## 3b · Entorno local (ADR-012)
+
+- Postgres y el servidor escuchan **solo en `127.0.0.1`**: nada de la red ve el entorno. Postgres usa `trust` porque no hay otra forma de llegar a él que desde esta máquina.
+- Las cuentas de ejemplo (`dev/dev.mjs`) tienen contraseñas fijas y conocidas **a propósito**: existen solo en `dev/.data/`, que está en `.gitignore`, y no se parecen a nada de la nube. El secreto con que se firman los JWT locales se genera al crear el clúster y vive en la misma carpeta.
+- El servidor no sirve archivos que empiecen con punto ni nada de `dev/.data/`, y toda ruta se resuelve y se compara contra la raíz del repo antes de leerla.
+
 ## 4 · Lo que NO está cubierto
 
 - **Sin CSP.** Sería la mejora más grande y es barata dado que no hay dependencias externas (C2). Debería entrar en el próximo ciclo de infra.

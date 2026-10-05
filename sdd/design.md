@@ -81,7 +81,22 @@ Comparten estilo visual a propósito: si el "sin SDD" se viera feo, la comparaci
 
 El código que muestra `demo.html` se **lee del archivo en vivo** entre los marcadores `/* <<<CODIGO */`. Nunca puede quedar desactualizado respecto de lo que está corriendo arriba, que es exactamente el tipo de mentira que este proyecto no se puede permitir.
 
-## 8 · Deuda de diseño consciente
+## 8 · Entorno local (`dev/`, ADR-012)
+
+```
+dev/
+├── dev.mjs              CLI: arrancar (default) · parar · reset · usuario · usuarios
+├── postgres.mjs         el clúster propio (initdb, pg_ctl) y Psql: consultas por stdin
+├── supabase-local.sql   el `auth` mínimo, los roles y los permisos que da Supabase
+├── auth.mjs             GoTrue: token (password y refresh), user, logout; signup cerrado
+├── rest.mjs             PostgREST: select, insert, upsert, update y delete con filtros eq…
+├── servidor.mjs         HTTP: el repo como lo sirve Vercel + /auth/v1 + /rest/v1
+└── tests/               node --test dev/tests/*.test.mjs — levanta un clúster temporal
+```
+
+La regla que lo sostiene: **el emulador traduce, Postgres decide.** `rest.mjs` arma el mismo SQL que armaría PostgREST y lo corre con el rol y los claims del pedido. No filtra filas ni chequea permisos por su cuenta: si lo hiciera, el test de RLS estaría probando al emulador y no a las políticas que van a la nube.
+
+## 9 · Deuda de diseño consciente
 
 - ~~`index.html` pasó las 300 líneas de JS que pide R05~~ — **resuelto en 0.31 (D1):** el JS inline se partió en seis archivos de 105 a 237 líneas sin la cabecera, cortando por las secciones que ya tenía, sin cambiar el código. Para verificarlo se corrió un smoke en Chrome headless antes y después del corte, con salida idéntica, y un rojo forzado con el orden de carga invertido.
 - Tests automatizados parciales desde 0.31 (D2): el ZIP y la sincronía de las reglas, sin navegador. El resto se sigue verificando en el navegador (R07, front). Ver `testing.md`.

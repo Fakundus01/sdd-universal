@@ -23,6 +23,24 @@ Cada uno se vio fallar a propósito antes de darlo por bueno (R29): sin la marca
 
 **Smoke en navegador real (sin dependencias):** Chrome headless con `--remote-debugging-port` y un script de Node que habla CDP con el `WebSocket` nativo. Carga `index.html`, junta excepciones y errores de consola, y ejercita el combinador (generar, lista de archivos, árbol, cambio de nivel, checkbox del arnés, vistas). Para el popup de descarga rápida hay que elegir antes la categoría «Proyectos»: con la categoría por defecto no hay cards con «📦 Descargar ZIP». Desde ahí se intercepta `Zip.descargar` para ver qué baja de verdad. Se usó para D1. Todavía no está en el repo: es el próximo paso de D2 si la suite crece.
 
+## La suite del entorno local (0.32, ADR-012)
+
+```
+node --test "dev/tests/*.test.mjs"
+```
+
+Necesita los binarios de Postgres en el PATH (`initdb`, `pg_ctl`, `psql`). Levanta un clúster temporal en otro puerto, corre `supabase/schema.sql` y `metricas.sql` tal cual, y habla con el servidor por HTTP, como la web. Es **la prueba de las dos cuentas de F5**: lo que antes se iba a hacer a mano una vez contra la nube, ahora corre cada vez.
+
+| Test | Qué atrapa |
+|---|---|
+| Una cuenta no ve, ni edita, ni borra lo de otra | Una política de `combinaciones` o `perfiles` que deje pasar filas ajenas |
+| No se puede crear a nombre de otro | Un `with check` que falte |
+| Sin sesión no se lee nada | Una tabla sin RLS o con la política abierta |
+| Las métricas se suman sin sesión y solo las ve el admin | La asimetría de `eventos` |
+| Guardar dos veces el mismo nombre pisa, no duplica | El upsert del combinador contra el índice real |
+| Login, refresh, logout, cambio de contraseña y registro cerrado | Que el emulador de GoTrue se aparte de lo que espera `sesion.js` |
+| El servidor sirve la config local y no sale del repo | Path traversal y `dev/.data/` expuesto |
+
 ## Por qué la suite es chica
 
 Sin build (ADR-001), montar Vitest o Playwright significa traer `node_modules` a un proyecto que hoy no tiene ninguno. La suite cubre lo que ya se rompió una vez (las reglas de la web) y lo que no se ve en pantalla (el contenido del ZIP). Lo visual se sigue verificando en el navegador. **Lo que la haría crecer:** una regresión de UI que llegue a producción. Ahí el smoke por CDP entra al repo y a CI.
@@ -35,7 +53,7 @@ Mientras tanto la disciplina es: **todo cambio se verifica leyendo el DOM, no mi
 |---|---|---|
 | V1 · el prompt incluye todo y lista los archivos | Generar con tipo, stack, nivel, playbooks y 3 tecnologías; leer el textarea y `#filelist` | ✅ |
 | V2 · sin Supabase la página funciona entera | `Sesion.activo() === false` y `#authbtn.hidden === true`; guardar y recuperar una combinación | ✅ |
-| V3 · al entrar, lo local se sube | `migrarLocales()` con combinaciones en `localStorage` | ⏳ hay proyecto real, pero está pausado (ver `status.md`) |
+| V3 · al entrar, lo local se sube | `migrarLocales()` con combinaciones en `localStorage` | ✅ 2026-10-05, en el entorno local: dos combinaciones del navegador quedan en la cuenta y `localStorage` se vacía |
 | V4 · sin scroll horizontal a 375 y 768 | `document.documentElement.scrollWidth <= innerWidth` y ningún elemento con `right > innerWidth` | ✅ |
 | V5 · arranca en oscuro | `document.documentElement.dataset.theme === "dark"` con el sistema en claro | ✅ |
 | V6 · las fijas no se pueden apagar | `document.querySelector('[data-regla="R08"]').disabled === true` | ✅ |
@@ -63,4 +81,4 @@ Es el test que mejor protege el proyecto: si alguien "mejora" el demo sin SDD y 
 
 ## Lo que a propósito no se testea
 
-Que el navegador centre un `<dialog>`, que `fetch` traiga un archivo o que Supabase respete RLS. Lo primero es del navegador, lo último **se verifica una vez de verdad** — con dos cuentas distintas, según el playbook — y después se confía en las políticas.
+Que el navegador centre un `<dialog>` o que `fetch` traiga un archivo: es del navegador. RLS sí se testea desde 0.32, en cada corrida de `dev/tests/`, con las mismas políticas que van a la nube. Lo que queda afuera es el servicio de Supabase en sí: cuando se reactive, `schema.sql` y `metricas.sql` se vuelven a correr allá y la prueba de dos cuentas se repite una vez a mano.

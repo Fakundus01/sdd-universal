@@ -256,7 +256,7 @@ const Sesion = (() => {
       return todas[0];
     }
     const fila = {...c, usuario_id: usuario().id};
-    const r = await rest("combinaciones?on_conflict=usuario_id,nombre", {
+    const r = await rest("combinaciones?on_conflict=usuario_id,nombre_clave", {
       method: "POST",
       headers: {Prefer: "resolution=merge-duplicates,return=representation"},
       body: JSON.stringify(fila)

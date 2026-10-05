@@ -32,6 +32,15 @@ create index if not exists eventos_tipo_idx on public.eventos (tipo, detalle);
 -- ---------------------------------------------------------------------------
 alter table public.perfiles add column if not exists admin boolean not null default false;
 
+-- v0.32: «no hay ninguna ruta para volverse admin» no era cierto. La política
+-- «perfil propio: editar» deja a cada uno editar SU fila entera, admin incluida,
+-- y Supabase da UPDATE sobre toda la tabla: un PATCH {admin:true} a tu propio
+-- perfil alcanzaba. RLS decide qué filas; qué columnas lo deciden los permisos.
+-- Por eso se edita solo lo que la web manda, y el perfil lo crea el trigger.
+revoke insert, update on public.perfiles from anon, authenticated;
+grant update (nombre, tema, nivel, perfil_sdd, agente, interes, onboarding)
+  on public.perfiles to authenticated;
+
 -- ---------------------------------------------------------------------------
 -- RLS: cualquiera puede SUMAR un evento, nadie puede LEERLOS salvo un admin.
 -- Es la asimetría que hace que esto sea seguro: la clave pública sirve para

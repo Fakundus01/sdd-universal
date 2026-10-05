@@ -58,8 +58,17 @@ create index if not exists combinaciones_usuario_idx
 
 -- No dos combinaciones con el mismo nombre para la misma persona: al guardar
 -- de nuevo se pisa la anterior (upsert) en vez de acumular duplicados.
-create unique index if not exists combinaciones_usuario_nombre_idx
-  on public.combinaciones (usuario_id, lower(nombre));
+--
+-- v0.32: la unicidad va sobre una columna y no sobre la expresión lower(nombre).
+-- El upsert de PostgREST (on_conflict=...) solo nombra columnas, y Postgres no
+-- encaja columnas contra un índice de expresión: con el índice viejo, guardar
+-- una combinación con cuenta fallaba siempre con 42P10. Lo encontró el test del
+-- entorno local (dev/tests/), que corre este archivo tal cual.
+alter table public.combinaciones add column if not exists nombre_clave text
+  generated always as (lower(nombre)) stored;
+drop index if exists public.combinaciones_usuario_nombre_idx;
+create unique index if not exists combinaciones_usuario_clave_idx
+  on public.combinaciones (usuario_id, nombre_clave);
 
 -- ---------------------------------------------------------------------------
 -- RLS: sin esto, la clave pública deja leer los datos de todo el mundo.

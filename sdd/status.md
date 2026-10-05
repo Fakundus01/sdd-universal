@@ -1,6 +1,6 @@
 # status.md · SDD Hub
 
-**Versión:** 0.31 · **Última actualización:** 2026-10-03 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
+**Versión:** 0.32 · **Última actualización:** 2026-10-05 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
 
 ## Features
 
@@ -10,7 +10,7 @@
 | F2 | Combinador de prompt de arranque | Complete | 100% | Lista además los archivos exactos a descargar |
 | F3 | Catálogo de tecnologías con selección múltiple | Complete | 100% | 120 items (0.27), popup arrastrable |
 | F4 | Configurador de reglas → `custom.md` | Complete | 100% | Las fijas con candado (ADR-006). 32 reglas desde 0.30.1 |
-| F5 | Cuentas y combinaciones guardadas | In Progress | 80% | Código completo y en uso con el proyecto Supabase real (`sdd-universal`). Falta la prueba de aislamiento entre dos cuentas (RLS) |
+| F5 | Cuentas y combinaciones guardadas | Complete | 100% | 0.32: la prueba de dos cuentas corre en `dev/tests/` con el esquema real, y encontró dos bugs que estaban en la nube (guardar con cuenta fallaba siempre; cualquiera podía hacerse admin). Corregidos en `schema.sql` y `metricas.sql` |
 | F6 | Guía navegable | Complete | 100% | Índice lateral con seguimiento de sección |
 | F7 | Demo comparativo con/sin SDD | Complete | 100% | Los tres casos borde verificados en los dos widgets |
 | F8 | Deploy en Vercel | Complete | 100% | Live, con headers y redirect verificados en producción |
@@ -25,15 +25,16 @@
 | F17 | Manuales: playbooks y skills desde la web | Complete | 100% | 0.25 y 0.28: skills del SDD + 11 sueltas, paginadas de a 6 |
 | F18 | Descarga rápida por card | Complete | 100% | 0.25: popup con nuevo/existente, nivel, skills y (0.30.1) arnés |
 | F19 | Sitio privado (portón de sesión) | Complete | 100% | 0.26 y 0.28. Depende de que el proyecto Supabase esté activo: ver Bloqueos |
+| F21 | Entorno local sin nube (ADR-012) | Complete | 100% | 0.32: `node dev/dev.mjs` levanta Postgres propio y un emulador de Supabase; la web corre entera con login. 9 tests + smoke en Chrome |
 | F20 | El ZIP trae la capa de ejecución (R29–R32) | Complete | 100% | 0.31: `harness.md`, `orchestration.md` y `prompts/` siempre; `agents/` con PRO; `harness/` opcional, con el pre-commit en 755. Cubierto por `web/tests/` (en CI) y por un smoke en Chrome headless: checkboxes, árbol, cambio de nivel y popup |
 
-**Avance total: 19.8 / 20 features = 99%**
+**Avance total: 21 / 21 features = 100%**
 
 ## Bloqueos
 
-**El proyecto Supabase `sdd-universal` está pausado (`INACTIVE`, visto el 2026-10-03), y reactivarlo choca con el límite del plan.** El free tier pausa los proyectos sin actividad. Como desde 0.26 el portón exige sesión, **nadie puede entrar a la web publicada**: el dominio del proyecto ni siquiera resuelve DNS. El owner autorizó reactivarlo, pero el restore falló: la organización ya tiene sus **2 proyectos gratis activos** (`abul_cell` y «Fakundus01's Project»). Para reactivar `sdd-universal` hay que pausar o borrar uno de esos dos, o pasar a plan pago, y eso lo decide el owner. Después queda decidir cómo evitar la próxima pausa: uso periódico, un ping programado, o plan pago.
+**Ninguno para desarrollar.** Desde 0.32 todo corre en local (`dev/`, ADR-012).
 
-**F5 todavía no tiene su prueba de punta a punta.** El blocker original («el owner tiene que crear el proyecto») ya no aplica: el proyecto existe y el login funciona sobre él. Lo que falta es la prueba que importa: dos cuentas distintas, confirmando que la segunda no ve los datos de la primera. Hasta entonces F5 queda en 80% (R16).
+**La web publicada sigue inaccesible, por decisión del owner.** El proyecto Supabase `sdd-universal` sigue pausado (`INACTIVE`, visto el 2026-10-05), y la organización ya usa sus 2 proyectos gratis. El 2026-10-05 el owner decidió dejarlo así y trabajar en local; Vercel queda para cuando la web se abra a otros programadores. **Al reactivarlo hay que volver a correr `supabase/schema.sql` y `metricas.sql` allá**: los arreglos de 0.32 (upsert y admin) todavía no están en la nube. Después, repetir una vez la prueba de dos cuentas contra el proyecto real.
 
 ## Deuda técnica aceptada
 
@@ -50,6 +51,6 @@ El 2026-10-03 todas estaban vencidas. Con el OK del owner («hacé las deudas qu
 
 ## Próximo ciclo
 
-1. **Owner:** liberar un lugar de proyecto gratis (o pasar a plan pago) para reactivar Supabase; la web publicada está inaccesible mientras tanto.
-2. Cerrar F5 con la prueba de dos cuentas: si RLS está mal, el resto no importa.
-3. **Owner:** decidir D3 (medir O1–O4 con `metricas.sql` o bajar los outcomes) y D6 (dominio para el SMTP).
+1. Ejemplos de punta a punta con el SDD (e-commerce, landing, ticketera con IA, chatbot), cada uno en su repo: lo que falle ahí entra a `scenarios.md` (R20).
+2. **Owner:** decidir D3 (medir O1–O4 con `metricas.sql` o bajar los outcomes) y D6 (dominio para el SMTP). D6 pesa todavía menos en local, donde no hay mails.
+3. Cuando la web salga a otros: reactivar Supabase, correr los dos `.sql` y repetir la prueba de dos cuentas (ver Bloqueos).
