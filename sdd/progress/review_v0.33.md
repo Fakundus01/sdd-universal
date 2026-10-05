@@ -1,66 +1,62 @@
-# Review v0.33.1 @ e7a1e3e
+# Review v0.33.2 @ 958d61d
 
 Veredicto: APPROVED
 
-Reviewer independiente (R30), vuelta 2, base `8cfac06`. El reporte completo, con los repros y las salidas, está en el scratchpad de la sesión: `reve-review-sdd-v033-v2.md`.
+Reviewer independiente (R30), base `74ad57e`. El reporte completo está en el scratchpad de la sesión: `reve-review-sdd-v0332.md`.
 
 ## Evidencia
 
 ```
-$ node --test web/tests/*.test.mjs        → ℹ tests 34 · ℹ pass 34 · ℹ fail 0
-$ node --test dev/tests/local.test.mjs     → ℹ tests 13 · ℹ pass 13 · ℹ fail 0
-$ python -m unittest discover -s harness/tests   (sola, 4 corridas) → Ran 132 tests · OK (skipped=1) ×4
+$ node --test web/tests/*.test.mjs     → ℹ tests 37 · ℹ pass 37 · ℹ fail 0
+$ node --test dev/tests/local.test.mjs  → ℹ tests 15 · ℹ pass 15 · ℹ fail 0
+$ python -m unittest discover -s harness/tests → Ran 141 tests · OK (skipped=1)
 ```
 
-- **Mutantes:** de 33, mueren 29. Los 4 que sobreviven son equivalentes o casi:
-  - M4: el lookahead que sacó el mutante no cambia el resultado, porque el filtro de modos y el orden de lectura ya lo cubren.
-  - W9: la base rechaza una segunda barra de todos modos.
-  - W15: la línea quedó redundante, porque el perfil ahora sale del configurador.
-  - S11: `eventos_tipo_check` ya rechaza el tipo.
-- **Sobrevivientes de la vuelta 1:** murieron M11, M12, M14, M15, W10, W11 y W16. W15 pasó a ser equivalente.
-- **Navegador** (a 360 y 1280, con `?v=33.1`):
-  - Prompt, lista y ZIP salen del mismo estado.
-  - El perfil tiene una sola fuente.
-  - El link compartido carga y limpia las tecnologías.
-  - No hay XSS ni scroll horizontal.
-  - Los 14 POST a `eventos` dieron 201.
-- **Sonda de la base contra :4321:**
-  - Mail, UA, salto de línea, tipo o detalle vacío → 400.
-  - `dia` 2099 o 2020 → 401 (RLS).
-  - Para anon y ana, la vista de 30 días, `eventos` y el resumen dan 0 filas.
-  - El PATCH para hacerse admin → 403.
-- **Lo pedido en la vuelta 1:** B1, M1–M6, N1–N9 y el link quedaron resueltos y verificados.
+**R1 en dev:** un anónimo que manda `id` o `dia` → `401 permission denied for table eventos`.
 
-## Menores (para 0.33.2; no bloquean)
+**Mutantes:** de 10, mueren 8. Los que mueren:
+- R1a y R1b: sin revoke/grant, o con `id` en el grant.
+- R3a, R3b, R3d y R3e: sin reintento, devolver con la salida en `None`, que `verify` no reporte los git perdidos, y que el hook Stop en rojo sin salida deje cerrar.
+- P1 y P2: el prompt con IA sin OWASP o sin la regla de agentes.
 
-- **R1 · Un anónimo elige el `id` de `eventos`.** Si ocupa un id por delante de la secuencia, el siguiente contador legítimo da `409 duplicate key` y se pierde en silencio. Arreglo: `revoke insert … ; grant insert (tipo, detalle) on public.eventos to anon, authenticated`.
-- **R2 · La lección de Pydantic (H24) describe el síntoma al revés.** Está en `tecnologias.md` y en `web/tecnologias.js`. Con pydantic 2.13.5, el validador que se llama como el campo convierte al método en el default del campo: un campo obligatorio pasa a ser opcional y revienta al serializar (500). No pasa de opcional a obligatorio, como dice el texto.
-- **R3 · Flaky de los tests del arnés bajo carga.** No viene del reinicio de dev. Con dos suites en paralelo, el hilo lector de `subprocess` falla con `WinError 1` y deja `stdout=None`.
-  - En los tests rompe `support.py:57`.
-  - En el producto puede romper `repo.py:24` y `verify._command`.
-  - Fallaron 3 de 8 corridas con carga y 0 de 4 sin carga.
-  - Arreglo: tratar `None` como falla transitoria y reintentar una vez.
+Sobreviven:
+- R1c, que es equivalente: la política `dia = hoy` lo sostiene.
+- R3c, que es el Menor de abajo.
+
+**Navegador** (`?v=33.2`, a 360 y 1280):
+- Ticketera con IA: el prompt recorre OWASP LLM01–LLM10, separa al que lee del que actúa y pide aprobación humana.
+- Brownfield con IA también recorre OWASP; sin IA no aparece.
+- `pgvector` está en el catálogo.
+- Sin scroll horizontal.
+
+**Contenido nuevo:**
+- La tabla OWASP 2025 tiene los nombres y el alcance correctos, y cada control existe en el paquete.
+- El NIST AI RMF 1.0 está bien.
+- RAG, agentes, evals y lecturas son correctos.
+- Los números de H26 coinciden con el ejemplo del chatbot.
+- La lección de Pydantic coincide con lo medido.
+
+## Menor
+
+- **R3c · Falta el test de un solo pipe perdido.** `LoseOutput` (`harness/tests/test_salida_perdida.py`) siempre pierde `stdout` y `stderr` juntos. El caso que se vio en la práctica es perder solo `stderr`. Un refactor de `run_captured` que mire solo `stdout` pasa la suite y vuelve el crash: `TypeError` en el hook Stop y `AttributeError` en `decode`.
 
 ## Nits
 
-- El §11 del master dice «últimas tres versiones», pero la tabla muestra cuatro.
-- La línea de W15 quedó redundante en `combinador.js`.
-- El barrido de valores legítimos contra el formato del SQL no está como test.
-- El placeholder `handback_E-n.md` del ejemplo ecommerce da FAIL con la regla general de rutas. Es anterior a 0.33.
+- **Tabla OWASP:** LLM09 dice «datos de la tienda» en una tabla que es genérica, y LLM10 no menciona la extracción del modelo por API.
+- **NIST *Govern*:** se apoya en R21, que es [AUTO]. En un proyecto chico no tiene dónde ir.
+- **pgvector con HNSW:** el `WHERE` se aplica después del índice, así que con un filtro selectivo se pierde recall. Conviene nombrar `iterative_scan` o un índice por inquilino.
+- **Playbook, paso 27:** el chatbot no manda una base de conocimiento cacheada; cachea reglas y personalidad.
+- **Reintento:** puede duplicar el tiempo máximo de un comando dentro del hook.
+- **Limpieza de dev:** el aviso dice 12 filas y la lista tiene 11.
 
 ---
 
-## Vuelta 1 · v0.33 @ bb6f168
+## Historial
 
-Resultado: CHANGES_REQUESTED.
+- **v0.33.1 @ e7a1e3e — APPROVED.** Quedaron como menores R1 (un anónimo elegía el `id`), R2 (la lección de Pydantic decía el síntoma al revés) y R3 (el test intermitente con `stdout=None`). Los tres se resolvieron en v0.33.2.
+- **v0.33 @ bb6f168 — CHANGES_REQUESTED.**
+  - B1: el chequeo de rutas en tablas (H13) no miraba `sdd-lite.md` ni `spec.md`.
+  - M1–M6: LITE, el filtro `MODES`, el ZIP, el check de eventos, huecos de test y el texto ajeno en el prompt.
+  - N1–N9.
 
-- **B1:** H13 no corría sobre `sdd-lite.md` ni sobre `spec.md`.
-- **M1:** en LITE, el relevo y `--e2e` creaban `progress/`.
-- **M2:** el filtro `MODES` no tenía test.
-- **M3:** el ZIP salía incoherente si se cambiaba «IA en el producto» después de generar.
-- **M4:** ADR-013 exageraba lo que hacía cumplir el check; además, un anónimo podía meter texto identificante y un `dia` futuro.
-- **M5:** huecos de test (W10, W11, W15 y W16).
-- **M6:** el texto ajeno entraba al prompt sin límite; el link compartido estaba roto desde antes.
-- **N1–N9.**
-
-Detalle en `reve-review-sdd-v033.md` del scratchpad.
+  Todo quedó resuelto en v0.33.1.
