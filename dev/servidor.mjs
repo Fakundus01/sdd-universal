@@ -67,7 +67,8 @@ function estatico(ruta, res){
   try {
     if (!archivo) throw new Error("fuera del sitio");
     if (archivo && statSync(archivo).isDirectory()){
-      if (!ruta.endsWith("/")) return enviar(res, 308, null, {Location: ruta + "/"});
+      // Una sola barra adelante: con `//web/` el navegador iría a otro host.
+      if (!ruta.endsWith("/")) return enviar(res, 308, null, {Location: "/" + ruta.replace(/^\/+/, "") + "/"});
       archivo = join(archivo, "index.html");
     }
     const contenido = readFileSync(archivo);
@@ -109,7 +110,7 @@ export async function levantar({datos = join(RAIZ, "dev", ".data"), puerto = 432
     try { ruta = decodeURIComponent(url.pathname); } catch { return enviar(res, 400, {message: "URL inválida"}); }
     // Solo se atiende a quien llama a 127.0.0.1 o localhost: una página ajena
     // que reapunte su dominio acá (DNS rebinding) llega con otro Host.
-    if (!/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(req.headers.host || ""))
+    if (!/^(127\.0\.0\.1|localhost)(:\d+)?$/i.test(req.headers.host || ""))
       return enviar(res, 403, {message: "Host no permitido"});
     try {
       const api = ruta.match(/^\/(auth|rest)\/v1\/([a-z_]+)$/);

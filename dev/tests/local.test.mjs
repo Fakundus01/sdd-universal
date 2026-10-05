@@ -192,4 +192,7 @@ test("sirve la config local y no sale del repo", async () => {
   const ajeno = await new Promise(ok => request(entorno.url + "/web/", {headers: {Host: "atacante.example"}},
                                                r => ok(r.statusCode)).end());
   assert.equal(ajeno, 403, "atiende a un Host ajeno (DNS rebinding)");
+
+  const barras = await fetch(entorno.url + "/%2Fweb", {redirect: "manual"});
+  assert.equal(barras.headers.get("location"), "/web/", "redirección abierta a //web/");
 });
