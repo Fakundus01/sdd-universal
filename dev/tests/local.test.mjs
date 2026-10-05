@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import {mkdtempSync, readFileSync, rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
+import {request} from "node:http";
 import {levantar} from "../servidor.mjs";
 import {guardarUsuario} from "../auth.mjs";
 
@@ -30,8 +31,8 @@ const entrar = async (email, password) =>
 
 // El mismo pedido que hace Sesion.guardarCombinacion, con la ruta leída de
 // sesion.js: si la web cambia el on_conflict, el test prueba el nuevo.
-const RUTA_GUARDAR = readFileSync(new URL("../../web/sesion.js", import.meta.url), "utf8")
-  .match(/rest\("(combinaciones\?on_conflict=[a-z_,]+)"/)[1];
+const SESION = readFileSync(new URL("../../web/sesion.js", import.meta.url), "utf8");
+const RUTA_GUARDAR = SESION.match(/rest\("(combinaciones\?on_conflict=[a-z_,]+)"/)[1];
 const guardar = (sesion, c) => pedir(`/rest/v1/${RUTA_GUARDAR}`, {
   metodo: "POST", token: sesion.access_token,
   headers: {Prefer: "resolution=merge-duplicates,return=representation"},
@@ -72,8 +73,11 @@ test("una cuenta no ve, ni edita, ni borra las combinaciones de otra", async () 
 });
 
 test("no se puede crear una combinación a nombre de otra cuenta", async () => {
+  // return=minimal: sin RETURNING, lo único que frena es el `with check` de
+  // «crear». Con representation también frenaría la política de lectura, y el
+  // test seguiría verde con el `with check` roto (lo encontró el reviewer).
   const r = await pedir("/rest/v1/combinaciones", {
-    metodo: "POST", token: B.access_token, headers: {Prefer: "return=representation"},
+    metodo: "POST", token: B.access_token, headers: {Prefer: "return=minimal"},
     cuerpo: {nombre: "colada", tipo: "webapp", usuario_id: A.user.id}
   });
   assert.equal(r.estado, 403);
@@ -102,6 +106,20 @@ test("nadie se vuelve admin desde la aplicación, ni con su propio perfil", asyn
 
   const tema = await pedir(`/rest/v1/perfiles?id=eq.${A.user.id}`, {metodo: "PATCH", token: A.access_token, cuerpo: {tema: "light"}});
   assert.equal(tema.estado, 204, "el arreglo rompió guardarTema");
+
+  // Las claves que manda guardarPerfil, leídas de sesion.js: si la web suma
+  // una columna y el grant de metricas.sql no, el PATCH entero falla en silencio.
+  const claves = SESION.match(/async function guardarPerfil\(\{([^}]+)\}/)[1].split(",").map(c => c.trim());
+  const todas = Object.fromEntries(claves.map(c => [c, c === "onboarding" ? true : c === "nivel" ? "NOVATO" : c === "perfil_sdd" ? "CONFIANZA" : "x"]));
+  const r = await pedir(`/rest/v1/perfiles?id=eq.${A.user.id}`, {metodo: "PATCH", token: A.access_token, cuerpo: todas});
+  assert.equal(r.estado, 204, `guardarPerfil no puede escribir: ${JSON.stringify(r.datos)}`);
+  assert.equal((await pedir(`/rest/v1/perfiles?id=eq.${A.user.id}&select=*`, {token: A.access_token})).datos[0].onboarding, true);
+});
+
+test("cambiar la clave desde la CLI no le saca el admin a nadie", async () => {
+  guardarUsuario(entorno.cluster, "admin@test.local", "otra-clave-admin-1");
+  const s = await entrar("admin@test.local", "otra-clave-admin-1");
+  assert.equal((await pedir(`/rest/v1/perfiles?id=eq.${s.user.id}&select=admin`, {token: s.access_token})).datos[0].admin, true);
 });
 
 test("sin sesión no se lee nada, y un token falso no pasa como anon", async () => {
@@ -166,6 +184,12 @@ test("sirve la config local y no sale del repo", async () => {
 
   assert.equal((await fetch(entorno.url + "/")).url, entorno.url + "/web/");
   assert.equal((await fetch(entorno.url + "/web/index.html")).status, 200);
-  for (const ruta of ["/dev/.data/jwt-secreto", "/.git/config", "/.env", "/web/..%2f..%2fREADME.md"])
+  // DATA~1 y GIT~1: los alias 8.3 de Windows, que no tienen punto.
+  for (const ruta of ["/dev/.data/jwt-secreto", "/.git/config", "/.env", "/web/..%2f..%2fREADME.md",
+                      "/dev/DATA~1/jwt-secreto", "/GIT~1/config", "/C:/Windows/win.ini"])
     assert.equal((await fetch(entorno.url + ruta)).status, 404, ruta);
+
+  const ajeno = await new Promise(ok => request(entorno.url + "/web/", {headers: {Host: "atacante.example"}},
+                                               r => ok(r.statusCode)).end());
+  assert.equal(ajeno, 403, "atiende a un Host ajeno (DNS rebinding)");
 });

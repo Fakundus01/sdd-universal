@@ -19,6 +19,8 @@ create table if not exists public.perfiles (
 
 -- Perfil de onboarding. Se agrega con "if not exists" para que este archivo
 -- se pueda volver a correr sobre un proyecto que ya tenía las tablas.
+-- Una columna nueva que edite la web va también al «grant update (...)» de
+-- metricas.sql: sin eso el PATCH entero falla con 42501, y sesion.js lo calla.
 alter table public.perfiles add column if not exists perfil_sdd text not null default 'ESTRICTO'
   check (perfil_sdd in ('ESTRICTO','CONFIANZA'));
 alter table public.perfiles add column if not exists agente text not null default '';

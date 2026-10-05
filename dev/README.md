@@ -22,7 +22,7 @@ Solo existen en `dev/.data/`, que no se commitea. Ctrl+C corta el servidor y el 
 |---|---|
 | `node dev/dev.mjs` | Arranca todo. La primera vez crea la base y las cuentas |
 | `node dev/dev.mjs usuarios` | Lista las cuentas y cuántas combinaciones tiene cada una |
-| `node dev/dev.mjs usuario <mail> <clave> [--admin]` | Crea una cuenta o le cambia la clave (no hay mails en local) |
+| `node dev/dev.mjs usuario <mail> <clave> [--admin|--no-admin]` | Crea una cuenta o le cambia la clave (no hay mails en local). Sin bandera, la marca de admin queda como estaba |
 | `node dev/dev.mjs parar` | Para el Postgres si quedó corriendo |
 | `node dev/dev.mjs reset` | Borra la base local entera |
 | `node --test "dev/tests/*.test.mjs"` | La suite: RLS con dos cuentas, auth y el servidor |

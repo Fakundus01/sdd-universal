@@ -20,8 +20,9 @@ export class Jwt {
 
   /* Devuelve los claims, o null si la firma no cierra o el token venció. */
   leer(token = ""){
-    const [h, p, firma] = token.split(".");
-    if (!h || !p || !firma) return null;
+    const partes = token.split(".");
+    if (partes.length !== 3 || partes.some(x => !x)) return null;
+    const [h, p, firma] = partes;
     const esperada = createHmac("sha256", this.secreto).update(`${h}.${p}`).digest();
     const dada = Buffer.from(firma, "base64url");
     if (dada.length !== esperada.length || !timingSafeEqual(dada, esperada)) return null;
@@ -99,7 +100,10 @@ export class Auth {
   }
 
   /* Devuelve [estado, cuerpo]. `ruta` es lo que sigue a /auth/v1/. */
-  async atender(metodo, ruta, query, headers, cuerpo){
+  async atender(metodo, ruta, query, headers, crudo){
+    // GoTrue contesta 400 a un cuerpo raro; acá también, en vez de un 500.
+    const cuerpo = Object.fromEntries(Object.entries(crudo && typeof crudo === "object" ? crudo : {})
+      .map(([k, v]) => [k, typeof v === "string" ? v : ""]));
     try {
       if (metodo === "POST" && ruta === "token"){
         const tipo = query.get("grant_type");
@@ -128,15 +132,17 @@ export class Auth {
   }
 }
 
-/* Para la CLI: crea la cuenta o le pisa la contraseña. Síncrono a propósito. */
-export function guardarUsuario(cluster, email, password, admin = false){
+/* Para la CLI: crea la cuenta o le pisa la contraseña. Síncrono a propósito.
+   `admin` en undefined deja la marca como estaba: cambiar la clave no es
+   motivo para perder el panel. */
+export function guardarUsuario(cluster, email, password, admin){
   const q = new Psql(cluster);
   const mail = q.valor(email.trim().toLowerCase()), pass = q.valor(password);
   q.correr(`insert into auth.users (email, encrypted_password)
     values (${mail}, crypt(${pass}, gen_salt('bf')))
     on conflict (email) do update set encrypted_password = excluded.encrypted_password;
-    update public.perfiles p set admin = ${admin ? "true" : "false"}
-    from auth.users u where u.id = p.id and u.email = ${mail};`);
+    ${admin === undefined ? "" : `update public.perfiles p set admin = ${admin ? "true" : "false"}
+    from auth.users u where u.id = p.id and u.email = ${mail};`}`);
 }
 
 export function listarUsuarios(cluster){

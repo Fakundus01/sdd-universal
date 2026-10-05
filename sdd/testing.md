@@ -34,12 +34,14 @@ Necesita los binarios de Postgres en el PATH (`initdb`, `pg_ctl`, `psql`). Levan
 | Test | Qué atrapa |
 |---|---|
 | Una cuenta no ve, ni edita, ni borra lo de otra | Una política de `combinaciones` o `perfiles` que deje pasar filas ajenas |
-| No se puede crear a nombre de otro | Un `with check` que falte |
+| No se puede crear a nombre de otro | Un `with check` que falte. Va con `return=minimal`: con `RETURNING` también frena la política de lectura y el test pasaba con el `with check` roto |
+| Nadie se vuelve admin, y `guardarPerfil` puede escribir todo lo que manda | El `revoke` de `metricas.sql`, y una columna nueva de la web que falte en su `grant` (las claves se leen de `sesion.js`) |
+| Cambiar la clave desde la CLI conserva el admin | Que `dev.mjs usuario` le saque el panel a quien cambia la clave |
 | Sin sesión no se lee nada | Una tabla sin RLS o con la política abierta |
 | Las métricas se suman sin sesión y solo las ve el admin | La asimetría de `eventos` |
 | Guardar dos veces el mismo nombre pisa, no duplica | El upsert del combinador contra el índice real |
 | Login, refresh, logout, cambio de contraseña y registro cerrado | Que el emulador de GoTrue se aparte de lo que espera `sesion.js` |
-| El servidor sirve la config local y no sale del repo | Path traversal y `dev/.data/` expuesto |
+| El servidor sirve la config local y no sale del repo | Path traversal, `dev/.data/` expuesto (también por su alias 8.3 `DATA~1`) y un `Host` ajeno |
 
 ## Por qué la suite es chica
 

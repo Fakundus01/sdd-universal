@@ -3,7 +3,7 @@
  *
  *   node dev/dev.mjs                         arranca todo en http://127.0.0.1:4321
  *   node dev/dev.mjs usuarios                lista las cuentas
- *   node dev/dev.mjs usuario <mail> <clave> [--admin]   crea o le cambia la clave
+ *   node dev/dev.mjs usuario <mail> <clave> [--admin|--no-admin]   crea o le cambia la clave
  *   node dev/dev.mjs parar                   para el Postgres si quedó corriendo
  *   node dev/dev.mjs reset                   borra la base local entera
  *
@@ -68,9 +68,10 @@ const acciones = {
   usuario: () => {
     const [mail, clave] = args.filter(a => !a.startsWith("--"));
     if (!mail || !clave || clave.length < 8)
-      throw new Error("Uso: node dev/dev.mjs usuario <mail> <clave de 8 o más> [--admin]");
+      throw new Error("Uso: node dev/dev.mjs usuario <mail> <clave de 8 o más> [--admin|--no-admin]");
     const cluster = clusterPreparado();
-    guardarUsuario(cluster, mail, clave, args.includes("--admin"));
+    const admin = args.includes("--admin") ? true : args.includes("--no-admin") ? false : undefined;
+    guardarUsuario(cluster, mail, clave, admin);
     mostrarCuentas(cluster);
   },
   parar: () => new Cluster({datos: DATOS, puerto: PUERTO_PG}).parar(),

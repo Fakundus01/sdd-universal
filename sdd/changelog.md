@@ -8,7 +8,7 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ### Agregado
 - **Entorno local sin nube** (`dev/`, ADR-012, F21). `node dev/dev.mjs` levanta un Postgres propio en `127.0.0.1:54329`, corre `supabase/schema.sql` y `metricas.sql` tal cual sobre un `auth` mínimo, y sirve la web en `http://127.0.0.1:4321/web/` con un emulador del subconjunto de GoTrue y PostgREST que usa `sesion.js`. La web no cambia para correr en local: el servidor reemplaza `supabase-config.js` al servirlo. Sin `node_modules`: habla con la base por `psql`, con los valores en base64 por stdin. Trae tres cuentas de ejemplo (`dev/README.md`) y comandos para crear cuentas y cambiar claves, porque en local no hay mails.
-- **`dev/tests/local.test.mjs`**, 9 tests con `node --test` sobre un clúster temporal: la prueba de dos cuentas de F5 (leer, editar, borrar y crear a nombre de otra cuenta), sin sesión, token falso, métricas solo para el admin, upsert sin duplicar, el ciclo de auth completo y que el servidor no salga del repo.
+- **`dev/tests/local.test.mjs`**, 10 tests con `node --test` sobre un clúster temporal: la prueba de dos cuentas de F5 (leer, editar, borrar y crear a nombre de otra cuenta), sin sesión, token falso, métricas solo para el admin, upsert sin duplicar, el ciclo de auth completo y que el servidor no salga del repo.
 - `.claude/launch.json` suma `sdd-local`.
 
 ### Corregido
@@ -26,7 +26,7 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 - Rojo medido contra la base `1055eef` (su `schema.sql`, `metricas.sql` y `sesion.js`): fallan los tres tests de los dos bugs y pasan los otros seis.
 - Rojo forzado: con la política de lectura de `combinaciones` en `using (true)`, fallan «una cuenta no ve…» (`B ve combinaciones de A`) y «sin sesión no se lee nada».
 - Smoke en Chrome headless por CDP contra `node dev/dev.mjs`: portón sin sesión, clave mala con el mensaje traducido, login de ana, guardar dos veces la misma combinación (pisa), tema al perfil, sesión que sobrevive a recargar, salir, facundo sin ver lo de ana y con métricas de admin, `admin.html`, `guia.html` y `demo.html`. Cero excepciones y cero errores de consola. V3: dos combinaciones de `localStorage` quedan en la cuenta de beto al entrar.
-- **Pendiente para R30:** la re-ejecución por un reviewer independiente.
+- **Reviewer independiente (R30), vuelta 1** sobre `5fa58a2`: re-ejecutó 9/9 y 6/6 y pidió cambios. Dos bloqueantes: (B1) en Windows el alias 8.3 `/dev/DATA~1/jwt-secreto` esquivaba el filtro de punto y entregaba el secreto de los JWT (y `/GIT~1/config`); (B2) el test de «crear a nombre de otro» pasaba por la política de lectura y seguía verde con el `with check` roto. Dos menores: (M1) cambiar la clave por la CLI sacaba el admin; (M2) una columna nueva de perfil fuera del `grant` rompería `guardarPerfil` en silencio. Más nits: 500 en vez de 400 con cuerpos raros, JWT con más de tres partes, 404 por accidente. Todo resuelto, más un control de `Host` contra DNS rebinding. Rojos de cada arreglo: con `with check (true)` falla «no se puede crear…»; con el `servidor.mjs` de `5fa58a2` falla por `/dev/DATA~1/jwt-secreto`; con el `auth.mjs` de `5fa58a2` falla el admin tras cambiar la clave (`false !== true`); sin `interes` en el `grant` falla `guardarPerfil` (42501). Suites: 10/10 y 6/6.
 
 ---
 

@@ -52,7 +52,8 @@ Esta es la confusión más peligrosa del proyecto, así que va explícita:
 
 - Postgres y el servidor escuchan **solo en `127.0.0.1`**: nada de la red ve el entorno. Postgres usa `trust` porque no hay otra forma de llegar a él que desde esta máquina.
 - Las cuentas de ejemplo (`dev/dev.mjs`) tienen contraseñas fijas y conocidas **a propósito**: existen solo en `dev/.data/`, que está en `.gitignore`, y no se parecen a nada de la nube. El secreto con que se firman los JWT locales se genera al crear el clúster y vive en la misma carpeta.
-- El servidor no sirve archivos que empiecen con punto ni nada de `dev/.data/`, y toda ruta se resuelve y se compara contra la raíz del repo antes de leerla.
+- El servidor no sirve archivos que empiecen con punto ni nada de `dev/.data/`. El filtro se aplica a lo pedido **y al nombre real en disco** (`realpathSync.native`): en Windows `dev/DATA~1/` es un alias 8.3 de `dev/.data/` que no tiene punto, y así se llegaba al secreto de los JWT (lo encontró el reviewer de 0.32).
+- Solo atiende pedidos con `Host` `127.0.0.1` o `localhost`: una página ajena que reapunte su dominio a esta máquina (DNS rebinding) llega con otro `Host` y recibe 403.
 
 ## 4 · Lo que NO está cubierto
 

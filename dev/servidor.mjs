@@ -2,8 +2,8 @@
  * y atiende /auth/v1 y /rest/v1 contra el Postgres propio.
  */
 import {createServer} from "node:http";
-import {readFileSync, statSync} from "node:fs";
-import {extname, join, resolve, sep} from "node:path";
+import {readFileSync, realpathSync, statSync} from "node:fs";
+import {extname, join, relative, resolve, sep} from "node:path";
 import {fileURLToPath} from "node:url";
 import {Cluster} from "./postgres.mjs";
 import {Auth} from "./auth.mjs";
@@ -42,13 +42,20 @@ export function prepararBase(cluster){
     cluster.script(readFileSync(join(RAIZ, archivo), "utf8"));
 }
 
+// Nada que empiece con punto: ni .git, ni .env, ni dev/.data.
+const oculta = partes => partes.some(p => p.startsWith(".") || p.includes("\\") || p.includes(":"));
+
+/* El filtro se aplica dos veces: a lo pedido y al nombre real en disco. En
+   Windows `/dev/DATA~1/` es un alias 8.3 de `dev/.data/` que no tiene punto;
+   realpathSync.native lo devuelve con el nombre largo, y ahí se lo ve. */
 function archivoDe(ruta){
   const partes = ruta.split("/").filter(Boolean);
-  // Nada que empiece con punto: ni .git, ni .env, ni dev/.data.
-  if (partes.some(p => p.startsWith(".") || p.includes("\\"))) return null;
-  const destino = resolve(RAIZ, ...partes);
-  if (destino !== RAIZ && !destino.startsWith(RAIZ + sep)) return null;
-  return destino;
+  if (oculta(partes)) return null;
+  let real;
+  try { real = realpathSync.native(resolve(RAIZ, ...partes)); } catch { return null; }
+  const dentro = relative(RAIZ, real);
+  if (dentro.startsWith("..") || resolve(RAIZ, dentro) !== real) return null;
+  return oculta(dentro.split(sep).filter(Boolean)) ? null : real;
 }
 
 function estatico(ruta, res){
@@ -58,11 +65,12 @@ function estatico(ruta, res){
 
   let archivo = archivoDe(ruta);
   try {
+    if (!archivo) throw new Error("fuera del sitio");
     if (archivo && statSync(archivo).isDirectory()){
       if (!ruta.endsWith("/")) return enviar(res, 308, null, {Location: ruta + "/"});
       archivo = join(archivo, "index.html");
     }
-    const contenido = archivo && readFileSync(archivo);
+    const contenido = readFileSync(archivo);
     return enviar(res, 200, contenido, {"Content-Type": TIPOS[extname(archivo)] || "application/octet-stream"});
   } catch {
     const pagina404 = readFileSync(join(RAIZ, "404.html"));
@@ -99,10 +107,18 @@ export async function levantar({datos = join(RAIZ, "dev", ".data"), puerto = 432
     const url = new URL(req.url, "http://local");
     let ruta;
     try { ruta = decodeURIComponent(url.pathname); } catch { return enviar(res, 400, {message: "URL inválida"}); }
+    // Solo se atiende a quien llama a 127.0.0.1 o localhost: una página ajena
+    // que reapunte su dominio acá (DNS rebinding) llega con otro Host.
+    if (!/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(req.headers.host || ""))
+      return enviar(res, 403, {message: "Host no permitido"});
     try {
       const api = ruta.match(/^\/(auth|rest)\/v1\/([a-z_]+)$/);
       if (!api) return estatico(ruta, res);
-      const cuerpo = ["POST", "PUT", "PATCH"].includes(req.method) ? await leerCuerpo(req) : null;
+      let cuerpo = null;
+      if (["POST", "PUT", "PATCH"].includes(req.method)){
+        try { cuerpo = await leerCuerpo(req); }
+        catch (e) { return enviar(res, 400, {message: e.message, msg: e.message}); }
+      }
       const [estado, salida] = await (api[1] === "auth" ? auth : rest)
         .atender(req.method, api[2], url.searchParams, req.headers, cuerpo);
       enviar(res, estado, salida);
