@@ -29,8 +29,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css?v=32">
-<link rel="stylesheet" href="app.css?v=32">
+<link rel="stylesheet" href="base.css?v=33">
+<link rel="stylesheet" href="app.css?v=33">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -164,7 +164,8 @@
        padding:9px 13px;font-size:.84rem}
   .files a:hover{border-color:var(--accent)}
   .files a code{font-family:var(--mono);font-size:.78rem;color:var(--accent-ink)}
-  .files a span{font-size:.74rem;color:var(--muted);flex:none}
+  .files a span{font-size:.74rem;color:var(--muted);flex:0 1 auto;min-width:0;text-align:right}
+  .files a code{flex:none}
   .zipbtns{display:flex;gap:9px;flex-wrap:wrap}
   .b-zip{background:var(--green-soft);color:var(--green);border:1px solid var(--green);border-radius:10px;padding:11px 18px;
        font-weight:700;font-size:.87rem;cursor:pointer;font-family:inherit}
@@ -197,6 +198,16 @@
   .selchip button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.9rem;
        line-height:1;padding:2px 5px;border-radius:50%;font-family:inherit}
   .selchip button:hover{color:var(--ink);background:var(--line)}
+  .selchip.fuera{border-style:dashed;border-color:var(--amber)}
+  .selchip.fuera small{color:var(--amber)}
+  .techaviso{font-size:.79rem;color:var(--ink-soft);margin-top:10px;padding:8px 11px;border-radius:9px;
+       background:var(--amber-soft);border:1px solid var(--amber)}
+  .techaviso:empty{display:none}
+  .tsumar{display:block;width:100%;text-align:left;margin:0 0 10px;padding:9px 12px;border-radius:10px;
+       border:1px dashed var(--amber);background:var(--amber-soft);color:var(--ink);font:inherit;font-size:.83rem;cursor:pointer}
+  .tsumar small{display:block;color:var(--muted);font-size:.75rem;margin-top:2px}
+  .iachk{margin-bottom:14px;align-items:flex-start}
+  .iachk input{margin-top:2px}
 
   /* margin:auto es lo que centra un <dialog> modal — el reset global de arriba lo pisaba
      y por eso quedaba clavado arriba a la izquierda. */
@@ -680,6 +691,7 @@
     <div><label class="lbl" for="cstack">Stack</label><select id="cstack">
       <option value="reco">Que el agente recomiende</option>
       <option value="python">Python (procesos, bots, datos)</option>
+      <option value="py-react">Python back + React/TS front</option>
       <option value="ts">TypeScript full-stack</option>
       <option value="react">React (solo front)</option>
       <option value="node">Node (solo back)</option>
@@ -697,12 +709,15 @@
       <option value="brownfield">Sí, ya tengo código andando</option>
     </select></div>
   </div>
+  <label class="oschk iachk"><input type="checkbox" id="cia"> IA en el producto
+    <small>— un modelo que lee lo que escribe la gente o contenido externo (chat, tickets, resúmenes). Suma el nivel N4 de seguridad, la recomendación de modelo (R12) y el playbook ia-en-el-producto</small></label>
   <div class="techpick">
     <div class="hd">
       <button class="open" id="opentech" type="button">＋ Elegir tecnologías</button>
       <span class="hint" id="techhint"></span>
     </div>
     <div class="selchips" id="selchips"></div>
+    <p class="techaviso" id="techaviso" role="status"></p>
   </div>
 
   <span class="lbl">Playbooks para sumar</span>
@@ -715,6 +730,8 @@
     <label><input type="checkbox" value="resend-smtp"> resend-smtp (mails)</label>
     <label><input type="checkbox" value="git-basico"> git-basico</label>
     <label><input type="checkbox" value="consumir-api-externa"> consumir-api-externa (datos ajenos)</label>
+    <label><input type="checkbox" value="ia-en-el-producto"> ia-en-el-producto (IA con tope)</label>
+    <label><input type="checkbox" value="go-live"> go-live (antes de desplegar)</label>
   </div>
   <button class="gen" id="go" type="button">Generar mi paquete de arranque</button>
 
@@ -765,7 +782,7 @@
 <section class="vista" data-vista="tecnologias" hidden>
   <div class="cfg-cab">
     <h2>Tecnologías</h2>
-    <p>Las 120 del catálogo, con búsqueda y filtros. Lo que marques acá queda elegido y entra al prompt cuando armes tu paquete en el Combinador.</p>
+    <p>Las 128 del catálogo, con búsqueda y filtros. Lo que marques acá queda elegido y entra al prompt cuando armes tu paquete en el Combinador.</p>
   </div>
   <div class="pcard sin-pad" id="slotTech"></div>
 </section>
@@ -1164,28 +1181,30 @@
   </div>
 </dialog>
 
-<script src="shell.js?v=32"></script>
-<script src="tema.js?v=32"></script>
-<script src="buscador.js?v=32"></script>
-<script src="md.js?v=32"></script>
-<script src="feedback.js?v=32"></script>
-<script src="zip.js?v=32"></script>
-<script src="paquete.js?v=32"></script>
-<script src="tecnologias.js?v=32"></script>
-<script src="reglas.js?v=32"></script>
-<script src="reglas-ui.js?v=32"></script>
-<script src="supabase-config.js?v=32"></script>
-<script src="sesion.js?v=32"></script>
-<script src="porton.js?v=32"></script>
-<script src="perfil.js?v=32"></script>
-<script src="perfil-vista.js?v=32"></script>
-<script src="app.js?v=32"></script>
-<script src="config-vista.js?v=32"></script>
-<script src="catalogo.js?v=32"></script>
-<script src="tecnologias-vista.js?v=32"></script>
-<script src="combinador.js?v=32"></script>
-<script src="manuales.js?v=32"></script>
-<script src="cuenta.js?v=32"></script>
-<script src="inicio.js?v=32"></script>
+<script src="shell.js?v=33"></script>
+<script src="tema.js?v=33"></script>
+<script src="buscador.js?v=33"></script>
+<script src="md.js?v=33"></script>
+<script src="feedback.js?v=33"></script>
+<script src="zip.js?v=33"></script>
+<script src="paquete.js?v=33"></script>
+<script src="tecnologias.js?v=33"></script>
+<script src="reglas.js?v=33"></script>
+<script src="reglas-ui.js?v=33"></script>
+<script src="metricas.js?v=33"></script>
+<script src="supabase-config.js?v=33"></script>
+<script src="sesion.js?v=33"></script>
+<script src="porton.js?v=33"></script>
+<script src="perfil.js?v=33"></script>
+<script src="perfil-vista.js?v=33"></script>
+<script src="app.js?v=33"></script>
+<script src="config-vista.js?v=33"></script>
+<script src="catalogo.js?v=33"></script>
+<script src="tecnologias-vista.js?v=33"></script>
+<script src="prompt.js?v=33"></script>
+<script src="combinador.js?v=33"></script>
+<script src="manuales.js?v=33"></script>
+<script src="cuenta.js?v=33"></script>
+<script src="inicio.js?v=33"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.31 · **Fecha:** 2026-10-03 · **Owner:** Facundo Moreno
+**Versión:** 0.33 · **Fecha:** 2026-10-05 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -123,7 +123,7 @@ Si no hay carpeta/repositorio: proponer crear `Desktop\repositorios\<proyecto>` 
 El análisis de repos y las tareas de lectura masiva se delegan a subagentes con el mínimo slice de contexto (§2). Presupuesto: el subagente recibe la tarea + su fila del protocolo, nada más.
 
 **R12 · MODELO-RECOMENDADO — [ON] — desactivable**
-Al arrancar, y ante features con IA, recomendar modelo por tarea sin sobredimensionar: generación de texto simple → modelo económico; refactor grande / arquitectura / código crítico → modelo alto. Registrar la recomendación en §3.
+Al arrancar, y ante features con IA, recomendar modelo por tarea sin sobredimensionar: generación de texto simple → modelo económico; refactor grande / arquitectura / código crítico → modelo alto. Registrar la recomendación en §3. Si el **producto** tiene IA adentro: nivel N4 de `seguridad.md` y `playbooks/ia-en-el-producto.md` (el tope de gasto es una reserva, no un chequeo).
 
 **R13 · CHANGELOG-SEMVER — [ON] — fija**
 Versionado `MAJOR.MINOR.PATCH`. Cada cambio implementado genera una entrada en `changelog/changelog-<usuario>.md`: qué se agregó/modificó/corrigió, archivos tocados, impacto. El changelog nunca se borra.
@@ -142,7 +142,7 @@ Una tarea se cierra solo si: código implementado + tests verdes (R07) + MDs al 
 Secretos y claves siempre en `.env`, nunca en el código ni en el repo. Se commitea un `.env.example` con los nombres de las variables y sin los valores. Ojo con el caso inverso: algunas claves **son públicas a propósito** (ej. la `anon` de Supabase) y esconderlas no protege nada — lo que protege es la configuración del servicio. Si una clave es pública, el MD dice por qué. Revisar el diff antes de cada commit buscando secretos. Si el producto guarda datos de terceros (ej.: prospectos), `security.md` debe decir qué se guarda, de dónde sale y cuánto se retiene. Detalle: `security.md`.
 
 **R18 · MODO-POR-TAMAÑO — [ON] — desactivable**
-En el arranque, clasificar el proyecto y elegir modo: script chico (≤~300 líneas estimadas o ≤1 día) → **LITE** (un solo `sdd-lite.md` con spec + changelog embebidos); proyecto estándar → **FULL**; monorepo/multi-servicio → **FEDERADO**. Registrar la elección en §3; el humano puede forzar otro modo.
+En el arranque, clasificar el proyecto y elegir modo: script chico (≤~300 líneas estimadas o ≤1 día) → **LITE** (un solo `sdd-lite.md` con spec + changelog embebidos; plantilla: `prompts/sdd-lite.md`); proyecto estándar → **FULL**; monorepo/multi-servicio → **FEDERADO**. Registrar la elección en §3; el humano puede forzar otro modo.
 
 **R19 · MANTENIMIENTO-PROGRAMADO — [ON] — desactivable**
 Si el `git log` (R02) muestra más de ~30 días sin actividad, o cuando el humano lo pida, proponer una **auditoría**: comparar contra la web las versiones de lenguaje, frameworks y librerías usadas; buscar deprecaciones y vulnerabilidades; revisar la salud del repo (branches muertas, `.env` fuera, tamaño). Presentar plan de actualización → OK → actualizar código **y** MDs → changelog. Nunca actualizar dependencias sin OK.
@@ -183,10 +183,10 @@ R17 alcanza para un script; no alcanza para nada que tenga usuarios. En el arran
 Un checklist de 200 ítems no se lee; seis controles que sí aplican se cumplen. Por eso los niveles son excluyentes por defecto: lo que no aplica, no aparece. **Reclasificar no es opcional:** agregar login a un proyecto que no lo tenía activa un nivel entero, y ese es exactamente el momento en que se olvida.
 
 **R28 · DEPENDENCIA-JUSTIFICADA — [ON] — desactivable**
-Antes de sumar una dependencia nueva (librería, framework, servicio, action de CI): una línea en `decisions.md` con qué problema resuelve, por qué no alcanza con lo que ya hay (o con un módulo propio razonable), y qué tan viva está (última release, mantenimiento). Dos dependencias para lo mismo: se elige una y se anota por qué. R19 audita sobre ese registro — la dependencia que nadie recuerda por qué está es justo la que nadie se anima a sacar, y la que un día aparece abandonada o vulnerable.
+Antes de sumar una dependencia nueva (librería, framework, servicio, action de CI): una línea en `decisions.md` con qué problema resuelve, por qué no alcanza con lo que ya hay (o con un módulo propio razonable), y qué tan viva está (última release, mantenimiento). Si la línea nombra una versión, se verifica contra el registro (npm, PyPI…) antes de escribirla: de memoria sale mal. Dos dependencias para lo mismo: se elige una y se anota por qué. R19 audita sobre ese registro — la dependencia que nadie recuerda por qué está es justo la que nadie se anima a sacar, y la que un día aparece abandonada o vulnerable.
 
 **R29 · TDD-ROJO-PRIMERO — [ON] — desactivable**
-Rojo → verde → refactor: el test se escribe primero y se lo ve fallar por la razón correcta. El rojo se **mide** contra la base (con su hash), no se deduce. Todo check, guard o hook nuevo se prueba rompiéndolo a propósito una vez y pegando la salida: un check que nunca vio un rojo no se sabe si corre. Variantes DATA/GAME y detalle: `harness.md` §5.
+Rojo → verde → refactor: el test se escribe primero y se lo ve fallar por la razón correcta. El rojo se **mide** contra la base (con su hash), no se deduce; con un módulo nuevo, contra un stub vacío que importa (un error de import no es un rojo). Todo check, guard o hook nuevo se prueba rompiéndolo a propósito una vez y pegando la salida: un check que nunca vio un rojo no se sabe si corre. Variantes DATA/GAME y detalle: `harness.md` §5.
 
 **R30 · LOOP-CERRADO — [ON] — fija**
 Nada es `done` sin **evidencia ejecutable** —comando + salida literal + hash del commit— y sin un **reviewer independiente** que re-ejecute la verificación (subagente `reviewer`, sesión nueva o el humano; nunca quien implementó), aunque el cambio parezca trivial. Lo propio del proyecto (test, lint, e2e) se declara en `harness.config.json`, nunca en el núcleo. El trabajo en vuelo vive en `sdd/progress/<rama>/`, no en el chat. Detalle: `harness.md`.
@@ -369,6 +369,8 @@ Entrada de changelog: `## [X.Y.Z] — YYYY-MM-DD` con secciones **Agregado / Mod
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.33 | 2026-10-05 | Lecciones de cuatro proyectos reales hechos con el paquete (landing, tienda, mesa de ayuda con IA y chatbot, en local) vía S33–S37. Playbook nuevo **`ia-en-el-producto`**: el tope de gasto se rompió siete veces, de siete formas. R12 apunta a él, R28 verifica versiones contra el registro, R29 mide el rojo de un módulo nuevo con un stub. `seguridad.md` 0.12: estáticos por lista blanca y un test por control. Combinador con stack Python + React, tipo «mesa de ayuda» y casilla «IA en el producto»; el prompt respeta R01 apagado; catálogo con Vite, Vitest, pytest, Tailwind, React Router, Mercado Pago, Stripe y Anthropic API. Arnés: modo LITE sin memoria en disco, rutas citadas en tablas, tarjeta con `rama`. Web: reporte de O1–O4 en el panel. |
+| 0.32 | 2026-10-04 | Entorno de desarrollo **100% local** (`dev/`): Postgres local con el mismo esquema y las mismas políticas RLS que Supabase, auth y REST compatibles con el cliente de la web, y usuarios de prueba. Supabase y Vercel quedan inactivos hasta salir de lo local. |
 | 0.31 | 2026-10-03 | El ZIP del proyecto trae la capa de ejecución: `harness.md`, `orchestration.md` y las plantillas de `prompts/` siempre; `agents/` con nivel PRO; `harness/` opcional, con el pre-commit ejecutable; y las skills `relevo` y `harness-fix`. La web tiene sus primeros tests (`web/tests/`, en CI), que incluyen la sincronía de las reglas con esta §4: ADR-004 decía que `reglas.js` se generaba, pero el generador nunca estuvo en el repo. El JS de `index.html` se parte en seis archivos y `og.png` sale de un script. |
 | 0.30.1 | 2026-10-02 | La parte ejecutable de R29/R30: el scaffold **`harness/`** (Python 3.10+ sin dependencias) con `verify.py` por niveles, checks de integridad, hooks de Claude Code, pre-commit y CI de ejemplo, y 100 tests que se prueban con las mismas reglas que exigen. Pasó siete vueltas de un reviewer independiente (R30 aplicado a sí mismo), que encontraron entre otras cosas cinco formas de inyección por nombre de archivo: de ahí S32 y el invariante de `lint_file` (sin shell, `./` siempre). `harness.md` se ajusta a lo implementado (DRIFT resuelto, opción A). |
 | 0.30 | 2026-10-02 | Capa de **ejecución verificable**, importada de Relay (usado en producción en chat-commerce-ai), vía S28–S31: **R29 TDD-ROJO-PRIMERO** (rojo medido y rojo forzado de checks), **R30 LOOP-CERRADO** (done = comando + salida literal + hash, re-ejecutado por un reviewer independiente), **R31 ORQUESTACIÓN-CON-ROLES** (siete roles de agente) y **R32 PRODUCCIÓN-CON-OK**. Nuevos: `harness.md`, `orchestration.md`, `harness.config.json` por proyecto, y `sdd/cards/` + `sdd/progress/<rama>/` como memoria en disco. El HANDBACK pide la evidencia literal. |

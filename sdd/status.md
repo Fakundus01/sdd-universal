@@ -1,14 +1,14 @@
 # status.md · SDD Hub
 
-**Versión:** 0.32 · **Última actualización:** 2026-10-05 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
+**Versión:** 0.33 · **Última actualización:** 2026-10-05 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
 
 ## Features
 
 | ID | Feature | Estado | % | Nota |
 |---|---|---|---|---|
 | F1 | Catálogo con filtros, búsqueda y paginación | Complete | 100% | Filtros en la URL, compartibles |
-| F2 | Combinador de prompt de arranque | Complete | 100% | Lista además los archivos exactos a descargar |
-| F3 | Catálogo de tecnologías con selección múltiple | Complete | 100% | 120 items (0.27), popup arrastrable |
+| F2 | Combinador de prompt de arranque | Complete | 100% | Lista además los archivos exactos a descargar. 0.33: el texto sale de `prompt.js` (puro, con tests); stack Python + React/TS; tipo Mesa de ayuda; «IA en el producto» (N4, R12, playbook); respeta `R01=OFF`; LITE con su plantilla |
+| F3 | Catálogo de tecnologías con selección múltiple | Complete | 100% | 128 items (0.33), popup arrastrable. Lo que no está se puede sumar igual y llega al prompt marcado |
 | F4 | Configurador de reglas → `custom.md` | Complete | 100% | Las fijas con candado (ADR-006). 32 reglas desde 0.30.1 |
 | F5 | Cuentas y combinaciones guardadas | Complete | 100% | 0.32: la prueba de dos cuentas corre en `dev/tests/` con el esquema real, y encontró dos bugs que estaban en la nube (guardar con cuenta fallaba siempre; cualquiera podía hacerse admin). Corregidos en `schema.sql` y `metricas.sql` |
 | F6 | Guía navegable | Complete | 100% | Índice lateral con seguimiento de sección |
@@ -26,25 +26,26 @@
 | F18 | Descarga rápida por card | Complete | 100% | 0.25: popup con nuevo/existente, nivel, skills y (0.30.1) arnés |
 | F19 | Sitio privado (portón de sesión) | Complete | 100% | 0.26 y 0.28. Depende de que el proyecto Supabase esté activo: ver Bloqueos |
 | F21 | Entorno local sin nube (ADR-012) | Complete | 100% | 0.32: `node dev/dev.mjs` levanta Postgres propio y un emulador de Supabase; la web corre entera con login. 9 tests + smoke en Chrome |
+| F22 | Reporte de outcomes en el panel (D3, ADR-013) | Complete | 100% | 0.33: O1, O2 y O4 de los últimos 30 días contra su meta; O3 manual. Clase de dispositivo gruesa en la visita, nunca el user-agent |
 | F20 | El ZIP trae la capa de ejecución (R29–R32) | Complete | 100% | 0.31: `harness.md`, `orchestration.md` y `prompts/` siempre; `agents/` con PRO; `harness/` opcional, con el pre-commit en 755. Cubierto por `web/tests/` (en CI) y por un smoke en Chrome headless: checkboxes, árbol, cambio de nivel y popup |
 
-**Avance total: 21 / 21 features = 100%**
+**Avance total: 22 / 22 features = 100%**
 
 ## Bloqueos
 
 **Ninguno para desarrollar.** Desde 0.32 todo corre en local (`dev/`, ADR-012).
 
-**La web publicada sigue inaccesible, por decisión del owner.** El proyecto Supabase `sdd-universal` sigue pausado (`INACTIVE`, visto el 2026-10-05), y la organización ya usa sus 2 proyectos gratis. El 2026-10-05 el owner decidió dejarlo así y trabajar en local; Vercel queda para cuando la web se abra a otros programadores. **Al reactivarlo hay que volver a correr `supabase/schema.sql` y `metricas.sql` allá**: los arreglos de 0.32 (upsert y admin) todavía no están en la nube. Después, repetir una vez la prueba de dos cuentas contra el proyecto real.
+**La web publicada sigue inaccesible, por decisión del owner.** El proyecto Supabase `sdd-universal` sigue pausado (`INACTIVE`, visto el 2026-10-05), y la organización ya usa sus 2 proyectos gratis. El 2026-10-05 el owner decidió dejarlo así y trabajar en local; Vercel queda para cuando la web se abra a otros programadores. **Al reactivarlo hay que volver a correr `supabase/schema.sql` y `metricas.sql` allá**: los arreglos de 0.32 (upsert y admin) y lo de 0.33 (columna `ia`, el check de la clase de dispositivo y la vista `metricas_30_dias`) todavía no están en la nube. Después, repetir una vez la prueba de dos cuentas contra el proyecto real.
 
 ## Deuda técnica aceptada
 
-El 2026-10-03 todas estaban vencidas. Con el OK del owner («hacé las deudas que se puedan») se cerraron D1 y D5, y D2 se cerró en parte. D3 y D6 necesitan decisiones o gastos del owner y siguen abiertas, con el dato actualizado.
+El 2026-10-03 todas estaban vencidas. Con el OK del owner («hacé las deudas que se puedan») se cerraron D1 y D5, y D2 se cerró en parte. D3 y D6 necesitaban decisiones o gastos del owner; D3 se cerró el 2026-10-05 (0.33) y D6 sigue abierta, con el dato actualizado.
 
 | ID | Deuda | Aceptada | Revisar el | Qué la dispara | Hoy (2026-10-03) |
 |---|---|---|---|---|---|
 | ~~D1~~ | ~~`index.html` pasa las 300 líneas de JS que pide R05~~ — **cerrada el 2026-10-03 (0.31)**: las 1123 líneas inline pasaron a seis archivos de 105 a 237 líneas sin la cabecera (ver `design.md` §2) | — | — | — | Smoke en Chrome headless con salida idéntica antes y después, más un rojo forzado con el orden de carga invertido |
 | D2 | Tests automatizados **parciales**: el ZIP y la sincronía de reglas tienen suite (0.31, `web/tests/`, en CI); la UI se sigue verificando en navegador | 2026-08-15 | 2026-12-01 | Una regresión de UI que llegue a producción: ahí el smoke por CDP (ver `testing.md`) entra al repo y a CI | Reaceptada en versión reducida: lo que ya se había roto (reglas) y lo invisible (el ZIP) ya están cubiertos |
-| D3 | Los outcomes O1–O4 de la spec no se están midiendo | 2026-08-15 | ~~2026-09-30~~ vencida | Sin analytics no hay dato. Decidir si se suma algo que respete la spec (sin píxeles de terceros) o si se bajan los outcomes a algo observable | Existe `Sesion.contar` + `supabase/metricas.sql` (conteos propios, sin terceros), pero no hay reporte contra O1–O4 |
+| ~~D3~~ | ~~Los outcomes O1–O4 de la spec no se están midiendo~~ — **cerrada el 2026-10-05 (0.33, ADR-013)**: el panel calcula O1, O2 y O4 de los últimos 30 días contra la meta con los contadores propios, y O3 queda manual | — | — | — | Falta lo que no se automatiza: hacer O3 con 3 personas y anotarlo acá |
 | ~~D4~~ | ~~Traducción al inglés~~ — **cerrada el 2026-08-15**: núcleo (master + compact) en inglés como espejo del canónico. El resto del paquete queda en español a propósito | — | — | El espejo se actualiza con cada release del master | — |
 | ~~D5~~ | ~~`web/og.png` se generó con un script que no quedó en el repo~~ — **cerrada el 2026-10-03 (0.31)**: `web/og.py` (Pillow) la regenera con el mismo diseño y toma el número de reglas del master | — | — | — | Decía «26 reglas» desde 0.11; ahora dice 32 |
 | D6 | Sin SMTP propio: el recupero de contraseña y la confirmación dependen del mailer del free tier, que manda pocos correos por hora y cae en spam | 2026-08-15 | ~~2026-09-30~~ vencida | **Procedimiento ya escrito** en `playbooks/resend-smtp.md`. Lo que falta es ejecutarlo, y para salir del modo prueba hace falta un dominio propio (~USD 15/año) — ese es el verdadero bloqueo, no el código | Sin cambios. Pesa menos desde 0.26: sin registro público, las cuentas las crea el admin con Auto Confirm |
@@ -52,5 +53,5 @@ El 2026-10-03 todas estaban vencidas. Con el OK del owner («hacé las deudas qu
 ## Próximo ciclo
 
 1. Ejemplos de punta a punta con el SDD (e-commerce, landing, ticketera con IA, chatbot), cada uno en su repo: lo que falle ahí entra a `scenarios.md` (R20).
-2. **Owner:** decidir D3 (medir O1–O4 con `metricas.sql` o bajar los outcomes) y D6 (dominio para el SMTP). D6 pesa todavía menos en local, donde no hay mails.
+2. **Owner:** hacer O3 (3 personas ajenas, 2 minutos cada una) y anotar el resultado acá; decidir D6 (dominio para el SMTP), que pesa todavía menos en local, donde no hay mails.
 3. Cuando la web salga a otros: reactivar Supabase, correr los dos `.sql` y repetir la prueba de dos cuentas (ver Bloqueos).

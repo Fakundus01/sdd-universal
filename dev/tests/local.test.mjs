@@ -140,6 +140,32 @@ test("las métricas se suman sin sesión y solo las lee el admin", async () => {
   assert.equal(deAdmin.find(m => m.detalle === "SDD-MASTER.md")?.total, 1);
 });
 
+test("D3: la visita lleva solo la clase de dispositivo, y la vista de 30 días es del admin", async () => {
+  const sumar = (c) => pedir("/rest/v1/eventos", {metodo: "POST", headers: {Prefer: "return=minimal"}, cuerpo: c});
+  assert.equal((await sumar({tipo: "visita", detalle: "#/combinador|movil"})).estado, 201);
+  assert.equal((await sumar({tipo: "visita", detalle: "/web/|escritorio"})).estado, 201);
+  assert.equal((await sumar({tipo: "visita", detalle: "md:SDD-MASTER.md"})).estado, 201, "los previews siguen sin clase");
+  // Lo que no es una de las dos clases no entra: ni un user-agent ni nada parecido.
+  for (const detalle of ["#/combinador|Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)", "#/combinador|tablet", "/web/|movil|x"])
+    assert.equal((await sumar({tipo: "visita", detalle})).estado, 400, detalle);
+  // Un evento viejo no cuenta para los 30 días.
+  assert.equal((await sumar({tipo: "visita", detalle: "#/combinador|escritorio", dia: "2020-01-01"})).estado, 201);
+
+  assert.deepEqual((await pedir("/rest/v1/metricas_30_dias?select=*", {token: B.access_token})).datos, []);
+  assert.deepEqual((await pedir("/rest/v1/metricas_30_dias?select=*")).datos, []);
+  const filas = (await pedir("/rest/v1/metricas_30_dias?select=*", {token: ADMIN.access_token})).datos;
+  assert.equal(filas.find(f => f.detalle === "#/combinador|movil")?.total, 1);
+  assert.equal(filas.find(f => f.detalle === "#/combinador|escritorio"), undefined, "la vista mira más de 30 días");
+});
+
+test("la combinación guarda si hay IA en el producto", async () => {
+  const r = await guardar(A, {nombre: "Ticketera con IA", tipo: "ticketera", stack: "py-react", ia: true});
+  assert.equal(r.estado, 201, JSON.stringify(r.datos));
+  assert.equal((await listar(A)).datos.find(c => c.nombre === "Ticketera con IA").ia, true);
+  const sin = await guardar(A, {nombre: "Landing sin IA"});
+  assert.equal(sin.datos[0].ia, false, "el default de ia tiene que ser false");
+});
+
 test("guardar dos veces el mismo nombre pisa la combinación, no la duplica", async () => {
   const primera = await guardar(B, {nombre: "Landing", stack: "reco"});
   assert.equal(primera.estado, 201, JSON.stringify(primera.datos));

@@ -1,6 +1,6 @@
 # spec.md · SDD Hub (la web del catálogo)
 
-**Versión:** 0.8 · **Última actualización:** 2026-08-15 · **Estado:** vigente
+**Versión:** 0.9 · **Última actualización:** 2026-10-05 · **Estado:** vigente
 
 ## 1 · Problema
 
@@ -14,16 +14,18 @@ El paquete SDD Universal son 20 archivos Markdown en un repo. Para quien ya sabe
 
 | # | Outcome | Cómo se mide | Meta |
 |---|---|---|---|
-| O1 | La gente descarga el archivo correcto | Descargas de `SDD-MASTER.md` sobre el total | > 60% |
-| O2 | El prompt sale de la web y no a mano | Clics en "Generar" sobre visitas | > 25% |
+| O1 | La gente descarga el archivo correcto | Descargas de `SDD-MASTER.md` sobre el total de descargas | > 60% |
+| O2 | El prompt sale de la web y no a mano | Clics en "Generar" sobre cargas de la página | > 25% |
 | O3 | Se entiende sin leer nada | Alguien ajeno al proyecto explica qué es después de 2 min en la página | Sí / No, con 3 personas |
-| O4 | Entra desde el celular | Visitas móviles que llegan al combinador | > 30% |
+| O4 | Entra desde el celular | De las llegadas al combinador, cuántas vienen de un celular | > 30% |
+
+**Cómo se mide (0.33, ADR-013):** O1, O2 y O4 salen de los contadores anónimos propios (`supabase/metricas.sql`) sobre los **últimos 30 días**, y el panel (`admin.html`) los muestra contra la meta. Para O4, la visita guarda una clase gruesa de dispositivo (`movil` / `escritorio`), nunca el user-agent. **O3 es manual**: no sale de ningún contador; el panel tiene dónde anotarlo, y el resultado que vale se escribe en `status.md`.
 
 ## 3 · Qué NO entra
 
 - **Generar el `sdd/` desde la web.** La web arma el prompt; el `sdd/` lo genera el agente del usuario. Meter un modelo en el medio nos obliga a tener API keys, costos por uso y moderación — es la v2 que describe `blocks.md`, y no es este proyecto.
 - **Ejecutar código del usuario.** No somos un playground.
-- **Analytics de terceros.** Los outcomes se miden con lo que da Vercel, sin píxeles ni cookies de tracking.
+- **Analytics de terceros.** Los outcomes se miden con contadores propios y anónimos (sin usuario, IP, user-agent ni cookies), sin píxeles ni servicios de afuera.
 - **Un CMS.** El catálogo se edita commiteando. Son 24 cards, no 24.000.
 - **Traducción al inglés.** Decisión pendiente, no descartada — ver `status.md`.
 
@@ -61,3 +63,5 @@ El paquete SDD Universal son 20 archivos Markdown en un repo. Para quien ya sabe
 - **V5** · El tema arranca en oscuro aunque el sistema esté en claro.
 - **V6** · El configurador de reglas no permite apagar ninguna regla marcada como `fija`.
 - **V7** · Los dos demos son operables y demuestran una diferencia observable en los tres casos borde (V1/V2/V3 de `examples/turnos`).
+- **V8** · El combinador respeta lo que configuró la persona: con `R01=OFF` (o perfil CONFIANZA) el prompt no promete esperar el OK del commit; con «IA en el producto» trae N4, R12 y el playbook `ia-en-el-producto`; una tecnología que no está en el catálogo llega al prompt marcada, no se pierde.
+- **V9** · El panel muestra O1, O2 y O4 de los últimos 30 días contra su meta, con «sin datos» cuando no hay eventos, y O3 como manual.

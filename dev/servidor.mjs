@@ -113,7 +113,8 @@ export async function levantar({datos = join(RAIZ, "dev", ".data"), puerto = 432
     if (!/^(127\.0\.0\.1|localhost)(:\d+)?$/i.test(req.headers.host || ""))
       return enviar(res, 403, {message: "Host no permitido"});
     try {
-      const api = ruta.match(/^\/(auth|rest)\/v1\/([a-z_]+)$/);
+      // Con dígitos: la vista metricas_30_dias (0.33) caía al estático y daba 404.
+      const api = ruta.match(/^\/(auth|rest)\/v1\/([a-z_][a-z0-9_]*)$/);
       if (!api) return estatico(ruta, res);
       let cuerpo = null;
       if (["POST", "PUT", "PATCH"].includes(req.method)){

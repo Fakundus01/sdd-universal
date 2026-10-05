@@ -14,7 +14,8 @@ function estadoActual(){
     nivel: $("clvl").value,
     perfil: $("cperf").value,
     playbooks: [...document.querySelectorAll("#pbs input:checked")].map(x => x.value),
-    tecnologias: [...sel]
+    tecnologias: [...sel],
+    ia: $("cia").checked
   };
 }
 
@@ -25,6 +26,7 @@ function aplicarCombinacion(c){
   $("clvl").value = c.nivel || "PRO";
   $("cperf").value = c.perfil || "ESTRICTO";
   document.querySelectorAll("#pbs input").forEach(i => i.checked = (c.playbooks || []).includes(i.value));
+  $("cia").checked = Boolean(c.ia);
   sel.clear(); (c.tecnologias || []).forEach(t => sel.add(t));
   renderSel(); renderTech();
   $("go").click();

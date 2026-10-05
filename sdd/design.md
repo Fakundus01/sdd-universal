@@ -19,7 +19,8 @@ web/
 ├── index.html          el catálogo, el combinador y los diálogos (solo HTML desde 0.31)
 ├── catalogo.js         shell, datos de las cards, estado en la URL, render       ┐
 ├── tecnologias-vista.js vista/popup de tecnologías, paginación, mover ventanas   │ el JS de
-├── combinador.js       prompt de arranque, lista de archivos, ZIP, descarga rápida │ index.html,
+├── prompt.js           el texto del prompt de arranque, puro (0.33)            │
+├── combinador.js       junta el estado, lista de archivos, ZIP, descarga rápida  │ index.html,
 ├── manuales.js         recorrido guiado y vista Manuales                         │ en este orden
 ├── cuenta.js           sesión, combinaciones guardadas, entrar, contraseña       │ (D1)
 ├── inicio.js           vista previa de MD, compartir, buscador, init             ┘
@@ -30,7 +31,8 @@ web/
 ├── demo.html           la comparación con/sin SDD
 ├── demo-sin-sdd.html   widget de reservas construido sin spec
 ├── demo-con-sdd.html   el mismo widget, con los criterios de la spec
-├── tecnologias.js      DATO — 120 tecnologías
+├── tecnologias.js      DATO — 128 tecnologías, con la lección de proyectos reales cuando hay
+├── metricas.js         clase de dispositivo y reporte de outcomes, puro (0.33, ADR-013)
 ├── reglas.js           DATO — espejo de la §4 del master, controlado por tests/ (ADR-004)
 ├── reglas-ui.js        configurador de reglas → custom.md
 ├── sesion.js           auth y persistencia (Supabase o localStorage)

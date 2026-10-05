@@ -192,6 +192,10 @@ const ReglasUI = (() => {
 
   function irPagina(p){ pag = p; render(); $("rlist").scrollTop = 0; }
 
-  return {iniciar, abrir, generar, irPagina, hayCambios: () => cfg.apagadas.length > 0 ||
+  /* Lo que el combinador lee para el prompt: con R01 apagada (o perfil
+     CONFIANZA) el prompt no puede prometer esperar el OK del commit. */
+  return {iniciar, abrir, generar, irPagina,
+          apagadas: () => [...cfg.apagadas], perfil: () => cfg.perfil, modo: () => cfg.modo,
+          hayCambios: () => cfg.apagadas.length > 0 ||
           cfg.perfil !== "ESTRICTO" || cfg.modo !== "FULL" || Boolean(cfg.maxLineas || cfg.stack || cfg.propias.trim())};
 })();

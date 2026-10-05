@@ -90,7 +90,7 @@ const App = (() => {
     if (empujar && location.hash !== "#/" + vista) history.pushState(null, "", "#/" + vista);
     cerrarCajon();
     scrollTo({top: 0, behavior: prefs.animaciones ? "smooth" : "auto"});
-    if (typeof Sesion !== "undefined") Sesion.contar("visita", "#/" + vista);
+    if (typeof Sesion !== "undefined") Sesion.contarVisita("#/" + vista);
   }
 
   const vistaDeHash = () => (location.hash.replace("#/", "") || "inicio").split("?")[0];

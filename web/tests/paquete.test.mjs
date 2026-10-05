@@ -90,6 +90,23 @@ test("lo que trae la capa de ejecución no cita prompts/ ni agents/ que falten",
       assert.ok(nombres.includes(cita) || nombres.includes("sdd/" + cita), `${n} cita ${cita}, que no viene en el ZIP`);
 });
 
+// Va siempre, no solo cuando la web eligió LITE: el modo lo clasifica el
+// agente al arrancar (R18), y el master y harness.md citan la plantilla.
+test("H4: la plantilla sdd-lite.md viaja con las otras de prompts/", async () => {
+  for (const nivel of ["PRO", "NOVATO"]){
+    const {zip, nombres} = await armar({nivel});
+    assert.ok(nombres.includes("sdd/prompts/sdd-lite.md"), `${nivel}: falta sdd/prompts/sdd-lite.md`);
+    assert.equal(lf(zip.get("prueba/sdd/prompts/sdd-lite.md").datos.toString("utf8")), lf(leer("prompts/sdd-lite.md")));
+  }
+});
+
+test("H5: .gitattributes junta en el merge los historiales de sdd/, también el de LITE", async () => {
+  const {zip} = await armar({nivel: "PRO"});
+  const ga = zip.get("prueba/.gitattributes").datos.toString("utf8");
+  for (const f of ["sdd/changelog/*.md", "sdd/status.md", "sdd/changelog.md", "sdd/sdd-lite.md"])
+    assert.match(ga, new RegExp(`^${f.replace(/[.*]/g, m => "\\" + m)} merge=union$`, "m"), `falta ${f} merge=union`);
+});
+
 test("el pre-commit sale ejecutable y nada más lo es", async () => {
   const {zip} = await armar({nivel: "PRO"});
   for (const [nombre, {modo}] of zip){

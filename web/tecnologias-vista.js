@@ -65,6 +65,17 @@ function techRows(){
 const techPorPagina = () => $("techCuerpo").classList.contains("como-vista") ? 8 : 20;
 let techPage = 1;
 
+/* Lo que se busca y no está en el catálogo no se pierde: se puede sumar
+   igual, y va al prompt marcado como «fuera del catálogo» para que el
+   agente lo verifique (Prompt.separarTecnologias). */
+const enCatalogo = n => TECH.some(t => t.n.toLowerCase() === String(n).trim().toLowerCase());
+function botonSumar(){
+  const q = $("tq").value.trim();
+  if (!q || q.length > 60 || enCatalogo(q) || [...sel].some(n => n.toLowerCase() === q.toLowerCase())) return "";
+  return `<button class="tsumar" type="button" data-sumar="${esc(q)}">＋ Sumar «${esc(q)}» igual
+    <small>No está en el catálogo: entra al prompt marcada, para que tu agente la verifique antes de usarla.</small></button>`;
+}
+
 function renderTech(){
   const list = techRows();
   const POR = techPorPagina();
@@ -72,7 +83,7 @@ function renderTech(){
   if (techPage > paginas) techPage = paginas;
 
   if (!list.length){
-    $("techlist").innerHTML = `<p class="dlg-empty">Ninguna tecnología coincide con esos filtros.<br>El catálogo arranca con lo que ya relevamos y crece con casos reales (R20).</p>`;
+    $("techlist").innerHTML = botonSumar() + `<p class="dlg-empty">Ninguna tecnología coincide con esos filtros.<br>El catálogo arranca con lo que ya relevamos y crece con casos reales (R20).</p>`;
   } else {
     const pagina = list.slice((techPage - 1) * POR, techPage * POR);
     // Con búsqueda activa el orden es por relevancia, así que agrupar por
@@ -92,7 +103,7 @@ function renderTech(){
         ${t.os ? '<span class="os" title="Open source">OSS</span>' : ""}
       </label>`;
     }
-    $("techlist").innerHTML = html + pager(list.length, techPage, POR, "tech");
+    $("techlist").innerHTML = botonSumar() + html + pager(list.length, techPage, POR, "tech");
   }
   const n = sel.size;
   $("techsel").textContent = n === 0 ? "Ninguna elegida"
@@ -104,10 +115,15 @@ function renderTech(){
 
 function renderSel(){
   $("selchips").innerHTML = [...sel].map(n => {
-    const t = TECH.find(x => x.n === n) || {};
-    return `<span class="selchip"><b>${esc(n)}</b>${t.e ? `<small>${esc(t.e)}</small>` : ""}
+    const t = TECH.find(x => x.n.toLowerCase() === n.toLowerCase());
+    const det = t ? t.e : "fuera del catálogo";
+    return `<span class="selchip${t ? "" : " fuera"}"><b>${esc(n)}</b>${det ? `<small>${esc(det)}</small>` : ""}
       <button type="button" data-unsel="${esc(n)}" aria-label="Quitar ${esc(n)}">✕</button></span>`;
   }).join("");
+  const fuera = [...sel].filter(x => !enCatalogo(x));
+  $("techaviso").textContent = fuera.length
+    ? `⚠ ${fuera.length === 1 ? `«${fuera[0]}» no está` : `${fuera.map(x => `«${x}»`).join(", ")} no están`} en el catálogo. No se descarta${fuera.length === 1 ? "" : "n"}: va${fuera.length === 1 ? "" : "n"} al prompt aparte, para que tu agente confirme qué ${fuera.length === 1 ? "es" : "son"} y si encaja${fuera.length === 1 ? "" : "n"}.`
+    : "";
   const n = sel.size;
   $("techhint").textContent = n === 0 ? `${TECH.length} disponibles · opcional`
     : n === 1 ? "1 elegida" : `${n} elegidas`;
@@ -165,6 +181,8 @@ dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
   addEventListener("resize", recentrar);
 })();
 document.addEventListener("click", e => {
+  const su = e.target.closest("[data-sumar]");
+  if (su){ sel.add(su.dataset.sumar); $("tq").value = ""; techPage = 1; renderTech(); renderSel(); return; }
   const un = e.target.closest("[data-unsel]");
   if (un) { sel.delete(un.dataset.unsel); renderTech(); renderSel(); }
 });

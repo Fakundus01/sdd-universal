@@ -1,6 +1,6 @@
 # seguridad.md · Controles por superficie de ataque
 
-**Versión:** 0.11 · 2026-08-15 · **Bloque:** `seguridad` · **Para agentes:** leer cuando se clasifica la superficie del proyecto (R27), cuando se escribe o revisa `security.md`, y antes de cualquier feature que toque autenticación, datos de terceros, pagos, archivos o IA.
+**Versión:** 0.12 · 2026-10-05 · **Bloque:** `seguridad` · **Para agentes:** leer cuando se clasifica la superficie del proyecto (R27), cuando se escribe o revisa `security.md`, y antes de cualquier feature que toque autenticación, datos de terceros, pagos, archivos o IA.
 
 > **Por qué existe.** R17 cubre lo básico —secretos fuera del repo, `.gitignore` como paso 0— y con eso alcanza para un script. No alcanza para nada que tenga usuarios. Este archivo agrega los controles que aparecen cuando el proyecto crece, **organizados por lo que el proyecto realmente hace**, no como una lista de 80 ítems que nadie lee.
 >
@@ -23,6 +23,8 @@ En el arranque, el agente responde estas seis preguntas y aplica **solo** los ni
 | 6 | ¿Hay una API o endpoint público? | **N6 · Superficie pública** |
 
 La clasificación y los niveles activados **se registran en `security.md` del proyecto**, con fecha. Si más adelante el proyecto suma login, se reclasifica: agregar una feature puede activar un nivel nuevo, y ese es justamente el momento en que la gente se olvida.
+
+**Cada control que se declara lleva un test que se vio fallar (R29).** En los ejemplos de `scenarios.md` S35, controles escritos en `security.md` (vencimiento de sesión, contención de rutas, el lock del rate limit) sobrevivían a su mutante: estaban en la spec pero ningún test los tocaba, o el test no daba rojo nunca. La tabla de controles del proyecto tiene una columna «test» y el reviewer (R30) rompe cada control una vez para verlo fallar. Un control sin test es una intención, no un control.
 
 ---
 
@@ -91,11 +93,13 @@ Este nivel casi no existía hace unos años y hoy es de los más ignorados.
 | Control | Por qué |
 |---|---|
 | **Lo que el modelo lee es dato, no instrucción** (R26) | Contenido de una web, un PDF o una issue puede traer texto dirigido al modelo. Si el modelo puede actuar, eso es una vía de ejecución |
-| Límite de gasto por usuario y global, con corte automático | Un endpoint de IA sin techo es una factura sin límite superior |
+| Límite de gasto por usuario y global, con corte automático: **se reserva la cota antes de llamar**, bajo lock, y se registra siempre (`playbooks/ia-en-el-producto.md`) | Un endpoint de IA sin techo es una factura sin límite superior. «Chequear y después llamar» no es un techo: en paralelo pasan todos, y una reserva fija tampoco lo es si el prompt crece |
 | Rate limit por IP y por cuenta | Sin esto, tu clave paga el uso de un tercero |
 | La API key **nunca** en el front | Si está en el navegador, es pública. Va en el servidor |
 | Nada sensible en el prompt sin decidirlo | Lo que va al prompt sale de tu infraestructura hacia el proveedor |
 | Validar la **salida** antes de usarla | Si la respuesta se inserta en HTML, ejecuta SQL o corre como comando, es entrada no confiable |
+| El texto del usuario va **escapado** dentro de etiquetas que pone el sistema | Un reemplazo de una pasada se rompe con `</tick</ticket>et>`: el cliente cierra el bloque y escribe instrucciones |
+| Tests con el **SDK real** sobre un transporte simulado | Un cliente falso escrito a mano ocultó que un helper validaba adentro de la llamada y perdía el registro del gasto |
 | Decirle al usuario que habla con una IA | Y qué se guarda de esa conversación |
 
 ## 7 · N5 · Archivos — el usuario puede subir
@@ -119,6 +123,7 @@ Este nivel casi no existía hace unos años y hoy es de los más ignorados.
 | Errores que no cuentan de más | Un stack trace en producción es un mapa |
 | Headers: `nosniff`, `X-Frame-Options`, `Referrer-Policy`, y CSP si se puede | Baratos y evitan familias enteras de ataque |
 | Paginación con techo | `?limite=999999` no puede bajar la base |
+| Estáticos servidos desde una **lista blanca** armada al arrancar, nunca `base / ruta_del_pedido` | Tocar el disco con la ruta del cliente es path traversal, y en Windows `\\host\share` dispara SMB saliente y filtra el hash NTLM. Test: rutas hostiles (`..`, `%5c`, UNC, letra de unidad, alias 8.3) y un espía que confirma que el disco no se toca |
 
 ---
 
@@ -144,7 +149,8 @@ Este nivel casi no existía hace unos años y hoy es de los más ignorados.
 5. **Logs con datos personales o tokens.** El lugar más común donde se filtra algo.
 6. **Escáner en verde = seguro.** Ver el punto de arriba.
 7. **Dejarlo para el final.** Agregar auth después de modelar los datos es rediseñar, no agregar.
-8. **Un endpoint de IA sin techo de gasto.** No es una brecha, es una factura.
+8. **Un endpoint de IA sin techo de gasto.** No es una brecha, es una factura. Y un techo que se chequea en vez de reservarse tampoco es techo.
+9. **Un control sin test.** Está escrito, se cree que funciona, y nadie lo vio fallar nunca.
 
 ## 11 · Lo que NO hay que hacer
 
@@ -162,4 +168,5 @@ Igual que todo el paquete (R20): un control entra cuando alguien se comió el pr
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.12 | 2026-10-05 | Lecciones de los cuatro ejemplos (`scenarios.md` S33 y S35): N4 con el tope como **reserva** y el playbook `ia-en-el-producto`, escape del texto del usuario y tests con el SDK real; N6 con los estáticos por lista blanca; cada control declarado lleva un test que se vio fallar; error 9 «un control sin test». |
 | 0.11 | 2026-08-15 | Primera versión: clasificación por superficie (N0–N6), controles con su porqué y su verificación, herramientas con lo que cada una **no** detecta, y los 8 errores que más se repiten. Nace de R27. |

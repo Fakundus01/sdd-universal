@@ -1,6 +1,6 @@
 # contracts.md · SDD Hub
 
-**Versión:** 0.8 · La web no expone API propia. Sus contratos son dos: la **forma de los archivos de datos** que consume, y las **llamadas a Supabase** que hace.
+**Versión:** 0.9 · La web no expone API propia. Sus contratos son dos: la **forma de los archivos de datos** que consume, y las **llamadas a Supabase** que hace.
 
 ---
 
@@ -16,12 +16,15 @@ Define un global `TECH`. Una entrada por tecnología:
   e: "JavaScript/TypeScript", // ecosistema tal como vino de la fuente
   f: "JavaScript / TypeScript", // familia — normalizada, es la que filtra
   u: "Frontend",           // uso principal
-  os: true }               // open source
+  os: true,                // open source
+  a: "…" }                 // opcional (0.33): lección de proyectos reales; viaja al prompt con la tecnología
 ```
 
 `e` vs `f`: la fuente traía `JS/TS`, `JavaScript` y `JavaScript/TypeScript` como valores distintos para lo mismo. `e` conserva el original (fidelidad) y `f` agrupa (usabilidad del filtro). **Se muestra `e`, se filtra por `f`.**
 
-**Fuente:** hoja `Todo` de `catalogo_tecnologias_software.xlsx`. No editar a mano (ADR-004).
+**Fuente:** hoja `Todo` de `catalogo_tecnologias_software.xlsx`. No editar a mano (ADR-004). **Excepción desde 0.33:** las tecnologías que piden proyectos reales entran a mano en `tecnologias.js` y en `tecnologias.md` en el mismo cambio; `web/tests/combinador.test.mjs` controla que las dos listas sean la misma y que ningún «N tecnologías» de la web quede viejo.
+
+**Lo que no está en el catálogo** (la persona lo busca y lo suma igual) se guarda en la selección con su nombre tal cual, y `Prompt.armar` lo manda en un bloque aparte, `PEDIDAS QUE NO ESTÁN EN EL CATÁLOGO`. Antes de 0.33 se perdía sin aviso.
 
 ---
 
@@ -74,7 +77,42 @@ Todo con header `apikey` y, salvo el primero, `Authorization: Bearer <access_tok
 | `POST /rest/v1/combinaciones?on_conflict=usuario_id,nombre` con `Prefer: resolution=merge-duplicates,return=representation` | Guardar o pisar | `201` con la fila |
 | `DELETE /rest/v1/combinaciones?id=eq.<id>` | Borrar una | `204` |
 | `PATCH /rest/v1/perfiles?id=eq.<id>` | Guardar el tema elegido | `204` |
+| `POST /rest/v1/eventos` (sin sesión, a propósito) | Sumar un contador anónimo | `201`. Una visita lleva `lugar\|movil` o `lugar\|escritorio`; cualquier otra cosa después de la barra es `400` (`eventos_detalle_visita_check`) |
+| `GET /rest/v1/metricas_30_dias?select=*` | El reporte de outcomes del panel | `200`; vacío para quien no es admin (RLS). `tipo, detalle, total` de los últimos 30 días |
 
 **El contrato que no se ve:** las consultas **nunca** filtran por usuario en el query string. Lo hace RLS del lado del servidor. Si alguna vez se agrega un `&usuario_id=eq.…` "por las dudas", es señal de que alguien dudó de las políticas — y esa duda se resuelve arreglando las políticas, no el front.
 
 **Degradación:** sin `SUPABASE.url` y `SUPABASE.key`, ninguna de estas llamadas ocurre y las mismas funciones trabajan contra `localStorage`. La interfaz de `sesion.js` es idéntica en los dos casos.
+
+---
+
+## 5 · `web/prompt.js` — el prompt de arranque (0.33)
+
+`Prompt.armar(opciones)` es puro: no lee el DOM. `combinador.js` le pasa:
+
+| Opción | De dónde sale |
+|---|---|
+| `tipo`, `stack` | `TYPES[ctype]` y `STACKS[cstack]` (`catalogo.js`) |
+| `nivel`, `perfil`, `brownfield` | los selects del combinador |
+| `playbooks`, `tecnologias`, `catalogo` | los tildados, la selección (`sel`) y `TECH` |
+| `custom`, `apagadas` | el configurador: `ReglasUI.hayCambios()` y `ReglasUI.apagadas()`, con `R01` sumada si su perfil es CONFIANZA |
+| `ia` | el checkbox «IA en el producto» (`#cia`) |
+| `lite` | `Prompt.esLite({modo, tipo})`: el modo del configurador, o FULL + un tipo que ya es LITE (calc, guía, proceso) |
+
+Lo que promete el texto, y testea `web/tests/combinador.test.mjs`:
+- **R01 apagada** (por `R01=OFF` o por perfil CONFIANZA): el prompt dice `R01=OFF` y no pide esperar el OK del commit ni avisa que R01 es desactivable.
+- **`ia`**: bloque `IA EN EL PRODUCTO` con N4 (R26, tope reservado antes de llamar, salida como dato), la recomendación de modelo de R12 salvo que esté apagada, y el playbook `ia-en-el-producto`, que además se suma solo a la lista de playbooks (`Prompt.playbooks`).
+- **`lite`**: `MODO: LITE` y que `sdd/sdd-lite.md` se arma con la plantilla `sdd/prompts/sdd-lite.md`, que el ZIP trae siempre.
+
+## 6 · Métricas: el formato del detalle (0.33, ADR-013)
+
+| Tipo | `detalle` | Quién lo manda |
+|---|---|---|
+| `visita` | `/web/\|movil` — carga de la página, con la clase del dispositivo | `inicio.js` |
+| `visita` | `#/<vista>\|escritorio` — cambio de vista | `app.js` |
+| `visita` | `md:<archivo>` — vista previa de un MD (sin clase) | `inicio.js` |
+| `descarga` | nombre del archivo | `catalogo.js` |
+| `combinacion` | `tipo/stack/nivel/existe` — clic en «Generar» | `manuales.js` |
+| `paquete` | `proyecto:<tipo>`, `rapido:<tipo>`, `sueltos`, `skills` | `combinador.js`, `manuales.js` |
+
+La clase la calcula `Metricas.clase` con `matchMedia("(pointer: coarse)")`. **Nunca se lee el user-agent**, y la base rechaza cualquier valor que no sea una de las dos clases.

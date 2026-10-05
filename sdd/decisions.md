@@ -156,3 +156,20 @@
 **R28, sin dependencias nuevas:** el servidor no usa `node_modules` (ADR-001). Habla con la base a través de `psql`, que viene con los mismos binarios, y pasa los valores en base64 por stdin. Así ningún dato del usuario entra al SQL como texto, y las tildes no dependen de la página de códigos de la consola de Windows. Cuesta un proceso por pedido, unos 50 ms, que en local no importa.
 
 **Lo que no cubre:** mails (recupero de contraseña y magic link, que responden con un aviso), registro público (cerrado igual que en la nube desde 0.26) y lo que PostgREST tiene y la web no usa. Si la web empieza a usar algo nuevo de Supabase, el emulador lo tiene que aprender en el mismo cambio, y el test de `dev/tests/` lo va a marcar en rojo si no.
+
+---
+
+## ADR-013 · Los outcomes se miden con los contadores propios, y O4 con una clase gruesa de dispositivo — 2026-10-05 · Vigente
+
+**Contexto:** D3 venció el 2026-09-30. La spec decía «se miden con lo que da Vercel», pero Vercel Analytics es un servicio de terceros y el sitio está en local (ADR-012). Ya existía `eventos` (`metricas.sql`): contadores sin usuario, IP, user-agent ni cookie, con fecha por día. Alcanzaba para O1 y O2. O4 («entra desde el celular») no: ningún evento decía de qué dispositivo venía la visita.
+
+**Decisión:**
+- **O1, O2 y O4 se calculan sobre `eventos`**, en una vista `metricas_30_dias` (misma RLS: solo el admin lee), y el panel los muestra contra la meta. La lógica es pura (`web/metricas.js`) y tiene tests. Sin datos dice «sin datos», no 0%.
+- **O2:** «visitas» son cargas de la página (detalle que empieza con `/`), no cada cambio de vista ni cada vista previa: si no, el denominador crece con la navegación y el outcome se hunde solo.
+- **O4:** de las llegadas al combinador, la parte que vino de un celular. Para eso la visita lleva `|movil` o `|escritorio` pegado al detalle. **La clase la calcula el navegador con `matchMedia("(pointer: coarse)")`; el user-agent no se lee nunca.** Dos valores posibles no distinguen a nadie; un user-agent, con poco tráfico, casi sí. La base lo hace cumplir: `eventos_detalle_visita_check` rechaza cualquier otra cosa después de la barra. Una tablet cuenta como celular, y está bien: lo que mide O4 es si la página anda con el dedo.
+- **O3 queda manual.** No hay contador que diga si alguien entendió. El panel explica el procedimiento y deja anotarlo (en ese navegador), pero el registro que vale es una línea en `status.md`.
+
+**Descartado:** un evento aparte de tipo `dispositivo` (duplicaba cada visita y no se podía cruzar con el lugar sin guardar algo que las vincule), y el ancho de pantalla en píxeles (es más identificante y no dice si hay dedo o mouse).
+
+**Lo que cuesta:** las visitas anteriores a 0.33 no tienen clase y no cuentan para O4. En la nube hay que volver a correr `metricas.sql` (crea el check y la vista) cuando se reactive; hasta entonces el panel lo avisa en vez de romperse.
+

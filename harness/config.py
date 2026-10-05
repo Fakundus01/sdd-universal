@@ -24,8 +24,31 @@ CMD_UNSAFE = set('%!^"&|<>()')
 BATCH_EXT = (".cmd", ".bat")
 
 
+MODES = ("FULL", "LITE", "COMPACT", "FEDERADO")
+CUSTOM_MODE_RE = re.compile(r"^\s*MODO\s*=\s*([A-Za-z]+)", re.M)
+# `**Modo:** LITE (R18) ·` (encabezado de sdd-lite.md) o `- **Modo por tamaño (R18):** LITE — …` (§3 del master).
+# La línea de plantilla del master trae los cuatro separados por `/`: ahí no se eligió nada todavía.
+DOC_MODE_RE = re.compile(r"\bModo\b[^:\n]{0,30}:\**\s*\**([A-Za-z]+)\**(?=[ \t]*(?:$|[—–·(-]))", re.M)
+MODE_SOURCES = (("sdd/custom.md", CUSTOM_MODE_RE), ("sdd/sdd-lite.md", DOC_MODE_RE), ("sdd/SDD-MASTER.md", DOC_MODE_RE))
+
+
 class ConfigError(Exception):
     pass
+
+
+def sdd_mode(root: Path) -> str:
+    """El modo por tamaño del proyecto (R18). Manda `MODO=` de `sdd/custom.md` (la última línea: el bloque de
+    sintaxis va antes que los overrides); si no hay, el `**Modo:**` de `sdd/sdd-lite.md`; si no, el §3 de
+    `sdd/SDD-MASTER.md`; si no, FULL."""
+    for rel, regex in MODE_SOURCES:
+        path = root / rel
+        if not path.is_file():
+            continue
+        found = [m.upper() for m in regex.findall(path.read_text(encoding="utf-8-sig", errors="replace"))]
+        found = [m for m in found if m in MODES]
+        if found:
+            return found[-1]
+    return "FULL"
 
 
 def split_template(template: str) -> list[str]:

@@ -60,6 +60,15 @@ class TestSessionStart(HooksCase):
         self.assertEqual(code, 0)
         self.assertIn("verify.py --quick` lo crea", out)
 
+    def test_en_lite_muestra_sdd_lite_y_no_promete_current(self):
+        # H7: en LITE no hay progress/; el estado vive en sdd/sdd-lite.md.
+        self.p.write("sdd/custom.md", "MODO=LITE\n")
+        self.p.write("sdd/sdd-lite.md", "## Próximo paso\nSumar el export a CSV\n")
+        code, out, _ = call("session-start", {}, self.p.root)
+        self.assertEqual(code, 0)
+        self.assertIn("Sumar el export a CSV", out)
+        self.assertNotIn("current.md", out)
+
 
 class TestContextGuard(HooksCase):
     def guard(self, usages: list[int], threshold: int = 100_000) -> str:

@@ -1,11 +1,12 @@
 """Integridad del arnés: lo que corre `verify.py --quick` (harness.md §7)."""
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from config import HarnessConfig
+from config import HarnessConfig, sdd_mode
 from report import Report
 from repo import Repo
 
@@ -19,6 +20,19 @@ PLACEHOLDER_RE = re.compile(r"^<[^>]+>$")
 LINE_SUFFIX_RE = re.compile(r"(:\d+(:\d+)?|#L\d+(-L?\d+)?)$")  # `src/x.ts:120`, `src/x.ts#L3`
 VERDICT_RE = re.compile(r"^\W*Veredicto\b(.*)$", re.I)
 VERDICT_TOKEN_RE = re.compile(r"\b(APPROVED|CHANGES_REQUESTED)\b")
+# Celdas de tabla (H13): un nombre de archivo sin carpeta (`consultas.py`) también se revisa, contra cualquier
+# carpeta del proyecto. Solo con extensiones de archivo conocidas, para no confundir `os.path` o `req.body`.
+FILE_EXTS = ("py|pyi|ipynb|js|mjs|cjs|jsx|ts|mts|cts|tsx|vue|svelte|astro|go|rs|java|kt|kts|swift|rb|php|cs|fs|"
+             "scala|dart|lua|ex|exs|erl|c|h|cc|cpp|hpp|sql|prisma|graphql|gql|proto|sh|ps1|bat|cmd|html|htm|"
+             "css|scss|sass|less|md|mdx|json|jsonc|yml|yaml|toml|ini|cfg|xml|csv|txt|tf")
+BARE_FILE_RE = re.compile(rf"^[A-Za-z0-9_][\w.-]*\.(?:{FILE_EXTS})$")
+# Librerías que se escriben como un archivo: `Node.js` en una tabla de stack no es una ruta.
+LIBRARY_NAMES = {f"{n}.js" for n in (
+    "node", "next", "nuxt", "vue", "react", "express", "chart", "three", "d3", "p5", "alpine", "ember", "backbone",
+    "moment", "day", "anime", "socket", "angular", "nest", "solid", "preact", "fastify", "koa", "hapi", "electron",
+    "pixi", "phaser", "babylon", "matter", "tone", "paper", "fabric", "leaflet", "highcharts", "plotly", "video",
+    "howler", "lodash", "jquery", "require", "handlebars", "mustache", "mithril", "polymer", "htmx", "deno")}
+WALK_SKIP = {".git", "node_modules", "__pycache__", ".venv", "venv", ".next", ".nuxt", "dist", "build"}
 
 
 def _clean_value(raw: str) -> str:
@@ -102,6 +116,8 @@ class HarnessChecks:
         self.report = report
         self.repo = repo or Repo(root)
         self.cards: list[Card] = []
+        self.mode = sdd_mode(root)
+        self._names: set[str] | None = None
 
     def run_all(self) -> None:
         self.check_required()
@@ -117,6 +133,11 @@ class HarnessChecks:
     def check_required(self) -> None:
         if not (self.root / "sdd" / "SDD-MASTER.md").is_file():
             self.report.fail("Falta sdd/SDD-MASTER.md: el arnés se apoya en el SDD (R30)")
+        if self.mode == "LITE":
+            # harness.md §10: en LITE no hay cards/ ni progress/. El pre-commit corre --quick en cada commit:
+            # crear current.md acá ensuciaría el working tree para nada.
+            self.report.ok("Modo LITE (R18): sin memoria en disco; el estado vive en sdd/sdd-lite.md")
+            return
         current = self.repo.progress_dir / "current.md"
         if current.is_file():
             self.report.ok(f"Memoria en disco: {self._rel(current)}")
@@ -149,12 +170,17 @@ class HarnessChecks:
                 errors += 1
                 continue
             branch = card.meta.get("rama", "")
+            if PLACEHOLDER_RE.match(branch):
+                branch = ""  # `rama: <rama>` copiado de una plantilla sin completar
             if card.state == "in_progress":
                 if not branch:
-                    self.report.fail(f"{rel}: in_progress sin 'rama'")
+                    self.report.fail(f"{rel}: in_progress sin 'rama' — agregá `rama: {self.repo.branch}` "
+                                     "(la rama donde se trabaja) al frontmatter")
                     errors += 1
                 else:
                     in_progress.setdefault(branch, []).append(card.id)
+            if card.state == "review" and not branch:
+                self.report.warn(f"{rel}: review sin 'rama' — al pasar a done va a fallar. {self._branch_hint(card)}")
             if card.state == "done":
                 errors += self._check_done(card, rel, branch)
             elif not card.criteria:
@@ -171,7 +197,7 @@ class HarnessChecks:
             self.report.fail(f"{rel}: done sin criterios de aceptación")
             return 1
         if not branch:
-            self.report.fail(f"{rel}: done sin 'rama' — no se puede ubicar su review")
+            self.report.fail(f"{rel}: done sin 'rama' — no se puede ubicar su review. {self._branch_hint(card)}")
             return 1
         review = self.root / "sdd" / "progress" / Repo.slug(branch) / f"review_{card.id}.md"
         if not review.is_file():
@@ -186,6 +212,15 @@ class HarnessChecks:
             self.report.fail(f"{self._rel(review)}: el título no dice qué hash se revisó (`# Review {card.id} @ <hash>`)")
             return 1
         return 0
+
+    def _branch_hint(self, card: Card) -> str:
+        """Cómo arreglar una tarjeta sin `rama`: si su review ya existe en una sola carpeta, esa es la rama."""
+        progress = self.root / "sdd" / "progress"
+        found = sorted(p.parent.name for p in progress.glob(f"*/review_{card.id}.md")) if progress.is_dir() else []
+        if len(found) == 1:
+            return f"Agregá `rama: {found[0]}` al frontmatter (ahí está su review)."
+        return (f"Agregá `rama: <rama>` al frontmatter: la rama donde se trabajó, la de "
+                f"sdd/progress/<rama>/review_{card.id}.md.")
 
     def check_status_coherence(self) -> None:
         status = self.root / "sdd" / "status.md"
@@ -225,10 +260,37 @@ class HarnessChecks:
                 checked += 1
                 if not (self.root / token).exists():
                     broken.append(f"{self._rel(doc)} → `{token}`")
+            for token in self._bare_names_in_tables(text):
+                checked += 1
+                if token not in self._file_names():
+                    broken.append(f"{self._rel(doc)} → `{token}` (en una tabla: no hay ningún archivo con ese nombre)")
         for item in broken:
             self.report.fail(f"Ruta citada que no existe: {item}")
         if not broken:
             self.report.ok(f"Rutas citadas existen ({checked} revisadas)")
+
+    @staticmethod
+    def _bare_names_in_tables(text: str) -> list[str]:
+        """`consultas.py` (sin carpeta, entre backticks) en una fila de tabla. Con carpeta ya lo cubre la regla
+        general; en prosa no se revisa, porque ahí suele ser genérico («tu `index.js`»)."""
+        names = []
+        for line in text.splitlines():
+            if not line.lstrip().startswith("|"):
+                continue
+            for token in TICK_RE.findall(line):
+                token = LINE_SUFFIX_RE.sub("", token.rstrip(".,:;"))
+                if BARE_FILE_RE.match(token) and token.lower() not in LIBRARY_NAMES:
+                    names.append(token)
+        return names
+
+    def _file_names(self) -> set[str]:
+        """Nombres de los archivos del proyecto, en disco como la regla general. Se arma una vez y solo si hace falta."""
+        if self._names is None:
+            self._names = set()
+            for _, dirs, files in os.walk(self.root):
+                dirs[:] = [d for d in dirs if d not in WALK_SKIP]
+                self._names.update(files)
+        return self._names
 
     # ── handbacks de la rama actual ──────────────────────────────────────────
     def check_handbacks(self) -> None:

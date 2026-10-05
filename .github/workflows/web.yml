@@ -4,7 +4,7 @@ name: web
 # y que la web muestre las mismas reglas que el master.
 on:
   push:
-    paths: ["web/**", "SDD-MASTER.md", "sdd-universal-tablero.html", "harness/**", "agents/**", "prompts/**", "skills/**", "*.md", ".github/workflows/web.yml"]
+    paths: ["web/**", "SDD-MASTER.md", "sdd-universal-tablero.html", "harness/**", "agents/**", "prompts/**", "playbooks/**", "skills/**", "*.md", ".github/workflows/web.yml"]
   pull_request:
 
 jobs:

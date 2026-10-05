@@ -6,7 +6,7 @@
  */
 import {comoRol, ErrorSql} from "./postgres.mjs";
 
-const RECURSOS = new Set(["perfiles", "combinaciones", "eventos", "metricas_resumen", "metricas_por_dia"]);
+const RECURSOS = new Set(["perfiles", "combinaciones", "eventos", "metricas_resumen", "metricas_por_dia", "metricas_30_dias"]);
 const RESERVADOS = new Set(["select", "order", "on_conflict", "limit"]);
 const OPERADORES = {eq: "=", neq: "<>", gt: ">", gte: ">=", lt: "<", lte: "<="};
 

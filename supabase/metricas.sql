@@ -99,3 +99,27 @@ $$;
 alter table public.eventos drop constraint if exists eventos_tipo_check;
 alter table public.eventos add constraint eventos_tipo_check
   check (tipo in ('visita','descarga','combinacion','paquete','perfil'));
+
+-- ---------------------------------------------------------------------------
+-- v0.33 (D3): el reporte de outcomes del panel. O4 («entra desde el celular»)
+-- necesita saber si la visita vino de un celular, y eso se guarda como una
+-- CLASE GRUESA pegada al detalle de la visita: «#/combinador|movil» o
+-- «/web/|escritorio». Nunca el user-agent, ni el modelo, ni el tamaño exacto
+-- de pantalla: dos valores posibles no distinguen a nadie, un user-agent sí.
+-- La web la calcula con matchMedia("(pointer: coarse)"), sin leer el agente.
+-- El check hace cumplir eso del lado de la base: si una visita trae «|», lo
+-- que sigue tiene que ser una de las dos clases y nada más.
+-- ---------------------------------------------------------------------------
+alter table public.eventos drop constraint if exists eventos_detalle_visita_check;
+alter table public.eventos add constraint eventos_detalle_visita_check
+  check (tipo <> 'visita' or position('|' in detalle) = 0
+         or detalle ~ '^[^|]*\|(movil|escritorio)$');
+
+-- Los últimos 30 días (hoy incluido), por tipo y detalle: lo que lee el
+-- reporte de O1, O2 y O4. Misma RLS que el resto: un no-admin ve vacío.
+create or replace view public.metricas_30_dias
+with (security_invoker = true) as
+  select tipo, detalle, count(*)::bigint as total
+  from public.eventos
+  where dia > (now() at time zone 'utc')::date - 30
+  group by tipo, detalle;

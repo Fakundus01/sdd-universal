@@ -1,10 +1,10 @@
 # tecnologias.md · Catálogo de tecnologías
 
-**Versión:** 0.7 · 2026-08-17 · **Bloque:** `stack` · **Para agentes:** leer solo cuando la tarea sea elegir o justificar el stack (R12), o cuando el humano traiga tecnologías elegidas desde la web del catálogo.
+**Versión:** 0.8 · 2026-10-05 · **Bloque:** `stack` · **Para agentes:** leer solo cuando la tarea sea elegir o justificar el stack (R12), o cuando el humano traiga tecnologías elegidas desde la web del catálogo.
 
 > Este archivo dice **qué existe**, no qué usar. La recomendación por tarea la hace el agente con R12; las versiones se verifican contra la web al arrancar (R19), y por eso esta tabla no lleva números de versión: envejecerían mal y darían una falsa sensación de estar al día.
 
-**120 tecnologías** en 13 categorías. `OS` = open source.
+**128 tecnologías** en 14 categorías. `OS` = open source.
 
 **Cobertura, dicha de frente:** lenguajes y frameworks están completos; bases de datos, DevOps e IA ya tienen lo esencial (0.7), y cloud y seguridad siguen siendo un arranque. No es un error del archivo: es hasta dónde llegó el relevamiento. Se completa con casos reales, como todo acá (R20).
 
@@ -41,7 +41,7 @@
 | **Julia** | Lenguaje | — | Ciencia/cálculo | ✓ |
 | **Zig** | Lenguaje | — | Sistemas | ✓ |
 
-## Frameworks (49)
+## Frameworks (50)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
@@ -59,7 +59,7 @@
 | **Echo** | Framework | Go | Backend/API | ✓ |
 | **Ember.js** | Framework | JavaScript | Web | ✓ |
 | **Express.js** | Framework | JavaScript/TypeScript | Backend/API | ✓ |
-| **FastAPI** | Framework | Python | API/backend | ✓ |
+| **FastAPI** | Framework | Python | API/backend · ver [lección](#lecciones-de-proyectos-reales) | ✓ |
 | **Fastify** | Framework | JavaScript/TypeScript | Backend/API | ✓ |
 | **Fiber** | Framework | Go | Backend/API | ✓ |
 | **Flask** | Framework | Python | Web/API | ✓ |
@@ -94,8 +94,9 @@
 | **Electron** | Framework | JavaScript/TypeScript | Apps de escritorio | ✓ |
 | **Svelte** | Framework | JavaScript/TypeScript | Frontend | ✓ |
 | **Tauri** | Framework | Rust + JS | Apps de escritorio livianas | ✓ |
+| **Tailwind CSS** | Framework CSS | CSS | Estilos con clases utilitarias | ✓ |
 
-## Bibliotecas (18)
+## Bibliotecas (19)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
@@ -117,6 +118,7 @@
 | **SQLAlchemy** | Biblioteca | Python | ORM/database | ✓ |
 | **TensorFlow** | Biblioteca | Python / C++ | IA y Machine Learning | ✓ |
 | **Three.js** | Biblioteca | JavaScript | 3D/WebGL | ✓ |
+| **React Router** | Biblioteca | JavaScript/TypeScript | Rutas del front (SPA) | ✓ |
 
 ## Backend (3)
 
@@ -158,12 +160,14 @@
 | **Docker** | Tool | — | Contenedores | ✓ |
 | **GitHub Actions** | Tool | — | CI/CD | — |
 
-## Testing (2)
+## Testing (4)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
 | **Jest** | Tool | JavaScript/TypeScript | Testing | ✓ |
 | **Playwright** | Tool | JavaScript/TypeScript | Testing web | ✓ |
+| **Vitest** | Tool | JavaScript/TypeScript | Testing (unit, sobre Vite) | ✓ |
+| **pytest** | Tool | Python | Testing | ✓ |
 
 ## Seguridad (1)
 
@@ -171,13 +175,14 @@
 |---|---|---|---|---|
 | **OWASP ZAP** | Tool | — | Seguridad web | ✓ |
 
-## IA - Modelos (3)
+## IA - Modelos (4)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
 | **GPT** | Modelo IA | — | LLM | — |
 | **Claude** | Modelo IA | — | LLM/agentes | — |
 | **Ollama** | Tool | — | LLMs locales | ✓ |
+| **Anthropic API** | API/SDK | Python/TypeScript | Claude desde tu app (SDK oficial) · ver [lección](#lecciones-de-proyectos-reales) | — |
 
 ## Videojuegos (3)
 
@@ -187,18 +192,52 @@
 | **Unity · Game Engine** | Game Engine | C# | Videojuegos | — |
 | **Unreal Engine · Game Engine** | Game Engine | C++ | Videojuegos | — |
 
-## Developer Tools (1)
+## Pagos (2)
+
+| Tecnología | Tipo | Ecosistema | Uso principal | OS |
+|---|---|---|---|---|
+| **Mercado Pago** | Pasarela de pago | Multilenguaje | Cobros en Latinoamérica (checkout + webhooks) | — |
+| **Stripe** | Pasarela de pago | Multilenguaje | Cobros online (checkout + webhooks) | — |
+
+## Developer Tools (2)
 
 | Tecnología | Tipo | Ecosistema | Uso principal | OS |
 |---|---|---|---|---|
 | **Puppeteer** | Tool | JavaScript/TypeScript | Automatización web | ✓ |
+| **Vite** | Build tool | JavaScript/TypeScript | Dev server y build del front | ✓ |
+
+---
+
+## Lecciones de proyectos reales
+
+Trampas que costaron horas en proyectos hechos con el SDD (la landing, la tienda, la mesa de ayuda con IA y el chatbot de 0.33, todos FastAPI + React/Vite/TS). Cuando elegís la tecnología en la web, la lección viaja al prompt de arranque junto con ella.
+
+**FastAPI · el `Path()` compartido.** Un `Path(ge=1)` o un `Query()` guardado en una variable y reusado en varias rutas queda atado al nombre del **primer** parámetro que lo usó. En otra ruta, con otro nombre, FastAPI lo busca con el nombre viejo y responde **422 «field required» (missing)** aunque el valor venga bien. Se crea uno por parámetro, o se declara una vez como **tipo**, que sí se puede reusar:
+
+```python
+from typing import Annotated
+from fastapi import Path
+
+IdPositivo = Annotated[int, Path(ge=1)]
+
+@app.get("/tickets/{ticket_id}")
+def ver_ticket(ticket_id: IdPositivo): ...
+
+@app.get("/clientes/{cliente_id}")
+def ver_cliente(cliente_id: IdPositivo): ...
+```
+
+**Anthropic API (SDK oficial).** Tres lecciones, detalladas en `playbooks/ia-en-el-producto.md`:
+- **Tests con el SDK real sobre un transporte falso**, no con un mock del cliente: `anthropic.Anthropic(http_client=httpx.Client(transport=httpx.MockTransport(responder)))`. Así se prueban el parseo, los errores y el `usage` de verdad, sin gastar. Un mock del objeto cliente prueba tu mock.
+- **El tope de gasto es una reserva.** Bajo un lock se anota lo máximo que puede costar la llamada **antes** de llamar, y al volver se ajusta con el uso real. «Chequear y después llamar» deja pasar todos los pedidos en paralelo. Con `max_retries=0` en esa llamada: cada reintento automático se cobra y la reserva cubre uno.
+- **Modelos vigentes.** Los IDs se verifican en la doc del proveedor o con `client.models.list()` al arrancar (R19), nunca de memoria: los que recuerda un agente suelen estar retirados.
 
 ---
 
 ## Cómo se usa
 
 1. **Desde la web:** en el combinador, el botón *Elegir tecnologías* abre el catálogo con filtros por categoría, ecosistema, tipo y open source. Lo que marques entra al prompt de arranque como bloque `TECNOLOGÍAS ELEGIDAS`.
-2. **Desde el chat:** nombrá las tecnologías y el agente las cruza con esta tabla. Si pedís algo que no está, no pasa nada: es un punto de partida, no una restricción.
+2. **Desde el chat:** nombrá las tecnologías y el agente las cruza con esta tabla. Si pedís algo que no está, no pasa nada: es un punto de partida, no una restricción. Desde la web pasa lo mismo: lo que buscás y no está se puede sumar igual, y entra al prompt en un bloque aparte, **«PEDIDAS QUE NO ESTÁN EN EL CATÁLOGO»**, para que el agente confirme qué es y si encaja. Antes de 0.8 se perdía sin aviso.
 3. **Al elegir stack (R12):** elegir de esta lista **no reemplaza la justificación**. El agente tiene que decir por qué esa combinación sirve para *este* proyecto, y qué descartó. Una tecnología tildada en una web no es una decisión de arquitectura.
 4. **Lo que el humano eligió, manda** salvo que sea técnicamente inviable — y en ese caso el agente lo dice antes de escribir código, no después (R25).
 
@@ -210,5 +249,6 @@ Igual que todo en este paquete (R20): una tecnología entra cuando alguien la us
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.8 | 2026-10-05 | +8 tecnologías que pidieron cuatro proyectos reales y el combinador perdía en silencio: Vite, Vitest, pytest, Tailwind CSS, React Router, Mercado Pago, Stripe (categoría nueva: Pagos) y Anthropic API. Sección «Lecciones de proyectos reales» (FastAPI y Anthropic API). Total: 128 en 14 categorías. |
 | 0.7 | 2026-08-17 | +19 tecnologías donde el catálogo era más flaco: bases de datos (SQLite, MongoDB, Redis, DuckDB, Supabase), runtimes (Bun, Deno), escritorio (Electron, Tauri), lenguajes (Elixir, Julia, Zig), front (Svelte, Astro), infra (Azure, Docker, GitHub Actions) e IA (Claude, Ollama). Total: 120. |
 | 0.6 | 2026-08-15 | Primer catálogo: 101 tecnologías en 13 categorías, importadas del relevamiento propio. Integrado al combinador de la web con filtros y selección múltiple. |

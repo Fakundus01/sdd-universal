@@ -5,8 +5,8 @@ La parte ejecutable de `harness.md` (R29, R30): verificación por niveles, check
 ## Instalar en un proyecto
 
 1. Copiá esta carpeta a la raíz del repo como `harness/` (podés dejar afuera `tests/` si no vas a tocar el arnés).
-2. Copiá `harness.config.example.json` a la raíz como **`harness.config.json`** y poné los comandos de tu stack. Solo `test` es obligatorio.
-3. Corré `python harness/verify.py --quick`. Crea `sdd/progress/<rama>/current.md` y tiene que terminar en `VERDE`.
+2. Copiá `harness.config.example.json` a la raíz como **`harness.config.json`** y poné los comandos de tu stack. Solo `test` es obligatorio. El ejemplo usa `oxlint` porque es el que trae `create-vite`; poné el linter que trae la plantilla de tu proyecto (eslint, ruff, golangci-lint…), no instales otro para que coincida con el ejemplo.
+3. Corré `python harness/verify.py --quick`. Crea `sdd/progress/<rama>/current.md` y tiene que terminar en `VERDE`. En modo LITE (`MODO=LITE` en `sdd/custom.md`, o `**Modo:** LITE` en `sdd/sdd-lite.md`) no crea nada: el estado vive en `sdd/sdd-lite.md`.
 4. **Pre-commit** (lo que hace cumplir el arnés con cualquier herramienta): `git config core.hooksPath harness/git-hooks`. Es por clon: anotalo en el README del proyecto. Si el proyecto se commitea desde Windows, además `git update-index --chmod=+x harness/git-hooks/pre-commit`: Windows no guarda el bit de ejecución y sin él git ignora el hook en Linux/macOS.
 5. **CI:** copiá `ci/verify.yml` a `.github/workflows/` y sumale el setup de tu stack.
 6. **Claude Code (opcional):** fusioná `hooks/settings.example.json` con tu `.claude/settings.json`. En macOS/Linux, si no tenés `python`, cambialo por `python3`.
@@ -31,10 +31,10 @@ La primera línea de la salida dice el comando, el hash y la rama: pegada entera
 ## Qué revisa (`--quick`)
 
 - `harness.config.json` válido y con `test`; claves desconocidas → WARN (atrapa typos).
-- `sdd/SDD-MASTER.md` existe; `sdd/progress/<rama>/current.md` existe (si no, lo crea).
-- Tarjetas de `sdd/cards/`: id = nombre del archivo, estado válido, `in_progress` con rama y una sola por rama, `done` con criterios + `review_<ID>.md` en `APPROVED` con el hash en el título.
+- `sdd/SDD-MASTER.md` existe; `sdd/progress/<rama>/current.md` existe (si no, lo crea; en modo LITE ni lo crea ni lo pide).
+- Tarjetas de `sdd/cards/`: id = nombre del archivo, estado válido, `in_progress` con rama y una sola por rama, `review` sin rama → WARN, `done` con rama + criterios + `review_<ID>.md` en `APPROVED` con el hash en el título.
 - `sdd/status.md` no marca al 100% una feature con tarjetas abiertas.
-- Rutas citadas en `cited_paths_docs` y en las tarjetas `done` existen (las tarjetas pendientes pueden citar archivos por crear).
+- Rutas citadas en `cited_paths_docs` y en las tarjetas `done` existen (las tarjetas pendientes pueden citar archivos por crear). En una celda de tabla, un nombre suelto entre backticks (`consultas.py`) tiene que existir en alguna carpeta del proyecto.
 - Handbacks de la rama: commiteados, con hash, sin TAB literal → WARN.
 - `e2e` declarado sin ninguna corrida verde registrada → WARN (S29).
 

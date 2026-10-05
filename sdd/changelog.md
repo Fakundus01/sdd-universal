@@ -4,6 +4,37 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ---
 
+## [0.33.0] — 2026-10-05 · web
+
+Lo que encontró usar el paquete en cuatro proyectos reales (landing, tienda, mesa de ayuda con IA y chatbot, todos FastAPI + React/Vite/TS), en la parte que vive en `web/`. El resto de la 0.33 (núcleo, arnés, playbooks) está en el changelog del paquete.
+
+### Agregado
+- **Stack «Python back + React/TS front»** (H1): FastAPI + Pydantic + pytest atrás, React + Vite + TypeScript + Vitest adelante, con `contracts.md` como única fuente de la API. El START-PROMPT del master lo daba de ejemplo y el combinador no lo tenía.
+- **8 tecnologías** (H2/H10/H15): Vite, Vitest, pytest, Tailwind CSS, React Router, Mercado Pago, Stripe (categoría nueva: Pagos) y Anthropic API. 128 en total, en `tecnologias.js` y `tecnologias.md` a la vez. Campo opcional `a` con la **lección de proyectos reales**, que viaja al prompt con la tecnología: FastAPI (H17, el `Path(ge=1)` compartido que da 422 en otra ruta; se arregla con `Annotated`) y Anthropic API (SDK real sobre `httpx.MockTransport`, tope de gasto como reserva, modelos vigentes).
+- **Lo que no está en el catálogo ya no se pierde** (H2): buscar algo que no existe ofrece «Sumar igual»; queda como chip punteado con aviso, y el prompt lo manda en un bloque aparte, `PEDIDAS QUE NO ESTÁN EN EL CATÁLOGO`, para que el agente lo verifique.
+- **Tipo «Mesa de ayuda / ticketera»** (H14) con su card, y checkbox **«IA en el producto»** en el combinador: suma al prompt el nivel N4 (R26, tope reservado antes de llamar, salida como dato), la recomendación de modelo de R12 (salvo que esté apagada) y el playbook `ia-en-el-producto`, que entra solo a la lista y al ZIP. El chatbot lo tilda solo. Viaja en el link compartido y en las combinaciones guardadas (columna `ia` en `combinaciones`, idempotente).
+- **Playbooks `ia-en-el-producto` y `go-live`** en el catálogo, Manuales, los checkboxes del combinador y el mapa del ZIP.
+- **Reporte de outcomes en el panel** (D3, ADR-013, F22): O1, O2 y O4 de los últimos 30 días contra su meta, «sin datos» cuando no hay eventos, y O3 como manual con dónde anotarlo y la línea para `status.md`. Para O4, la visita guarda `|movil` o `|escritorio` calculado con `matchMedia("(pointer: coarse)")`; **nunca el user-agent**. `metricas.sql` suma, idempotente, el check `eventos_detalle_visita_check` y la vista `metricas_30_dias`.
+- `web/prompt.js` y `web/metricas.js`: lógica pura, sin DOM, con tests (`combinador.test.mjs`, `metricas.test.mjs`).
+
+### Corregido
+- **Con `R01=OFF` el prompt seguía diciendo «primer commit (R01)» y «avisame que R01 es desactivable»** (H3). Ahora lee el configurador: con R01 apagada, o perfil CONFIANZA (que es R01=OFF según el master), dice `R01=OFF` y que commitee sin esperar el OK. El prompt además lista las reglas apagadas.
+- **Modo LITE sin plantilla** (H4): `prompts/sdd-lite.md` viaja siempre en `sdd/prompts/` (el modo lo clasifica el agente, y el master y `harness.md` la citan), y con LITE elegido, o un tipo que ya es LITE, el prompt dice que `sdd/sdd-lite.md` se arma con ella.
+- **`.gitattributes` del ZIP** (H5): suma `sdd/changelog.md merge=union` y `sdd/sdd-lite.md merge=union`.
+- `dev/servidor.mjs` no ruteaba recursos de `/rest/v1/` con dígitos (`metricas_30_dias` caía al estático con 404).
+- En el panel, una combinación larga (`ticketera/py-react/NOVATO/nuevo`) ensanchaba la tabla a 379 px en un celular de 360. Y la lista de archivos del combinador desbordaba con la descripción larga: ahora se acomoda.
+
+### Modificado
+- `?v=33` en `index.html`, `admin.html`, `guia.html` y `demo.html` (cambiaron `sesion.js` y otros).
+- `sdd/`: spec 0.9 (cómo se mide cada outcome, V8 y V9), ADR-013, contracts 0.9 (§5 `prompt.js`, §6 formato de las métricas), status (F2, F3, F22, D3 cerrada), testing, design.
+
+### Verificado
+- Rojo medido sobre `2b522bd` con los tests nuevos: `web/tests` 20 tests, 14 en rojo (los 13 nuevos de combinador y métricas y el de LITE del ZIP); `dev/tests` 12, 2 en rojo (`#/combinador|Mozilla/5.0 (iPhone…)` entraba con `201`, y faltaba la columna `ia`). H5 llegó después: rojo propio con `falta sdd/changelog.md merge=union`.
+- Verde: `node --test "web/tests/*.test.mjs"` 21/21; `node --test "dev/tests/*.test.mjs"` 12/12.
+- Smoke en Chrome headless por CDP contra `node dev/dev.mjs`, a 360 px (táctil) y 1280 px: ticketera + `py-react` + IA + FastAPI, Anthropic API y «Celery» sumada fuera del catálogo, con `R01=OFF` en el configurador. El prompt trae N4, R12, la reserva, el stack, la lección de FastAPI, el bloque de fuera del catálogo y `R01=OFF`, sin «R01 es desactivable» ni «commit (R01)»; `ia-en-el-producto.md` en la lista y en el árbol. Las visitas llegaron a la base como `#/combinador|movil` y `|escritorio`. El panel muestra las cuatro tarjetas. Sin scroll horizontal en ninguno de los dos anchos y cero errores de consola.
+
+---
+
 ## [0.32.0] — 2026-10-05
 
 ### Agregado

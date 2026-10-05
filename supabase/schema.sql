@@ -72,6 +72,11 @@ drop index if exists public.combinaciones_usuario_nombre_idx;
 create unique index if not exists combinaciones_usuario_clave_idx
   on public.combinaciones (usuario_id, nombre_clave);
 
+-- v0.33: si el proyecto lleva IA en el producto. Decide el nivel N4 de
+-- seguridad.md y la recomendación de modelo (R12) en el prompt, así que una
+-- combinación guardada sin este dato vuelve a salir sin ellos.
+alter table public.combinaciones add column if not exists ia boolean not null default false;
+
 -- ---------------------------------------------------------------------------
 -- RLS: sin esto, la clave pública deja leer los datos de todo el mundo.
 -- Es el paso que no se puede saltear.

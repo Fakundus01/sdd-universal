@@ -1,6 +1,6 @@
 # catalog.md · Catálogo de playbooks
 
-**Versión:** 0.6 · 2026-10-02 · Estados: `✓ disponible` · `⏳ pendiente` · `🧪 en desarrollo`. Los pendientes se van escribiendo a demanda (R24: si un agente resuelve una tarea repetible sin playbook, propone crearlo).
+**Versión:** 0.7 · 2026-10-05 · Estados: `✓ disponible` · `⏳ pendiente` · `🧪 en desarrollo`. Los pendientes se van escribiendo a demanda (R24: si un agente resuelve una tarea repetible sin playbook, propone crearlo).
 
 | ID | Playbook | Categoría | Nivel | Estado |
 |---|---|---|---|---|
@@ -12,6 +12,7 @@
 | resend-smtp | Que los mails de confirmación y recupero lleguen de verdad (Gmail o Resend como SMTP) | infra | novato+pro | ✓ |
 | git-basico | Git desde cero: init, add, commit, push, ramas y cómo deshacer sin miedo | herramientas | novato | ✓ |
 | consumir-api-externa | Consumir un repo o API de datos ajeno sin quedar rehén: copia propia, licencia, sincronización con registro | datos | novato+pro | ✓ |
+| ia-en-el-producto | Un modelo de IA adentro del producto: tope de gasto como reserva, registro siempre, streaming que se cierra, salida como dato y tests que no gastan | código | pro | ✓ |
 | go-live | Antes de desplegar: datos de prod en solo lectura, capacidad, monitoreo y OK humano (R32) | infra | novato+pro | ✓ |
 | pipelines-ci | CI/CD con GitHub Actions: tests + deploy automático + gate de spec (si el código diverge de la spec, el build falla) | infra | pro | ⏳ |
 | azure-fundamentos | Azure a fondo: Resource Groups, Storage, DNS, Policies, control de costos | infra | pro | ⏳ |

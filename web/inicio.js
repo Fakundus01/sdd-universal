@@ -62,7 +62,7 @@ $("share").onclick = async () => {
   const o = {n: $("comboname").value.trim(), t: $("ctype").value, s: $("cstack").value,
              l: $("clvl").value, p: $("cperf").value, e: $("cexiste").value,
              pb: [...document.querySelectorAll("#pbs input:checked")].map(x => x.value),
-             tec: [...sel]};
+             tec: [...sel], ia: $("cia").checked};
   const url = location.origin + location.pathname + "#/combinador?c=" + b64url.cod(o);
   try { await navigator.clipboard.writeText(url); } catch { /* sin portapapeles */ }
   $("share").textContent = "¡Link copiado!";
@@ -76,7 +76,7 @@ function cargarComboDelLink(){
     const o = b64url.dec(m[1]);
     if (o.e) $("cexiste").value = o.e;
     aplicarCombinacion({nombre: o.n, tipo: o.t, stack: o.s, nivel: o.l,
-                        perfil: o.p, playbooks: o.pb, tecnologias: o.tec});
+                        perfil: o.p, playbooks: o.pb, tecnologias: o.tec, ia: o.ia});
     avisar("Cargamos la combinación que venía en el link. Revisala y generá tu paquete.");
   } catch { avisar("El link traía una combinación que no se pudo leer.", true); }
 }
@@ -102,7 +102,7 @@ function pintarBusca(){
   const q = $("kq").value.trim();
   kRes = q.length < 2 ? [] : Buscador.filtrar(itemsBusca(), q, ["t", "d"]).slice(0, 12);
   $("kres").innerHTML = q.length < 2
-    ? `<p class="k-vacio">Escribí al menos dos letras. Busca en las cards, las 120 tecnologías, las 32 reglas y las páginas.</p>`
+    ? `<p class="k-vacio">Escribí al menos dos letras. Busca en las cards, las 128 tecnologías, las 32 reglas y las páginas.</p>`
     : kRes.length
       ? kRes.map((r, i) => `<button type="button" data-k="${i}" class="${i === kMarcada ? "marcada" : ""}">
           <span class="tipo">${r.tipo}</span><b>${Buscador.resaltar(r.t, q)}</b><small>${esc(r.d)}</small>
@@ -196,7 +196,7 @@ window.aplicarPerfil = function aplicarPerfil(p){
 };
 
 (async () => {
-  Sesion.contar("visita", location.pathname);
+  Sesion.contarVisita(location.pathname);
   if (Sesion.activo()) Feedback.empezar();
   // El portón es quien arranca la sesión (y tapa la página si no hay);
   // acá solo se espera su resultado para no llamar a Sesion.iniciar() dos veces.

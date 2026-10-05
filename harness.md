@@ -1,6 +1,6 @@
 # harness.md · El arnés: que lo que el agente dice que hizo sea cierto
 
-**Versión:** 0.30.1 · 2026-10-02 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
+**Versión:** 0.32 · 2026-10-05 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
 
 > Nace de **Relay**, el sistema que se usó en producción en `chat-commerce-ai` (features H-1 a H-11). Escenarios S28–S31.
 > El SDD gobierna *qué* se construye; el arnés hace cumplir *que esté construido*.
@@ -30,8 +30,8 @@ Se activa con **R29/R30** (ON por default). Funciona con un solo agente: no hace
   "test": "npm test",
   "test_quick": "npm test -- --changed",
   "lint": "npm run lint",
-  "lint_file": "npx eslint {file}",
-  "lint_ext": [".js", ".ts", ".tsx"],
+  "lint_file": "npx oxlint {files}",
+  "lint_ext": [".js", ".jsx", ".ts", ".tsx"],
   "e2e": "npx playwright test",
   "prod_readonly_query": "psql \"$PROD_RO_URL\" -c \"{sql}\"",
   "deploy": "git push origin dev:main",
@@ -46,7 +46,7 @@ Se activa con **R29/R30** (ON por default). Funciona con un solo agente: no hace
 | `test` | sí | La suite que define «verde». Sin esto no hay R30. |
 | `test_quick` | no | Subconjunto rápido para `--changed`. Si falta, se usa `test`. |
 | `lint` | no | Lint completo (nivel completo). |
-| `lint_file` | no | Lint de lo cambiado: `{file}` corre una vez por archivo, `{files}` una sola vez con todos. **No pasa por un shell** (S32): ver abajo. Lo usan `--quick`, el pre-commit y el hook post-edición. |
+| `lint_file` | no | Lint de lo cambiado con el linter que trae la plantilla del proyecto (`create-vite` trae `oxlint`, no eslint): `{file}` corre una vez por archivo, `{files}` una sola vez con todos. **No pasa por un shell** (S32): ver abajo. Lo usan `--quick`, el pre-commit y el hook post-edición. |
 | `lint_ext` | no | Extensiones a las que se les pasa `lint_file` (ej. `[".ts", ".tsx"]`). Si falta: todo menos `.md` y `.json`. |
 | `e2e` | no | End to end a demanda (`verify.py --e2e`). Cada corrida verde se anota con su hash en `sdd/progress/e2e.md`; si `e2e` existe y ese registro está vacío, `--quick` avisa (S29). |
 | `prod_readonly_query` | no | Consulta de **solo lectura** a producción para R32. Las credenciales van en `.env` con un usuario sin permisos de escritura (R17). |
@@ -111,6 +111,10 @@ $ python harness/verify.py --changed      # @ 3f1c9a2e
 
 **Rojo forzado:** todo **check, guard, hook o test de infraestructura nuevo** —y todo cambio en cómo se reporta un error— se prueba rompiéndolo a propósito una vez (temporal, sin commitear) y pegando la cola de la salida donde se ve el `FAIL`. Un check que nunca vio un rojo no se sabe si funciona: puede estar no corriendo. Fue la práctica que más bugs de los propios checks atrapó.
 
+**Módulo nuevo:** si el test importa algo que todavía no existe, el «rojo» es un error de import y no prueba nada. Se mide contra un **stub vacío que importa** (la clase o función con el cuerpo mínimo), así cada test falla por su aserción. Y si un test que debería dar rojo pasa contra la base, se endurece hasta que falle: en los ejemplos, un test de productos «sin repetir» pasaba también con el código que los reemplazaba (`scenarios.md` S35).
+
+**Mutantes de carrera:** un test de concurrencia tiene que dar rojo con el lock sacado. Si no, la demora está fuera de la ventana entre mirar y anotar, o los hilos no arrancan juntos (`threading.Barrier`). Uno de los ejemplos tuvo un test así que no dio rojo en ninguna de 50 corridas.
+
 **Variantes de dominio:** DATA → el «test» es una validación de datos (esquema, rangos, nulos) y el rojo forzado es un dataset roto a propósito. GAME → `playtest.md` documenta el caso y su resultado; el rojo forzado es el estado de juego que el check debe rechazar.
 
 ### Checks de drift fuente ↔ realidad
@@ -149,9 +153,9 @@ sdd/
 
 ## 7 · Qué revisa el arnés (`verify.py --quick`)
 
-1. Existen los archivos base (`harness.config.json`, `sdd/SDD-MASTER.md`, `sdd/progress/<rama>/current.md` — lo crea si falta).
-2. Toda ruta citada en los docs de `cited_paths_docs` y en las tarjetas `done` existe (`src/x.ts:120` y `#L3` se aceptan). Las tarjetas pendientes y `design.md` pueden citar archivos que todavía no existen: R08 los escribe antes que el código.
-3. Tarjetas: frontmatter válido, una sola `in_progress` por rama, toda `done` con criterios de aceptación y un `review_<ID>.md` en `APPROVED` con hash.
+1. Existen los archivos base (`harness.config.json`, `sdd/SDD-MASTER.md`, `sdd/progress/<rama>/current.md` — lo crea si falta; en modo LITE no, ver §10).
+2. Toda ruta citada en los docs de `cited_paths_docs` y en las tarjetas `done` existe (`src/x.ts:120` y `#L3` se aceptan). En las **celdas de tabla** también se revisa el nombre suelto entre backticks (`consultas.py`, sin carpeta): tiene que existir algún archivo con ese nombre en el proyecto. Solo con extensiones de archivo conocidas, así `os.path` o `Node.js` no cuentan. Las tarjetas pendientes y `design.md` pueden citar archivos que todavía no existen: R08 los escribe antes que el código.
+3. Tarjetas: frontmatter válido, una sola `in_progress` por rama, toda `done` con `rama`, criterios de aceptación y un `review_<ID>.md` en `APPROVED` con hash. La plantilla trae `rama: main` desde el principio; una `review` sin `rama` ya avisa, y el `FAIL` dice qué `rama:` agregar (la carpeta de su review, si la encuentra).
 4. Handbacks de la rama: commiteados, con hash real, sin TAB literal.
 5. `status.md` coherente con las tarjetas (una feature al 100% tiene todas sus tarjetas `done`).
 6. Lint de los archivos cambiados (`lint_file`).
@@ -209,7 +213,7 @@ El scaffold trae los tres: `harness/hooks/` (Claude), `harness/git-hooks/pre-com
 | R31 ORQUESTACIÓN-CON-ROLES | AUTO | OFF — demasiadas piezas para supervisar | Un solo agente + reviewer en sesión nueva |
 | R32 PRODUCCIÓN-CON-OK | ON (fija) | ON | — |
 
-Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia en el HANDBACK; sin `cards/` ni `progress/`.
+Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia en el HANDBACK; sin `cards/` ni `progress/`. `verify.py` lee el modo de `MODO=` en `sdd/custom.md` (manda la última línea), si no del `**Modo:**` de `sdd/sdd-lite.md` (plantilla `prompts/sdd-lite.md`), si no del §3 de `sdd/SDD-MASTER.md`; en LITE no crea ni pide `current.md`, y el hook de inicio muestra `sdd/sdd-lite.md`.
 
 ---
 
@@ -217,5 +221,6 @@ Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.32 | 2026-10-05 | Hallazgos de usar el paquete en 4 proyectos reales: en LITE, `verify.py` ya no crea `sdd/progress/<rama>/current.md` en cada pre-commit (§10, H7); las rutas citadas se revisan también como nombre suelto en celdas de tabla (§7.2, H13); la plantilla de tarjeta trae `rama: main` y el `FAIL` de una `done` sin `rama` dice cómo arreglarlo (§7.3, H23); el ejemplo de `lint_file` pasa a `oxlint`, el que trae `create-vite` (§2, H9). |
 | 0.30.1 | 2026-10-02 | DRIFT resuelto al implementar `harness/` (opción A): §2 suma `lint_ext`, `cited_paths_docs`, `{files}` y la regla de `lint_file` sin shell (S32); §3 suma `--e2e` con registro, la primera línea como evidencia, CI con HEAD detached, monorepo y proyecto sin git; §7.2 acota las rutas citadas a los docs declarados y las tarjetas `done`. Lo de macOS/Linux pasa a «pensado para», hasta que corra el CI. |
 | 0.30 | 2026-10-02 | Primera versión, destilada de Relay (chat-commerce-ai, rama `dev`): config por proyecto, verificación por niveles, evidencia con hash, TDD con rojo medido, rojo forzado de checks, drift fuente↔realidad, memoria en disco por rama, checkpoints del reviewer, auto-mejora por nivel mecánico, degradación por herramienta. |
