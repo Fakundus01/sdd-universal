@@ -1,5 +1,5 @@
-# Review C-2 @ e710850
-**Veredicto:** CHANGES_REQUESTED
+# Review C-2 @ 8965144
+**Veredicto:** APPROVED (vuelta 2; la vuelta 1 @ e710850 fue CHANGES_REQUESTED, abajo)
 
 Base `d61f084`, diff revisado `git diff d61f084..e710850` (11 archivos, todos en `cerebro/**` salvo `sdd/progress/v0.36-C-2/current.md`; el handback entra en `53c2d25`).
 
@@ -82,3 +82,61 @@ VERDE — 0 FAIL, 0 WARN
 
 ## Mejoras al arnés detectadas
 - Para tarjetas retomadas de una sesión cortada, exigir en el handback mutantes **por cada afirmación** del «Cómo» (contención, transacción, formato), no solo por la lógica que se escribió en la sesión nueva: los 4 sobrevivientes son exactamente afirmaciones heredadas sin rojo.
+
+## Vuelta 2 @ 8965144
+**Veredicto:** APPROVED
+
+Diff revisado `git diff e710850..8965144`: en `cerebro/`, solo `cerebro.py`, `indice.py`, `notas.py` y `tests/`, más `sdd/progress/v0.36-C-2/`. Nada fuera de zona. Ningún test quitado ni debilitado: la única línea `-` en `tests/` es un import que se amplió. 11 tests nuevos, 0 skipeados (los de enlaces corrieron con junction).
+
+### Verificación re-ejecutada
+```text
+$ python -m unittest discover -s cerebro/tests      (3.14.0)
+Ran 73 tests in 2.606s
+OK
+$ py -3.11 -m unittest discover -s cerebro/tests
+Ran 73 tests in 2.686s
+OK
+$ python -m unittest discover -s cerebro/tests -v | grep -ci skipped
+0
+$ python harness/verify.py --changed
+VERDE — 0 FAIL, 0 WARN
+```
+
+### Bloqueantes de la vuelta 1
+| # | Pedido | Estado | Evidencia |
+|---|---|---|---|
+| 1 | Test de `proyectos/` como enlace (M7) | [x] | `test_proyectos_como_enlace_hacia_afuera_se_rechaza`; M7 muerto |
+| 2 | Test de todo-o-nada (M8) | [x] | `test_si_el_embedder_falla_a_mitad_el_indice_queda_como_estaba` y `..._de_todo_...`; M8 muerto |
+| 3 | Test de fecha AAAA-MM-DD (M6) | [x] | `test_fecha_solo_acepta_aaaa_mm_dd`; M6 muerto |
+| 4 | Índice roto sin traceback | [x] | `_traducir` y `_traduciendo` (`indice.py:53-75`), `ErrorCorrupto`; `--todo` aparta el archivo a `indice.sqlite.roto` y rehace el índice. Sonda: archivo con basura → `buscar` e `indexar` dan error en español con rc 2 que indica cómo recuperarse; `indexar --todo` → rc 0 |
+| 5 | Test de orden BM25 (M11) | [x] | `test_la_nota_mas_relevante_para_las_palabras_va_primero`; M11 muerto |
+
+Menores de la vuelta 1:
+- H5, bloqueado no es FTS5: [x] Sonda con `BEGIN EXCLUSIVE` en otro proceso: «el índice … está en uso por otro proceso (database is locked): esperá y reintentá», rc 2. Con `--todo` **no** lo toma por roto ni lo aparta (`.roto` intacto).
+- H6, `listar` sin enlaces que salen: [x] Junction `proyectos/junta → afuera`: «aviso: … enlace que sale de CEREBRO_DIR; se saltea» y `buscar zzzafuera` ya no la trae.
+- Slug sin ASCII: [x] `日本語` da `nota-77710a`, `中文` da `nota-72726d`, `日本語` repetido da «ya existe», `!!!` da `nota`.
+- R26 en `--json`: queda diferido a C-4, como acordó el leader.
+
+### Mutantes
+Los 14 de la vuelta 1, re-aplicados uno por vez con `timeout 120`: **14/14 muertos** (M6 → `test_fecha_solo_acepta_aaaa_mm_dd`, M7 → `test_proyectos_como_enlace_hacia_afuera_se_rechaza`, M8 → `test_si_el_embedder_falla_a_mitad_de_todo…`, M11 → `test_la_nota_mas_relevante…`; el resto, igual que en la vuelta 1).
+
+Nuevos, sobre el código de esta vuelta:
+| # | Mutante | Resultado |
+|---|---|---|
+| N1 | `listar` sin el chequeo por archivo (`resolve().relative_to`) | muerto (`test_listar_no_sigue_enlaces_que_salen_de_cerebro_dir`) |
+| N2 | `listar` sin el chequeo de `proyectos/` como enlace | **sobrevive** (ver V2-1) |
+| N3 | todo `OperationalError` se informa como «falta FTS5» | muerto (`test_base_bloqueada_no_dice_que_falta_fts5`) |
+| N4 | `--todo` no aparta el índice roto | muerto (2 tests) |
+| N5 | slug sin sufijo de hash | muerto (`test_sin_ascii_lleva_sufijo_determinista_y_no_choca`) |
+| N6 | `buscar` sin `@_traduciendo` | muerto (3 tests) |
+| N7 | el índice roto se informa como `ErrorIndice` genérico | muerto (2 tests) |
+
+Después de cada corrida, `git status --short` queda vacío.
+
+### Checkpoints
+- C1: [x] · C2: [x] los 7 criterios con evidencia y la zona respetada · C3: [x] · C4: [x] re-ejecutado; los mutantes de lógica crítica mueren · C5: [x]
+
+### Observaciones (BAJA, no bloquean)
+- V2-1: `cerebro/notas.py:155-157` es la guardia de lectura de `proyectos/` como enlace y no tiene test (N2 vive). Si se quita, `indexar` leería notas de fuera. Es lectura, no escritura (el criterio 6 sí está cubierto por M7). Conviene sumar un test de `listar` con `proyectos/` como junction.
+- V2-2: una junction **cíclica dentro** de `proyectos/` (`p/ciclo → proyectos`) hace que `rglob` la recorra. En 3.14 indexa las mismas notas muchas veces («192 nuevas» con 3 reales, por rutas `p/ciclo/p/…`). En 3.11 corta con `WinError 1921` (rc 2, sin traceback). Ya pasaba antes de esta vuelta y el caso es raro; se arreglaría salteando todo directorio que sea symlink o junction (`is_symlink()`/`is_junction()`) en vez de mirar solo adónde resuelve.
+- V2-3: `cerebro/indice.py:237` `replace(… ".roto")` pisa un `.roto` anterior: un segundo índice roto borra la copia del primero. Sugerencia: agregarle fecha u hora al nombre.
