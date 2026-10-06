@@ -1,6 +1,6 @@
 # loops.md · Loops con contrato: que el agente itere solo y sepa cuándo frenar
 
-**Versión:** 0.35 · 2026-10-06 · **Para agentes:** leer solo cuando la tarea es dejar al agente iterando solo hacia un objetivo, o programar un loop (R33). **Para humanos:** cómo pedir «seguí hasta que quede bien» sin que el agente gire para siempre ni declare victoria antes de tiempo.
+**Versión:** 0.36 · 2026-10-06 · **Para agentes:** leer solo cuando la tarea es dejar al agente iterando solo hacia un objetivo, o programar un loop (R33). **Para humanos:** cómo pedir «seguí hasta que quede bien» sin que el agente gire para siempre ni declare victoria antes de tiempo.
 
 > Nace de S39. Se apoya en `harness.md` (evidencia, memoria en disco) y `orchestration.md` (roles, grafo de tarjetas). En 2026 a esto se lo llama *loop engineering*: en vez de escribir la próxima prompt en cada paso, se diseña el loop que la escribe.
 
@@ -51,6 +51,7 @@ aprobado: <fecha + quién, o vacío>
 ## Memoria
 - Bitácora: `sdd/progress/<rama>/current.md` (una línea por vuelta: qué se hizo, verificación @ hash)
 - Al cortar: resumen al final de este archivo + HANDBACK al humano
+- Si hay Cerebro: una nota por lección del resumen (`playbooks/obsidian-cerebro.md` §B)
 ```
 
 **Reglas del contrato:**
@@ -108,4 +109,5 @@ Cuando el objetivo necesita varias tarjetas, el loop no las recorre en lista: us
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.36 | 2026-10-06 | La memoria del loop suma una nota al Cerebro por lección al cortar (S41). |
 | 0.35 | 2026-10-06 | Primera versión (S39): contrato de cinco partes, aprobar el loop = commits solo en su rama, vuelta = tarjeta, loops sobre el grafo de tarjetas, tipos frecuentes y cómo correrlo en cada herramienta. |

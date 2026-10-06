@@ -1,6 +1,6 @@
 # SDD-MASTER · Universal Governance for AI-Agent Development
 
-**Version:** 0.35 · **Date:** 2026-10-06 · **Owner:** Facundo Moreno
+**Version:** 0.36 · **Date:** 2026-10-06 · **Owner:** Facundo Moreno
 **English mirror.** The canonical source of this package is the Spanish `SDD-MASTER.md`; this mirror tracks it release by release. File names and references are identical in both languages, so everything below works unchanged.
 
 > **If you are an AI agent (Claude, Cursor, Copilot, Gemini or other):**
@@ -39,7 +39,7 @@ No technical change happens without being documented and approved in the `sdd/` 
 | If your task is… | Read only… |
 |---|---|
 | Starting the session | `SDD-MASTER.md` (this file) |
-| Planning a feature | `spec.md` · `features/features-<user>.md` · `status.md` |
+| Planning a feature | `spec.md` · `features/features-<user>.md` · `status.md` (+ if there is a Cerebro: search for similar work first, `playbooks/obsidian-cerebro.md` §C) |
 | Implementing code | `design.md` · `contracts/contracts-<user>.md` · `testing.md` |
 | Commit / push / versioning | `changelog/changelog-<user>.md` (+ R01, R13) |
 | Understanding the architecture | `design.md` · `diagram.md` |
@@ -251,7 +251,7 @@ repo/
 ```
 
 **LITE mode:** everything above collapses into a single `sdd-lite.md`. **FEDERATED mode:** this tree repeats per module and the root `sdd/` only routes (optional: `api-catalog.md` with the inter-module API index).
-**Package-level, not per project:** `blocks.md`, `tecnologias.md`, `seguridad.md`, `playbooks/`, `skills/`, `examples/`, `web/` and `README.md` live in the SDD Universal repo; a project copies only the playbooks it uses (and `.claude/skills/` if the agent is Claude — optional shortcuts, the SDD works the same without them). In `examples/` there is a real, complete `sdd/` to see what the result looks like before generating your own.
+**Package-level, not per project:** `blocks.md`, `tecnologias.md`, `seguridad.md`, `playbooks/`, `skills/`, `examples/`, `web/`, `cerebro/` (search over the cross-project memory) and `README.md` live in the SDD Universal repo; a project copies only the playbooks it uses (and `.claude/skills/` if the agent is Claude — optional shortcuts, the SDD works the same without them). In `examples/` there is a real, complete `sdd/` to see what the result looks like before generating your own.
 **Enterprise optionals (teams.md §8):** `team.md` · `environments.md` · `onboarding.md` · `incidents.md` (postmortems) · `metrics.md` (velocity + token spend per cycle).
 
 **`spec.md` quality contract — the 6 elements.** A spec doesn't pass OK if any is missing: (1) concrete, measurable outcomes, not feature names; (2) explicit scope limits (what does NOT get in); (3) technical constraints and assumptions; (4) decisions already made (DB, libraries, patterns) so they aren't re-litigated; (5) breakdown into parallelizable subtasks; (6) testable verification criteria. The spec is an executable contract constraining what the agent may generate — not a passive doc.
@@ -376,6 +376,7 @@ The versions of the current line (0.32 onward). The earlier ones (0.31 and back)
 
 | Version | Date | Change |
 |---|---|---|
+| 0.36 | 2026-10-06 | **Cross-project memory**, via S41: the repo can be opened as an Obsidian vault (plain markdown links, `.obsidian/` out of git) and a «Cerebro» vault keeps one note per lesson, decision or scenario of each project. `cerebro/` searches it hybrid-style (words + local embeddings, OpenAI optional later) and exposes it over MCP; what it returns is data (R26). Planning searches there before proposing. No new rule: playbook `obsidian-cerebro` and one row in §2. S42: cards at risk of hitting an obstacle don't go on the ECONOMY tier (`orchestration.md` §9). |
 | 0.35 | 2026-10-06 | **R33 · LOOP-WITH-A-CONTRACT** and the card graph, via S39 and S40: an autonomous loop is written first in `sdd/loops/<name>.md` (trigger, measurable goal, verification, stop rule, memory) and approving it authorizes commits only on its branch. Cards declare `depende_de` and the leader dispatches by levels of the graph. New `loops.md`; `orchestration.md` §10. Takes in what 2026 calls *loop engineering* and *graph engineering* (of execution), without adding layers the package already had. |
 | 0.34 | 2026-10-05 | Web without a gate and with real routes, at the owner's request: the app opens without an account; login is optional and lives at `/web/login` (it only returns to internal routes); onboarding stops being a dialog over everything and becomes `/web/preferencias`. Every view has its own URL (`/web/catalogo`, `/web/combinador`…), reloadable and shareable, with a rewrite on the local server and in `vercel.json`. Old `#/` links redirect. Fixes the 0.33 bug: onboarding sat above the gate and neither of the two could be touched (ADR-014, ADR-015 of the web). |
 | 0.33.2 | 2026-10-05 | **S38 · the AI product beyond spend**, with material contributed by the owner (OWASP Top 10 for LLMs 2025, NIST AI RMF, RAG, Huyen): `seguridad.md` 0.13 with the LLM01–LLM10 map and its control in the package, rules for agents that act, and NIST for corporate clients. The `ia-en-el-producto` playbook adds a reference architecture, RAG, agents and two-layer evals (high-precision deterministic ones + a judge, H26). The AI prompt walks through the OWASP list; catalog with pgvector and embeddings. Minor items from the 0.33.1 review: in `eventos` only `tipo` and `detalle` are inserted, the Pydantic lesson is described properly, and the harness retries when Windows loses a process's output. |

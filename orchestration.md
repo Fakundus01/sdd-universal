@@ -1,6 +1,6 @@
 # orchestration.md · Orquestación con roles: quién hace qué, y cómo vuelve
 
-**Versión:** 0.35 · 2026-10-06 · **Para agentes:** leer solo si R31 está activa (la herramienta tiene subagentes, o la feature necesita más de una tarjeta). Cada subagente lee **solo su fila** de §2 + su tarjeta. **Para humanos:** cómo se reparte el trabajo entre agentes sin que se autoaprueben ni se pisen.
+**Versión:** 0.36 · 2026-10-06 · **Para agentes:** leer solo si R31 está activa (la herramienta tiene subagentes, o la feature necesita más de una tarjeta). Cada subagente lee **solo su fila** de §2 + su tarjeta. **Para humanos:** cómo se reparte el trabajo entre agentes sin que se autoaprueben ni se pisen.
 
 > Se apoya en `harness.md` (evidencia, tarjetas, memoria en disco). Nace de Relay (chat-commerce-ai). Escenarios S28–S31.
 > Los roles de `teams.md` son de **personas**; los de acá son de **agentes**. Conviven: el `leader` dirige cada OK humano al rol de persona que corresponde (R21).
@@ -119,7 +119,7 @@ Así nadie cambia la spec para que coincida con lo que construyó.
 
 ## 9 · Modelo y esfuerzo por tarjeta
 
-El leader los elige por tarjeta y los escribe en ella, con la tabla de `models.md` §4. Dos reglas fijas: **el ahorro va en los implementers, no en quien decide ni en quien verifica** (un reviewer barato aprueba todo); y **pagos, auth, multi-tenancy y migraciones** van como mínimo en tier MEDIO con esfuerzo alto, aunque el cambio parezca chico.
+El leader los elige por tarjeta y los escribe en ella, con la tabla de `models.md` §4. Dos reglas fijas: **el ahorro va en los implementers, no en quien decide ni en quien verifica** (un reviewer barato aprueba todo); y **pagos, auth, multi-tenancy y migraciones** van como mínimo en tier MEDIO con esfuerzo alto, aunque el cambio parezca chico. **El tier ECONÓMICO es para tarjetas mecánicas** (renombrar, traducir una lista, un dato de config sin incertidumbre): si la tarjeta puede chocar con un obstáculo de diseño (una ruta fija, un check que no cierra), va en MEDIO y dice explícito qué no hacer (copiar archivos, tocar tarjetas). Un implementer barato ante un obstáculo improvisa en vez de devolver `blocked` (S42).
 
 ---
 
@@ -148,5 +148,6 @@ Un loop con contrato (R33, `loops.md` §4) recorre este mismo grafo.
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.36 | 2026-10-06 | §9: ECONÓMICO solo para tarjetas mecánicas (S42, del loop `dev-de-10`). |
 | 0.35 | 2026-10-06 | §10 Grafo de tarjetas (S40): `depende_de` en la tarjeta, despacho por niveles, bloqueo que se propaga, mermaid en `current.md`, sin ciclos. |
 | 0.30 | 2026-10-02 | Primera versión, destilada de Relay: siete roles (`leader`, `implementer`, `reviewer`, `analytic`, `infra-implementer`, `looper`, `prompter`), con el `spec-keeper` absorbido por el leader; flujo con escalado por complejidad, respuestas de una línea, límites del looper, worktrees y zonas, ramas `dev`/`main` y permisos aparte para infra. |

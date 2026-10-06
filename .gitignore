@@ -6,6 +6,7 @@ desktop.ini
 # Editores
 .vscode/
 .idea/
+.obsidian/
 
 # Herramientas (config local; .claude/launch.json SÍ se versiona)
 .claude/settings.local.json

@@ -13,6 +13,7 @@
 | git-basico | Git desde cero: init, add, commit, push, ramas y cómo deshacer sin miedo | herramientas | novato | ✓ |
 | consumir-api-externa | Consumir un repo o API de datos ajeno sin quedar rehén: copia propia, licencia, sincronización con registro | datos | novato+pro | ✓ |
 | ia-en-el-producto | Un modelo de IA adentro del producto: tope de gasto como reserva, registro siempre, streaming que se cierra, salida como dato y tests que no gastan | código | pro | ✓ |
+| obsidian-cerebro | Obsidian para ver el SDD como grafo + un vault «Cerebro» con lo aprendido en todos los proyectos, con búsqueda semántica local (y OpenAI opcional) por MCP | herramientas | novato+pro | ✓ |
 | go-live | Antes de desplegar: datos de prod en solo lectura, capacidad, monitoreo y OK humano (R32) | infra | novato+pro | ✓ |
 | pipelines-ci | CI/CD con GitHub Actions: tests + deploy automático + gate de spec (si el código diverge de la spec, el build falla) | infra | pro | ⏳ |
 | azure-fundamentos | Azure a fondo: Resource Groups, Storage, DNS, Policies, control de costos | infra | pro | ⏳ |

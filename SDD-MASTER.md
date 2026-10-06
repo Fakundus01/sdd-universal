@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.35 · **Fecha:** 2026-10-06 · **Owner:** Facundo Moreno
+**Versión:** 0.36 · **Fecha:** 2026-10-06 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -39,7 +39,7 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 | Si tu tarea es… | Leé solamente… |
 |---|---|
 | Arrancar la sesión | `SDD-MASTER.md` (este archivo) |
-| Planning de una feature | `spec.md` · `features/features-<usuario>.md` · `status.md` |
+| Planning de una feature | `spec.md` · `features/features-<usuario>.md` · `status.md` (+ si hay Cerebro: buscar lo parecido antes, `playbooks/obsidian-cerebro.md` §C) |
 | Implementar código | `design.md` · `contracts/contracts-<usuario>.md` · `testing.md` |
 | Commit / push / versionar | `changelog/changelog-<usuario>.md` (+ R01, R13) |
 | Entender la arquitectura | `design.md` · `diagram.md` |
@@ -251,7 +251,7 @@ repo/
 ```
 
 **Modo LITE:** todo lo anterior colapsa en un único `sdd-lite.md`. **Modo FEDERADO:** este árbol se repite por módulo y el `sdd/` raíz solo rutea (opcional: `api-catalog.md` con el índice de APIs entre módulos).
-**Del paquete, no por proyecto:** `blocks.md`, `tecnologias.md`, `seguridad.md`, `playbooks/`, `skills/`, `examples/`, `web/` y `README.md` viven en el repo del SDD Universal; a un proyecto solo se copian los playbooks que use (y `.claude/skills/` si el agente es Claude — atajos opcionales, el SDD funciona igual sin ellos). En `examples/` hay un `sdd/` real y completo para ver cómo se ve el resultado antes de generar el propio.
+**Del paquete, no por proyecto:** `blocks.md`, `tecnologias.md`, `seguridad.md`, `playbooks/`, `skills/`, `examples/`, `web/`, `cerebro/` (búsqueda en la memoria entre proyectos) y `README.md` viven en el repo del SDD Universal; a un proyecto solo se copian los playbooks que use (y `.claude/skills/` si el agente es Claude — atajos opcionales, el SDD funciona igual sin ellos). En `examples/` hay un `sdd/` real y completo para ver cómo se ve el resultado antes de generar el propio.
 **Opcionales enterprise (teams.md §8):** `team.md` · `environments.md` · `onboarding.md` · `incidents.md` (postmortems) · `metrics.md` (velocidad + gasto de tokens por ciclo).
 
 **Contrato de calidad de `spec.md` — los 6 elementos.** Una spec no pasa el OK si le falta alguno: (1) outcomes concretos y medibles, no nombres de features; (2) límites de alcance explícitos (qué NO entra); (3) constraints y supuestos técnicos; (4) decisiones ya tomadas (DB, librerías, patrones) para no re-discutir; (5) desglose en sub-tareas paralelizables; (6) criterios de verificación testeables. La spec es un contrato ejecutable que restringe lo que el agente puede generar — no un doc pasivo.
@@ -377,6 +377,7 @@ Las versiones de la línea actual (0.32 en adelante). Las anteriores (0.31 hacia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.36 | 2026-10-06 | **Memoria entre proyectos**, vía S41: el repo se puede abrir como vault de Obsidian (links markdown normales, `.obsidian/` fuera de git) y un vault «Cerebro» guarda una nota por lección, decisión o escenario de cada proyecto. `cerebro/` la busca en forma híbrida (palabras + embeddings locales, después OpenAI opcional) y la expone por MCP; lo recuperado es dato (R26). El planning busca ahí antes de proponer. Sin regla nueva: playbook `obsidian-cerebro` y una fila en §2. S42: las tarjetas con riesgo de obstáculo no van en tier ECONÓMICO (`orchestration.md` §9). |
 | 0.35 | 2026-10-06 | **R33 · LOOP-CON-CONTRATO** y grafo de tarjetas, vía S39 y S40: un loop autónomo se escribe antes en `sdd/loops/<nombre>.md` (disparador, objetivo medible, verificación, regla de corte, memoria) y aprobarlo autoriza commits solo en su rama. Las tarjetas declaran `depende_de` y el leader despacha por niveles del grafo. Nuevo `loops.md`; `orchestration.md` §10. Recoge lo que en 2026 se llama *loop engineering* y *graph engineering* (de ejecución), sin sumar capas que el paquete ya tenía. |
 | 0.34 | 2026-10-05 | Web sin portón y con rutas reales, a pedido del owner: la app abre sin cuenta; el login es opcional y vive en `/web/login` (vuelve solo a rutas internas); el onboarding deja de ser un diálogo encima de todo y pasa a `/web/preferencias`. Cada vista tiene su URL (`/web/catalogo`, `/web/combinador`…), recargable y compartible, con rewrite en el servidor local y en `vercel.json`. Los links viejos con `#/` redirigen. Arregla el bug de 0.33: el onboarding quedaba arriba del portón y ninguno de los dos se podía tocar (ADR-014, ADR-015 de la web). |
 | 0.33.2 | 2026-10-05 | **S38 · el producto con IA más allá del gasto**, con material aportado por el owner (OWASP Top 10 para LLMs 2025, NIST AI RMF, RAG, Huyen): `seguridad.md` 0.13 con el mapa LLM01–LLM10 y su control en el paquete, reglas para agentes que actúan y NIST para clientes corporativos. El playbook `ia-en-el-producto` suma arquitectura de referencia, RAG, agentes y evals de dos capas (deterministas de alta precisión + un juez, H26). El prompt con IA recorre el OWASP; catálogo con pgvector y embeddings. Menores de la review de 0.33.1: en `eventos` solo se inserta `tipo` y `detalle`, la lección de Pydantic bien descripta, y el arnés reintenta cuando Windows pierde la salida de un proceso. |

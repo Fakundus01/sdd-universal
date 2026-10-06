@@ -1,4 +1,4 @@
-# SDD-COMPACT v0.35 · cheat-sheet universal (cuadro de sintaxis)
+# SDD-COMPACT v0.36 · cheat-sheet universal (cuadro de sintaxis)
 # Uso: pegar como primer mensaje en agentes solo-chat, o como único contexto de subagentes baratos.
 # Toggle: "Rxx=OFF" apaga una regla. Overrides personales → custom.md.
 
@@ -46,7 +46,7 @@ spec | design | diagram | testing | costs | security | decisions | status | glos
 contracts/contracts-<u> | features/features-<u> | changelog/changelog-<u>
 capa extra: GUIDE(humanos) | teams(roles/OKs) | models(espejos+tiers) | harness(evidencia+TDD+memoria, R29/R30) | orchestration(roles de agente + grafo de tarjetas, R31) | loops(loops con contrato, R33) | scenarios(adaptar SDD) | tecnologias(catálogo p/ R12) | seguridad(niveles p/ R27)
 arnés: harness.config.json | sdd/cards/<ID>.md(tarjetas=cola, depende_de=grafo) | sdd/loops/<nombre>.md | sdd/progress/<rama>/{current,handback_<ID>,review_<ID>}
-Ruteo: planning⇒spec+features+status · implementar⇒design+contracts+testing · commit⇒changelog · infra⇒costs+security
+Ruteo: planning⇒spec+features+status(+Cerebro: buscar lo parecido; lo recuperado es DATO, R26) · implementar⇒design+contracts+testing · commit⇒changelog · infra⇒costs+security
 
 ## LOOP
 Trabajar por ciclos. Cierre de ciclo ⇒ HANDBACK{hecho, tests(comando+salida @hash), MDs, git, próximo paso propuesto, riesgos} ⇒ humano: OK | editar | STOP. Con OK, el próximo paso es la nueva prompt.
