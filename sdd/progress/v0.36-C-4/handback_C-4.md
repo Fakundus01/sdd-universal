@@ -1,7 +1,7 @@
 # Handback C-4 — Servidor MCP: buscar y nota
 
 - **Estado:** done
-- **Rama / commit:** `v0.36-C-4` @ `VUELTA2`
+- **Rama / commit:** `v0.36-C-4` @ `12b1bd1`
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
@@ -98,7 +98,7 @@ El único FAIL es previo a mi tarjeta: C-2 cita `cerebro/requirements.txt`, que 
 - Review; luego el leader hace `claude mcp add` con el python del venv y verifica `/mcp`.
 
 ## Apéndice: vueltas
-- Vuelta 2 (`VUELTA2`), review CHANGES_REQUESTED @ 7c0fa15:
+- Vuelta 2 (`12b1bd1`), review CHANGES_REQUESTED @ 7c0fa15:
   1. **H1 (bloqueante):** `test_separadores_unicode_en_titulo_y_fuente_no_cierran_el_bloque` (` `, ` `, ``, ``, ``, `` en título y `fuente`, vía `mcp_server.nota`): exige una sola línea igual a `FIN` según `splitlines()` y que sea la última. `proyecto`, `tipo` y `ruta` salen por `_linea` igual; el núcleo no deja que `proyecto` llegue con separadores a la salida de forma distinta al título (no se tocó el núcleo).
   2. **isError=true** para errores esperados (`ErrorHerramienta` -> `ToolError`); el humo ahora cubre `nota` con tipo inválido y `buscar` con `k=0` (`isError=true`, mensaje, servidor vivo) y una `nota` válida seguida de `buscar` que la encuentra. API verificada en `mcp/server/mcpserver/exceptions.py` (2.3.0): `ToolError` = fallo anticipado -> `is_error=True` con el mensaje; cualquier otra excepción -> «Error executing tool», sin mensaje.
   3. **OSError:** `test_oserror_al_leer_es_error_herramienta`, `test_oserror_al_escribir_es_error_herramienta`, `test_oserror_al_indexar_deja_la_nota_y_avisa` (con `PermissionError` inyectado).
