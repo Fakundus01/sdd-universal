@@ -212,7 +212,7 @@ class TestEscribir(ConCerebro):
         self.assertEqual(list(proyectos.rglob("*.md")) if proyectos.exists() else [], [])
 
     def test_campos_de_una_linea_rechazan_nul_y_separadores_unicode(self):
-        for sep in ("\x00", " ", " ", "\x85"):
+        for sep in ("\x00", "\x0b", "\x0c", "\x1c", "\x1d", "\x1e", "\u2028", "\u2029", "\x85"):
             for campo in ("proyecto", "titulo", "fuente"):
                 with self.subTest(campo=campo, sep=repr(sep)):
                     with self.assertRaises(ErrorNota) as ctx:

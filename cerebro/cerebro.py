@@ -74,13 +74,18 @@ def _cmd_indexar(base: Path, args, emb) -> int:
     return 0
 
 
+def _filtro_proyecto(proyecto: str | None) -> str | None:
+    """El `proyecto` de las notas es el slug de su carpeta (`notas.slug`): el filtro se normaliza igual."""
+    return notas.slug(proyecto) if proyecto and proyecto.strip() else None
+
+
 def _cmd_buscar(base: Path, args, emb) -> int:
     if args.tipo is not None and args.tipo not in notas.TIPOS:
         raise ErrorCLI(f"--tipo «{args.tipo}» no es válido ({' | '.join(notas.TIPOS)})")
     if args.k < 1:
         raise ErrorCLI("-k tiene que ser 1 o más")
     with Indice(config.ruta_indice(base), emb) as ind:
-        res = ind.buscar(args.consulta, proyecto=args.proyecto, tipo=args.tipo, k=args.k)
+        res = ind.buscar(args.consulta, proyecto=_filtro_proyecto(args.proyecto), tipo=args.tipo, k=args.k)
     if args.json:
         print(json.dumps(res, ensure_ascii=False, indent=2))
         return 0
@@ -103,6 +108,7 @@ def _cmd_revisar(base: Path, args, emb) -> int:
     for aviso in avisos:
         print(f"aviso: {aviso}", file=sys.stderr)
     errores: list[str] = []
+    desparejas = 0
     for a in archivos:
         ruta = a.relative_to(base).as_posix()
         try:
@@ -110,10 +116,17 @@ def _cmd_revisar(base: Path, args, emb) -> int:
         except UnicodeDecodeError:
             errores.append(f"{ruta}: archivo: no es UTF-8")
             continue
-        errores.extend(notas.parsear(texto, ruta)[1])
+        nota, problemas = notas.parsear(texto, ruta)
+        errores.extend(problemas)
+        carpeta = a.relative_to(base / "proyectos").parts[0] if len(a.relative_to(base / "proyectos").parts) > 1 else ""
+        if nota is not None and carpeta and nota.proyecto != carpeta:
+            desparejas += 1  # no es un error (a mano se escribe como uno quiere), pero buscar --proyecto no la encuentra
+            print(f"aviso: {ruta}: proyecto «{nota.proyecto}» no es el nombre de su carpeta; "
+                  f"`buscar --proyecto` la encuentra como «{nota.proyecto}», no como «{carpeta}» "
+                  f"(corregí el frontmatter a `proyecto: {carpeta}`)", file=sys.stderr)
     for e in errores:
         print(e)
-    print(f"{len(archivos)} nota(s) revisadas, {len(errores)} error(es).")
+    print(f"{len(archivos)} nota(s) revisadas, {len(errores)} error(es)" + (f", {desparejas} aviso(s) de proyecto." if desparejas else "."))
     return 1 if errores else 0
 
 

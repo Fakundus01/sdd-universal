@@ -45,7 +45,7 @@ def buscar(consulta: str, proyecto: str | None = None, tipo: str | None = None, 
     base = config.cerebro_dir()
     try:
         with Indice(config.ruta_indice(base), embedders.obtener()) as ind:
-            res = ind.buscar(consulta, proyecto=proyecto, tipo=tipo, k=k)
+            res = ind.buscar(consulta, proyecto=notas.slug(proyecto) if proyecto and proyecto.strip() else None, tipo=tipo, k=k)
     except (ErrorIndice, embedders.ErrorEmbedder) as e:
         raise ErrorHerramienta(str(e)) from e
     except OSError as e:

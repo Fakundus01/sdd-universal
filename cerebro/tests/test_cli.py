@@ -12,6 +12,7 @@ from unittest import mock
 from soporte import CEREBRO, ConCerebro, Contador
 
 import config
+from notas import escribir_nota
 import embedders
 from embedders import ErrorEmbedder, Falso
 from indice import Indice
@@ -71,6 +72,32 @@ class TestCLI(ConCerebro):
         code, out, _ = self.cli("revisar")
         self.assertNotEqual(code, 0)
         self.assertIn("proyectos/p/mala.md: tipo:", out)
+
+    def test_revisar_avisa_si_el_proyecto_no_es_el_slug_de_la_carpeta(self):
+        self.cli("init")
+        self.nota("sdd-universal", "buena.md", "Buena", "x")
+        rara = self.base / "proyectos" / "sdd-universal" / "rara.md"
+        rara.write_text("---\nproyecto: SDD Universal\ntipo: leccion\nfecha: 2026-10-06\nfuente: x\n---\n# R\n",
+                        encoding="utf-8")
+        code, out, err = self.cli("revisar")
+        self.assertEqual(code, 0, out + err)  # es un aviso: la nota es válida y a mano se escribe como uno quiere
+        self.assertIn("proyectos/sdd-universal/rara.md", err)
+        self.assertIn("SDD Universal", err)
+        self.assertIn("sdd-universal", err)
+        self.assertNotIn("buena.md", err)
+        self.assertIn("2 nota", out)
+        self.assertIn("1 aviso", out)
+
+    def test_buscar_proyecto_normaliza_el_filtro_con_slug(self):
+        self.cli("init")
+        escribir_nota(self.base, "Mi Proyecto", "leccion", "Hallazgo raro", "palabra zarzaparrilla", "x")
+        emb = Contador()
+        self.cli("indexar", embedder=emb)
+        for nombre in ("Mi Proyecto", "mi-proyecto", "  MI proyecto "):
+            with self.subTest(nombre=nombre):
+                code, out, err = self.cli("buscar", "zarzaparrilla", "--json", "--proyecto", nombre, embedder=emb)
+                self.assertEqual(code, 0, err)
+                self.assertEqual([r["proyecto"] for r in json.loads(out)], ["mi-proyecto"])
 
     def test_indexar_buscar_json(self):
         self.cli("init")

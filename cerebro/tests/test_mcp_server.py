@@ -89,6 +89,12 @@ class TestBuscar(Base):
                     f.unlink()
                 self.cli("indexar")
 
+    def test_buscar_proyecto_normaliza_el_filtro_con_slug(self):
+        mcp_server.nota("Mi Proyecto", "leccion", "Hallazgo raro", "palabra zarzaparrilla", "x")
+        for nombre in ("Mi Proyecto", "mi-proyecto"):
+            with self.subTest(nombre=nombre):
+                self.assertIn("Hallazgo raro", mcp_server.buscar("zarzaparrilla", proyecto=nombre))
+
     def test_errores_levantan_error_herramienta(self):
         for kwargs, texto in (({"tipo": "inventado"}, "tipo"), ({"k": 0}, "k tiene"), ({"k": 10_000}, "k tiene")):
             with self.assertRaises(mcp_server.ErrorHerramienta, msg=str(kwargs)) as cm:
@@ -243,6 +249,13 @@ def conversar(comando: list[str], env: dict, mensajes: list[dict], espera: float
     return respuestas, "".join(errores)
 
 
+def exigir_respuestas(respuestas: dict, stderr: str, ids) -> None:
+    """Si el servidor no contestó, lo que sirve para diagnosticar es su stderr (no un KeyError)."""
+    for i in ids:
+        if i not in respuestas:
+            raise AssertionError(f"sin respuesta al id {i}; stderr del servidor: {stderr!r}")
+
+
 PEDIDOS = [{"jsonrpc": "2.0", "id": i, "method": "ping"} for i in (1, 2, 3, 4)]
 
 SERVIDOR_QUE_INUNDA_STDERR = (
@@ -274,6 +287,20 @@ class TestConversar(unittest.TestCase):
         self.assertEqual(respuestas, {})
         self.assertIn("boom", stderr)
 
+    def test_un_servidor_que_cierra_stdin_sin_leer_no_rompe_el_helper(self):
+        grande = {"jsonrpc": "2.0", "method": "notifications/x", "params": {"relleno": "x" * 5_000_000}}
+        respuestas, stderr = conversar([sys.executable, "-c", SERVIDOR_QUE_CAE], dict(os.environ), [grande, *PEDIDOS],
+                                       espera=5)
+        self.assertEqual(respuestas, {})
+        self.assertIn("boom", stderr)
+
+    def test_si_el_servidor_no_contesta_el_error_trae_su_stderr(self):
+        with self.assertRaises(AssertionError) as cm:
+            exigir_respuestas({1: {}}, "Traceback: boom", [1, 2])
+        self.assertIn("boom", str(cm.exception))
+        self.assertIn("id 2", str(cm.exception))
+        exigir_respuestas({1: {}, 2: {}}, "", [1, 2])
+
 
 @unittest.skipUnless(HAY_MCP, "falta el paquete `mcp` (se instala solo en cerebro/.venv; ver cerebro/README.md ## MCP)")
 class TestHumoStdio(Base):
@@ -298,6 +325,7 @@ class TestHumoStdio(Base):
              "params": {"name": "buscar", "arguments": {"consulta": "cuerpo del humo"}}},
         ]
         respuestas, stderr = conversar([sys.executable, str(CEREBRO / "mcp_server.py")], env, mensajes)
+        exigir_respuestas(respuestas, stderr, range(1, 8))
         self.assertIn("result", respuestas[1], stderr)
         nombres = {t["name"] for t in respuestas[2]["result"]["tools"]}
         self.assertEqual(nombres, {"buscar", "nota"})
