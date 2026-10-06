@@ -131,3 +131,35 @@ Cierre de los dos sobrevivientes (ahora 196 tests, suite completa):
 
 ## Próximo paso sugerido
 - Primera llamada real por el leader con OK del owner: `CEREBRO_EMBEDDINGS=openai`, una nota corta, `indexar --todo` y `buscar`; mirar el gasto en el dashboard de OpenAI.
+
+## Vuelta 2
+- **Commit de código:** `9b71e38` (base `9fcebc3`, la review). El commit de este handback va encima.
+- Sin llamadas reales, sin leer claves ni `.env` reales, sin procesos en segundo plano. Suite: venv `Ran 202 tests` OK; Python del sistema `Ran 202 tests` OK (skipped=3).
+
+### Cambios
+1. **MEDIA, respuesta 200 malformada:** `OpenAIEmbedder._lote` ahora valida `data`/`index`/`embedding` dentro de un `try` y levanta `ErrorEmbedder("OpenAI devolvió una respuesta que no sirve: ...")` fuera del `except` (sin `__context__`, sin citar la respuesta). Casos: texto plano de portal cautivo, sin `data`, `data: null`, embedding string / no numérico / null, `index` ausente o null, cantidad e índices que no cuadran. No se reintenta (1 request). Tests: `test_respuesta_200_malformada_es_error_claro_sin_encadenar` (9 subcasos), `test_la_cli_con_respuesta_200_malformada_sale_con_2_sin_traceback_ni_clave` (función `main`) y `test_la_cli_real_en_subproceso_con_respuesta_malformada` (subproceso con `MockTransport` inyectado dentro, código 2, sin `Traceback`, sin clave).
+2. **MEDIA, borde 500:** `test_500_se_reintenta` (500 y luego 200: exactamente 2 requests, espera `[1.0]`).
+3. **BAJA:** `test_index_duplicado_o_faltante_es_error` (`[0,0]`, `[0,2]`, `[1,2]`) y `test_la_clave_se_tacha_antes_de_truncar_a_300` (clave sin `sk-` cruzando el corte de 300).
+4. **BAJA:** `cerebro/README.md`, sección «Con OpenAI»: línea con la decisión fechada (2026-10-06) y la verificación contra `openai` 3.24.0.
+5. **Cliente del SDK:** no lo toqué. `self._cliente.api_key` guarda la clave en claro, inherente al SDK. El objeto cliente no se imprime ni se loguea en ningún camino del código; `repr` del embedder, `repr(e.__dict__)` (incluye el cliente) y los logs a DEBUG ya están cubiertos por `test_repr_y_str_del_embedder_no_llevan_la_clave` y `test_la_clave_no_se_imprime_ni_se_loguea`. Nadie debe volcar `vars(e._cliente)` a un log.
+
+### Rojo visto antes del arreglo (código de `9fcebc3`)
+```text
+ERROR  test_respuesta_200_malformada... [texto plano de portal cautivo]  AttributeError: 'str' object has no attribute 'data'
+ERROR  ... [sin data] / [data null]   TypeError: 'NoneType' object is not iterable
+ERROR  ... [embedding string / no numerico / null]   ValueError / TypeError
+FAIL   ... [sin index] [index null] [cantidad que no cuadra]  'respuesta' not found in 'OpenAI devolvió 1 vectores para 1 textos'
+ERROR  test_la_cli_con_respuesta_200_malformada...   (traceback, no código 2)
+FAIL   test_la_cli_real_en_subproceso_con_respuesta_malformada
+Ran 202 tests ... FAILED (failures=8, errors=7)
+```
+Los tests de 500, `index` y orden tachar/truncar ya pasaban contra el código bueno (eran huecos de cobertura): su rojo es el del mutante de la review.
+
+### Mutantes (uno por vez, suite completa, `subprocess.run(..., timeout=120)`)
+| # | Mutante | Resultado | Corrida | Test que lo mata |
+|---|---|---|---|---|
+| R4 | `estado >= 500` -> `> 500` | MUERTO | Ran 202 tests, FAILED (errors=1) | test_500_se_reintenta |
+| R13 | truncar a 300 antes de tachar | MUERTO | Ran 202 tests, FAILED (failures=1) | test_la_clave_se_tacha_antes_de_truncar_a_300 |
+| R14 | chequeo de `index` -> `len(datos) != len(textos)` | MUERTO | Ran 202 tests, FAILED (failures=5) | test_index_duplicado_o_faltante_es_error, test_respuesta_200_malformada... |
+| M1 | sin captura de la forma de la respuesta | MUERTO | Ran 202 tests, FAILED (failures=1, errors=7) | los tres tests nuevos de malformada (incl. CLI y subproceso) |
+| M2 | `raise` dentro del `except` (encadena contexto) | MUERTO | Ran 202 tests, FAILED (failures=6) | test_respuesta_200_malformada... (assert_sin_clave exige sin `__context__`) |
