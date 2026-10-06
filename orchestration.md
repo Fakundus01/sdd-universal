@@ -127,7 +127,7 @@ El leader los elige por tarjeta y los escribe en ella, con la tabla de `models.m
 
 Las tarjetas de una feature no son una lista: son un grafo. Cada tarjeta declara en su frontmatter de qué otras depende (`depende_de: [H-1, H-2]`, vacío si ninguna). Con eso el leader:
 
-- **Despacha por niveles:** está lista la tarjeta `pending` con todas sus dependencias en `done`. Las listas del mismo nivel van en paralelo (tope de §7) si sus zonas de archivos no se pisan.
+- **Despacha por niveles:** está lista la tarjeta `pending` con todas sus dependencias en `done`. Las listas del mismo nivel van en paralelo (tope de §7) si sus zonas de archivos no se pisan, **cada una en su rama y su worktree**: el arnés admite una sola tarjeta `in_progress` por rama. El leader mergea cada una a la rama de la feature después de su `APPROVED`.
 - **Propaga el bloqueo:** si una tarjeta queda `blocked`, las que dependen de ella no se despachan; las de otras ramas del grafo siguen.
 - **Lo dibuja** en `current.md`, en mermaid, cuando hay más de tres tarjetas:
 
