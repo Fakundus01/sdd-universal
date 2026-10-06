@@ -151,7 +151,14 @@ class TestClave(SinEntorno):
         self.assertIsNone(config.clave_openai())
 
     def test_el_env_es_el_de_la_raiz_del_paquete(self):
-        self.assertEqual(RUTA_ENV_REAL(), Path(config.__file__).resolve().parent.parent / ".env")
+        esperada = Path(config.__file__).resolve().parent.parent / ".env"
+        cwd = os.getcwd()
+        with tempfile.TemporaryDirectory() as otro:  # no depende de desde dónde se corra
+            os.chdir(otro)
+            try:
+                self.assertEqual(RUTA_ENV_REAL(), esperada)
+            finally:
+                os.chdir(cwd)
 
     def test_leer_la_clave_no_toca_el_entorno(self):
         self.env_ruta.write_text(f"OPENAI_API_KEY={CLAVE}\n", encoding="utf-8")
@@ -355,6 +362,16 @@ class TestEmbedder(SinEntorno):
                 with self.assertRaises(ErrorEmbedder) as ctx:
                     embedder(s, reintentos=1).embed(["a"])
                 self.assert_sin_clave(ctx.exception)
+
+    def test_una_clave_sin_prefijo_sk_tambien_se_tacha(self):
+        """El patrón `sk-...` no alcanza si la clave tiene otro formato: se tacha por valor exacto."""
+        otra = "clave-falsa-DISTINTIVA-777"
+        s = Servidor(error_api(401, f"Incorrect API key provided: {otra}"))
+        e = OpenAIEmbedder(clave=otra, http_client=s.http_client(), esperar=Reloj())
+        with self.assertRaises(ErrorEmbedder) as ctx:
+            e.embed(["a"])
+        self.assertNotIn(otra, str(ctx.exception))
+        self.assertIn("[clave]", str(ctx.exception))
 
     def test_error_de_conexion_con_la_clave_en_el_mensaje(self):
         def cae(request):
