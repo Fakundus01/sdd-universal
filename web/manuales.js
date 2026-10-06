@@ -12,7 +12,7 @@
     {v: "catalogo", t: "📦 Catálogo", d: "Todos los paquetes: el núcleo, los tipos de proyecto y los playbooks. Cada card tiene el ojito 👁 para leer antes de bajar, y las de proyecto traen «📦 Descargar ZIP» con la carpeta ya armada."},
     {v: "combinador", t: "🧩 Combinador", d: "El camino fino: tipo + stack + nivel + tecnologías + playbooks → tu prompt de arranque exacto y el ZIP del proyecto. Con cuenta podés guardar combinaciones y retomarlas desde cualquier dispositivo."},
     {v: "tecnologias", t: "🛠️ Tecnologías", d: "Las 130 del catálogo con búsqueda y filtros. Lo que marcás acá queda elegido y entra al prompt cuando armás tu paquete."},
-    {v: "reglas", t: "📐 Mis reglas", d: "Las 32 reglas del SDD con su interruptor ON/OFF. Apagá las que no van con vos y bajate el custom.md ya escrito — el núcleo nunca se toca, así tu configuración sobrevive a cada actualización."},
+    {v: "reglas", t: "📐 Mis reglas", d: "Las 33 reglas del SDD con su interruptor ON/OFF. Apagá las que no van con vos y bajate el custom.md ya escrito — el núcleo nunca se toca, así tu configuración sobrevive a cada actualización."},
     {v: "manuales", t: "📚 Manuales", d: "Los playbooks (recetas paso a paso: deploy, git, Supabase, datos ajenos…) para leer acá mismo o bajar, y las skills de Claude para instalar en tu repo."},
     {t: "📖 Aprender", d: "En el menú también están la Guía (cómo se usa el SDD, para humanos), el Demo (el mismo formulario con y sin SDD — probá los casos borde) y el Tablero (todo el sistema en una página). Son páginas aparte: se abren desde el menú."},
     {v: "comunidad", t: "💬 Feedback", d: "Errores, ideas y casos reales van a GitHub Issues con plantillas. Lo que se confirma termina alimentando el núcleo: nada entra «porque suena bien» (R20)."},

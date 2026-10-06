@@ -19,7 +19,7 @@ Tema.alCambiar(t => Sesion.guardarTema(t));
 
 /* ---------- datos ---------- */
 const CARDS = [
- {c:"Base",n:"pro",  s:"ok",t:"SDD Universal (master)",d:"El núcleo completo: 32 reglas con toggle, protocolo de lectura anti-gasto de tokens, prompts de arranque y loop HANDBACK.",f:"../SDD-MASTER.md"},
+ {c:"Base",n:"pro",  s:"ok",t:"SDD Universal (master)",d:"El núcleo completo: 33 reglas con toggle, protocolo de lectura anti-gasto de tokens, prompts de arranque y loop HANDBACK.",f:"../SDD-MASTER.md"},
  {c:"Base",n:"pro",  s:"ok",t:"SDD Compact (cuadro de sintaxis)",d:"Todo el sistema en 45 líneas de palabras clave. Para agentes solo-chat, subagentes baratos o gente que odia leer.",f:"../SDD-COMPACT.md"},
  {c:"Base",n:"novato",s:"ok",t:"Guía de uso (para humanos)",d:"Quick start en tres caminos, la respuesta honesta a «¿es fácil?», cómo se actualiza cada proyecto y los 7 errores más comunes con su antídoto. Se lee en la web, sin descargar nada.",f:"guia.html",dl:false,cta:"Leer la guía →"},
  {c:"Base",n:"novato",s:"ok",t:"Demo: con SDD vs sin SDD",d:"El mismo formulario de reservas construido dos veces. Los dos andan y se ven igual — hasta que probás los tres casos borde. Con el código real de los dos al lado.",f:"demo.html",dl:false,cta:"Probar el demo →"},
@@ -29,8 +29,8 @@ const CARDS = [
  {c:"Base",n:"pro",  s:"ok",t:"Capa Enterprise (equipos)",d:"11 roles (PO, AF, SM, QA, devs, pasantes, RPA, infra): quién aprueba qué, ceremonias Scrum mapeadas y subagentes por rol.",f:"../teams.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Multi-agente & ahorro de tokens",d:"Espejos para Claude, Codex/ChatGPT, Cursor, Copilot y Gemini + técnicas de ahorro por tier de modelo.",f:"../models.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Bloques componibles",d:"Cómo se arma un SDD a medida combinando BASE + TYPE + STACK + PLAYBOOKS, con reglas de precedencia. Es el motor detrás del combinador.",f:"../blocks.md"},
- {c:"Base",n:"pro",  s:"ok",t:"Cómo crece el SDD (escenarios)",d:"La matriz de 38 situaciones reales: dónde funciona, dónde falla y qué adaptación resolvió cada caso. Nada entra al núcleo «porque suena bien».",f:"../scenarios.md"},
- {c:"Base",n:"novato",s:"ok",t:"Mis reglas: armá tu custom.md",d:"Prendé y apagá las 32 reglas, elegí perfil y modo, sumá las tuyas, y bajate el custom.md ya escrito. El núcleo no se toca nunca: por eso tu configuración sobrevive a cada actualización.",f:"#reglas",dl:false,cta:"Configurar mis reglas →"},
+ {c:"Base",n:"pro",  s:"ok",t:"Cómo crece el SDD (escenarios)",d:"La matriz de 40 situaciones reales: dónde funciona, dónde falla y qué adaptación resolvió cada caso. Nada entra al núcleo «porque suena bien».",f:"../scenarios.md"},
+ {c:"Base",n:"novato",s:"ok",t:"Mis reglas: armá tu custom.md",d:"Prendé y apagá las 33 reglas, elegí perfil y modo, sumá las tuyas, y bajate el custom.md ya escrito. El núcleo no se toca nunca: por eso tu configuración sobrevive a cada actualización.",f:"#reglas",dl:false,cta:"Configurar mis reglas →"},
  {c:"Base",n:"pro",  s:"ok",t:"Seguridad por superficie",d:"Los controles que hacen falta según lo que tu proyecto realmente hace: login, datos de personas, plata, IA, archivos o API pública. Seis preguntas, y solo aparecen los niveles que aplican — no un checklist de 200 ítems que nadie termina.",f:"../seguridad.md"},
  {c:"Base",n:"novato",s:"ok",t:"Catálogo de tecnologías",d:"130 tecnologías (lenguajes, frameworks, bibliotecas, bases, cloud, IA, testing…) con su ecosistema y para qué sirve cada una. Elegilas desde el combinador y entran solas al prompt.",f:"../tecnologias.md"},
 

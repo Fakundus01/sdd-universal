@@ -10,8 +10,8 @@
 <link rel="apple-touch-icon" href="web/icono-192.png">
 <title>SDD Universal · Tablero v0.31</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="web/base.css?v=34.1">
-<link rel="stylesheet" href="web/app.css?v=34.1">
+<link rel="stylesheet" href="web/base.css?v=35">
+<link rel="stylesheet" href="web/app.css?v=35">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;line-height:1.55}
@@ -122,7 +122,7 @@
     <span class="chip">v0.31 · 2026-10-03</span>
     <span class="chip">Fuente: Markdown</span>
     <span class="chip">Español · nombres de archivo en inglés</span>
-    <span class="chip">32 reglas con toggle</span>
+    <span class="chip">33 reglas con toggle</span>
     <span class="chip">NOVATO friendly · pensar-por-tres</span>
     <span class="chip">Modos FULL · LITE · COMPACT · FEDERADO</span>
     <span class="chip">Multi-agente: Claude · Codex · Cursor · Copilot · Gemini</span>
@@ -133,7 +133,7 @@
 <nav class="toc">
   <a href="#flujo">① Flujo de trabajo</a>
   <a href="#arqui">② Arquitectura de archivos</a>
-  <a href="#reglas">③ Reglas R01–R32</a>
+  <a href="#reglas">③ Reglas R01–R33</a>
   <a href="#extras">④ Lo que le agregué</a>
   <a href="#escenarios">⑤ Escenarios</a>
   <a href="#roadmap">⑥ Roadmap</a>
@@ -243,7 +243,7 @@
 </section>
 
 <section id="reglas">
-  <h2><span class="n">③</span>Catálogo de reglas R01–R32</h2>
+  <h2><span class="n">③</span>Catálogo de reglas R01–R33</h2>
   <p class="lead">Cada regla tiene ID y toggle: escribís <code>R01=OFF</code> en cualquier mensaje y el agente lo registra. Dos perfiles rápidos:</p>
   <div class="profilebar">
     <div class="profile p-strict"><b>Modo ESTRICTO (default)</b>Todas ON: la IA nunca commitea ni pushea sin tu OK.</div>
@@ -282,6 +282,7 @@
     <div class="rule"><div class="top"><span class="rid">R30</span><b>LOOP-CERRADO</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>Done = comando + salida literal + hash, re-ejecutado por un reviewer independiente (nunca quien implementó). Comandos en harness.config.json; el trabajo en vuelo, en sdd/progress/, no en el chat.</p></div>
     <div class="rule"><div class="top"><span class="rid">R31</span><b>ORQUESTACIÓN-CON-ROLES</b><span class="tag on">AUTO</span><span class="tag sw">desactivable</span></div><p>Con subagentes o feature de varias tarjetas → orchestration.md: siete roles, una tarjeta por agente con zona de archivos, cada uno devuelve solo «done -&gt; ruta». OFF con NOVATO.</p></div>
     <div class="rule"><div class="top"><span class="rid">R32</span><b>PRODUCCIÓN-CON-OK</b><span class="tag on">ON</span><span class="tag fx">fija</span></div><p>Antes de desplegar, mirar los datos de prod en solo lectura. Escribir en prod o mergear a la rama de prod: el humano o su OK explícito — lo que no se deshace con un revert.</p></div>
+    <div class="rule"><div class="top"><span class="rid">R33</span><b>LOOP-CON-CONTRATO</b><span class="tag on">ON</span><span class="tag sw">desactivable</span></div><p>Antes de dejar al agente iterando solo: archivo del loop con disparador, objetivo medible, verificación, regla de corte y memoria. Aprobarlo autoriza commits solo en la rama del loop.</p></div>
   </div>
 </section>
 
@@ -353,10 +354,10 @@
 </div>
 </div>
 
-<script src="web/shell.js?v=34.1"></script>
-<script src="web/tema.js?v=34.1"></script>
-<script src="web/supabase-config.js?v=34.1"></script>
-<script src="web/sesion.js?v=34.1"></script>
+<script src="web/shell.js?v=35"></script>
+<script src="web/tema.js?v=35"></script>
+<script src="web/supabase-config.js?v=35"></script>
+<script src="web/sesion.js?v=35"></script>
 <script>
 Shell.montar({pagina: "contenido", base: "web/", actual: "../sdd-universal-tablero.html", titulo: "Tablero"});
 Tema.iniciar();

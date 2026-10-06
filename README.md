@@ -14,7 +14,7 @@ Un paquete abierto de gobernanza: **la especificación va antes que el código**
 
 | Archivo/carpeta | Qué es |
 |---|---|
-| `SDD-MASTER.md` | El núcleo: 32 reglas con toggle (R01–R32), protocolo de lectura, prompts |
+| `SDD-MASTER.md` | El núcleo: 33 reglas con toggle (R01–R33), protocolo de lectura, prompts |
 | `SDD-COMPACT.md` | Todo el sistema en ~45 líneas de palabras clave |
 | `SDD-MASTER-EN.md` · `SDD-COMPACT-EN.md` | El núcleo en inglés — espejo del canónico en español |
 | `examples/` | **Un `sdd/` real y completo** de un proyecto chico — la mejor forma de entender qué genera el agente |
