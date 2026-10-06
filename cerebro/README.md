@@ -25,7 +25,7 @@ Versiones verificadas contra PyPI el 2026-10-06.
 | Dependencia | Qué resuelve | Por qué no alcanza lo que hay | Qué tan viva está |
 |---|---|---|---|
 | `fastembed==0.8.1` | Embeddings locales (ONNX, CPU, sin servidor ni GPU) para buscar por significado | La stdlib no tiene modelos; escribir un módulo propio equivale a reimplementar tokenizador e inferencia. La alternativa `sentence-transformers` arrastra PyTorch (varios GB); `fastembed` solo `onnxruntime` | Release 0.8.1 del 2026-09-22, mantenida por Qdrant, Python >=3.10 |
-| `mcp==2.3.0` | Servidor MCP para que Claude Code llame `buscar` y `nota` (lo usa `mcp_server.py`, tarjeta C-4) | Hablar el protocolo MCP a mano (JSON-RPC, negociación, esquemas) es un módulo propio grande y frágil; es el SDK oficial | Release 2.3.0 del 2026-10-02, SDK oficial del protocolo, Python >=3.10 |
+| `mcp==2.3.0` | Servidor MCP para que Claude Code llame `buscar` y `nota` (lo usa `mcp_server.py`, tarjeta C-4) | Hablar el protocolo MCP a mano (JSON-RPC, negociación, esquemas) es un módulo propio grande y frágil; es el SDK oficial | Release 2.3.0 del 2026-10-02, SDK oficial del protocolo, Python >=3.10. Se fija 2.3.0 (verificado en PyPI y en el venv: `from mcp.server import MCPServer` existe); C-4 usa esa API 2.x (`MCPServer`, no `FastMCP` de la 1.x) |
 
 `openai` (embeddings en la nube, opcional) se decide en su tarjeta (C-6), no acá.
 
