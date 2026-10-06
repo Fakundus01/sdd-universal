@@ -1,0 +1,29 @@
+# Tests de cerebro/ (memoria entre proyectos) en Linux y Windows, en la versión mínima y una actual de Python.
+# Se instala requirements.txt (fastembed, mcp, openai) para correr también el humo del MCP y los tests de OpenAI
+# (estos con transporte simulado: sin red ni claves). Lo único que se saltea es la integración con el modelo real:
+# bajaría ~220 MB en cada corrida, y CEREBRO_SIN_MODELO la saltea con motivo.
+name: cerebro
+on:
+  push:
+    paths: ["cerebro/**", ".github/workflows/cerebro.yml"]
+  pull_request:
+    paths: ["cerebro/**", ".github/workflows/cerebro.yml"]
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.10", "3.14"]
+    runs-on: ${{ matrix.os }}
+    env:
+      CEREBRO_SIN_MODELO: "1"
+      CEREBRO_EMBEDDINGS: falso
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r cerebro/requirements.txt
+      - run: python -m unittest discover -s cerebro/tests -v
