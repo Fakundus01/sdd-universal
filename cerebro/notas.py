@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime
 import hashlib
+import os
 import re
 import unicodedata
 from dataclasses import dataclass, field
@@ -143,6 +144,16 @@ def slug(texto: str) -> str:
     return f"{s}-nota" if s.upper() in RESERVADOS else s
 
 
+def _es_enlace(p: Path) -> bool:
+    """Symlink o junction (en Windows, un punto de reanálisis): no se recorre."""
+    if p.is_symlink():
+        return True
+    try:
+        return bool(getattr(os.lstat(p), "st_file_attributes", 0) & 0x400)
+    except OSError:
+        return False
+
+
 def listar(base: Path, avisos: list[str] | None = None) -> list[Path]:
     """Las notas de `proyectos/` (sin carpetas con punto). Los enlaces (symlinks, junctions) que salen de
     CEREBRO_DIR se saltean; cada uno suma una línea a `avisos`."""
@@ -155,8 +166,19 @@ def listar(base: Path, avisos: list[str] | None = None) -> list[Path]:
     if raiz_real.parent != base.resolve():
         avisos.append("proyectos: es un enlace que sale de CEREBRO_DIR; no se lee")
         return []
-    nombres = [p for p in raiz.rglob("*.md")
-               if not any(parte.startswith(".") for parte in p.relative_to(raiz).parts)]
+    nombres = []
+    for carpeta, subdirs, archivos in os.walk(raiz):
+        actual = Path(carpeta)
+        hijos = []
+        for d in sorted(subdirs):
+            if d.startswith("."):
+                continue
+            if _es_enlace(actual / d):
+                avisos.append(f"{(actual / d).relative_to(base).as_posix()}: enlace a una carpeta; no se recorre")
+                continue
+            hijos.append(d)
+        subdirs[:] = hijos
+        nombres += [actual / f for f in archivos if f.endswith(".md") and not f.startswith(".")]
     validas = []
     for p in nombres:
         try:

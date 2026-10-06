@@ -345,6 +345,21 @@ class TestIndiceRoto(ConIndice):
         self.assertTrue(self.abrir().buscar("UnboundLocalError"))
         self.assertTrue(list(self.db.parent.glob("indice.sqlite.*")), "el archivo roto se renombra, no se pierde")
 
+    def test_un_segundo_indice_roto_no_pisa_la_copia_del_primero(self):
+        self.roto()
+        primero = self.abrir()
+        primero.indexar(self.base, todo=True)
+        primero.close()
+        segundo = self.abrir()
+        self.db.write_bytes(b"otra vez roto " * 100)
+        segundo.indexar(self.base, todo=True)
+        segundo.close()
+        self.db.write_bytes(b"tercera rotura " * 100)
+        self.abrir().indexar(self.base, todo=True)
+        copias = sorted(p.read_bytes()[:10] for p in self.db.parent.glob("indice.sqlite.roto*"))
+        self.assertEqual(copias, [b"esto no es", b"otra vez r", b"tercera ro"])
+        self.assertTrue(self.abrir().buscar("UnboundLocalError"))
+
     def test_base_bloqueada_no_dice_que_falta_fts5(self):
         self.abrir().indexar(self.base)
         otro = sqlite3.connect(self.db, isolation_level=None)

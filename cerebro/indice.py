@@ -234,7 +234,12 @@ class Indice:
             if not todo or not self.ruta_db.is_file():
                 raise
         self.close()
-        self.ruta_db.replace(self.ruta_db.with_name(self.ruta_db.name + ".roto"))
+        destino = self.ruta_db.with_name(self.ruta_db.name + ".roto")
+        numero = 1
+        while destino.exists():  # un índice roto anterior se conserva: este va con número
+            numero += 1
+            destino = self.ruta_db.with_name(f"{self.ruta_db.name}.roto.{numero}")
+        self.ruta_db.replace(destino)
         return self._indexar(base, todo)
 
     @_traduciendo
