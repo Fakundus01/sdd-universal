@@ -145,7 +145,7 @@ class HarnessChecks:
         self.report = report
         self.repo = repo or Repo(root)
         self.cards: list[Card] = []
-        self.mode = sdd_mode(root)
+        self.mode = sdd_mode(root, config.master)
         self._names: set[str] | None = None
 
     def run_all(self) -> None:
@@ -160,8 +160,8 @@ class HarnessChecks:
 
     # ── archivos base ────────────────────────────────────────────────────────
     def check_required(self) -> None:
-        if not (self.root / "sdd" / "SDD-MASTER.md").is_file():
-            self.report.fail("Falta sdd/SDD-MASTER.md: el arnés se apoya en el SDD (R30)")
+        if not (self.root / self.config.master).is_file():
+            self.report.fail(f"Falta {self.config.master}: el arnés se apoya en el SDD (R30)")
         if self.mode == "LITE":
             # harness.md §10: en LITE no hay cards/ ni progress/. El pre-commit corre --quick en cada commit:
             # crear current.md acá ensuciaría el working tree para nada.
@@ -398,7 +398,7 @@ class HarnessChecks:
     def check_e2e_registered(self) -> None:
         if not self.config.e2e or self.e2e_running:
             return
-        record = e2e_record(self.root)
+        record = e2e_record(self.root, self.config.master)
         if not record.is_file() or not record.read_text(encoding="utf-8").strip():
             self.report.warn(f"e2e declarado pero sin ninguna corrida verde registrada en {self._rel(record)} "
                              "(corré `verify.py --e2e`): un E2E que nunca corrió no prueba nada")

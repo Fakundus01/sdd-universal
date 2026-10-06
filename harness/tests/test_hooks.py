@@ -55,6 +55,16 @@ class TestSessionStart(HooksCase):
         self.assertIn("Correr la migración 0042", out)
         self.assertIn("Tarjeta en curso en esta rama: H-1", out)
 
+    def test_nombra_el_master_configurado(self):
+        self.p.write("harness.config.json", json.dumps({"test": PASS_CMD, "master": "SDD-MASTER.md"}))
+        _, out, _ = call("session-start", {}, self.p.root)
+        self.assertIn("Leé SDD-MASTER.md y", out)
+        self.assertNotIn("sdd/SDD-MASTER.md", out)
+
+    def test_sin_master_configurado_nombra_el_de_siempre(self):
+        _, out, _ = call("session-start", {}, self.p.root)
+        self.assertIn("Leé sdd/SDD-MASTER.md y", out)
+
     def test_sin_current_dice_como_crearlo(self):
         code, out, _ = call("session-start", {}, self.p.root)
         self.assertEqual(code, 0)

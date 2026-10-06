@@ -191,6 +191,54 @@ class TestE2E(ChecksCase):
         self.assertEqual(self.run_checks().messages("WARN"), [])
 
 
+class TestMasterConfigurable(ChecksCase):
+    """Clave `master` (harness.md §2): el núcleo puede vivir fuera de sdd/ (L-7)."""
+
+    ROOT_MASTER = "# master" + chr(10) * 2 + "- **Modo por tamaño (R18):** LITE — chico" + chr(10)
+
+    def master_en_raiz(self, extra: dict | None = None) -> None:
+        (self.p.root / "sdd/SDD-MASTER.md").unlink()
+        self.p.write("SDD-MASTER.md", self.ROOT_MASTER)
+        cfg = {"test": "x", "master": "SDD-MASTER.md"}
+        cfg.update(extra or {})
+        self.p.write("harness.config.json", json.dumps(cfg))
+
+    def test_default_es_el_de_siempre(self):
+        self.assertEqual(HarnessConfig.load(self.p.root).master, "sdd/SDD-MASTER.md")
+
+    def test_master_en_raiz_da_ok(self):
+        self.master_en_raiz()
+        report = self.run_checks()
+        self.assertEqual([f for f in report.messages("FAIL") if "SDD-MASTER" in f], [])
+
+    def test_modo_se_lee_del_master_configurado(self):
+        self.master_en_raiz()
+        checks = HarnessChecks(self.p.root, HarnessConfig.load(self.p.root), Report())
+        self.assertEqual(checks.mode, "LITE")
+
+    def test_master_inexistente_nombra_la_ruta_configurada(self):
+        self.p.write("harness.config.json", json.dumps({"test": "x", "master": "nucleo/MASTER.md"}))
+        fails = self.run_checks().messages("FAIL")
+        self.assertTrue(any("nucleo/MASTER.md" in f for f in fails), fails)
+        self.assertFalse(any("sdd/SDD-MASTER.md" in f for f in fails), fails)
+
+    def test_ruta_invalida_no_carga(self):
+        for bad in ("/etc/master.md", r"C:\x\master.md", "../fuera/M.md", "sdd/../../M.md", "", 5, None, ["a"]):
+            with self.subTest(master=bad):
+                self.p.write("harness.config.json", json.dumps({"test": "x", "master": bad}))
+                with self.assertRaisesRegex(ConfigError, "master"):
+                    HarnessConfig.load(self.p.root)
+
+    def test_ruta_con_punto_punto_que_no_sale_es_valida(self):
+        self.p.write("harness.config.json", json.dumps({"test": "x", "master": "sdd/../SDD-MASTER.md"}))
+        self.assertEqual(HarnessConfig.load(self.p.root).master, "sdd/../SDD-MASTER.md")
+
+    def test_master_es_clave_conocida(self):
+        self.master_en_raiz()
+        self.assertEqual(HarnessConfig.load(self.p.root).unknown_keys, [])
+        self.assertEqual([w for w in self.run_checks().messages("WARN") if "master" in w and "desconoc" in w], [])
+
+
 class TestRepoSinCommits(unittest.TestCase):
     def test_la_rama_se_conoce_antes_del_primer_commit(self):
         p = Project(git=False)

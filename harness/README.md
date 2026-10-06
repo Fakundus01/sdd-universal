@@ -31,7 +31,7 @@ La primera línea de la salida dice el comando, el hash y la rama: pegada entera
 ## Qué revisa (`--quick`)
 
 - `harness.config.json` válido y con `test`; claves desconocidas → WARN (atrapa typos).
-- `sdd/SDD-MASTER.md` existe; `sdd/progress/<rama>/current.md` existe (si no, lo crea; en modo LITE ni lo crea ni lo pide).
+- El master existe (`master` de `harness.config.json`; default `sdd/SDD-MASTER.md`); `sdd/progress/<rama>/current.md` existe (si no, lo crea; en modo LITE ni lo crea ni lo pide).
 - Tarjetas de `sdd/cards/`: id = nombre del archivo, estado válido, `in_progress` con rama y una sola por rama, `review` sin rama → WARN, `done` con rama + criterios + `review_<ID>.md` en `APPROVED` con el hash en el título.
 - `sdd/status.md` no marca al 100% una feature con tarjetas abiertas.
 - Rutas citadas en `cited_paths_docs` (default: `AGENTS.md`, `CLAUDE.md`, `sdd/testing.md`, `sdd/spec.md`, `sdd/sdd-lite.md`) y en las tarjetas `done` existen (las tarjetas pendientes pueden citar archivos por crear). En una celda de tabla, un nombre suelto entre backticks (`consultas.py`) tiene que existir en alguna carpeta del proyecto.

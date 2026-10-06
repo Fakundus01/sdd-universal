@@ -3,17 +3,19 @@ from __future__ import annotations
 
 import json
 import os
+import posixpath
 import re
 import shlex
 from dataclasses import dataclass, field
 from pathlib import Path
 
 CONFIG_NAME = "harness.config.json"
+DEFAULT_MASTER = "sdd/SDD-MASTER.md"
 # La spec también (H13 nació en una `sdd-lite.md`); los que no existen se saltean. El master y orchestration.md no:
 # citan archivos opcionales (`GEMINI.md`, `metrics.md`) y darían falsos positivos.
 DEFAULT_CITED_DOCS = ["AGENTS.md", "CLAUDE.md", "sdd/testing.md", "sdd/spec.md", "sdd/sdd-lite.md"]
 STR_KEYS = {"test", "test_quick", "lint", "lint_file", "e2e", "prod_readonly_query", "deploy",
-            "base_branch", "prod_branch"}
+            "base_branch", "prod_branch", "master"}
 LIST_KEYS = {"lint_ext", "cited_paths_docs"}
 INT_KEYS = {"context_threshold"}
 KNOWN_KEYS = STR_KEYS | LIST_KEYS | INT_KEYS
@@ -31,18 +33,20 @@ CUSTOM_MODE_RE = re.compile(r"^\s*MODO\s*=\s*([A-Za-z]+)", re.M)
 # `**Modo:** LITE (R18) ·` (encabezado de sdd-lite.md) o `- **Modo por tamaño (R18):** LITE — …` (§3 del master).
 # La línea de plantilla del master trae los cuatro separados por `/`: ahí no se eligió nada todavía.
 DOC_MODE_RE = re.compile(r"\bModo\b[^:\n]{0,30}:\**\s*\**([A-Za-z]+)\**(?=[ \t]*(?:$|[—–·(-]))", re.M)
-MODE_SOURCES = (("sdd/custom.md", CUSTOM_MODE_RE), ("sdd/sdd-lite.md", DOC_MODE_RE), ("sdd/SDD-MASTER.md", DOC_MODE_RE))
+MODE_SOURCES = (("sdd/custom.md", CUSTOM_MODE_RE), ("sdd/sdd-lite.md", DOC_MODE_RE), (DEFAULT_MASTER, DOC_MODE_RE))
 
 
 class ConfigError(Exception):
     pass
 
 
-def sdd_mode(root: Path) -> str:
+def sdd_mode(root: Path, master: str = DEFAULT_MASTER) -> str:
     """El modo por tamaño del proyecto (R18). Manda `MODO=` de `sdd/custom.md` (la última línea: el bloque de
     sintaxis va antes que los overrides); si no hay, el `**Modo:**` de `sdd/sdd-lite.md`; si no, el §3 de
-    `sdd/SDD-MASTER.md`; si no, FULL."""
+    `master` (default `sdd/SDD-MASTER.md`); si no, FULL."""
     for rel, regex in MODE_SOURCES:
+        if regex is DOC_MODE_RE and rel == DEFAULT_MASTER:
+            rel = master
         path = root / rel
         if not path.is_file():
             continue
@@ -53,9 +57,9 @@ def sdd_mode(root: Path) -> str:
     return "FULL"
 
 
-def e2e_record(root: Path) -> Path:
+def e2e_record(root: Path, master: str = DEFAULT_MASTER) -> Path:
     """Dónde se anota cada e2e verde: `sdd/progress/e2e.md`, o `sdd/e2e.md` en LITE, que no tiene progress/."""
-    return root / "sdd" / ("e2e.md" if sdd_mode(root) == "LITE" else "progress/e2e.md")
+    return root / "sdd" / ("e2e.md" if sdd_mode(root, master) == "LITE" else "progress/e2e.md")
 
 
 def split_template(template: str) -> list[str]:
@@ -76,6 +80,7 @@ class HarnessConfig:
     prod_readonly_query: str | None = None
     deploy: str | None = None  # documental: el arnés nunca lo ejecuta (R32)
     base_branch: str = "main"
+    master: str = DEFAULT_MASTER
     prod_branch: str = "main"
     context_threshold: int = 400_000
     cited_paths_docs: list[str] = field(default_factory=lambda: list(DEFAULT_CITED_DOCS))
@@ -109,6 +114,8 @@ class HarnessConfig:
                 raise ConfigError(f"{CONFIG_NAME}: '{key}' tiene que ser una lista de textos, ej. [\".py\"]")
             if key in INT_KEYS and (isinstance(value, bool) or not isinstance(value, int)):
                 raise ConfigError(f"{CONFIG_NAME}: '{key}' tiene que ser un número entero, ej. 400000")
+        if "master" in data:
+            HarnessConfig._validate_master(data["master"])
         tokens = split_template(data.get("lint_file") or "")
         if tokens and "{file" in tokens[0]:
             raise ConfigError(f"{CONFIG_NAME}: 'lint_file' arranca con {{file}}: el ejecutable sería el archivo "
@@ -119,6 +126,16 @@ class HarnessConfig:
                     f"{CONFIG_NAME}: 'lint_file': {{file}}/{{files}} tiene que ser un argumento entero "
                     f"(o --opcion={{file}}), no parte de «{token}». Para encadenar linters usá un script: "
                     "\"sh scripts/lint.sh {file}\"")
+
+    @staticmethod
+    def _validate_master(value: object) -> None:
+        """`master` es una ruta relativa que queda dentro del repo: nada de absolutas ni de `..` que salgan."""
+        if not isinstance(value, str) or not value.strip():
+            raise ConfigError(f"{CONFIG_NAME}: 'master' tiene que ser una ruta (texto), ej. \"SDD-MASTER.md\"")
+        norm = posixpath.normpath(value.replace("\\", "/"))
+        if value.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", value) or norm == ".." or norm.startswith("../"):
+            raise ConfigError(f"{CONFIG_NAME}: 'master' ({value}) tiene que ser relativa y quedar dentro del repo: "
+                              "sin ruta absoluta ni `..` que salga de la raíz")
 
     def lints(self, rel_path: str) -> bool:
         """¿Corresponde pasarle lint_file a este archivo?"""
