@@ -9,4 +9,4 @@
 - OK del owner («OK venv», 2026-10-06): C-3, C-4 y C-6 pueden instalar `fastembed`, `mcp` y `openai` en `cerebro/.venv` de su worktree (no en el Python del sistema)
 
 ## Próximo paso
-C-1 y C-2 en paralelo. C-3 y C-4 instalan `fastembed`/`mcp` en un venv del worktree: esperan el OK del owner.
+Retomar C-2 desde el trabajo sin commitear de su worktree (la sesión anterior se cortó con `cerebro.py` en esqueleto). Con C-2 aprobada: C-3, C-4 y C-5 en paralelo (OK de venv ya dado).
