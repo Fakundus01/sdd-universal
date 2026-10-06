@@ -1,7 +1,7 @@
 # Handback L-7 — Clave `master` en harness.config.json
 
 - **Estado:** done
-- **Rama / commit:** `v0.35-L-7` @ `a6e050c (el handback va en este mismo commit; hash = el del commit que lo contiene, ver git log)` (base `55f953c`)
+- **Rama / commit:** `v0.35-L-7` @ `3e74080` (código y tests; este handback se corrige en el commit siguiente) (base `55f953c`)
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
