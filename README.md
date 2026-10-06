@@ -14,21 +14,21 @@ Un paquete abierto de gobernanza: **la especificación va antes que el código**
 
 | Archivo/carpeta | Qué es |
 |---|---|
-| `SDD-MASTER.md` | El núcleo: 33 reglas con toggle (R01–R33), protocolo de lectura, prompts |
-| `SDD-COMPACT.md` | Todo el sistema en ~45 líneas de palabras clave |
-| `SDD-MASTER-EN.md` · `SDD-COMPACT-EN.md` | El núcleo en inglés — espejo del canónico en español |
+| [`SDD-MASTER.md`](SDD-MASTER.md) | El núcleo: 33 reglas con toggle (R01–R33), protocolo de lectura, prompts |
+| [`SDD-COMPACT.md`](SDD-COMPACT.md) | Todo el sistema en ~45 líneas de palabras clave |
+| [`SDD-MASTER-EN.md`](SDD-MASTER-EN.md) · [`SDD-COMPACT-EN.md`](SDD-COMPACT-EN.md) | El núcleo en inglés — espejo del canónico en español |
 | `examples/` | **Un `sdd/` real y completo** de un proyecto chico — la mejor forma de entender qué genera el agente |
-| `GUIDE.md` | Guía de uso para humanos (con la respuesta honesta a "¿es fácil?") |
-| `scenarios.md` | Dónde funciona, dónde no, y cómo se adapta — el motor de crecimiento |
-| `custom.md` | Tus overrides personales (el núcleo nunca se edita) |
-| `teams.md` | Capa enterprise: roles, aprobaciones, ceremonias, subagentes por rol |
-| `models.md` | Espejos multi-agente + tiers de modelo + ahorro de tokens |
-| `harness.md` | El arnés: evidencia ejecutable, TDD con rojo medido, memoria en disco (R29, R30) |
-| `orchestration.md` | Siete roles de agente (leader, implementer, reviewer…) y el loop cerrado (R31) |
+| [`GUIDE.md`](GUIDE.md) | Guía de uso para humanos (con la respuesta honesta a "¿es fácil?") |
+| [`scenarios.md`](scenarios.md) | Dónde funciona, dónde no, y cómo se adapta — el motor de crecimiento |
+| [`custom.md`](custom.md) | Tus overrides personales (el núcleo nunca se edita) |
+| [`teams.md`](teams.md) | Capa enterprise: roles, aprobaciones, ceremonias, subagentes por rol |
+| [`models.md`](models.md) | Espejos multi-agente + tiers de modelo + ahorro de tokens |
+| [`harness.md`](harness.md) | El arnés: evidencia ejecutable, TDD con rojo medido, memoria en disco (R29, R30) |
+| [`orchestration.md`](orchestration.md) | Siete roles de agente (leader, implementer, reviewer…) y el loop cerrado (R31) |
 | `agents/` | Los prompts de cada rol, agnósticos (en Claude Code van a `.claude/agents/`) |
-| `blocks.md` | Cómo se combinan los bloques (BASE + TYPE + STACK + TECNOLOGÍAS + PLAYBOOKS) |
-| `tecnologias.md` | Catálogo de 130 tecnologías con ecosistema y uso — elegibles desde la web |
-| `seguridad.md` | Controles de seguridad por superficie de ataque (R27): solo los que tu proyecto necesita |
+| [`blocks.md`](blocks.md) | Cómo se combinan los bloques (BASE + TYPE + STACK + TECNOLOGÍAS + PLAYBOOKS) |
+| [`tecnologias.md`](tecnologias.md) | Catálogo de 130 tecnologías con ecosistema y uso — elegibles desde la web |
+| [`seguridad.md`](seguridad.md) | Controles de seguridad por superficie de ataque (R27): solo los que tu proyecto necesita |
 | `playbooks/` | Recetas paso a paso (deploy, env, React+Vite, GitHub+Vercel, IA en el producto…) con notas `[NOVATO]` |
 | `prompts/` | Start, loop/HANDBACK, mantenimiento, migración desde otro chat, tarjeta de tarea, handback en archivo, relevo |
 | `web/` | El catálogo web: catálogo, combinador, guía navegable y demo comparativo |

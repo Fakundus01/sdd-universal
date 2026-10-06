@@ -2,7 +2,7 @@
 
 Para proyectos chicos (≤~300 líneas estimadas o ≤1 día de trabajo): **todo el SDD en un solo archivo**, `sdd/sdd-lite.md`. Sin `cards/`, sin `progress/`, sin `features/`. Lo que en FULL son archivos, acá son secciones. El agente lee este archivo entero al arrancar cada sesión; por eso tiene que seguir siendo corto (si pasa de ~250 líneas o aparece una segunda feature grande, se propone pasar a FULL con el flujo brownfield).
 
-Nace de `scenarios.md` S36: el modo existía en el master pero no había plantilla, y cada proyecto inventaba las secciones. Esta es la estructura que usó la landing de los ejemplos, que pasó cuatro vueltas de reviewer.
+Nace de [`scenarios.md`](../scenarios.md) S36: el modo existía en el master pero no había plantilla, y cada proyecto inventaba las secciones. Esta es la estructura que usó la landing de los ejemplos, que pasó cuatro vueltas de reviewer.
 
 ```markdown
 # sdd-lite.md · <Proyecto> — <qué es en 3 palabras>

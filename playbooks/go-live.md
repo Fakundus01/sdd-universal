@@ -15,7 +15,7 @@ Nace de dos incidentes reales (S31): un cambio de lógica de negocio que iba a b
 2. **Mirar los datos de producción (solo lectura).** Por cada regla de negocio que cambia, una consulta que cuente **a quién afecta**: «¿cuántas suscripciones activas quedarían bloqueadas con la regla nueva?». Se corre con `prod_readonly_query` y se pega la salida en el handback.
    [NOVATO] Solo lectura quiere decir un usuario de base que *no puede* modificar nada: aunque el agente se equivoque de comando, no rompe. Si no tenés ese usuario, crealo antes (o que lo haga quien administra la base).
 3. **Si el número sorprende, frenar.** Afectar a más registros de los que la spec previó es un `DRIFT` (R25), no un detalle de deploy.
-4. **Migraciones:** idempotentes, probadas contra una copia o un esquema igual al de prod, y con el plan para volver atrás escrito **antes** de correrlas. El esquema que deja la migración coincide con los modelos (check de drift, `harness.md` §5).
+4. **Migraciones:** idempotentes, probadas contra una copia o un esquema igual al de prod, y con el plan para volver atrás escrito **antes** de correrlas. El esquema que deja la migración coincide con los modelos (check de drift, [`harness.md`](../harness.md) §5).
 5. **Capacidad.** Si el deploy suma carga (jobs periódicos que se reactivan, una feature que multiplica consultas, más usuarios):
    - memoria y conexiones del plan actual de la base vs. lo que va a pedir el cambio;
    - cantidad de workers/jobs concurrentes × conexiones que abre cada uno ≤ límite de conexiones del plan;

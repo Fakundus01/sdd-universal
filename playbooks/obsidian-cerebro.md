@@ -13,7 +13,7 @@ RESULTADO: el repo navegable como grafo en Obsidian, un vault «Cerebro» con la
 
 ## A · El repo como vault (ver el SDD como grafo)
 
-1. Abrí Obsidian → **Abrir carpeta como bóveda** → elegí la carpeta del repo (la que tiene `SDD-MASTER.md` o `sdd/`).
+1. Abrí Obsidian → **Abrir carpeta como bóveda** → elegí la carpeta del repo (la que tiene [`SDD-MASTER.md`](../SDD-MASTER.md) o `sdd/`).
    [NOVATO] Una «bóveda» (vault) es solo una carpeta con archivos `.md`. Obsidian no los cambia: los muestra y los enlaza.
 2. Confirmá que `.obsidian/` está en el `.gitignore` del repo (es la config personal de Obsidian: no se versiona).
 3. Abrí la **vista de grafo** (ícono de nodos en la barra izquierda, o `Ctrl+G`). Cada MD es un nodo; cada link, una línea.
@@ -56,7 +56,7 @@ tags: [loops, arnés]
 - Sin secretos ni datos de personas: el Cerebro puede salir de tu máquina (§D).
 
 ### Cuándo se escribe
-- **Al cerrar un loop** (R33, `loops.md` §2): el leader escribe una nota por lección del «Resumen al cortar».
+- **Al cerrar un loop** (R33, [`loops.md`](../loops.md) §2): el leader escribe una nota por lección del «Resumen al cortar».
 - **Al resolver un DRIFT o agregar un escenario:** una nota `decision` o `escenario`.
 - A mano, cuando vos quieras: es Obsidian, escribís como en cualquier nota.
 
@@ -98,7 +98,7 @@ El agente busca en el Cerebro lo parecido a la tarea («tope de gasto de IA», �
 4. **Qué sale de tu máquina:** el texto de cada fragmento indexado y de cada consulta va a la API de OpenAI. Por eso las notas no llevan secretos ni datos de personas (§B). La decisión queda escrita con fecha en `cerebro/README.md`.
 
 ## Verificación
-- El grafo del repo muestra `SDD-MASTER.md` conectado con `harness.md`, `loops.md`, `orchestration.md`.
+- El grafo del repo muestra [`SDD-MASTER.md`](../SDD-MASTER.md) conectado con [`harness.md`](../harness.md), [`loops.md`](../loops.md), [`orchestration.md`](../orchestration.md).
 - `cerebro buscar "loop sin regla de corte"` trae la nota de S39 entre las primeras.
 - En Claude Code, `/mcp` lista `cerebro` conectado, y una pregunta de planificación lo usa.
 

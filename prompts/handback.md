@@ -1,6 +1,6 @@
 # handback.md · Plantilla de handback en archivo (R30)
 
-El HANDBACK del master (§7) es el cierre de ciclo **en el chat**, en ~20 líneas. Este es el handback **en archivo** que deja un agente al terminar una tarjeta: va en `sdd/progress/<rama>/handback_<ID>.md`, se commitea con la rama antes de responder `done`, y es lo que lee el reviewer. Qué cuenta como evidencia: `harness.md` §4.
+El HANDBACK del master (§7) es el cierre de ciclo **en el chat**, en ~20 líneas. Este es el handback **en archivo** que deja un agente al terminar una tarjeta: va en `sdd/progress/<rama>/handback_<ID>.md`, se commitea con la rama antes de responder `done`, y es lo que lee el reviewer. Qué cuenta como evidencia: [`harness.md`](../harness.md) §4.
 
 ````markdown
 # Handback H-1 — <título>

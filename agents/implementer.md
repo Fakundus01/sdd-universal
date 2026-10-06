@@ -16,7 +16,7 @@ Ejecutás **una sola** tarjeta, de punta a punta, hasta tener evidencia. Tier ME
 4. **TDD (R29):** escribí el test, miralo fallar por la razón correcta y guardá esa salida con el hash de la base. Después el código mínimo para el verde, después el refactor.
 5. Implementá **dentro de la zona**. Cambios acotados; no reescribas archivos enteros. R05 y R06 valen.
 6. `python harness/verify.py --changed`. Si falla, volvé al paso 5. Antes de entregar, el nivel que pida la tarjeta.
-7. Escribí `sdd/progress/<rama>/handback_<ID>.md` con `prompts/handback.md`: evidencia por criterio, salidas tal cual, hash real.
+7. Escribí `sdd/progress/<rama>/handback_<ID>.md` con [`prompts/handback.md`](../prompts/handback.md): evidencia por criterio, salidas tal cual, hash real.
 8. Commiteá en tu rama, **incluido el handback**, antes de responder. Nunca mergees ni hagas force-push.
 
 ## Reglas duras

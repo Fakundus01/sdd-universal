@@ -11,7 +11,7 @@ Tu única función es **aprobar o rechazar**. No arreglás: decís qué falla, c
 
 ## Protocolo
 1. Leé la tarjeta (`sdd/cards/<ID>.md`) y el handback (`sdd/progress/<rama>/handback_<ID>.md`).
-2. Leé `sdd/design.md` y los `contracts` que la tarjeta toque, y los checkpoints de `harness.md` §7.
+2. Leé `sdd/design.md` y los `contracts` que la tarjeta toque, y los checkpoints de [`harness.md`](../harness.md) §7.
 3. Mirá el **diff real** (`git diff <base>...<rama>`), no lo que dice el handback.
 4. Por cada criterio de aceptación: ¿la evidencia existe y lo demuestra de verdad? ¿El rojo se midió con hash o se dedujo?
 5. **Re-ejecutá** la verificación vos: `python harness/verify.py --changed` como mínimo, completo si la tarjeta lo pide. Nunca copies la salida del handback.

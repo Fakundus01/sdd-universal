@@ -53,7 +53,7 @@ Las ceremonias **no generan documentos nuevos**: leen los que el SDD ya produce.
 | Sprint Planning | `spec` + `features` + `status` | `status.md` queda como sprint backlog con % |
 | Daily | los HANDBACK de ayer de cada dev | el SM los lee: son el daily por escrito |
 | Sprint Review | Definition of Done (R16) + changelogs | demo + bump MINOR/PATCH |
-| Retro | `decisions.md` + `scenarios.md` | mejoras de proceso → filas nuevas en la matriz (R20) |
+| Retro | `decisions.md` + [`scenarios.md`](scenarios.md) | mejoras de proceso → filas nuevas en la matriz (R20) |
 
 ---
 
@@ -61,7 +61,7 @@ Las ceremonias **no generan documentos nuevos**: leen los que el SDD ya produce.
 
 El patrón de orquestación es **Coordinador / Implementadores / Verificador**: el coordinador descompone la spec en sub-tareas paralelizables (elemento 5 del contrato de spec), varios implementadores trabajan en paralelo (idealmente en git worktrees aislados para no pisarse), y un verificador **independiente** chequea contra la spec antes de dar nada por terminado. La clave es el incentivo opuesto: el implementador quiere terminar, el verificador quiere encontrar fallas — esa tensión mejora la calidad. Tiering: la spec se escribe con tier ALTO (un error ahí se propaga a todo), se implementa con MEDIO, y la verificación puede correr en un modelo rápido con instrucciones de refutar.
 
-**Con R31 activa, el patrón concreto es `orchestration.md`:** siete roles de agente (`leader`, `implementer`, `reviewer`, `analytic`, `infra-implementer`, `looper`, `prompter`) con tarjetas, evidencia y loop cerrado. Los subagentes de esta tabla son su versión por rol de *persona*: `review-agent` → `reviewer`, `qa-agent` → `looper`/`implementer`, `infra-agent` → `infra-implementer` en solo lectura, `doc-agent` → lo absorbe el `leader`. Si conviven, manda `orchestration.md` para *cómo* se ejecuta y esta capa para *a quién* va cada OK.
+**Con R31 activa, el patrón concreto es [`orchestration.md`](orchestration.md):** siete roles de agente (`leader`, `implementer`, `reviewer`, `analytic`, `infra-implementer`, `looper`, `prompter`) con tarjetas, evidencia y loop cerrado. Los subagentes de esta tabla son su versión por rol de *persona*: `review-agent` → `reviewer`, `qa-agent` → `looper`/`implementer`, `infra-agent` → `infra-implementer` en solo lectura, `doc-agent` → lo absorbe el `leader`. Si conviven, manda `orchestration.md` para *cómo* se ejecuta y esta capa para *a quién* va cada OK.
 
 Cada rol tiene su subagente espejo, con slice y tier fijos. **Un subagente jamás recibe el paquete completo (R11):** si necesita más contexto, vuelve al orquestador y lo pide.
 
@@ -80,7 +80,7 @@ Cada rol tiene su subagente espejo, con slice y tier fijos. **Un subagente jamá
 
 Nadie lee todo: cada rol tiene su ruta y el `onboarding-agent` la acompaña.
 
-- **Pasante / Jr:** día 1 → `GUIDE.md` + `spec.md`; día 2 → su feature asignada + primer ciclo HANDBACK junto a su mentor.
+- **Pasante / Jr:** día 1 → [`GUIDE.md`](GUIDE.md) + `spec.md`; día 2 → su feature asignada + primer ciclo HANDBACK junto a su mentor.
 - **Dev nuevo:** lo anterior + `design.md` y los `contracts` de su módulo.
 - **QA nuevo:** `testing.md` + `features` (criterios de aceptación).
 - **PO / AF nuevo:** `spec` + `status` + `decisions.md` (el porqué de cada decisión ya tomada — evita re-abrir debates).
@@ -109,5 +109,5 @@ El agente los genera solo si aplican (no por default): `team.md` (quién es qui�
 
 | Versión | Fecha | Cambio |
 |---|---|---|
-| 0.30 | 2026-10-02 | §5 apunta a `orchestration.md` (R31) y mapea sus subagentes a los roles de agente; quedan claros los dos ejes: roles de persona acá, roles de agente allá. |
+| 0.30 | 2026-10-02 | §5 apunta a [`orchestration.md`](orchestration.md) (R31) y mapea sus subagentes a los roles de agente; quedan claros los dos ejes: roles de persona acá, roles de agente allá. |
 | 0.3 | 2026-08-15 | Primera capa enterprise: 11 roles con RACI, OKs especializados por rol, autonomía escalonada por seniority, ceremonias Scrum mapeadas, 6 subagentes por rol, rutas de onboarding y secciones RPA/infra. |

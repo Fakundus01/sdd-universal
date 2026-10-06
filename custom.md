@@ -1,6 +1,6 @@
 # custom.md · Overrides personales
 
-El núcleo universal (`SDD-MASTER.md`, `SDD-COMPACT.md`, `scenarios.md`) **no se edita**: así podés actualizarlo cuando salga una versión nueva sin perder tu configuración. Todo lo tuyo va acá. El agente lee el master primero y después este archivo, que pisa lo que haga falta.
+El núcleo universal ([`SDD-MASTER.md`](SDD-MASTER.md), [`SDD-COMPACT.md`](SDD-COMPACT.md), [`scenarios.md`](scenarios.md)) **no se edita**: así podés actualizarlo cuando salga una versión nueva sin perder tu configuración. Todo lo tuyo va acá. El agente lee el master primero y después este archivo, que pisa lo que haga falta.
 
 ## Sintaxis
 

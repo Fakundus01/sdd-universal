@@ -1,6 +1,6 @@
 # task-card.md · Plantilla de tarjeta de tarea
 
-Una tarjeta = una unidad de trabajo para **un** agente. Vive en `sdd/cards/<ID>.md`, la escribe solo el `leader` (o el humano sin R31) y es a la vez la cola de trabajo: el frontmatter dice en qué estado está. `status.md` enlaza las tarjetas de cada feature. Detalle: `harness.md` §6, `orchestration.md` §3.
+Una tarjeta = una unidad de trabajo para **un** agente. Vive en `sdd/cards/<ID>.md`, la escribe solo el `leader` (o el humano sin R31) y es a la vez la cola de trabajo: el frontmatter dice en qué estado está. `status.md` enlaza las tarjetas de cada feature. Detalle: [`harness.md`](../harness.md) §6, [`orchestration.md`](../orchestration.md) §3.
 
 ```markdown
 ---

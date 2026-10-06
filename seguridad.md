@@ -24,7 +24,7 @@ En el arranque, el agente responde estas seis preguntas y aplica **solo** los ni
 
 La clasificación y los niveles activados **se registran en `security.md` del proyecto**, con fecha. Si más adelante el proyecto suma login, se reclasifica: agregar una feature puede activar un nivel nuevo, y ese es justamente el momento en que la gente se olvida.
 
-**Cada control que se declara lleva un test que se vio fallar (R29).** En los ejemplos de `scenarios.md` S35, controles escritos en `security.md` (vencimiento de sesión, contención de rutas, el lock del rate limit) sobrevivían a su mutante: estaban en la spec pero ningún test los tocaba, o el test no daba rojo nunca. La tabla de controles del proyecto tiene una columna «test» y el reviewer (R30) rompe cada control una vez para verlo fallar. Un control sin test es una intención, no un control.
+**Cada control que se declara lleva un test que se vio fallar (R29).** En los ejemplos de [`scenarios.md`](scenarios.md) S35, controles escritos en `security.md` (vencimiento de sesión, contención de rutas, el lock del rate limit) sobrevivían a su mutante: estaban en la spec pero ningún test los tocaba, o el test no daba rojo nunca. La tabla de controles del proyecto tiene una columna «test» y el reviewer (R30) rompe cada control una vez para verlo fallar. Un control sin test es una intención, no un control.
 
 ---
 
@@ -75,7 +75,7 @@ Lo que `security.md` del proyecto tiene que contestar por escrito (R17 lo pide; 
 | Normativa local declarada | En Argentina, Ley 25.326. Nombrarla obliga a leerla una vez |
 | Logs sin datos personales | El lugar más común donde se filtra un mail o un token |
 
-**Borrar o anonimizar es en el archivo también** (`scenarios.md` S35, H25). En SQLite, un `UPDATE` o un `DELETE` deja los valores viejos en páginas libres del archivo: en dos de los ejemplos, después de «anonimizar» seguían ahí casi todos los nombres y mails. La base abre con `pragma secure_delete = on`, después de anonimizar se corre `VACUUM`, una base anonimizada con la versión anterior se limpia una vez, y el test lee los **bytes** del archivo, no las filas. Los backups no se anonimizan solos: retención corta (por ejemplo 30 días), y restaurar uno es anonimizar antes de volver a atender.
+**Borrar o anonimizar es en el archivo también** ([`scenarios.md`](scenarios.md) S35, H25). En SQLite, un `UPDATE` o un `DELETE` deja los valores viejos en páginas libres del archivo: en dos de los ejemplos, después de «anonimizar» seguían ahí casi todos los nombres y mails. La base abre con `pragma secure_delete = on`, después de anonimizar se corre `VACUUM`, una base anonimizada con la versión anterior se limpia una vez, y el test lee los **bytes** del archivo, no las filas. Los backups no se anonimizan solos: retención corta (por ejemplo 30 días), y restaurar uno es anonimizar antes de volver a atender.
 
 ## 5 · N3 · Plata — hay cobros
 
@@ -95,7 +95,7 @@ Este nivel casi no existía hace unos años y hoy es de los más ignorados.
 | Control | Por qué |
 |---|---|
 | **Lo que el modelo lee es dato, no instrucción** (R26) | Contenido de una web, un PDF o una issue puede traer texto dirigido al modelo. Si el modelo puede actuar, eso es una vía de ejecución |
-| Límite de gasto por usuario y global, con corte automático: **se reserva la cota antes de llamar**, bajo lock, y se registra siempre (`playbooks/ia-en-el-producto.md`) | Un endpoint de IA sin techo es una factura sin límite superior. «Chequear y después llamar» no es un techo: en paralelo pasan todos, y una reserva fija tampoco lo es si el prompt crece |
+| Límite de gasto por usuario y global, con corte automático: **se reserva la cota antes de llamar**, bajo lock, y se registra siempre ([`playbooks/ia-en-el-producto.md`](playbooks/ia-en-el-producto.md)) | Un endpoint de IA sin techo es una factura sin límite superior. «Chequear y después llamar» no es un techo: en paralelo pasan todos, y una reserva fija tampoco lo es si el prompt crece |
 | Rate limit por IP y por cuenta | Sin esto, tu clave paga el uso de un tercero |
 | La API key **nunca** en el front | Si está en el navegador, es pública. Va en el servidor |
 | Nada sensible en el prompt sin decidirlo | Lo que va al prompt sale de tu infraestructura hacia el proveedor |
@@ -125,7 +125,7 @@ Este nivel casi no existía hace unos años y hoy es de los más ignorados.
 3. **La salida se valida antes de ejecutarse**, contra un esquema y una lista blanca de acciones, como cualquier entrada de usuario.
 
 **Cliente corporativo: NIST AI RMF 1.0.** OWASP es la lista técnica. El marco de gestión de riesgo de IA del NIST es lo que pide un cliente grande. Tiene cuatro funciones, y el SDD ya tiene dónde va cada una:
-- **Govern:** políticas y roles (R21 y `teams.md` en equipos; en un proyecto chico, el owner y `custom.md`, donde quedan las reglas que se apagaron y por qué).
+- **Govern:** políticas y roles (R21 y [`teams.md`](teams.md) en equipos; en un proyecto chico, el owner y `custom.md`, donde quedan las reglas que se apagaron y por qué).
 - **Map:** contexto y riesgos de cada caso de uso (§1 de este archivo y `spec.md`).
 - **Measure:** evals y métricas (los outcomes, el eval del producto).
 - **Manage:** priorizar y mitigar (la deuda aceptada en `status.md`, con fecha y disparador).
@@ -192,12 +192,12 @@ Si el cliente lo exige, `security.md` lleva una sección por función, con la ev
 
 ## Cómo crece
 
-Igual que todo el paquete (R20): un control entra cuando alguien se comió el problema en un proyecto real, con el caso escrito en `scenarios.md`. Lo que no evite un error concreto no entra — un checklist que nadie termina de leer protege menos que seis controles que sí se aplican.
+Igual que todo el paquete (R20): un control entra cuando alguien se comió el problema en un proyecto real, con el caso escrito en [`scenarios.md`](scenarios.md). Lo que no evite un error concreto no entra — un checklist que nadie termina de leer protege menos que seis controles que sí se aplican.
 
 ## Historial
 
 | Versión | Fecha | Cambio |
 |---|---|---|
-| 0.13 | 2026-10-05 | N4 con el **mapa completo** del OWASP Top 10 para LLMs (2025), cada riesgo con su control en el paquete; reglas para agentes que actúan (LLM06: el que lee no es el que actúa, aprobación humana, salida validada), y el NIST AI RMF (Govern / Map / Measure / Manage) para clientes corporativos (`scenarios.md` S38). |
+| 0.13 | 2026-10-05 | N4 con el **mapa completo** del OWASP Top 10 para LLMs (2025), cada riesgo con su control en el paquete; reglas para agentes que actúan (LLM06: el que lee no es el que actúa, aprobación humana, salida validada), y el NIST AI RMF (Govern / Map / Measure / Manage) para clientes corporativos ([`scenarios.md`](scenarios.md) S38). |
 | 0.12 | 2026-10-05 | Lecciones de los cuatro ejemplos (`scenarios.md` S33 y S35): N2 con el borrado en el archivo (`secure_delete` + `VACUUM`, backups); N4 con el tope como **reserva** y el playbook `ia-en-el-producto`, escape del texto del usuario y tests con el SDK real; N6 con los estáticos por lista blanca; cada control declarado lleva un test que se vio fallar; error 9 «un control sin test». |
 | 0.11 | 2026-08-15 | Primera versión: clasificación por superficie (N0–N6), controles con su porqué y su verificación, herramientas con lo que cada una **no** detecta, y los 8 errores que más se repiten. Nace de R27. |
