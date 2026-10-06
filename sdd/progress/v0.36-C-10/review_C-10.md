@@ -1,5 +1,5 @@
-# Review C-10 @ 509623f
-**Veredicto:** CHANGES_REQUESTED
+# Review C-10 @ 406a5c5
+**Veredicto:** APPROVED
 
 Reviewer independiente (ALTO). Base `f0e2d8e`, contenido `509623f`, handback en `8cca9e6`. Scripts propios en el scratchpad (`intact.py`, `check.py`, `graph.py`, `zipsim.py`, `md.mjs`; stdlib, no se commitean).
 
@@ -86,3 +86,38 @@ Por archivo (proyecto completo): `SDD-MASTER.md` 22, `GUIDE.md` 11, `orchestrati
 ## Mejoras al arnés detectadas
 - `verify.py` del paquete no revisa los `](…)` del núcleo ni de `agents/`/`playbooks/`/`prompts/` (`harness/config.py:16`): con 300 links nuevos, el «Rutas citadas existen (184)» no cambió. Para el paquete, sumar esos MD a `cited_paths_docs` en `harness.config.json`.
 - Un test en `web/tests/` que arme el ZIP (`Paquete.proyecto`) y resuelva cada `](…)` de los MD copiados contra las rutas del ZIP habría atrapado H1.
+
+## Vuelta 2 @ 406a5c5
+**Veredicto:** APPROVED
+
+Arriba queda la vuelta 1 (`509623f`, CHANGES_REQUESTED). Decisión del leader: H1, los links rotos dentro de los ZIP, pasa a C-11 (`web/paquete.js` reescribe los links al empaquetar, con un test de 0 rotos en los tres ZIP). C-10 y C-11 se mergean juntas, así que C-10 se juzga sin H1. Que `SDD-COMPACT(-EN)` quede sin links de salida es una excepción al criterio 1 que decidió el leader.
+
+### Verificación re-ejecutada (@ `ce2b7f7` = `406a5c5` + handback)
+```text
+$ python harness/verify.py --quick
+[OK]    Tarjetas válidas (15)
+[OK]    Rutas citadas existen (184 revisadas)
+VERDE — 0 FAIL, 0 WARN          (el current.md de plantilla de mi rama, borrado)
+$ node --test "web/tests/*.test.mjs"
+ℹ tests 49 · pass 49 · fail 0 · skipped 0
+$ node web/tests/smoke/smoke.mjs
+PASS smoke: 22 pasos, 0 errores de consola
+```
+- **Texto intacto** (script propio, `f0e2d8e..406a5c5`, se saca cada link nuevo `[x](y)` → `x`): `files 36 new links 244 bad 0`. `AGENTS.md` y `CLAUDE.md` conservan solo `[SDD-MASTER.md](SDD-MASTER.md)`, que en este repo es el archivo correcto. Ningún link cae en un bloque de código, lleva `|` ni es `[[wikilink]]`.
+- **Links:** los 244 resuelven. Los `-EN` usan su par `-EN` cuando existe. La zona es la de antes: fuera de `agents/`, `playbooks/` y `prompts/` solo cambia `sdd/progress/v0.36-C-10/`.
+- **Grafo** (nodos = 50 MD del alcance; aristas = links `.md` resolubles fuera de bloques de código): **0 huérfanos, 1 componente con los 50 nodos**, 185 aristas únicas. Links de salida: `SDD-MASTER` 20, `scenarios` 13, `loops` 2, `orchestration` 10, `SDD-COMPACT` y `SDD-COMPACT-EN` 0 (la excepción del leader; tienen 11 y 3 de entrada). Quedan sin salida los 10 de la vuelta 1 más los dos COMPACT. El único link no resoluble es el ejemplo preexistente dentro de un code span (`playbooks/obsidian-cerebro.md:22`).
+- **`cited_paths_docs` con los 50 MD** (lo probé en mi worktree y lo revertí; el árbol queda limpio): **48 FAIL, igual que el handback**. 47 son rutas entre backticks de «un proyecto normal» o ejemplos: `sdd/sdd-lite.md`, `sdd/SDD-MASTER.md`, `sdd/custom.md`, `sdd/e2e.md`, `sdd/cards/H-1.md`, `.claude/agents/`, `GEMINI.md`, `metrics.md`, `team.md`, `harness_fixes.md`. El otro es el `(harness.md)` preexistente. **Ninguno es un link de C-10.** Que el paquete no pueda usar ese check es un límite del arnés, no de esta tarjeta.
+
+### Hallazgos de la vuelta 1
+- **H4 (falsos positivos): resuelto.** Ya no queda ningún link a `AGENTS.md` ni `CLAUDE.md`. `custom.md` solo queda en la fila de `README.md:23`, que lista los archivos del paquete, y está bien. `prompts/sdd-lite.md` solo queda en `harness.md:220` («plantilla `prompts/sdd-lite.md`»), que nombra la plantilla, y también está bien. Revisé los links que quedan hacia `SDD-MASTER`, `GUIDE`, `README`, `historial-master` y `CONTRIBUTING`: todos nombran el archivo del paquete. El caso más dudoso es `playbooks/obsidian-cerebro.md:16` («la carpeta del repo, la que tiene `SDD-MASTER.md` o `sdd/`»): es genérico, pero el destino es el mismo archivo y en el ZIP resuelve (`sdd/playbooks/` → `sdd/SDD-MASTER.md`). Queda como INFO.
+- **H2: resuelto.** `SDD-MASTER(-EN).md:77` ya no tiene el link dentro del placeholder.
+- **H5: resuelto.** `SDD-COMPACT(-EN).md` no tiene ningún link.
+- **H3** (`#mdruta`, `web/inicio.js:11`): sigue fuera de zona. Es menor y no bloquea.
+- **H1 → C-11:** nada en los MD impide la solución genérica. Los 244 links son relativos simples a `.md`: sin anclas a otros archivos (las únicas `#…` son anclas dentro de `tecnologias.md` y vienen de antes), sin rutas absolutas y sin corchetes anidados. El texto del link siempre es la mención original, así que «si el destino no viene en el ZIP, dejar solo el texto» devuelve exactamente la línea de la base, como lo mide mi script de texto intacto. Un borde para C-11: el link en un encabezado (`agents/looper.md:18`) y dentro de negrita (`**[LOOP-PROMPT](prompts/loop-prompt.md)**`, `SDD-MASTER(-EN).md:28`) también tienen que reescribirse.
+
+### Checkpoints (vuelta 2)
+- C1: [x] `verify.py --quick` VERDE re-ejecutado; las rutas nuevas existen.
+- C2: [x] los criterios 1–5 tienen evidencia, con la excepción de COMPACT decidida por el leader; la zona se respetó.
+- C3: [x] H1 sale del alcance de C-10 por decisión del leader (C-11 se mergea junto). Los MD no traban la reescritura genérica.
+- C4: [x] re-ejecuté verificación, tests y smoke; texto y grafo medidos con scripts propios.
+- C5: [x] handback de la vuelta 2 commiteado. Dos observaciones que no bloquean: (1) dice que en `SDD-MASTER.md` §3 queda el link a `prompts/sdd-lite.md`, pero en `SDD-MASTER.md:146` la mención sigue sin link; (2) `sdd/progress/v0.36-C-10/current.md` sigue siendo la plantilla vacía.
