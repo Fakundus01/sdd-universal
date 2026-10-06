@@ -90,7 +90,8 @@ const Perfil = (() => {
         <b>${esc(o.t)}</b><small>${esc(o.d)}</small>
       </button>`).join("");
     $("obAtras").hidden = paso === 0;
-    $("obSaltar").hidden = paso === PASOS.length - 1;
+    // «Prefiero no decir» está en los cuatro pasos (0.34.1): en el último,
+    // deja la respuesta vacía y termina, igual que en los otros.
   }
 
   async function elegir(valor){

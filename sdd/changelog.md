@@ -4,6 +4,23 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ---
 
+## [0.34.1] — 2026-10-05 · web
+
+Los nits de la review R30 de 0.34 (aprobada).
+
+### Corregido
+- **Una URL por vista:** `/web/inicio` y `/web/index.html` pasan a `/web/` con `replaceState` (`Rutas.canonizar`, al cargar, después de convertir los `#/` viejos).
+- **`volver` a una variante de login** (`/web/login/`, `/web/login?…`, `/web/login#…`, `/web/LOGIN`) cae en `/web/`, sin una parada de más. `/web/logins` sigue siendo una ruta como cualquier otra.
+- **Paridad dev ↔ Vercel:** dev servía por nombre cualquier `web/<x>.html` que existiera (`/web/demo-con-sdd` daba el widget), y Vercel solo admin, guía y demo. Ahora `dev/servidor.mjs` exporta `PAGINAS = ["admin", "guia", "demo"]`, la misma lista que los rewrites de `vercel.json`, y un test las compara. Cualquier otro nombre sirve la app en los dos lados.
+- **«Prefiero no decir» en los cuatro pasos** del onboarding: en el último se escondía, así que para no contestar el agente había que saltar todo. Ahora deja la respuesta vacía y termina, como en los otros pasos.
+
+### Verificado
+- Rojo sobre `aa41371`: `web/tests` 49 tests, 4 en rojo (`Rutas.canonizar is not a function`, `volver` con `/web/login/`, «Prefiero no decir» escondido, `dev/servidor.mjs no exporta PAGINAS`); `dev/tests` 17, 1 en rojo (`/web/demo-con-sdd` servía el `.html`).
+- Verde: `web/tests` 49/49, `dev/tests` 17/17. `?v=34.1` en las páginas y el tablero (cambiaron `rutas.js` y `perfil.js`).
+- `sdd/`: contracts §7, ADR-015, design §4b, testing, status; `dev/README.md`.
+
+---
+
 ## [0.34.0] — 2026-10-05 · web
 
 El bug que reportó el owner y las tres decisiones que tomó para que no vuelva: sin portón, rutas reales y el onboarding como página.

@@ -139,7 +139,7 @@ Ninguno admite espacios, `@` ni saltos de línea. **Lo que no garantiza:** un sl
 
 | Ruta | Qué sirve | Vista |
 |---|---|---|
-| `/web/` · `/web/inicio` | `index.html` | inicio |
+| `/web/` (`/web/inicio` y `/web/index.html` se normalizan a esta) | `index.html` | inicio |
 | `/web/catalogo` (`?cat=`, `?q=`, `?lvl=`) | `index.html` | catalogo |
 | `/web/combinador` (`?c=<combinación en base64url>`) | `index.html` | combinador |
 | `/web/tecnologias` · `/web/reglas` · `/web/manuales` · `/web/comunidad` | `index.html` | la del nombre |
@@ -149,7 +149,9 @@ Ninguno admite espacios, `@` ni saltos de línea. **Lo que no garantiza:** un sl
 | `/web/<nombre>/` | 308 a `/web/<nombre>` | — |
 | `/web/<algo>.<ext>` que no existe | 404 | — |
 
-**Regla del servidor** (`dev/servidor.mjs` y `vercel.json`): `^/web/[a-z][a-z0-9-]*$` → `web/<nombre>.html` si existe, si no `web/index.html`. Todo lo demás, como antes.
+**Regla del servidor** (`dev/servidor.mjs` y `vercel.json`): `^/web/[a-z][a-z0-9-]*$` → `web/<nombre>.html` solo para las páginas de una lista explícita (`admin`, `guia`, `demo`: `PAGINAS` en `dev/servidor.mjs`, la misma que los rewrites de `vercel.json`, y un test las compara); cualquier otro nombre → `web/index.html` (por eso `/web/demo-con-sdd` es la app, en dev y en Vercel). Todo lo demás, como antes.
+
+**Una URL por vista (0.34.1):** `/web/inicio` y `/web/index.html` pasan a `/web/` con `replaceState`. **`volver`** a cualquier variante de login (`/web/login/`, con query, en mayúsculas) cae en `/web/`.
 
 **Links viejos:** `…/web/#/<vista>?<query>` y `…/web/index.html#/<vista>?<query>` → `/web/<vista>?<query>` con `history.replaceState`, del lado del navegador (el servidor no ve el hash). Una vista desconocida va a Inicio.
 

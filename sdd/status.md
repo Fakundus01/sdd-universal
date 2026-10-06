@@ -1,6 +1,6 @@
 # status.md · SDD Hub
 
-**Versión:** 0.34 · **Última actualización:** 2026-10-05 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
+**Versión:** 0.34.1 · **Última actualización:** 2026-10-05 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
 
 ## Features
 

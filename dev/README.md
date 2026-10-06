@@ -34,4 +34,4 @@ Solo existen en `dev/.data/`, que no se commitea. Ctrl+C corta el servidor y el 
 
 ## Cómo funciona
 
-Postgres corre `supabase/schema.sql` y `metricas.sql` **tal cual** en cada arranque, así que lo que pasa acá pasa en la nube. El servidor sirve el repo como Vercel y responde las llamadas de `web/sesion.js` a `/auth/v1` y `/rest/v1`. RLS la aplica Postgres, no el emulador. Las rutas de la app (`/web/catalogo`, `/web/login`…) las resuelve el servidor igual que `vercel.json` (ADR-015): `/web/<nombre>` sirve `web/<nombre>.html` si existe, si no `web/index.html`. Detalle en `sdd/design.md` §8.
+Postgres corre `supabase/schema.sql` y `metricas.sql` **tal cual** en cada arranque, así que lo que pasa acá pasa en la nube. El servidor sirve el repo como Vercel y responde las llamadas de `web/sesion.js` a `/auth/v1` y `/rest/v1`. RLS la aplica Postgres, no el emulador. Las rutas de la app (`/web/catalogo`, `/web/login`…) las resuelve el servidor igual que `vercel.json` (ADR-015): `/web/admin`, `/web/guia` y `/web/demo` sirven su página (la lista `PAGINAS`, la misma de `vercel.json`), y cualquier otro `/web/<nombre>` sirve la app. Detalle en `sdd/design.md` §8.

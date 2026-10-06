@@ -45,6 +45,15 @@ const Rutas = (() => {
     return true;
   }
 
+  /* Una sola URL por vista: /web/inicio y /web/index.html pasan a /web/
+     (0.34.1). Sin recargar y sin sumar un paso al «atrás». */
+  function canonizar(loc, hist){
+    const b = base(loc.pathname), resto = loc.pathname.slice(b.length);
+    if (resto !== "inicio" && resto !== "index.html") return false;
+    hist.replaceState(null, "", b + (loc.search || "") + (loc.hash || ""));
+    return true;
+  }
+
   /* Adónde volver después de entrar: solo una ruta interna bajo la app.
      Un `volver` sin validar es una redirección abierta (la lección de 0.32,
      cuando /%2Fweb terminaba en //web/). */
@@ -54,11 +63,16 @@ const Rutas = (() => {
     let u;
     try { u = new URL(v, "http://interno.invalid"); } catch { return raiz; }
     if (u.origin !== "http://interno.invalid" || !u.pathname.startsWith(raiz) || u.pathname.includes("//")) return raiz;
-    if (u.pathname === raiz + "login") return raiz;
+    // Cualquier variante de login (con barra, con query, en mayúsculas) es
+    // login: volver ahí sería una parada de más (0.34.1).
+    if (u.pathname.toLowerCase().replace(/\/+$/, "") === raiz + "login") return raiz;
     return u.pathname + u.search + u.hash;
   }
 
-  return {VISTAS, base, vistaDe, url, desdeHash, migrar, volverSeguro};
+  return {VISTAS, base, vistaDe, url, desdeHash, migrar, canonizar, volverSeguro};
 })();
 
-if (typeof location !== "undefined" && typeof history !== "undefined") Rutas.migrar(location, history);
+if (typeof location !== "undefined" && typeof history !== "undefined"){
+  Rutas.migrar(location, history);
+  Rutas.canonizar(location, history);
+}

@@ -76,7 +76,7 @@ test("0.34: onboarding y login son vistas con su ruta, no diálogos encima de to
   assert.match(html, /<section class="vista" data-vista="preferencias"/);
   assert.match(html, /<section class="vista" data-vista="login"/);
   assert.doesNotMatch(html, /id="obdlg"/, "el onboarding sigue siendo un <dialog>");
-  assert.match(html, /<script src="rutas\.js\?v=34"><\/script>\s*\n<script src="shell\.js/, "rutas.js tiene que correr primero");
+  assert.match(html, /<script src="rutas\.js\?v=34\.1"><\/script>\s*\n<script src="shell\.js/, "rutas.js tiene que correr primero");
   const tit = leer("web/app.js").match(/const TITULOS = (\{[\s\S]*?\});/);
   assert.ok(tit, "TITULOS en app.js");
   assert.deepEqual(Object.keys(vm.runInNewContext(`(${tit[1]})`)).sort(), [...VISTAS].sort());
@@ -92,11 +92,11 @@ test("ningún link de la web apunta a #/: van a la ruta", () => {
   assert.match(leer("web/inicio.js"), /combinador\?c=/);
 });
 
-test("cache-busting en ?v=34", () => {
+test("cache-busting en ?v=34.1", () => {
   for (const f of ["web/index.html", "web/admin.html", "web/guia.html", "web/demo.html"]){
     const vs = [...leer(f).matchAll(/\?v=([\d.]+)"/g)].map(m => m[1]);
     assert.ok(vs.length > 2, f);
-    assert.deepEqual([...new Set(vs)], ["34"], f);
+    assert.deepEqual([...new Set(vs)], ["34.1"], f);
   }
 });
 
@@ -110,4 +110,41 @@ test("vercel.json resuelve las rutas igual que dev: páginas, app y barra final"
   assert.ok(i("/web/admin.html") < rw.indexOf(app), "la página va antes que el comodín");
   assert.match(app.source, /^\/web\/:[a-z]+\(\[a-z\]\[a-z0-9-\]\*\)$/, app.source);
   assert.ok((v.redirects || []).some(r => /\/web\/:[a-z]+\(\[a-z\]\[a-z0-9-\]\*\)\/$/.test(r.source)), "falta la barra final");
+});
+
+/* 0.34.1 · nits de la review R30 de 0.34. */
+test("/web/inicio se normaliza a /web/ (una sola URL canónica)", () => {
+  for (const [loc, esperado] of [[{pathname: "/web/inicio", search: "", hash: ""}, "/web/"],
+                                 [{pathname: "/web/inicio", search: "?x=1", hash: ""}, "/web/?x=1"],
+                                 [{pathname: "/web/index.html", search: "", hash: ""}, "/web/"]]){
+    let url = null;
+    assert.equal(Rutas.canonizar(loc, {replaceState: (_a, _b, u) => { url = u; }}), true, loc.pathname);
+    assert.equal(url, esperado);
+  }
+  assert.equal(Rutas.canonizar({pathname: "/web/", search: "", hash: ""}, {replaceState(){ throw new Error("no"); }}), false);
+  assert.equal(Rutas.canonizar({pathname: "/web/catalogo", search: "", hash: ""}, {replaceState(){ throw new Error("no"); }}), false);
+  assert.match(leer("web/rutas.js"), /Rutas\.canonizar\(location, history\)/, "rutas.js no canoniza al cargar");
+});
+
+test("volver a cualquier variante de login cae en /web/", () => {
+  for (const v of ["/web/login/", "/web/login?volver=/web/admin", "/web/login#x", "/web/login/?a=1", "/web/LOGIN"])
+    assert.equal(Rutas.volverSeguro(v, "/web/"), "/web/", v);
+  assert.equal(Rutas.volverSeguro("/web/logins", "/web/"), "/web/logins");
+});
+
+test("onboarding: «Prefiero no decir» también en el último paso", () => {
+  const src = leer("web/perfil.js");
+  assert.doesNotMatch(src, /\$\("obSaltar"\)\.hidden\s*=/, "«Prefiero no decir» se esconde en algún paso");
+});
+
+/* Paridad dev ↔ Vercel: las páginas que se sirven por nombre son una lista
+   explícita, la misma en los dos lados. */
+test("dev y vercel.json resuelven las mismas páginas por nombre", () => {
+  const v = JSON.parse(leer("vercel.json"));
+  const deVercel = v.rewrites.filter(r => /^\/web\/[a-z-]+$/.test(r.source))
+    .map(r => { assert.equal(r.destination, r.source + ".html", r.source); return r.source.slice(5); }).sort();
+  const m = leer("dev/servidor.mjs").match(/export const PAGINAS = (\[[^\]]*\]);/);
+  assert.ok(m, "dev/servidor.mjs no exporta PAGINAS");
+  assert.deepEqual(JSON.parse(m[1]).sort(), deVercel);
+  assert.ok(deVercel.includes("admin"));
 });

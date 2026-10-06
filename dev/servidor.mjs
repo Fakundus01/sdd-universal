@@ -29,6 +29,12 @@ const HEADERS = {
   "Cache-Control": "no-store"
 };
 
+/* Las páginas que se sirven por nombre sin extensión (/web/admin →
+   admin.html). Es la misma lista que los rewrites de vercel.json, y un test
+   (web/tests/rutas.test.mjs) las compara: si difieren, dev y Vercel
+   responderían distinto a la misma URL. Lo demás de /web/<nombre> es la app. */
+export const PAGINAS = ["admin", "guia", "demo"];
+
 const CONFIG_LOCAL = `// Servido por dev/servidor.mjs en lugar de web/supabase-config.js (ADR-012).
 // Apunta al entorno local: el mismo origen que la página.
 const SUPABASE = {url: location.origin, key: "local-anon"};
@@ -70,7 +76,7 @@ function estatico(ruta, res){
   const vista = ruta.match(/^\/web\/([a-z][a-z0-9-]*)(\/)?$/);
   if (vista){
     if (vista[2]) return enviar(res, 308, null, {Location: `/web/${vista[1]}`});
-    const pagina = archivoDe(`/web/${vista[1]}.html`) || join(RAIZ, "web", "index.html");
+    const pagina = (PAGINAS.includes(vista[1]) && archivoDe(`/web/${vista[1]}.html`)) || join(RAIZ, "web", "index.html");
     return enviar(res, 200, readFileSync(pagina), {"Content-Type": TIPOS[".html"]});
   }
 

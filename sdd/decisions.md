@@ -203,7 +203,7 @@
 
 **Decisión:**
 - Una ruta por vista bajo `/web/` (`contracts.md` §7). `pushState` al navegar, `popstate` al ir atrás/adelante; se recargan y se comparten.
-- **El servidor resuelve:** `/web/<nombre>` sin extensión sirve `web/<nombre>.html` si existe, si no `web/index.html`; con barra final, 308 sin barra. En `dev/servidor.mjs` y en `vercel.json` (rewrites), con el mismo patrón cerrado (`[a-z][a-z0-9-]*`, una sola parte), así que no se abre nada nuevo: ni otro archivo, ni path traversal.
+- **El servidor resuelve:** `/web/<nombre>` sin extensión sirve `web/<nombre>.html` solo para las páginas de una lista explícita (`admin`, `guia`, `demo`: `PAGINAS` en `dev/servidor.mjs`, la misma que los rewrites de `vercel.json`, y un test las compara), y si no `web/index.html`; con barra final, 308 sin barra. En `dev/servidor.mjs` y en `vercel.json` (rewrites), con el mismo patrón cerrado (`[a-z][a-z0-9-]*`, una sola parte), así que no se abre nada nuevo: ni otro archivo, ni path traversal.
 - **Compatibilidad:** `rutas.js` convierte `#/x?…` en `/web/x?…` al cargar. Las páginas aparte (guía, demo, tablero) linkean a las rutas nuevas.
 - **Métricas sin migración:** el detalle de cambio de vista se queda en `#/<vista>|clase`, como etiqueta. No cambia el check de `eventos`, ni los outcomes, ni el barrido del test.
 

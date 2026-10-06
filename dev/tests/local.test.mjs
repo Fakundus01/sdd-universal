@@ -355,3 +355,16 @@ test("rutas reales: /web/<vista> recarga con la app, y nada más se abre", async
   assert.equal((await get("/web/app.js")).status, 200);
   assert.equal((await get("/web/index.html")).status, 200);
 });
+
+test("0.34.1: dev sirve por nombre solo las páginas de la lista, como Vercel", async () => {
+  const {PAGINAS} = await import("../servidor.mjs");
+  for (const p of PAGINAS){
+    const r = await fetch(`${entorno.url}/web/${p}`);
+    assert.equal(r.status, 200, p);
+    assert.doesNotMatch(await r.text(), /<section class="vista" data-vista="catalogo"/, `${p} sirvió la app`);
+  }
+  // demo-con-sdd.html existe, pero Vercel no lo resuelve por nombre: dev tampoco.
+  const r = await fetch(`${entorno.url}/web/demo-con-sdd`);
+  assert.equal(r.status, 200);
+  assert.match(await r.text(), /<section class="vista" data-vista="catalogo"/, "dev sirvió demo-con-sdd.html por nombre");
+});
