@@ -13,23 +13,17 @@ graph LR
   L-1 & L-2 & L-3 & L-4 & L-6 --> L-5[L-5 cierre]
 ```
 
-## Bitácora (una línea por vuelta)
-- v0 · 25f9ec1 · tarjetas escritas; línea de base: web/tests 47/49 (los 2 de R33), harness/tests OK, verify --quick FAIL (sin harness.config.json → L-6)
-- v0 · 4e09c8d · dev/tests 17/17 (objetivo 3 en verde desde la base)
-
-- v1 · L-1 done (review APPROVED @ 2ede9cc, merge); web/tests 49/49 en la rama del loop
-- v2 · L-6 blocked: el implementer copió el master a `sdd/SDD-MASTER.md` (fuera de zona, segunda fuente de verdad) y cambió estados de tarjetas. No se mergea. Causa real: `harness/checks.py:135` y `config.py:34` tienen fija la ruta `sdd/SDD-MASTER.md`; el paquete lo tiene en la raíz. Hace falta una clave de config en el arnés → cambio de contrato (harness.md §2) → DRIFT al owner
-- v3 · L-3 CHANGES_REQUESTED (review @ 1975704): texto del EN viejo en §6.1 y `depende_de` traducido a `depends_on` en §5 → re-despachado al implementer (iteración 2/3)
-- v4 · L-3 done (2.ª vuelta de review APPROVED, merge); espejos EN en 0.35
-- v5 · L-2 CHANGES_REQUESTED: falta el test de `done` con dependencia no done (mutante vivo) y que un FAIL del grafo apague el OK de tarjetas; más formatos de `depende_de` que se pierden en silencio → re-despachado (iteración 2/3)
-- v6 · L-4 done (review APPROVED @ addc1f6, merge); smoke en la rama del loop: PASS, 22 pasos, 0 errores de consola
-- (L-2) 2.º review CHANGES_REQUESTED @ 1c19422: regresión, `Card.parse` tira UnboundLocalError con una tarjeta sin frontmatter → iteración 3/3
-- v5 · L-2 done (3.er review APPROVED @ d0cfe53, merge); harness/tests OK, web/tests 49/49 en la rama del loop
-
-- DRIFT de L-6 resuelto por el owner: opción A → `harness.md` §2 con la clave `master`; L-7 nueva (arnés), L-6 vuelve a pending con `depende_de: [L-7]`, tier MEDIO y rama nueva `v0.35-L-6b`
-- (L-7) review CHANGES_REQUESTED @ 3f29cc3: M7, M9 y M10 vivos (3 de los 4 usos del master configurado sin test); `verify.py` entra a la zona → iteración 2/3
-- v6 · L-7 done (2.º review APPROVED, merge); harness/tests OK en la rama del loop. L-6 despachada (rama v0.35-L-6b)
-- (L-6) blocked bien dado: 7 FAIL de rutas citadas, que eran citas a rutas de un proyecto normal (sdd/SDD-MASTER.md, sdd/sdd-lite.md), un ejemplo inventado (prompts/nuevo.md) y dev/.data (solo existe en runtime). El leader las reescribe con `<proyecto>/…`/`<repo>/…` en AGENTS.md, CLAUDE.md, sdd/testing.md y L-7; con la config de L-6: verify --quick VERDE (0 FAIL, 1 WARN de e2e sin registrar)
+## Bitácora (vuelta = tarjeta cerrada o bloqueada, `loops.md` §3)
+- base · 25f9ec1 · web/tests 47/49 (los 2 de R33), harness/tests OK, verify --quick ROJO (sin config → L-6); 4e09c8d · dev/tests 17/17
+- v1 · L-1 done (review APPROVED @ 2ede9cc); web/tests 49/49
+- v2 · L-6 blocked: copió el master a `sdd/` y cambió estados de tarjetas (fuera de zona). Causa: ruta del master fija en el arnés → DRIFT al owner
+- v3 · L-3 done (1.er review CHANGES_REQUESTED: texto del EN viejo y `depends_on`; 2.º APPROVED @ 88edd90)
+- v4 · L-4 done (APPROVED @ addc1f6); smoke PASS, 22 pasos
+- v5 · L-2 done (CHANGES_REQUESTED ×2: mutantes vivos, después UnboundLocalError; APPROVED @ d0cfe53)
+- DRIFT de L-6 → opción A del owner: clave `master` en `harness.md` §2; L-7 nueva
+- v6 · L-7 done (CHANGES_REQUESTED: M7/M9/M10 vivos; APPROVED @ 2840dd0)
+- v7 · L-6 done (1.ª vuelta blocked bien dado por citas a rutas de un proyecto normal, que el leader corrigió; APPROVED @ b0c8bbb); verify --quick VERDE 0/0
+- v8 · L-5 cierre: changelog 0.35.0, status (F26, D2 cerrada), testing.md; review del loop
 
 ## Próximo paso
-Despachar L-7 → review → L-6 → review → L-5 (cierre). Vueltas usadas 5/8; quedan justas: L-7, L-6, L-5.
+Review independiente del loop (R30) → `review_dev-de-10.md`. Con APPROVED: loop `cumplido` y HANDBACK al owner pidiendo OK para push y merge.

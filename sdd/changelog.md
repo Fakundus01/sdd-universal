@@ -4,6 +4,30 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ---
 
+## [0.35.0] — 2026-10-06 · paquete + web + arnés
+
+Loop engineering y grafo de tarjetas (S39, S40), hechos con el primer loop con contrato del paquete (`sdd/loops/dev-de-10.md`): 7 tarjetas en un grafo, implementers y reviewers independientes en worktrees, 8 de 8 vueltas.
+
+### Agregado
+- **R33 · LOOP-CON-CONTRATO** en el master (y COMPACT y espejos EN): un loop autónomo se escribe antes en `sdd/loops/<nombre>.md` (disparador, objetivo medible, verificación, regla de corte, memoria); aprobarlo autoriza commits solo en su rama. `loops.md` nuevo.
+- **Grafo de tarjetas** (`orchestration.md` §10): `depende_de` en la tarjeta, despacho por niveles, bloqueo que se propaga; las tarjetas en paralelo van cada una en su rama.
+- `verify.py` revisa el grafo (L-2): dependencia que no existe, ciclos (DFS iterativo, con tope y mensaje recortado), despacho fuera de orden, `depende_de` en un formato no reconocido; y una tarjeta sin frontmatter da FAIL, nunca una excepción.
+- Clave **`master`** en `harness.config.json` (L-7, DRIFT de L-6 con la opción A del owner): el núcleo puede vivir fuera de `sdd/`; la ruta se contiene dentro del repo (léxica y con `resolve()`).
+- El paquete **usa su propio arnés** (L-6): `harness.config.json` en la raíz; `verify.py --quick` en verde, `e2e` registrado.
+- **Smoke de la interfaz en CI** (L-4, cierra D2): `web/tests/smoke/smoke.mjs`, Chrome headless por CDP sin dependencias.
+
+### Modificado
+- La web muestra 33 reglas y 40 situaciones, con R33 desactivable en el configurador; `og.png` regenerada; `?v=35` (L-1).
+- `SDD-MASTER-EN.md` y `SDD-COMPACT-EN.md` al día con el canónico 0.35: estaban en 0.30 (L-3).
+- Citas a rutas de un proyecto normal escritas como `<proyecto>/…` en `AGENTS.md`, `CLAUDE.md` y `sdd/testing.md`, para que el chequeo de rutas citadas no las tome por rutas de este repo.
+
+### Verificado
+- Línea de base `83e798f` + MD de 0.35: `web/tests` 47/49 (los 2 rojos de R33), `verify.py --quick` ROJO (sin config).
+- Cierre: `web/tests` 49/49, `harness/tests` OK, `dev/tests` 17/17, smoke PASS (22 pasos, 0 errores de consola), `verify.py --quick` VERDE 0 FAIL 0 WARN. Reviews en `sdd/progress/v0.35-L-*/`; review del loop en `sdd/progress/v0.35-loops-grafo/review_dev-de-10.md`.
+- Lo que atajaron los reviewers: texto del EN viejo y `depende_de` traducido a `depends_on` (L-3); dos mutantes vivos y después un `UnboundLocalError` con una tarjeta sin frontmatter (L-2); tres usos del master configurado sin test (L-7). Y el leader rechazó la primera vuelta de L-6, que copió el master a `sdd/` y cambió estados de tarjetas.
+
+---
+
 ## [0.34.1] — 2026-10-05 · web
 
 Los nits de la review R30 de 0.34 (aprobada).

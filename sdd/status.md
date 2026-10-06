@@ -1,6 +1,6 @@
 # status.md · SDD Hub
 
-**Versión:** 0.34.1 · **Última actualización:** 2026-10-05 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
+**Versión:** 0.35.0 · **Última actualización:** 2026-10-06 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
 
 ## Features
 
@@ -33,7 +33,9 @@
 | F24 | Entrar opcional en `/web/login` (ADR-014) | Complete | 100% | 0.34: `volver` solo a rutas internas; admin sin sesión manda acá |
 | F25 | Onboarding como página (`/web/preferencias`) | Complete | 100% | 0.34: la primera visita entra ahí sin bloquear; «Rehacer» lleva ahí |
 
-**Avance total: 24 / 24 features vigentes = 100%** (F19 retirada)
+| F26 | R33 y grafo de tarjetas en la web y el arnés (loop `dev-de-10`) | Complete | 100% | 0.35: R33 en el configurador; `verify.py` revisa `depende_de` y ciclos; espejos EN al día; el paquete usa su propio arnés (clave `master`); smoke de la interfaz en CI (D2) |
+
+**Avance total: 25 / 25 features vigentes = 100%** (F19 retirada)
 
 ## Bloqueos
 
@@ -48,7 +50,7 @@ El 2026-10-03 todas estaban vencidas. Con el OK del owner («hacé las deudas qu
 | ID | Deuda | Aceptada | Revisar el | Qué la dispara | Hoy (2026-10-03) |
 |---|---|---|---|---|---|
 | ~~D1~~ | ~~`index.html` pasa las 300 líneas de JS que pide R05~~ — **cerrada el 2026-10-03 (0.31)**: las 1123 líneas inline pasaron a seis archivos de 105 a 237 líneas sin la cabecera (ver `design.md` §2) | — | — | — | Smoke en Chrome headless con salida idéntica antes y después, más un rojo forzado con el orden de carga invertido |
-| D2 | Tests automatizados **parciales**: el ZIP y la sincronía de reglas tienen suite (0.31, `web/tests/`, en CI); la UI se sigue verificando en navegador | 2026-08-15 | 2026-12-01 | Una regresión de UI que llegue a producción: ahí el smoke por CDP (ver `testing.md`) entra al repo y a CI | Reaceptada en versión reducida: lo que ya se había roto (reglas) y lo invisible (el ZIP) ya están cubiertos |
+| ~~D2~~ | ~~Tests automatizados parciales: la UI se verificaba a mano en el navegador~~ — **cerrada el 2026-10-06 (0.35, tarjeta L-4)**: el smoke por CDP está en `web/tests/smoke/` y corre en CI | — | — | — | 22 pasos, rojo forzado con una excepción y con un `console.error`, sin dependencias |
 | ~~D3~~ | ~~Los outcomes O1–O4 de la spec no se están midiendo~~ — **cerrada el 2026-10-05 (0.33, ADR-013)**: el panel calcula O1, O2 y O4 de los últimos 30 días contra la meta con los contadores propios, y O3 queda manual | — | — | — | Falta lo que no se automatiza: hacer O3 con 3 personas y anotarlo acá |
 | ~~D4~~ | ~~Traducción al inglés~~ — **cerrada el 2026-08-15**: núcleo (master + compact) en inglés como espejo del canónico. El resto del paquete queda en español a propósito | — | — | El espejo se actualiza con cada release del master | — |
 | ~~D5~~ | ~~`web/og.png` se generó con un script que no quedó en el repo~~ — **cerrada el 2026-10-03 (0.31)**: `web/og.py` (Pillow) la regenera con el mismo diseño y toma el número de reglas del master | — | — | — | Decía «26 reglas» desde 0.11; ahora dice 32 |
@@ -56,6 +58,8 @@ El 2026-10-03 todas estaban vencidas. Con el OK del owner («hacé las deudas qu
 
 ## Próximo ciclo
 
+0. **Owner:** OK para el push de `v0.35-loops-grafo` y el merge a `main` (R01, R32). El loop `dev-de-10` está cumplido (`sdd/loops/dev-de-10.md`).
+0b. v0.36: Obsidian (el repo como vault y un vault «Cerebro» entre proyectos) con RAG local primero y OpenAI después, cada uno con su fase de MD.
 1. Ejemplos de punta a punta con el SDD (e-commerce, landing, ticketera con IA, chatbot), cada uno en su repo: lo que falle ahí entra a `scenarios.md` (R20).
 2. **Owner:** hacer O3 (3 personas ajenas, 2 minutos cada una) y anotar el resultado acá; decidir D6 (dominio para el SMTP), que pesa todavía menos en local, donde no hay mails.
 3. Cuando la web salga a otros: reactivar Supabase, correr los dos `.sql` y repetir la prueba de dos cuentas (ver Bloqueos).
