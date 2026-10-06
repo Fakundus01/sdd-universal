@@ -96,7 +96,9 @@ test("H4: la plantilla sdd-lite.md viaja con las otras de prompts/", async () =>
   for (const nivel of ["PRO", "NOVATO"]){
     const {zip, nombres} = await armar({nivel});
     assert.ok(nombres.includes("sdd/prompts/sdd-lite.md"), `${nivel}: falta sdd/prompts/sdd-lite.md`);
-    assert.equal(lf(zip.get("prueba/sdd/prompts/sdd-lite.md").datos.toString("utf8")), lf(leer("prompts/sdd-lite.md")));
+    // C-11 reescribe los links al empaquetar: se compara el texto, no los destinos.
+    const sinLinks = t => lf(t).replace(/\[([^\]]+)\]\([^)\s]+\.md[^)\s]*\)/g, "$1");
+    assert.equal(sinLinks(zip.get("prueba/sdd/prompts/sdd-lite.md").datos.toString("utf8")), sinLinks(leer("prompts/sdd-lite.md")));
   }
 });
 
