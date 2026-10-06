@@ -25,5 +25,7 @@ graph LR
 - v7 · L-6 done (1.ª vuelta blocked bien dado por citas a rutas de un proyecto normal, que el leader corrigió; APPROVED @ b0c8bbb); verify --quick VERDE 0/0
 - v8 · L-5 cierre: changelog 0.35.0, status (F26, D2 cerrada), testing.md; review del loop
 
+- cierre · review del loop APPROVED @ 6b82aef → loop `cumplido`
+
 ## Próximo paso
-Review independiente del loop (R30) → `review_dev-de-10.md`. Con APPROVED: loop `cumplido` y HANDBACK al owner pidiendo OK para push y merge.
+OK del owner para push de `v0.35-loops-grafo` y merge a `main` (R01, R32); mirar la primera corrida del job `smoke` en CI. Después: v0.36 Obsidian + RAG (fase MD).

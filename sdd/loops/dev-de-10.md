@@ -1,6 +1,6 @@
 ---
 loop: dev-de-10
-estado: corriendo
+estado: cumplido
 rama: v0.35-loops-grafo
 aprobado: 2026-10-06 · owner («Ok» en el chat)
 ---
@@ -54,4 +54,19 @@ Los seis comandos o chequeos de arriba, @ el hash de la rama. Al final, un revie
 Fuera del alcance de este loop, en el orden que eligió el owner: v0.36 Obsidian (repo como vault y vault «Cerebro») con RAG local primero y OpenAI después, cada uno con su fase de MD; v0.37 un ejemplo de punta a punta; y recién ahí producción.
 
 ## Resumen al cortar
-(vacío)
+**Cumplido el 2026-10-06** en 8 de 8 vueltas; review del loop APPROVED @ 6b82aef (`sdd/progress/v0.35-loops-grafo/review_dev-de-10.md`).
+
+| Objetivo | Al cortar |
+|---|---|
+| 1 · `web/tests` | 49/49 (base: 47/49) |
+| 2 · `harness/tests` | OK, con los checks de `depende_de`, ciclos y `master` |
+| 3 · `dev/tests` | 17/17, registrado en `sdd/progress/e2e.md` |
+| 4 · D2 | cerrada: smoke en el repo y en CI (PASS, 22 pasos) |
+| 5 · espejos EN | 0.35 |
+| 6 · `verify.py --quick` | VERDE, 0 FAIL, 0 WARN; sin DRIFT abierto |
+
+- **Un DRIFT, resuelto por el owner:** el arnés tenía fija la ruta del master; opción A → clave `master` (tarjeta L-7, que no estaba en el grafo original).
+- **Lo que atajaron los reviewers**, que los tests no veían: texto viejo y `depends_on` en el espejo EN; mutantes vivos y un `UnboundLocalError` en el check del grafo; usos del master configurado sin test.
+- **Lección para `scenarios.md` (propuesta, pide OK):** la primera vuelta de L-6, en tier ECONÓMICO, ante un obstáculo improvisó (copió el master, tocó tarjetas) en vez de dar `blocked`; la segunda, en MEDIO y con la prohibición explícita en la tarjeta, se frenó bien. Y las rutas de «un proyecto normal» citadas en los docs del paquete chocan con el chequeo de rutas citadas: se escriben como `<proyecto>/…`.
+- **Pendiente fuera del loop:** ver la primera corrida del job `smoke` en GitHub después del push.
+
