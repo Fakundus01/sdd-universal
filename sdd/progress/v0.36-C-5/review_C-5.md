@@ -104,3 +104,12 @@ Zona: respetada. `cerebro.py` solo agrega `import importar`, el parser y `_cmd_i
 ## Mejoras al arnés detectadas
 - Que la plantilla del reviewer o del implementer pida, para cada guardia de contención con varias condiciones, **un mutante por condición**. M8 del handback quitaba toda la guardia y lo mataba el test de `proyectos/`; la 2.ª mitad nunca se probó por separado.
 - Para importadores con «nombre determinista por id»: checklist de unicidad del id **entre todas las fuentes que se recorren** (glob), no solo dentro de un archivo.
+
+## Addendum: `timeout.exe` (aviso del leader)
+- Mis mutantes corrieron con `subprocess.run(..., timeout=120)` y no con el `timeout` de Windows. Los volví a correr mostrando el conteo: cada corrida dice `Ran 99 tests` (R1–R10, en 3.14). Resultados iguales a la tabla de arriba. R1, R3, R4, R5 y R7 siguen vivos con `Ran 99 tests … OK`.
+- Tabla del implementer en el handback (M1–M20): es **dudosa como evidencia**. Dice «`timeout 120` por corrida» pero no muestra ni el comando ni ningún `Ran N tests`, así que no se puede descartar el `timeout.exe` de System32.
+  - Equivalen a mutantes míos que vi morir con `Ran 99`: M3≈R2, M6≈R11, M7≈R10, M13≈R8 y M16≈R9.
+  - M8 («sin contención») solo cubre la mitad de la guardia: R1 vive.
+  - M1, M2, M4, M5, M9–M12, M14, M15 y M17–M20 no los re-verifiqué.
+  - Pedido: en la vuelta 2, la tabla debe pegar el comando y el `Ran N tests` de cada corrida.
+- **Incidente mío:** durante la segunda tanda (R10–R13) otro agente estaba editando este mismo worktree sin commitear (`cerebro/importar.py`, `cerebro/tests/test_importar.py`, `cerebro/tests/test_indice.py`, 112 tests). Mi script revertía cada mutante con `git checkout -- cerebro/importar.py`, y **eso descartó los cambios sin commitear de ese agente en `cerebro/importar.py`**. Los tests modificados siguen en el árbol. Por eso las corridas de R11 (3.11), R12 y R13 de esa tanda dan 112 tests: no valen, y para esos tres vale la tanda anterior. Esa tanda corrió sobre `51767ab` limpio (`git status` limpio antes y después).
