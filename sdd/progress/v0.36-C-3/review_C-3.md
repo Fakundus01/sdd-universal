@@ -1,5 +1,65 @@
-# Review C-3 @ 7c5d48c
-**Veredicto:** CHANGES_REQUESTED (vuelta 3; las vueltas 1 @ 1d11328 y 2 @ 3ca371f también fueron CHANGES_REQUESTED, abajo)
+# Review C-3 @ 1c795aa
+**Veredicto:** APPROVED (vuelta 4; las vueltas 1 @ 1d11328, 2 @ 3ca371f y 3 @ 7c5d48c fueron CHANGES_REQUESTED, abajo)
+
+## Vuelta 4 @ 1c795aa
+
+Diff revisado: `git diff 042afbf..1c795aa`. Toca solo `cerebro/tests/test_local.py` (+21) y `sdd/progress/v0.36-C-3/handback_C-3.md`. `embedders.py` no cambia desde `7c5d48c` y `review_C-3.md` no se tocó. Zona OK.
+
+### Verificación re-ejecutada
+```text
+$ cerebro/.venv/Scripts/python -m unittest discover -s cerebro/tests -v
+test_mismo_sentido_con_otras_palabras_queda_mas_cerca_que_una_frase_ajena (test_local.TestLocalIntegracion...) ... ok
+test_cache_por_defecto_y_variable_de_entorno (test_local.TestLocalUnitario...) ... ok
+test_el_cargador_real_le_pasa_modelo_y_cache_a_fastembed (test_local.TestLocalUnitario...) ... ok
+Ran 97 tests in 4.324s
+OK
+$ python -m unittest discover -s cerebro/tests   (sistema, sin fastembed)
+OK (skipped=2)        # Ran 97
+$ python harness/verify.py --changed
+VERDE — 0 FAIL, 0 WARN
+```
+
+### Tests restaurados
+- `test_el_cargador_real_le_pasa_modelo_y_cache_a_fastembed` (`test_local.py:233`). Reemplaza `embedders._importar_fastembed` por una clase falsa que registra los kwargs. Exige que `embed([])` no cargue nada y que la carga pida exactamente `{"model_name": MODELO_LOCAL, "cache_dir": str(cache)}`. Así cubre `embedders.py:93-94`. No usa red, no toca el entorno y no baja modelos.
+- `test_cache_por_defecto_y_variable_de_entorno` (`test_local.py:246`). Comprueba que con `CEREBRO_MODELOS` devuelve esa ruta, y que sin ella devuelve exactamente `Path.home()/.cache/cerebro/modelos`, fuera de `tempfile.gettempdir()`. Así cubre `embedders.py:67-71`. Es más estricto que el original y solo calcula rutas.
+- El handback (sección «Vuelta 4») declara el borrado de la vuelta 3, el motivo de la pérdida (mutantes con `test_local.py` solo, Ran 22) y la restauración. Su nueva tabla corre la suite completa (Ran 97) con el venv y con el Python del sistema.
+
+### Mutantes (los 17 míos; uno por vez sobre `cerebro/embedders.py`; `subprocess.run(..., timeout=120)`; suite COMPLETA; `HTTP(S)_PROXY=http://127.0.0.1:9` para que ninguno baje un modelo; revertidos)
+| # | Mutante | venv (sin red) | sistema (sin fastembed) |
+|---|---|---|---|
+| M1 | aviso a stdout | muerto, Ran 97, failures=1 | — |
+| M2 | import ansioso | muerto, Ran 97, failures=2 | — |
+| M3 | aviso después de cargar | muerto, Ran 97, failures=2 | — |
+| M4 | sin re-raise de `ErrorEmbedder` | muerto, Ran 97, failures=1 | — |
+| M5 | huella sin `.lower()` | muerto, Ran 97, failures=1 | — |
+| M6 | `OSError` → `True` | muerto, Ran 97, failures=4 | — |
+| M7 | `any` → `all` en dim | muerto, Ran 97, failures=1 | — |
+| M8 | sin chequeo de cantidad | muerto, Ran 97, failures=1 | — |
+| M9 | `CEREBRO_MODELOS` ignorado | **muerto**, Ran 97, failures=1 (`test_cache_por_defecto_...`) | muerto, Ran 97, failures=1, skipped=2 |
+| M10 | `obtener("local")` → `Falso()` | muerto, Ran 97, failures=1 | — |
+| M11 | `glob("*/*")` | muerto, Ran 97, failures=1 | — |
+| M13 | sin `setdefault` | muerto, Ran 97, failures=2 | — |
+| M14 | `setdefault` pisa | muerto, Ran 97, failures=1 | — |
+| M15 | `cache_dir=None` | **muerto**, Ran 97, failures=1 (`test_el_cargador_real_...`) | muerto, Ran 97, failures=1, skipped=2 |
+| M16 | `model_name` fijo a L6 | **muerto**, Ran 97, failures=1 + errors=1 (`test_el_cargador_real_...` + integración sin red) | **muerto sin red ni fastembed**, Ran 97, failures=1, skipped=2 (`test_el_cargador_real_...`) |
+| M17 | cache por defecto en el temp | **muerto**, Ran 97, failures=1 + errors=1 | muerto, Ran 97, failures=1, skipped=2 |
+| M18 | `Local` ignora la cache inyectada | muerto, Ran 97, failures=10 | — |
+
+17/17 muertos. Limpieza: bajo M17, el intento de carga de la integración creó `%TEMP%\cerebro\modelos`, vacío, a las 10:15:32, en esta corrida. Lo borré. `~/.cache/cerebro/modelos` sigue con solo el modelo multilingüe y `git status` está limpio.
+
+### Checkpoints vuelta 4
+- C1: [x] 97/97 en el venv (integración corrida) y 97 (2 skips con motivo) en el sistema; `verify.py --changed` VERDE.
+- C2: [x] los cinco criterios se cumplen (evidencia de las vueltas 1–3, sin cambios de código desde `7c5d48c`); zona respetada.
+- C3: [x] carga perezosa, aviso antes de la carga y por stderr, cache persistente, H7 resuelto, README fiel.
+- C4: [x] 17/17 mutantes muertos con la suite completa. Lo que se perdió en la vuelta 3 está cubierto otra vez, sin red ni modelo.
+- C5: [x] el handback declara el borrado y la restauración; árbol limpio; `.venv` y modelo fuera de git.
+
+### Cambios requeridos
+Ninguno.
+
+### Observaciones (no bloquean)
+- `TestLocalIntegracion` usa el cache real del usuario y baja unos 220 MB si falta. Está documentado en el handback y en el README, y se redirige con `CEREBRO_MODELOS`.
+- Para el leader: en los mutantes que tocan rutas o modelos conviene correr con un proxy inválido, como hizo el implementer en la vuelta 4, para que la integración no baje nada fuera del repo.
 
 ## Vuelta 3 @ 7c5d48c
 
