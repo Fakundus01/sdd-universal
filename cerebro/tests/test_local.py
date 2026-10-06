@@ -5,7 +5,10 @@ from __future__ import annotations
 import importlib.util
 import math
 import os
+import contextlib
+import io
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -46,6 +49,12 @@ class TestLocalUnitario(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.cache = Path(self._tmp.name) / "modelos"
+
+    def modelo_bajado(self) -> Path:
+        snap = self.cache / "models--qdrant--paraphrase-multilingual-MiniLM-L12-v2-onnx-Q" / "snapshots" / "abc"
+        snap.mkdir(parents=True)
+        (snap / "model_optimized.onnx").write_bytes(b"x")
+        return snap
 
     def test_nombre_y_dim_son_los_del_modelo_multilingue(self):
         e = Local()
@@ -92,13 +101,15 @@ class TestLocalUnitario(unittest.TestCase):
         self.assertIn("una sola vez", avisos[0])
 
     def test_con_el_modelo_en_cache_no_avisa(self):
-        (self.cache / "models--qdrant--paraphrase-multilingual-MiniLM-L12-v2-onnx-Q" / "snapshots" / "abc").mkdir(parents=True)
+        self.modelo_bajado()
         avisos: list[str] = []
         Local(cargar=cargador(Modelo()), avisar=avisos.append, cache=self.cache).embed(["hola"])
         self.assertEqual(avisos, [])
 
     def test_cache_con_otro_modelo_igual_avisa(self):
-        (self.cache / "models--otro--modelo").mkdir(parents=True)
+        otro = self.cache / "models--otro--modelo" / "snapshots" / "abc"
+        otro.mkdir(parents=True)
+        (otro / "model.onnx").write_bytes(b"x")
         avisos: list[str] = []
         Local(cargar=cargador(Modelo()), avisar=avisos.append, cache=self.cache).embed(["hola"])
         self.assertEqual(len(avisos), 1)
@@ -120,7 +131,96 @@ class TestLocalUnitario(unittest.TestCase):
         with mock.patch.dict(sys.modules, {"fastembed": None}):
             with self.assertRaises(ErrorEmbedder) as ctx:
                 e.embed(["hola"])
-        self.assertIn("pip install -r cerebro/requirements.txt", str(ctx.exception))
+        msg = str(ctx.exception)
+        self.assertTrue(msg.startswith("falta `fastembed`"), msg)
+        self.assertIn("pip install -r cerebro/requirements.txt", msg)
+        self.assertNotIn("internet", msg)
+
+    def test_aviso_sale_antes_de_la_carga_del_modelo(self):
+        eventos: list[str] = []
+
+        def cargar(nombre, cache):
+            eventos.append("carga")
+            return Modelo()
+
+        e = Local(cargar=cargar, avisar=lambda m: eventos.append("aviso"), cache=self.cache)
+        e.embed(["hola"])
+        self.assertEqual(eventos, ["aviso", "carga"])
+
+    def test_aviso_sale_aunque_la_carga_falle(self):
+        avisos: list[str] = []
+
+        def sin_red(nombre, cache):
+            raise OSError("sin red")
+
+        with self.assertRaises(ErrorEmbedder):
+            Local(cargar=sin_red, avisar=avisos.append, cache=self.cache).embed(["hola"])
+        self.assertEqual(len(avisos), 1)
+
+    def test_el_aviso_va_a_stderr_y_stdout_queda_limpio(self):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            Local(cargar=cargador(Modelo()), cache=self.cache).embed(["hola"])
+        self.assertEqual(out.getvalue(), "")
+        self.assertIn(embedders.MODELO_LOCAL, err.getvalue())
+
+    def test_importar_el_nucleo_no_importa_fastembed(self):
+        codigo = ("import sys; sys.path.insert(0, sys.argv[1]); import embedders, indice, notas, cerebro; "
+                  "embedders.obtener('local'); assert 'fastembed' not in sys.modules, 'fastembed importado'")
+        r = subprocess.run([sys.executable, "-I", "-c", codigo, str(Path(embedders.__file__).parent)],
+                           capture_output=True, text=True, timeout=60)
+        self.assertEqual(r.returncode, 0, r.stderr)
+
+    def test_snapshots_vacio_o_sin_onnx_no_cuenta_como_bajado(self):
+        snap = self.modelo_bajado()
+        (snap / "model_optimized.onnx").unlink()
+        for caso in ("sin onnx", "snapshots vacio"):
+            with self.subTest(caso):
+                if caso == "snapshots vacio":
+                    snap.rmdir()
+                avisos: list[str] = []
+                Local(cargar=cargador(Modelo()), avisar=avisos.append, cache=self.cache).embed(["hola"])
+                self.assertEqual(len(avisos), 1)
+
+    def test_convierte_cualquier_secuencia_numerica_a_lista_de_floats(self):
+        class Enteros(Modelo):
+            def embed(self, textos):
+                return [tuple([1] * 384) for _ in textos]
+
+        v = Local(cargar=cargador(Enteros()), avisar=lambda m: None, cache=self.cache).embed(["a"])[0]
+        self.assertIsInstance(v, list)
+        self.assertTrue(all(type(x) is float for x in v))
+
+    def test_distinta_cantidad_de_vectores_es_error(self):
+        class Corto(Modelo):
+            def embed(self, textos):
+                return list(super().embed(textos))[:-1]
+
+        e = Local(cargar=cargador(Corto()), avisar=lambda m: None, cache=self.cache)
+        with self.assertRaises(ErrorEmbedder):
+            e.embed(["uno", "dos"])
+
+    def test_un_solo_vector_de_dimension_mezclada_es_error(self):
+        class Mezclado(Modelo):
+            def embed(self, textos):
+                return [[1.0] * 384, [1.0] * 10]
+
+        e = Local(cargar=cargador(Mezclado()), avisar=lambda m: None, cache=self.cache)
+        with self.assertRaises(ErrorEmbedder):
+            e.embed(["uno", "dos"])
+
+    def test_el_entorno_del_proceso_no_queda_cambiado(self):
+        durante: dict = {}
+
+        class TextEmbedding:
+            def __init__(self, **kwargs) -> None:
+                durante["v"] = os.environ.get("HF_HUB_DISABLE_SYMLINKS_WARNING")
+
+        sin = {k: v for k, v in os.environ.items() if k != "HF_HUB_DISABLE_SYMLINKS_WARNING"}
+        with mock.patch.dict(os.environ, sin, clear=True),                 mock.patch.dict(sys.modules, {"fastembed": mock.Mock(TextEmbedding=TextEmbedding)}):
+            Local(avisar=lambda m: None, cache=self.cache)._modelo_listo()
+            self.assertNotIn("HF_HUB_DISABLE_SYMLINKS_WARNING", os.environ)
+        self.assertEqual(durante["v"], "1")
 
     def test_el_cargador_real_le_pasa_modelo_y_cache_a_fastembed(self):
         pedido: dict = {}

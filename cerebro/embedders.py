@@ -82,8 +82,16 @@ def _cargar_fastembed(nombre: str, cache: str):
         raise ErrorEmbedder("falta `fastembed` para los embeddings locales: instalalo en un venv con "
                             "`pip install -r cerebro/requirements.txt` (o probá sin modelos con "
                             "CEREBRO_EMBEDDINGS=falso)") from e
-    os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")  # Windows sin modo desarrollador: solo ruido
-    return TextEmbedding(model_name=nombre, cache_dir=cache)
+    # Windows sin modo desarrollador: el aviso de symlinks es solo ruido. Se acota a la carga y se restaura.
+    previo = os.environ.get("HF_HUB_DISABLE_SYMLINKS_WARNING")
+    os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+    try:
+        return TextEmbedding(model_name=nombre, cache_dir=cache)
+    finally:
+        if previo is None:
+            os.environ.pop("HF_HUB_DISABLE_SYMLINKS_WARNING", None)
+        else:
+            os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = previo
 
 
 class Local(Embedder):
@@ -102,7 +110,7 @@ class Local(Embedder):
 
     def _en_cache(self) -> bool:
         try:
-            return any(_HUELLA_CACHE in d.name.lower() and (d / "snapshots").is_dir()
+            return any(_HUELLA_CACHE in d.name.lower() and any((d / "snapshots").glob("*/*.onnx"))
                        for d in self._cache.iterdir())
         except OSError:
             return False
