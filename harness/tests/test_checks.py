@@ -215,7 +215,9 @@ class TestGrafoDeTarjetas(ChecksCase):
         self.p.card(id="H-1", depende_de="[H-2]")
         self.p.card(id="H-2", depende_de="[H-1]")
         self.assertFails(self.run_checks(), "ciclo")
-        self.assertFails(self.run_checks(), "H-1 -> H-2 -> H-1")
+        report = self.run_checks()
+        self.assertFails(report, "H-1 -> H-2 -> H-1")
+        self.assertEqual(len([f for f in report.messages("FAIL") if "ciclo" in f]), 1)
 
     def test_autodependencia_es_ciclo(self):
         self.p.card(id="H-1", depende_de="[H-1]")
@@ -309,6 +311,37 @@ class TestGrafoDeTarjetas(ChecksCase):
         fails = self.run_checks().messages("FAIL")
         self.assertTrue(any("id del frontmatter" in f for f in fails), fails)
         self.assertFalse(any("no existe" in f for f in fails), fails)
+
+    def test_formas_raras_de_archivo_en_cards_dan_fail_nunca_excepcion(self):
+        casos = {
+            "sin frontmatter": b"# Notas, no una tarjeta",
+            "frontmatter sin cierre": b"---" + bytes([10]) + b"id: README" + bytes([10]) + b"estado: pending",
+            "vacio": b"",
+            "binario": bytes(range(256)) * 4,
+        }
+        for nombre, contenido in casos.items():
+            ruta = self.p.root / "sdd/cards/README.md"
+            ruta.parent.mkdir(parents=True, exist_ok=True)
+            ruta.write_bytes(contenido)
+            report = self.run_checks()
+            self.assertTrue(any("README.md" in f for f in report.messages("FAIL")), f"{nombre}: {report.messages('FAIL')}")
+        ruta.write_bytes(casos["sin frontmatter"])
+        self.assertFails(self.run_checks(), "id del frontmatter (vacío)")
+
+    def test_ciclo_largo_se_informa_recortado(self):
+        for n in range(1, 31):
+            self.p.card(id=f"C-{n}", depende_de=f"[C-{n % 30 + 1}]")
+        fails = [f for f in self.run_checks().messages("FAIL") if "ciclo" in f]
+        self.assertEqual(len(fails), 1)
+        self.assertIn("(30 tarjetas)", fails[0])
+        self.assertLess(len(fails[0]), 300)
+
+    def test_lista_entre_comillas_y_comentario_solo_son_validos(self):
+        self.p.card(id="H-2")
+        self.p.card(id="H-1", depende_de='"[H-2]"')
+        self.assertEqual(self.run_checks().messages("FAIL"), [])
+        self.p.card(id="H-1", depende_de="# nada por ahora")
+        self.assertEqual(self.run_checks().messages("FAIL"), [])
 
 
 if __name__ == "__main__":

@@ -91,12 +91,13 @@ class Card:
         text = path.read_text(encoding="utf-8-sig", errors="replace")
         meta: dict[str, str] = {}
         body = text
+        deps: list[str] = []
+        deps_error = ""
         if text.startswith("---"):
             head, sep, rest = text[3:].partition("\n---")
             if sep:
                 body = rest
                 lines = head.splitlines()
-                deps, deps_error = [], ""
                 for n, line in enumerate(lines):
                     key, colon, value = line.partition(":")
                     if colon and key.strip():
@@ -112,6 +113,10 @@ class Card:
         """`depende_de: [A, B]` (o `[A,B]`, con comillas). Ausente o `[]` es sin dependencias; cualquier otra
         forma (lista YAML en varias líneas, valores sin corchetes) se rechaza en vez de perderse en silencio."""
         value = value.strip()
+        if value[:1] == "#":
+            value = ""  # `depende_de: # nada`: solo un comentario
+        if value[:1] in ("'", '"') and len(value) > 1 and value[-1] == value[0]:
+            value = value[1:-1].strip()  # `depende_de: "[A]"`, YAML válido
         if not value:
             if following and re.match(r"\s*-\s", following[0]):
                 return [], "lista en varias líneas; escribila en una línea, `depende_de: [A, B]`"
@@ -242,6 +247,8 @@ class HarnessChecks:
         """DFS iterativo (una cadena larga no tira RecursionError); cada ciclo se informa una vez."""
         errors = 0
         done: set[str] = set()
+        steps = 0
+        limit = 2 * (len(by_id) + sum(len(c.deps) for c in by_id.values())) + 10  # tope: nunca cuelga
         for start in sorted(by_id):
             if start in done:
                 continue
@@ -249,6 +256,10 @@ class HarnessChecks:
             on_path = {start}
             stack = [iter([d for d in by_id[start].deps if d in by_id])]
             while stack:
+                steps += 1
+                if steps > limit:
+                    self.report.fail("depende_de: el recorrido del grafo no termina (error del arnés; avisá al leader)")
+                    return errors + 1
                 dep = next(stack[-1], None)
                 if dep is None:
                     node = path.pop()
@@ -258,7 +269,8 @@ class HarnessChecks:
                     continue
                 if dep in on_path:
                     cycle = path[path.index(dep):] + [dep]
-                    self.report.fail(f"ciclo en depende_de: {' -> '.join(cycle)} (tarjeta mal partida: re-partila)")
+                    shown = cycle if len(cycle) <= 12 else cycle[:5] + ["…"] + cycle[-4:] + [f"({len(cycle) - 1} tarjetas)"]
+                    self.report.fail(f"ciclo en depende_de: {' -> '.join(shown)} (tarjeta mal partida: re-partila)")
                     errors += 1
                 elif dep not in done:
                     path.append(dep)

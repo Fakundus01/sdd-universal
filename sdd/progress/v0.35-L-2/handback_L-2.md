@@ -1,14 +1,16 @@
 # Handback L-2 — verify.py revisa depende_de: que exista y que no haya ciclos
 
 - **Estado:** done
-- **Rama / commit:** `v0.35-L-2` @ `f1f39f0` (vuelta 1; base de la vuelta `abcb57c`)
+- **Rama / commit:** `v0.35-L-2` @ `HASH_NUEVO` (vuelta 2; base de la vuelta `a0213f6`)
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
 - `Card.deps` (campo, ya parseado) y `Card.deps_error`: `depende_de: [A, B]` / `[A,B]` / comillas / `[]` / ausente / comentario al final son válidos y se deduplican; **cualquier otro formato da `FAIL ... formato no reconocido`** (lista YAML en varias líneas, valores sin corchetes, `"A", "B"`, un id suelto).
 - `_check_graph` (existencia, fuera de orden para `in_progress`/`review`/`done`) y `_check_cycles` (**DFS iterativo**, sin `RecursionError`, O(n) con `on_path`; un ciclo se informa una vez). Una tarjeta con id vacío no inventa un «no existe» (ya falla por el id vacío).
-- Tests: `TestGrafoDeTarjetas` (16 tests) movida arriba de `if __name__ == "__main__"`; ahora corre también con `python test_checks.py`.
+- Tests: `TestGrafoDeTarjetas` (20 tests) movida arriba de `if __name__ == "__main__"`; ahora corre también con `python test_checks.py`.
 - `harness.md` §7 punto 4 e historial 0.35, sin cambios respecto a la vuelta 0.
+
+- Vuelta 2: `Card.parse` inicializa `deps`/`deps_error` antes del `if` (regresión `UnboundLocalError` con archivos sin frontmatter, sin cierre, vacíos o binarios); tope de pasos en el DFS (`FAIL` en vez de colgarse); ciclo largo recortado (`C-1 -> … -> C-30 -> C-1 -> (30 tarjetas)`); `depende_de: "[A]"` se acepta y `depende_de: # comentario` cuenta como vacío; el ciclo se informa una sola vez (con assert).
 
 ## No hecho / pendiente
 - Nada.
@@ -21,7 +23,7 @@
 | Archivo | Cambio |
 |---|---|
 | harness/checks.py | `Card.deps`/`deps_error`/`_parse_deps`, `_check_graph`, `_check_cycles` iterativo |
-| harness/tests/test_checks.py | `TestGrafoDeTarjetas` (16 tests) antes del `__main__` |
+| harness/tests/test_checks.py | `TestGrafoDeTarjetas` (20 tests) antes del `__main__` |
 | harness/tests/support.py | sin cambios en esta vuelta (`card(..., depende_de=None)` de la vuelta 0) |
 | harness.md | §7 punto 4 + historial 0.35 (vuelta 0) |
 | sdd/progress/v0.35-L-2/ | `current.md`, este handback |
@@ -54,11 +56,28 @@ Ran 16 tests / FAILED (failures=4, errors=2)
 ```
 Los tests de `done`, del OK apagado y del diamante pasaban o no aplicaban en la base: su rojo es la tabla de mutantes (cada uno falla cuando se quita la rama que cubren).
 
+Rojo antes de la vuelta 2 (R29), tests nuevos contra el `checks.py` de `1c19422` (`a0213f6` solo suma el review):
+```text
+$ git rev-parse --short HEAD
+a0213f6
+$ python test_checks.py TestGrafoDeTarjetas      # en harness/tests, sin tracebacks
+....F......E..F.....
+ERROR: test_formas_raras_de_archivo_en_cards_dan_fail_nunca_excepcion
+UnboundLocalError: cannot access local variable 'deps' where it is not associated with a value
+FAIL: test_ciclo_largo_se_informa_recortado   '(30 tarjetas)' not found in 'ciclo en depende_de: C-1 -> C-2 -> ...'
+FAIL: test_lista_entre_comillas_y_comentario_solo_son_validos   ... 'no está entre corchetes' para '"[H-2]"'
+Ran 20 tests / FAILED (failures=2, errors=1)
+```
+(El assert de «un solo ciclo» y el tope de pasos pasan en la base: el primero cubre el docstring; el segundo se prueba con el mutante «invertir la condición del ciclo», que ahora da `FAILED (failures=1, errors=13)` en vez de colgarse.)
+
 Verde después:
 ```text
 $ python -m unittest discover -s harness/tests      # tail -4
-Ran 160 tests in 72.811s
+Ran 163 tests in 70.219s
 OK (skipped=1)
+$ python harness/tests/test_checks.py      # tail -4
+Ran 51 tests in 26.365s
+OK
 ```
 `verify.py --changed` sigue en `[FAIL] falta harness.config.json` por la causa ajena de la vuelta 0 (el paquete no trae config; la base tampoco).
 
@@ -73,7 +92,7 @@ OK (skipped=1)
 | sin `errors += 1` (inexistente) | muerto (1 FAIL) | `test_fallo_del_grafo_apaga_el_ok_de_tarjetas` |
 | sin `errors += 1` (fuera de orden) | muerto (1 FAIL; vivo antes del aserto del OK) | `test_in_progress_con_dependencia_sin_done_falla` |
 | sin `errors += 1` (ciclo) | muerto (1 FAIL) | `test_fallo_del_grafo_apaga_el_ok_de_tarjetas` |
-| invertir la condición del ciclo (`dep not in on_path`) | muerto (el DFS cuelga; corte a los 100 s) | todo el grupo de ciclos |
+| invertir la condición del ciclo (`dep not in on_path`) | muerto (vuelta 1: colgaba, corte a los 100 s; vuelta 2: con el tope de pasos falla sin colgarse) | todo el grupo de ciclos |
 | invertir `!= "done"` | muerto (4 FAIL) | fuera de orden y válidos |
 | no limpiar `on_path` al cerrar un nodo | vivo la primera vez; muerto (error) con `test_diamante_no_es_ciclo` agregado | `test_diamante_no_es_ciclo` |
 
@@ -92,3 +111,4 @@ OK (skipped=1)
 
 ## Apéndice: vueltas
 - Vuelta 1 (f1f39f0): review R30 CHANGES_REQUESTED sobre `f7673be`. Req. 1 (test de `done` fuera de orden) y 2 (el FAIL del grafo apaga el OK) resueltos; mejoras: DFS iterativo, FAIL por formato no reconocido, dedupe, id vacío, clase de tests antes de `__main__`, tabla de mutantes (que además encontró dos huecos más: aserto del OK en formato y fuera de orden, y el diamante).
+- Vuelta 2 (HASH_NUEVO): review R30 CHANGES_REQUESTED sobre `1c19422`. Req. 1 (`UnboundLocalError` en `Card.parse` sin frontmatter/sin cierre/vacío) y 2 (test genérico de formas raras de archivo en `sdd/cards/`, incluido un binario) resueltos; mejoras: un solo ciclo con assert, tope de pasos del DFS, ciclo largo recortado, `"[A]"` y comentario solo aceptados. Archivos de la vuelta: `harness/checks.py`, `harness/tests/test_checks.py`, este handback.
