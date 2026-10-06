@@ -32,7 +32,7 @@ Si tu propuesta llega a regla, entra con el formato estándar y tiene que pasar 
 
 ## Si querés mandar código o texto
 
-1. **Fijate primero si va en [`custom.md`](custom.md).** Si es un gusto personal (apagar R01, cambiar el máximo de líneas), eso ya se resuelve sin tocar el núcleo — armalo desde [Mis reglas](https://sdd-universal.vercel.app/web/) en la web.
+1. **Fijate primero si va en `custom.md`.** Si es un gusto personal (apagar R01, cambiar el máximo de líneas), eso ya se resuelve sin tocar el núcleo — armalo desde [Mis reglas](https://sdd-universal.vercel.app/web/) en la web.
 2. **El núcleo no se edita para casos particulares.** [`SDD-MASTER.md`](SDD-MASTER.md) no puede pasar las ~400 líneas (R20): si tu aporte es detalle, va a un archivo ruteado, no al master.
 3. **Un cambio, un PR**, con el caso que lo justifica en la descripción.
 4. **Si tocás la web:** cero dependencias nuevas en el front. Es un constraint del proyecto (`sdd/spec.md`, C2), no una preferencia — traer una librería para algo que se resuelve en 40 líneas se rechaza aunque funcione.

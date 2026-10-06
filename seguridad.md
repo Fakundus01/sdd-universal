@@ -125,7 +125,7 @@ Este nivel casi no existía hace unos años y hoy es de los más ignorados.
 3. **La salida se valida antes de ejecutarse**, contra un esquema y una lista blanca de acciones, como cualquier entrada de usuario.
 
 **Cliente corporativo: NIST AI RMF 1.0.** OWASP es la lista técnica. El marco de gestión de riesgo de IA del NIST es lo que pide un cliente grande. Tiene cuatro funciones, y el SDD ya tiene dónde va cada una:
-- **Govern:** políticas y roles (R21 y [`teams.md`](teams.md) en equipos; en un proyecto chico, el owner y [`custom.md`](custom.md), donde quedan las reglas que se apagaron y por qué).
+- **Govern:** políticas y roles (R21 y [`teams.md`](teams.md) en equipos; en un proyecto chico, el owner y `custom.md`, donde quedan las reglas que se apagaron y por qué).
 - **Map:** contexto y riesgos de cada caso de uso (§1 de este archivo y `spec.md`).
 - **Measure:** evals y métricas (los outcomes, el eval del producto).
 - **Manage:** priorizar y mitigar (la deuda aceptada en `status.md`, con fecha y disparador).

@@ -27,9 +27,9 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 2. Pegá el **START-PROMPT** (§6) como primera prompt del chat, completando los huecos.
 3. Trabajá el resto de la sesión con el **[LOOP-PROMPT](prompts/loop-prompt.md)** y su **HANDBACK** (§7).
 4. Creá en la raíz del repo dos espejos de una línea, para que cualquier agente encuentre esto solo:
-   - [`AGENTS.md`](AGENTS.md) → `Leé sdd/SDD-MASTER.md y obedecé sus reglas.`
-   - [`CLAUDE.md`](CLAUDE.md) → `Leé sdd/SDD-MASTER.md y obedecé sus reglas.`
-5. Para adaptarlo a tu gusto **sin editar el núcleo universal**: escribí tus overrides en `sdd/custom.md` (`R01=OFF`, `R05.max=500`, reglas propias `+R21-…`). El agente lee el master y después [`custom.md`](custom.md), que pisa lo que haga falta. Así podés actualizar el núcleo cuando salga una versión nueva sin perder tu personalización.
+   - `AGENTS.md` → `Leé sdd/SDD-MASTER.md y obedecé sus reglas.`
+   - `CLAUDE.md` → `Leé sdd/SDD-MASTER.md y obedecé sus reglas.`
+5. Para adaptarlo a tu gusto **sin editar el núcleo universal**: escribí tus overrides en `sdd/custom.md` (`R01=OFF`, `R05.max=500`, reglas propias `+R21-…`). El agente lee el master y después `custom.md`, que pisa lo que haga falta. Así podés actualizar el núcleo cuando salga una versión nueva sin perder tu personalización.
 6. Si trabajás con un agente de solo-chat (sin archivos), pegá [`SDD-COMPACT.md`](SDD-COMPACT.md) en el primer mensaje en lugar de este documento.
 
 ---
@@ -47,7 +47,7 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 | Dudas de dominio / vocabulario | `glossary.md` |
 | Repo existente sin SDD | nada: ejecutá el flujo Brownfield (§6.2) |
 | Mantenimiento / actualizar dependencias | [`prompts/maintenance-prompt.md`](prompts/maintenance-prompt.md) · `costs.md` (R19) |
-| Adaptar o extender el SDD mismo | [`scenarios.md`](scenarios.md) · [`custom.md`](custom.md) (R20) |
+| Adaptar o extender el SDD mismo | [`scenarios.md`](scenarios.md) · `custom.md` (R20) |
 | Equipo grande: roles, OKs, ceremonias | [`teams.md`](teams.md) (R21) |
 | Configurar espejos multi-agente o elegir tier | [`models.md`](models.md) (R22) |
 | Explicarle el SDD a un humano | [`GUIDE.md`](GUIDE.md) |
@@ -74,7 +74,7 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 - **IA en el producto:** [no / sí → modelo recomendado y por qué]
 - **Modo de autonomía:** ESTRICTO / CONFIANZA (ver §4)
 - **Modo por tamaño (R18):** FULL / LITE / COMPACT / FEDERADO — **Variante de dominio:** WEB / DATA / GAME / API-only
-- **Reglas apagadas u overrides:** [ninguna / lista, ej.: R01=OFF — ver [`custom.md`](custom.md)]
+- **Reglas apagadas u overrides:** [ninguna / lista, ej.: R01=OFF — ver `custom.md`]
 
 ---
 
@@ -86,7 +86,7 @@ Para apagar o prender una regla, escribí en cualquier mensaje: `R01=OFF` / `R01
 - **ESTRICTO** (default): todas las reglas ON.
 - **CONFIANZA:** `R01=OFF` → el agente puede commitear y pushear solo. Para quien confía en la IA y quiere velocidad.
 
-**Modos por tamaño (R18):** FULL (default) · LITE (proyectos chicos: un solo [`sdd-lite.md`](prompts/sdd-lite.md)) · COMPACT (agentes solo-chat o subagentes baratos: se pega [`SDD-COMPACT.md`](SDD-COMPACT.md)) · FEDERADO (monorepos: un `sdd/` raíz que rutea + un `sdd/` por módulo).
+**Modos por tamaño (R18):** FULL (default) · LITE (proyectos chicos: un solo `sdd-lite.md`) · COMPACT (agentes solo-chat o subagentes baratos: se pega [`SDD-COMPACT.md`](SDD-COMPACT.md)) · FEDERADO (monorepos: un `sdd/` raíz que rutea + un `sdd/` por módulo).
 **Variantes de dominio:** WEB (default) · DATA (notebooks: tests = validaciones de datos, `experiments.md`) · GAME (`playtest.md` complementa a R07) · API-only. El detalle de cuándo aplica cada una vive en [`scenarios.md`](scenarios.md).
 
 **R01 · GIT-OK — [ON] — desactivable (avisar siempre)**
@@ -149,7 +149,7 @@ En el arranque, clasificar el proyecto y elegir modo: script chico (≤~300 lín
 Si el `git log` (R02) muestra más de ~30 días sin actividad, o cuando el humano lo pida, proponer una **auditoría**: comparar contra la web las versiones de lenguaje, frameworks y librerías usadas; buscar deprecaciones y vulnerabilidades; revisar la salud del repo (branches muertas, `.env` fuera, tamaño). Presentar plan de actualización → OK → actualizar código **y** MDs → changelog. Nunca actualizar dependencias sin OK.
 
 **R20 · META-ESCALABILIDAD (cómo crece el SDD) — [ON] — fija**
-El SDD se versiona con semver y crece solo desde casos reales: toda regla nueva nace de una fila en `scenarios.md`, entra con el formato estándar (`Rxx · NOMBRE — [default] — fija/desactivable`) y debe justificar su costo en tokens. Este master nunca supera ~400 líneas: el detalle se muda a archivos ruteados. Personalizaciones → [`custom.md`](custom.md), jamás editando el núcleo. Lo que no ahorre tokens o errores, no entra.
+El SDD se versiona con semver y crece solo desde casos reales: toda regla nueva nace de una fila en `scenarios.md`, entra con el formato estándar (`Rxx · NOMBRE — [default] — fija/desactivable`) y debe justificar su costo en tokens. Este master nunca supera ~400 líneas: el detalle se muda a archivos ruteados. Personalizaciones → `custom.md`, jamás editando el núcleo. Lo que no ahorre tokens o errores, no entra.
 
 **R21 · EQUIPO-ROLES — [AUTO: se activa con equipo grande] — desactivable**
 Con más de ~4 personas o roles diferenciados (PO, AF, SM, QA, devs por seniority, RPA, infra…): aplicar la capa [`teams.md`](teams.md). Los OK se especializan por rol (spec→PO, diseño→Tech Lead, tests→QA, deploy→Infra) y el agente dirige cada OK a quien corresponde. Autonomía escalonada: pasantes/Jr siempre ESTRICTO y literal; Sr puede CONFIANZA solo en su rama. Subagentes por rol con slice y tier fijos.
@@ -250,7 +250,7 @@ repo/
         └── from-another-chat.md   # migrar una idea definida en otro chat
 ```
 
-**Modo LITE:** todo lo anterior colapsa en un único [`sdd-lite.md`](prompts/sdd-lite.md). **Modo FEDERADO:** este árbol se repite por módulo y el `sdd/` raíz solo rutea (opcional: `api-catalog.md` con el índice de APIs entre módulos).
+**Modo LITE:** todo lo anterior colapsa en un único `sdd-lite.md`. **Modo FEDERADO:** este árbol se repite por módulo y el `sdd/` raíz solo rutea (opcional: `api-catalog.md` con el índice de APIs entre módulos).
 **Del paquete, no por proyecto:** [`blocks.md`](blocks.md), [`tecnologias.md`](tecnologias.md), [`seguridad.md`](seguridad.md), `playbooks/`, `skills/`, `examples/`, `web/`, `cerebro/` (búsqueda en la memoria entre proyectos) y [`README.md`](README.md) viven en el repo del SDD Universal; a un proyecto solo se copian los playbooks que use (y `.claude/skills/` si el agente es Claude — atajos opcionales, el SDD funciona igual sin ellos). En `examples/` hay un `sdd/` real y completo para ver cómo se ve el resultado antes de generar el propio.
 **Opcionales enterprise (teams.md §8):** `team.md` · `environments.md` · `onboarding.md` · `incidents.md` (postmortems) · `metrics.md` (velocidad + gasto de tokens por ciclo).
 
@@ -381,6 +381,6 @@ Las versiones de la línea actual (0.32 en adelante). Las anteriores (0.31 hacia
 | 0.35 | 2026-10-06 | **R33 · LOOP-CON-CONTRATO** y grafo de tarjetas, vía S39 y S40: un loop autónomo se escribe antes en `sdd/loops/<nombre>.md` (disparador, objetivo medible, verificación, regla de corte, memoria) y aprobarlo autoriza commits solo en su rama. Las tarjetas declaran `depende_de` y el leader despacha por niveles del grafo. Nuevo [`loops.md`](loops.md); `orchestration.md` §10. Recoge lo que en 2026 se llama *loop engineering* y *graph engineering* (de ejecución), sin sumar capas que el paquete ya tenía. |
 | 0.34 | 2026-10-05 | Web sin portón y con rutas reales, a pedido del owner: la app abre sin cuenta; el login es opcional y vive en `/web/login` (vuelve solo a rutas internas); el onboarding deja de ser un diálogo encima de todo y pasa a `/web/preferencias`. Cada vista tiene su URL (`/web/catalogo`, `/web/combinador`…), recargable y compartible, con rewrite en el servidor local y en `vercel.json`. Los links viejos con `#/` redirigen. Arregla el bug de 0.33: el onboarding quedaba arriba del portón y ninguno de los dos se podía tocar (ADR-014, ADR-015 de la web). |
 | 0.33.2 | 2026-10-05 | **S38 · el producto con IA más allá del gasto**, con material aportado por el owner (OWASP Top 10 para LLMs 2025, NIST AI RMF, RAG, Huyen): [`seguridad.md`](seguridad.md) 0.13 con el mapa LLM01–LLM10 y su control en el paquete, reglas para agentes que actúan y NIST para clientes corporativos. El playbook `ia-en-el-producto` suma arquitectura de referencia, RAG, agentes y evals de dos capas (deterministas de alta precisión + un juez, H26). El prompt con IA recorre el OWASP; catálogo con pgvector y embeddings. Menores de la review de 0.33.1: en `eventos` solo se inserta `tipo` y `detalle`, la lección de Pydantic bien descripta, y el arnés reintenta cuando Windows pierde la salida de un proceso. |
-| 0.33.1 | 2026-10-05 | Review R30 de 0.33: el check de rutas en tablas mira `spec.md` y [`sdd-lite.md`](prompts/sdd-lite.md) por defecto; LITE sin `progress/` también en el relevo y en `--e2e`; la tabla de eventos rechaza texto identificante y días que no son hoy; el prompt, la lista y el ZIP salen siempre del mismo estado; el link `#/combinador?c=` vuelve a cargar. N2 de `seguridad.md`: borrar es en el archivo también (`secure_delete` + `VACUUM`, backups). Trampa de Pydantic en [`tecnologias.md`](tecnologias.md) (un validador que se llama como su campo lo pisa). El historial viejo pasa a `historial-master.md`. |
+| 0.33.1 | 2026-10-05 | Review R30 de 0.33: el check de rutas en tablas mira `spec.md` y `sdd-lite.md` por defecto; LITE sin `progress/` también en el relevo y en `--e2e`; la tabla de eventos rechaza texto identificante y días que no son hoy; el prompt, la lista y el ZIP salen siempre del mismo estado; el link `#/combinador?c=` vuelve a cargar. N2 de `seguridad.md`: borrar es en el archivo también (`secure_delete` + `VACUUM`, backups). Trampa de Pydantic en [`tecnologias.md`](tecnologias.md) (un validador que se llama como su campo lo pisa). El historial viejo pasa a `historial-master.md`. |
 | 0.33 | 2026-10-05 | Lecciones de cuatro proyectos reales hechos con el paquete (landing, tienda, mesa de ayuda con IA y chatbot, en local) vía S33–S37. Playbook nuevo **`ia-en-el-producto`**: el tope de gasto se rompió siete veces, de siete formas. R12 apunta a él, R28 verifica versiones contra el registro, R29 mide el rojo de un módulo nuevo con un stub. `seguridad.md` 0.12: estáticos por lista blanca y un test por control. Combinador con stack Python + React, tipo «mesa de ayuda» y casilla «IA en el producto»; el prompt respeta R01 apagado; catálogo con Vite, Vitest, pytest, Tailwind, React Router, Mercado Pago, Stripe y Anthropic API. Arnés: modo LITE sin memoria en disco, rutas citadas en tablas, tarjeta con `rama`. Web: reporte de O1–O4 en el panel. |
 | 0.32 | 2026-10-04 | Entorno de desarrollo **100% local** (`dev/`): Postgres local con el mismo esquema y las mismas políticas RLS que Supabase, auth y REST compatibles con el cliente de la web, y usuarios de prueba. Supabase y Vercel quedan inactivos hasta salir de lo local. |

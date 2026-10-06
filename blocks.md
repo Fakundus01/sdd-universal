@@ -30,7 +30,7 @@ BLOQUE: type · ID: chatbot · NIVEL: novato+pro · COMBINA-CON: stack/*, playbo
 SDD final = BASE + 1 TYPE + 0..1 STACK + 0..N TECNOLOGÍAS + 0..N PLAYBOOKS + custom.md
 ```
 
-**Precedencia (lo específico pisa lo general):** BASE < TYPE < STACK < TECNOLOGÍA < PLAYBOOK < [`custom.md`](custom.md). Si el TYPE dice "usá SQLite" y el STACK elegido dice "Postgres", gana el STACK; si tu `custom.md` dice otra cosa, gana custom. Los bloques nunca contradicen las reglas fijas del BASE (R05, R08, R17…): solo agregan o parametrizan.
+**Precedencia (lo específico pisa lo general):** BASE < TYPE < STACK < TECNOLOGÍA < PLAYBOOK < `custom.md`. Si el TYPE dice "usá SQLite" y el STACK elegido dice "Postgres", gana el STACK; si tu `custom.md` dice otra cosa, gana custom. Los bloques nunca contradicen las reglas fijas del BASE (R05, R08, R17…): solo agregan o parametrizan.
 
 ## 4 · Qué trae un bloque TYPE (contrato)
 
@@ -42,7 +42,7 @@ SDD final = BASE + 1 TYPE + 0..1 STACK + 0..N TECNOLOGÍAS + 0..N PLAYBOOKS + cu
 
 ## 5 · Cómo se combinan (dos versiones)
 
-**v1 — sin IA en el medio (funciona hoy):** la web concatena los bloques elegidos y **arma la carpeta del proyecto completa en un `.zip`**: el `sdd/` con el núcleo y los playbooks elegidos, el [`custom.md`](custom.md) generado desde el configurador de reglas, los espejos, el `.gitignore` y el prompt de arranque. La persona descomprime y ya puede trabajar. El agente del usuario (Claude, Codex, Cursor…) hace la fusión real en el arranque — ya sabe hacerlo: el cuestionario socrático resuelve los huecos y la precedencia resuelve los choques. No requiere backend ni API keys: la web es 100% estática.
+**v1 — sin IA en el medio (funciona hoy):** la web concatena los bloques elegidos y **arma la carpeta del proyecto completa en un `.zip`**: el `sdd/` con el núcleo y los playbooks elegidos, el `custom.md` generado desde el configurador de reglas, los espejos, el `.gitignore` y el prompt de arranque. La persona descomprime y ya puede trabajar. El agente del usuario (Claude, Codex, Cursor…) hace la fusión real en el arranque — ya sabe hacerlo: el cuestionario socrático resuelve los huecos y la precedencia resuelve los choques. No requiere backend ni API keys: la web es 100% estática.
 
 **v2 — con IA en el medio (evolución):** la web llama a un modelo por API (Claude o GPT) que fusiona los bloques en un `sdd/` completo a medida, lo deja descargable como ZIP, y aprende: cada combinación nueva que funciona bien se puede promover a bloque oficial del catálogo (mismo motor de crecimiento que [`scenarios.md`](scenarios.md)). Requiere una función serverless y una API key — se agrega después sin romper la v1.
 
