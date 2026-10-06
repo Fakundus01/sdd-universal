@@ -27,6 +27,7 @@ graph LR
 - v5 · L-2 done (3.er review APPROVED @ d0cfe53, merge); harness/tests OK, web/tests 49/49 en la rama del loop
 
 - DRIFT de L-6 resuelto por el owner: opción A → `harness.md` §2 con la clave `master`; L-7 nueva (arnés), L-6 vuelve a pending con `depende_de: [L-7]`, tier MEDIO y rama nueva `v0.35-L-6b`
+- (L-7) review CHANGES_REQUESTED @ 3f29cc3: M7, M9 y M10 vivos (3 de los 4 usos del master configurado sin test); `verify.py` entra a la zona → iteración 2/3
 
 ## Próximo paso
 Despachar L-7 → review → L-6 → review → L-5 (cierre). Vueltas usadas 5/8; quedan justas: L-7, L-6, L-5.
