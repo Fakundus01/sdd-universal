@@ -250,6 +250,29 @@ class TestInicializar(ConCerebro):
         self.assertEqual(notas.listar(self.base, avisos), [buena])
         self.assertTrue(any("junta" in a for a in avisos), avisos)
 
+    def test_listar_con_proyectos_como_enlace_hacia_afuera_no_lee_nada(self):
+        ajeno = self.afuera / "ajeno"
+        (ajeno / "p").mkdir(parents=True)
+        (ajeno / "p" / "x.md").write_text(VALIDA, encoding="utf-8")
+        crear_enlace(self, self.base / "proyectos", ajeno)
+        avisos: list[str] = []
+        self.assertEqual(notas.listar(self.base, avisos), [])
+        self.assertTrue(any("proyectos" in a for a in avisos), avisos)
+
+    def test_listar_no_entra_en_una_junction_que_vuelve_a_proyectos(self):
+        notas.inicializar(self.base)
+        a = self.nota("p", "a.md", "A", "x")
+        crear_enlace(self, self.base / "proyectos" / "p" / "ciclo", self.base / "proyectos")
+        avisos: list[str] = []
+        self.assertEqual(notas.listar(self.base, avisos), [a])
+        self.assertTrue(any("ciclo" in x for x in avisos), avisos)
+
+    def test_listar_no_entra_en_un_enlace_a_una_carpeta_de_adentro(self):
+        notas.inicializar(self.base)
+        a = self.nota("p", "a.md", "A", "x")
+        crear_enlace(self, self.base / "proyectos" / "alias", self.base / "proyectos" / "p")
+        self.assertEqual(notas.listar(self.base), [a])
+
 
 if __name__ == "__main__":
     unittest.main()

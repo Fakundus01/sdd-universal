@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import config  # noqa: E402
 import embedders  # noqa: E402
+import importar  # noqa: E402
 import notas  # noqa: E402
 from indice import ErrorIndice, Indice  # noqa: E402
 
@@ -42,6 +43,8 @@ def _parser() -> argparse.ArgumentParser:
     n.add_argument("--cuerpo", required=True)
     n.add_argument("--tags", default="", help="separadas por coma")
     n.add_argument("--fecha", help="AAAA-MM-DD (default: hoy)")
+    imp = sub.add_parser("importar-sdd", help="siembra el Cerebro con escenarios, hallazgos y lecciones de un repo SDD")
+    imp.add_argument("repo")
     return p
 
 
@@ -123,8 +126,28 @@ def _cmd_nota(base: Path, args, emb) -> int:
     return 0
 
 
+def _cmd_importar_sdd(base: Path, args, emb) -> int:
+    _exigir_base(base)
+    try:
+        r = importar.importar(Path(args.repo), base)
+    except importar.ErrorImportar as e:
+        raise ErrorCLI(str(e)) from None
+    for aviso in r.avisos:
+        print(f"aviso: {aviso}", file=sys.stderr)
+    for aviso in r.editadas:
+        print(f"aviso: {aviso}", file=sys.stderr)
+    for error in r.invalidas:
+        print(f"saltada (formato): {error}", file=sys.stderr)
+    tipos = ", ".join(f"{r.por_tipo.get(t, 0)} {t}" for t in ("escenario", "hallazgo", "leccion"))
+    print(f"importadas: {tipos}")
+    print(f"{r.nuevas} nuevas, {r.actualizadas} actualizadas, {r.sin_cambios} sin cambios, "
+          f"{len(r.editadas)} editadas a mano (no se pisaron)"
+          + (f", {len(r.invalidas)} con errores de formato" if r.invalidas else ""))
+    return 1 if r.invalidas else 0
+
+
 COMANDOS = {"init": _cmd_init, "indexar": _cmd_indexar, "buscar": _cmd_buscar, "revisar": _cmd_revisar,
-            "nota": _cmd_nota}
+            "nota": _cmd_nota, "importar-sdd": _cmd_importar_sdd}
 USAN_EMBEDDER = {"indexar", "buscar"}
 
 
