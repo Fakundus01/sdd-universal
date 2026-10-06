@@ -26,8 +26,10 @@ ESCENARIOS = """# scenarios.md
 
 ## 2 · Otra tabla
 
-| S99 | Otra fila con id de la matriz | x | y | z |
+| S99 | Fila de otra tabla: no es de la matriz | x | y | z |
 """
+
+SIN_S03 = ESCENARIOS.replace("| S03 | Script chico | ❌ No | Overhead | **Modo LITE (R18)** |\n", "")
 
 HALLAZGOS = """# hallazgos-2026-10.md
 
@@ -101,7 +103,7 @@ class TestContenido(Base):
         self.importar()
         esc = {n.fuente: n for _, n in self.notas("escenario")}
         self.assertEqual(sorted(esc), ["sdd-universal/scenarios.md#S01", "sdd-universal/scenarios.md#S02",
-                                       "sdd-universal/scenarios.md#S03", "sdd-universal/scenarios.md#S99"])
+                                       "sdd-universal/scenarios.md#S03"])
         n = esc["sdd-universal/scenarios.md#S01"]
         self.assertEqual(n.proyecto, "sdd-universal")
         self.assertEqual(n.titulo, "Web app `full-stack`, 1 dev")
@@ -135,8 +137,7 @@ class TestContenido(Base):
         n = h["sdd-universal/examples/hallazgos-2026-10.md#H1"]
         self.assertIn("`py-react` | ni otro", n.cuerpo)
         self.assertIn("Sumar `py-react` a `STACKS`", n.cuerpo)
-        self.assertIn("H1", n.titulo)
-        self.assertIn("Combinador", n.titulo)
+        self.assertEqual(n.titulo, "No hay `py-react` | ni otro")
         self.assertEqual(n.fecha, "2026-10-01")
         self.assertIn("[Vite](https://vitejs.dev)", h["sdd-universal/examples/hallazgos-2026-10.md#H2"].cuerpo)
 
@@ -167,6 +168,20 @@ class TestContenido(Base):
         self.assertEqual(self.notas(), [])
         self.assertTrue(any("scenarios.md" in a for a in r.avisos), r.avisos)
 
+    def test_solo_filas_de_la_matriz_no_de_otras_tablas(self):
+        armar(self.repo)
+        self.importar()
+        self.assertFalse(any(n.fuente.endswith("#S99") for _, n in self.notas()))
+
+    def test_celdas_con_pipe_escapado_al_final_de_la_fila(self):
+        self.assertEqual(importar.celdas("| a | b \\|"), ["a", "b |"])
+        self.assertEqual(importar.celdas("| a | b \\| |"), ["a", "b |"])
+
+    def test_carpetas_con_punto_dentro_de_proyectos_no_se_listan(self):
+        self.nota("sdd-universal", "a.md", "A", "x")
+        self.nota(".oculta", "b.md", "B", "x")
+        self.assertEqual([p.name for p in notas.listar(self.base)], ["a.md"])
+
     def test_repo_inexistente_es_error(self):
         with self.assertRaises(importar.ErrorImportar):
             self.importar(self.afuera / "no-existe")
@@ -180,6 +195,55 @@ class TestContenido(Base):
         with self.assertRaises((importar.ErrorImportar, notas.ErrorNota)):
             self.importar()
         self.assertEqual(list(ajeno.rglob("*")), [])
+
+
+    def test_proyecto_sdd_universal_como_enlace_hacia_afuera_no_escribe_afuera(self):
+        armar(self.repo)
+        ajeno = self.afuera / "ajeno2"
+        ajeno.mkdir()
+        crear_enlace(self, self.base / "proyectos" / "sdd-universal", ajeno)
+        with self.assertRaises(importar.ErrorImportar):
+            self.importar()
+        self.assertEqual(list(ajeno.rglob("*")), [])
+
+
+HALLAZGOS_NOV = HALLAZGOS.replace("py-react", "otra-cosa").replace("Vitest", "Jest")
+
+
+class TestIds(Base):
+    def test_hallazgos_de_dos_archivos_con_el_mismo_hn_no_chocan(self):
+        armar(self.repo)
+        (self.repo / "examples" / "hallazgos-2026-11.md").write_text(HALLAZGOS_NOV, encoding="utf-8")
+        r1 = self.importar()
+        self.assertEqual((r1.nuevas, len(self.notas("hallazgo"))), (9, 4))
+        r2 = self.importar()
+        self.assertEqual((r2.nuevas, r2.actualizadas, r2.sin_cambios), (0, 0, 9))
+        fuentes = sorted(n.fuente for _, n in self.notas("hallazgo"))
+        self.assertIn("sdd-universal/examples/hallazgos-2026-11.md#H1", fuentes)
+        self.assertIn("sdd-universal/examples/hallazgos-2026-10.md#H1", fuentes)
+
+    def test_id_repetido_en_una_fuente_se_detecta_antes_de_escribir(self):
+        armar(self.repo, escenarios=ESCENARIOS.replace("| S03 |", "| S02 |"))
+        with self.assertRaises(importar.ErrorImportar) as ctx:
+            self.importar()
+        self.assertIn("S02", str(ctx.exception))
+        self.assertIn("scenarios.md", str(ctx.exception))
+        self.assertEqual(notas.listar(self.base), [])
+
+    def test_id_repetido_en_un_archivo_de_hallazgos_nombra_el_archivo(self):
+        armar(self.repo, hallazgos=HALLAZGOS.replace("| H2 |", "| H1 |"))
+        with self.assertRaises(importar.ErrorImportar) as ctx:
+            self.importar()
+        self.assertIn("H1", str(ctx.exception))
+        self.assertIn("hallazgos-2026-10.md", str(ctx.exception))
+        self.assertEqual(notas.listar(self.base), [])
+
+    def test_id_repetido_por_cli_sale_con_2_y_no_importa_nada(self):
+        armar(self.repo, escenarios=ESCENARIOS.replace("| S03 |", "| S02 |"))
+        code, out, err = self.cli("importar-sdd", str(self.repo))
+        self.assertEqual(code, 2)
+        self.assertIn("S02", err)
+        self.assertEqual(notas.listar(self.base), [])
 
 
 class TestIdempotencia(Base):
@@ -242,6 +306,39 @@ class TestIdempotencia(Base):
         self.assertEqual(ruta.read_text(encoding="utf-8"), sin)
         self.assertEqual(len(r.editadas), 1)
 
+    def test_cambiar_la_version_de_scenarios_no_reescribe_las_notas(self):
+        armar(self.repo)
+        self.importar()
+        antes = self.snapshot()
+        armar(self.repo, escenarios=ESCENARIOS.replace("2026-03-15", "2026-11-20"))
+        r = self.importar()
+        self.assertEqual((r.actualizadas, r.nuevas, r.editadas), (0, 0, []))
+        self.assertEqual(self.snapshot(), antes)
+
+    def test_nota_guardada_con_crlf_por_otro_editor_no_cuenta_como_cambio(self):
+        armar(self.repo)
+        self.importar()
+        for a in notas.listar(self.base):
+            a.write_bytes(a.read_bytes().replace(b"\n", b"\r\n"))
+        r = self.importar()
+        self.assertEqual((r.actualizadas, r.nuevas, r.editadas), (0, 0, []))
+
+    def test_fila_que_desaparece_del_origen_avisa_la_nota_huerfana_sin_borrarla(self):
+        armar(self.repo)
+        self.importar()
+        n = len(self.snapshot())
+        armar(self.repo, escenarios=SIN_S03)
+        r = self.importar()
+        self.assertEqual(len(r.huerfanas), 1)
+        self.assertIn("S03", r.huerfanas[0])
+        self.assertEqual(len(self.snapshot()), n)
+
+    def test_las_notas_propias_en_la_carpeta_no_son_huerfanas(self):
+        armar(self.repo)
+        self.nota("sdd-universal", "2026-10-06-mia.md", "Mía", "x")
+        r = self.importar()
+        self.assertEqual(r.huerfanas, [])
+
     def test_el_nombre_no_depende_del_titulo(self):
         armar(self.repo)
         self.importar()
@@ -256,15 +353,15 @@ class TestCLI(Base):
         armar(self.repo)
         code, out, err = self.cli("importar-sdd", str(self.repo))
         self.assertEqual(code, 0, err)
-        self.assertIn("4 escenario", out)
+        self.assertIn("3 escenario", out)
         self.assertIn("2 hallazgo", out)
         self.assertIn("2 leccion", out)
-        self.assertIn("8 nuevas", out)
+        self.assertIn("7 nuevas", out)
         code, out, err = self.cli("revisar")
         self.assertEqual(code, 0, out + err)
         code, out, err = self.cli("importar-sdd", str(self.repo))
         self.assertIn("0 nuevas", out)
-        self.assertIn("8 sin cambios", out)
+        self.assertIn("7 sin cambios", out)
 
     def test_una_nota_invalida_se_informa_importa_el_resto_y_sale_con_1(self):
         armar(self.repo, loops={"mala.md": LOOP_CUMPLIDO.replace("2026-09-30", "2026-13-45")})
@@ -273,7 +370,7 @@ class TestCLI(Base):
         self.assertIn("saltada (formato)", err)
         self.assertIn("fecha", err)
         self.assertIn("2 con errores de formato", out)
-        self.assertEqual(len(notas.listar(self.base)), 6)
+        self.assertEqual(len(notas.listar(self.base)), 5)
 
     def test_editada_a_mano_sale_por_stderr(self):
         armar(self.repo)
@@ -284,6 +381,15 @@ class TestCLI(Base):
         self.assertEqual(code, 0)
         self.assertIn("S03", err)
         self.assertIn("1 editadas a mano", out)
+
+    def test_huerfanas_salen_por_stderr_y_en_el_resumen(self):
+        armar(self.repo)
+        self.cli("importar-sdd", str(self.repo))
+        armar(self.repo, escenarios=SIN_S03)
+        code, out, err = self.cli("importar-sdd", str(self.repo))
+        self.assertEqual(code, 0)
+        self.assertIn("S03", err)
+        self.assertIn("1 huérfanas", out)
 
     def test_repo_inexistente_da_error_en_espanol_rc_2(self):
         code, out, err = self.cli("importar-sdd", str(self.afuera / "nada"))

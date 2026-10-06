@@ -136,12 +136,14 @@ def _cmd_importar_sdd(base: Path, args, emb) -> int:
         print(f"aviso: {aviso}", file=sys.stderr)
     for aviso in r.editadas:
         print(f"aviso: {aviso}", file=sys.stderr)
+    for aviso in r.huerfanas:
+        print(f"aviso: huérfana: {aviso}", file=sys.stderr)
     for error in r.invalidas:
         print(f"saltada (formato): {error}", file=sys.stderr)
     tipos = ", ".join(f"{r.por_tipo.get(t, 0)} {t}" for t in ("escenario", "hallazgo", "leccion"))
     print(f"importadas: {tipos}")
     print(f"{r.nuevas} nuevas, {r.actualizadas} actualizadas, {r.sin_cambios} sin cambios, "
-          f"{len(r.editadas)} editadas a mano (no se pisaron)"
+          f"{len(r.editadas)} editadas a mano (no se pisaron), {len(r.huerfanas)} huérfanas (se dejan)"
           + (f", {len(r.invalidas)} con errores de formato" if r.invalidas else ""))
     return 1 if r.invalidas else 0
 

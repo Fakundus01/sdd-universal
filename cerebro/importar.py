@@ -15,6 +15,7 @@ MARCA = "importado"
 _FILA_ESC = re.compile(r"^\|\s*(S\d{2,3})\s*\|")
 _FILA_HAL = re.compile(r"^\|\s*(H\d+)\s*\|")
 _FECHA = re.compile(r"\d{4}-\d{2}-\d{2}")
+_NOMBRE_FECHA = re.compile(r"^(\d{4}-\d{2}-\d{2})-")
 _NOMBRE = re.compile(r"^\d{4}-\d{2}-\d{2}-(.+)\.md$")
 _NEGRITA_INICIAL = re.compile(r"^\*\*(.+?)\*\*")
 
@@ -29,6 +30,7 @@ class Resumen:
     actualizadas: int = 0
     sin_cambios: int = 0
     editadas: list[str] = field(default_factory=list)
+    huerfanas: list[str] = field(default_factory=list)
     avisos: list[str] = field(default_factory=list)
     invalidas: list[str] = field(default_factory=list)
     por_tipo: dict[str, int] = field(default_factory=dict)
@@ -43,6 +45,7 @@ class Candidata:
     fuente: str
     fecha: str
     tags: list[str]
+    origen: str = ""
 
 
 def celdas(linea: str) -> list[str]:
@@ -58,11 +61,26 @@ def _una_linea(texto: str) -> str:
     return " ".join(texto.split())
 
 
+def _matriz(texto: str) -> list[str] | None:
+    """Las líneas de la sección «## 1 · Matriz…» (hasta el próximo `## `); None si no está."""
+    lineas = texto.replace("\r\n", "\n").split("\n")
+    try:
+        ini = next(i for i, l in enumerate(lineas) if re.match(r"^##\s+1\b", l))
+    except StopIteration:
+        return None
+    fin = next((i for i in range(ini + 1, len(lineas)) if lineas[i].startswith("## ")), len(lineas))
+    return lineas[ini + 1:fin]
+
+
 def _escenarios(texto: str, avisos: list[str]) -> list[Candidata]:
     m = re.search(r"\*\*Versión:\*\*[^\n]*?(\d{4}-\d{2}-\d{2})", texto)
     fecha = m.group(1) if m else datetime.date.today().isoformat()
     out = []
-    for linea in texto.split("\n"):
+    matriz = _matriz(texto)
+    if matriz is None:
+        avisos.append("scenarios.md: no encuentro la sección «## 1 · Matriz de situaciones»; se saltea")
+        return out
+    for linea in matriz:
         m = _FILA_ESC.match(linea)
         if not m:
             continue
@@ -74,13 +92,14 @@ def _escenarios(texto: str, avisos: list[str]) -> list[Candidata]:
         cuerpo = (f"**Situación:** {situacion}\n\n**¿Funciona hoy?** {funciona}\n\n"
                   f"**Problema:** {problema}\n\n**Adaptación:** {adaptacion}")
         out.append(Candidata(id_.lower(), "escenario", _una_linea(situacion), cuerpo,
-                             f"{PROYECTO}/scenarios.md#{id_}", fecha, [id_]))
+                             f"{PROYECTO}/scenarios.md#{id_}", fecha, [id_], "scenarios.md"))
     return out
 
 
 def _hallazgos(texto: str, nombre: str, avisos: list[str]) -> list[Candidata]:
     m = re.search(r"(\d{4}-\d{2})", nombre)
     fecha = f"{m.group(1)}-01" if m else datetime.date.today().isoformat()
+    sufijo = re.sub(r"^hallazgos-", "", Path(nombre).stem).lower()
     out = []
     for linea in texto.split("\n"):
         m = _FILA_HAL.match(linea)
@@ -93,8 +112,8 @@ def _hallazgos(texto: str, nombre: str, avisos: list[str]) -> list[Candidata]:
         id_, ejemplo, donde, paso, propuesta = c
         cuerpo = (f"**Ejemplo:** {ejemplo}\n\n**Dónde:** {donde}\n\n"
                   f"**Qué pasó:** {paso}\n\n**Propuesta:** {propuesta}")
-        out.append(Candidata(id_.lower(), "hallazgo", _una_linea(f"{id_} · {donde}"), cuerpo,
-                             f"{PROYECTO}/examples/{nombre}#{id_}", fecha, [id_]))
+        out.append(Candidata(f"{sufijo}-{id_.lower()}", "hallazgo", _una_linea(paso) or id_, cuerpo,
+                             f"{PROYECTO}/examples/{nombre}#{id_}", fecha, [id_], nombre))
     return out
 
 
@@ -145,7 +164,7 @@ def _lecciones(texto: str, loop: str) -> list[Candidata]:
             continue
         n += 1
         out.append(Candidata(f"{loop}-l{n}", "leccion", titulo, completo,
-                             f"{PROYECTO}/sdd/loops/{loop}.md#resumen-al-cortar", fecha, [loop]))
+                             f"{PROYECTO}/sdd/loops/{loop}.md#resumen-al-cortar", fecha, [loop], f"{loop}.md"))
     return out
 
 
@@ -177,6 +196,13 @@ def _con_marca(texto: str) -> str:
     cierre = lineas.index("---", 1)
     lineas.insert(cierre, f"{MARCA}: {_hash(texto)}")
     return "\n".join(lineas)
+
+
+def _tiene_marca(ruta: Path) -> bool:
+    try:
+        return _sin_marca(ruta.read_text(encoding="utf-8"))[1] is not None
+    except (OSError, UnicodeDecodeError):
+        return False
 
 
 def _existentes(carpeta: Path) -> dict[str, Path]:
@@ -223,6 +249,12 @@ def importar(repo: Path, base: Path) -> Resumen:
         raise ErrorImportar(f"no existe {base}: corré `cerebro.py init`")
     r = Resumen()
     cands = candidatas(repo, r.avisos)
+    vistos: dict[str, Candidata] = {}
+    for c in cands:
+        if c.id in vistos:
+            raise ErrorImportar(f"el id «{c.fuente.split('#')[-1]}» está repetido en {c.origen}; "
+                                "no se importó nada (corregí la fila repetida)")
+        vistos[c.id] = c
     raiz = base / "proyectos"
     raiz.mkdir(exist_ok=True)
     raiz_real = raiz.resolve()
@@ -231,6 +263,8 @@ def importar(repo: Path, base: Path) -> Resumen:
         raise ErrorImportar(f"{carpeta}: queda fuera de CEREBRO_DIR/proyectos (¿un enlace?)")
     previas = _existentes(carpeta)
     for c in cands:
+        if c.id in previas:  # la fecha de una nota ya importada no cambia: el hash de cambio es por fila
+            c.fecha = _NOMBRE_FECHA.match(previas[c.id].name).group(1)
         texto = _texto(c)
         nota, errores = notas.parsear(texto, c.fuente)
         if errores:
@@ -249,9 +283,14 @@ def importar(repo: Path, base: Path) -> Resumen:
         resto, marca = _sin_marca(actual)
         if marca != _hash(resto):
             r.editadas.append(f"{c.fuente.split('#')[-1]} ({destino.name}): editada a mano; no se pisa")
-        elif actual.replace("\r\n", "\n") == texto:
+        elif actual == texto:
             r.sin_cambios += 1
         else:
             destino.write_text(texto, encoding="utf-8", newline="\n")
             r.actualizadas += 1
+    for id_, ruta in sorted(previas.items()):
+        if id_ not in vistos and _tiene_marca(ruta):
+            n = notas.parsear(ruta.read_text(encoding="utf-8"), ruta.name)[0]
+            donde = n.fuente.split("/", 1)[-1] if n else id_
+            r.huerfanas.append(f"{donde} ({ruta.name}): ya no está en el origen; la nota queda")
     return r

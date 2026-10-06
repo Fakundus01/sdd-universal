@@ -350,10 +350,14 @@ class TestIndiceRoto(ConIndice):
         primero = self.abrir()
         primero.indexar(self.base, todo=True)
         primero.close()
+        segundo = self.abrir()
         self.db.write_bytes(b"otra vez roto " * 100)
+        segundo.indexar(self.base, todo=True)
+        segundo.close()
+        self.db.write_bytes(b"tercera rotura " * 100)
         self.abrir().indexar(self.base, todo=True)
         copias = sorted(p.read_bytes()[:10] for p in self.db.parent.glob("indice.sqlite.roto*"))
-        self.assertEqual(copias, [b"esto no es", b"otra vez r"])
+        self.assertEqual(copias, [b"esto no es", b"otra vez r", b"tercera ro"])
         self.assertTrue(self.abrir().buscar("UnboundLocalError"))
 
     def test_base_bloqueada_no_dice_que_falta_fts5(self):
