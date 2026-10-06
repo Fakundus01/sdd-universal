@@ -1,5 +1,8 @@
-# Review C-6 @ a32b3c1
-**Veredicto:** CHANGES_REQUESTED
+# Review C-6 @ 9b71e38
+**Veredicto:** APPROVED
+
+## Vuelta 1 @ a32b3c1
+Veredicto de la vuelta 1: CHANGES_REQUESTED (hallazgos 1 y 2 abajo; resueltos en la vuelta 2).
 
 Reviewer independiente (tier ALTO). Revisé el diff real `c0e29bb..a32b3c1` (más `cbe7e80`, que solo agrega el handback) en el worktree `sdd-universal-C-6-rev`. Usé el intérprete del venv del implementer solo como ejecutable. No hice ninguna llamada real a OpenAI ni gasté nada; no busqué ni leí ninguna clave real. El `.env` temporal de prueba (con una clave falsa) lo borré, y el árbol quedó limpio.
 
@@ -96,3 +99,66 @@ Cambié uno por vez, corrí la suite completa con el venv mediante `subprocess.r
 
 ## Mejoras al arnés detectadas
 - Para el prompter: en las tarjetas que integran una API externa, sumar a la plantilla el borde «respuesta 2xx con cuerpo inesperado (HTML de proxy o portal cautivo, campo `null`)», y exigir que cada valor de una frontera del tipo `>= 500` o `== 401` tenga un test exacto en ese valor (los mutantes de borde R4 y R10 lo muestran).
+
+## Vuelta 2 @ 9b71e38
+**Veredicto:** APPROVED
+
+Diff `9fcebc3..9b71e38`: `cerebro/embedders.py` (+11 −4), `cerebro/tests/test_openai.py` (+104 −0) y `cerebro/README.md` (+2). Todo dentro de la zona. Ningún test se borró ni se cambió: en los tests no hay ni una línea `-`.
+
+### Verificación re-ejecutada
+```text
+$ <venv C-6>/python.exe -m unittest discover -s cerebro/tests
+Ran 202 tests in 12.804s
+OK
+$ python -m unittest discover -s cerebro/tests        (sistema, openai 2.28.0)
+Ran 202 tests in 8.328s
+OK (skipped=3)
+$ <venv C-6>/python.exe sinred.py                       (socket/DNS bloqueados)
+Ran 202 tests in 12.720s
+OK
+intentos de red: []
+$ python harness/verify.py --full
+VERDE — 0 FAIL, 1 WARN   (sin 'lint', preexistente; el current.md de plantilla que crea, borrado)
+```
+
+### Hallazgos de la vuelta 1
+1. **Resuelto. Respuesta 200 malformada (`embedders.py:260-270`).** El parseo ahora está dentro de un `try`. El `ErrorEmbedder` se lanza fuera del `except` y no cita la respuesta. Lo probé con la **CLI real en subproceso** (`cerebro/cerebro.py` como `__main__`, con `httpx2.HTTPTransport.handle_request` reemplazado por respuestas armadas, `socket.connect` bloqueado y la clave falsa `sk-REVIEWER-falsa-…` dentro del cuerpo de cada respuesta). Los 5 casos dieron `code=2`, salida que empieza con `error:` en español, sin `Traceback` y sin la clave:
+   - texto plano: «OpenAI devolvió una respuesta que no sirve: no tiene la forma esperada (¿un proxy o un portal cautivo en el medio?)»
+   - sin `data`, `data: null` y embedding string: el mismo mensaje.
+   - `index` duplicado: «… trajo 2 vectores con índices que no cuadran para 1 textos».
+
+   También la sonda en proceso `sondas.py`: 50/50 OK.
+2. **Resuelto. Reintento ante 500:** `test_500_se_reintenta` mata a R4.
+3. **Resuelto.** `test_index_duplicado_o_faltante_es_error` mata a R14.
+4. **Resuelto.** `test_la_clave_se_tacha_antes_de_truncar_a_300` mata a R13.
+5. **Resuelto.** `cerebro/README.md:47` tiene la decisión con fecha (2026-10-06, §D.4).
+6. La nota sobre `api_key` en el cliente del SDK sigue igual. No bloquea.
+
+### Mutantes (los 14 de la vuelta 1 más 2 sobre el código nuevo)
+Uno por vez, suite completa con `subprocess.run(..., timeout=120)`, revertidos.
+
+| # | Mutante | Resultado | Corrida | Test que lo mató |
+|---|---|---|---|---|
+| R1 | `_sin_clave` no tacha | MUERTO | Ran 202 tests, FAILED (failures=8) | test_la_clave_no_aparece_en_ningun_error |
+| R2 | raise dentro del `except` | MUERTO | Ran 202 tests, FAILED (failures=3) | test_la_clave_no_aparece_en_ningun_error |
+| R3 | `repr` con la clave | MUERTO | Ran 202 tests, FAILED (failures=1) | test_repr_y_str_del_embedder_no_llevan_la_clave |
+| R4 | 500 no se reintenta | MUERTO | Ran 202 tests, FAILED (errors=1) | test_500_se_reintenta |
+| R5 | backoff 2/4/8 | MUERTO | Ran 202 tests, FAILED (failures=3) | test_429_y_despues_ok, test_500_se_reintenta |
+| R6 | lotes solapados | MUERTO | Ran 202 tests, FAILED (failures=1) | test_por_lotes_y_en_orden |
+| R7 | conexión sin reintento | MUERTO | Ran 202 tests, FAILED (failures=1) | test_error_de_conexion_se_reintenta |
+| R8 | guardia apagada | MUERTO | Ran 202 tests, FAILED (failures=7, errors=2) | test_local_a_openai_se_niega_a_mezclar |
+| R9 | entorno sin `strip` | MUERTO | Ran 202 tests, FAILED (failures=1) | test_sin_clave_es_none |
+| R10 | 401 como 403 | MUERTO | Ran 202 tests, FAILED (failures=2) | test_401_error_claro_y_sin_reintento |
+| R11 | `Retry-After` ignorado | MUERTO | Ran 202 tests, FAILED (failures=1) | test_retry_after_se_respeta_con_tope |
+| R12 | la guardia no compara la dim | MUERTO | Ran 202 tests, FAILED (failures=3, errors=1) | test_cambiar_dimension_o_nombre_sin_todo_es_error |
+| R13 | truncar antes de tachar | MUERTO | Ran 202 tests, FAILED (failures=1) | test_la_clave_se_tacha_antes_de_truncar_a_300 |
+| R14 | `index` reemplazado por `len` | MUERTO | Ran 202 tests, FAILED (failures=5) | test_index_duplicado_o_faltante_es_error |
+| R15 | `except` del parseo estrechado a `KeyError` | MUERTO | Ran 202 tests, FAILED (failures=1, errors=7) | test_la_cli_real_en_subproceso_con_respuesta_malformada, test_respuesta_200_malformada_es_error_claro_sin_encadenar |
+| R16 | raise del malformado dentro del `except` (encadena) | MUERTO | Ran 202 tests, FAILED (failures=6) | test_respuesta_200_malformada_es_error_claro_sin_encadenar |
+
+### Checkpoints
+- C1: [x] `verify.py --full` VERDE.
+- C2: [x] Los criterios 1–5 tienen evidencia y se probaron con sondas propias. La zona se respetó.
+- C3: [x] Errores en español, código 2 y sin traceback (`cerebro/cerebro.py:3`), también ante respuestas malformadas.
+- C4: [x] La verificación la re-ejecuté yo, con el SDK real sobre `MockTransport`, sin red y sin tests debilitados. Murieron los 16 mutantes.
+- C5: [x] Handback de la vuelta 2 commiteado, sin secretos y con la variable documentada.
