@@ -37,41 +37,69 @@ async function archivosDe(fn, opciones){
 
 const PLAYBOOKS = fs.readdirSync(path.join(RAIZ, "playbooks"))
   .filter(f => f.endsWith(".md") && !f.startsWith("_")).map(f => f.replace(/\.md$/, ""));
+// custom.md lo arma la web: acá linkea a un MD que viaja y a uno que no
+const CUSTOM = ["# custom", "", "Ver [el master](SDD-MASTER.md#r01) y [escenarios](scenarios.md).", ""].join("\n");
 const BASE = {nombre: "Prueba", tipoNombre: "Web", prompt: "P", playbooks: PLAYBOOKS,
   custom: "# custom\n", conTecnologias: true, conGuia: true, brownfield: false,
   conSkills: true, conHarness: true};
 
-/* Links `](x.md…)` relativos fuera de bloques y code spans. Chequeo propio:
-   no usa nada de paquete.js. */
-function linksMd(texto){
+/* Links relativos a un archivo (cualquier extensión) fuera de bloques y code
+   spans, en orden. Chequeo propio: no usa nada de paquete.js. */
+function linksArchivo(texto){
   const out = [];
-  let fence = false;
+  let abre = null;
   for (const linea of texto.replace(/\r/g, "").split("\n")){
-    if (/^\s*```/.test(linea)){ fence = !fence; continue; }
-    if (fence) continue;
-    const sinCode = linea.replace(/`[^`]*`/g, m => " ".repeat(m.length));
-    for (const m of sinCode.matchAll(/\]\(([^)\s]+)\)/g)){
+    const f = linea.match(/^\s*(`{3,}|~{3,})/);
+    if (abre){ if (f && f[1][0] === abre[0] && f[1].length >= abre.length && /^\s*\S+\s*$/.test(linea)) abre = null; continue; }
+    if (f){ abre = f[1]; continue; }
+    const sinCode = linea.replace(/(`+)[^`].*?\1(?!`)/g, m => " ".repeat(m.length));
+    for (const m of sinCode.matchAll(/(?<![!\\])\[[^\]]*\]\(([^)\s]+)\)/g)){
       const u = m[1];
       if (/^(#|[a-z][a-z0-9+.-]*:|\/)/i.test(u)) continue;
-      const p = u.split("#")[0];
-      if (/\.md$/i.test(p)) out.push(p);
+      const p = u.split(/[#?]/)[0];
+      if (/\.[a-z0-9]+$/i.test(p)) out.push(p);
     }
   }
   return out;
 }
+
+const resolver = (desde, l) => path.posix.normalize(path.posix.join(path.posix.dirname(desde), decodeURI(l)));
 
 function rotos(archivos){
   const presentes = new Set(archivos.map(a => a.nombre));
   let total = 0; const malos = [];
   for (const a of archivos){
     if (!a.nombre.endsWith(".md")) continue;
-    for (const l of linksMd(a.contenido)){
+    for (const l of linksArchivo(a.contenido)){
       total++;
-      const dest = path.posix.normalize(path.posix.join(path.posix.dirname(a.nombre), decodeURI(l)));
-      if (!presentes.has(dest)) malos.push(`${a.nombre} -> ${l}`);
+      if (!presentes.has(resolver(a.nombre, l))) malos.push(`${a.nombre} -> ${l}`);
     }
   }
   return {total, malos};
+}
+
+/* El «0 rotos» se cumple también degradando todo a texto. Acá: cada link del
+   MD original cuyo destino viaja en el ZIP sigue siendo un link, y al mismo
+   archivo lógico (el de su `origen`); los demás quedaron como texto. */
+function conservados(archivos){
+  const mapa = new Map(archivos.filter(a => a.origen).map(a => [a.origen, a.nombre]));
+  const problemas = [];
+  let esperados = 0;
+  for (const a of archivos){
+    if (!a.origen) continue;
+    if (a.origen !== "custom.md")
+      assert.ok(fs.existsSync(path.join(RAIZ, a.origen)), `el origen ${a.origen} de ${a.nombre} no existe en el repo`);
+    if (!a.nombre.endsWith(".md")) continue;
+    const orig = a.origen === "custom.md" ? CUSTOM : leer(a.origen);
+    const esperado = linksArchivo(orig)
+      .map(l => mapa.get(path.posix.normalize(path.posix.join(path.posix.dirname(a.origen), decodeURI(l)))))
+      .filter(Boolean);
+    esperados += esperado.length;
+    const obtenido = linksArchivo(a.contenido).map(l => resolver(a.nombre, l));
+    if (JSON.stringify(esperado) !== JSON.stringify(obtenido))
+      problemas.push(`${a.nombre}: esperaba ${esperado.length} links, salieron ${obtenido.length}`);
+  }
+  return {problemas, esperados};
 }
 
 const ZIPS = {
@@ -83,9 +111,13 @@ const ZIPS = {
 };
 
 for (const [nombre, armar] of Object.entries(ZIPS))
-  test(`C-11: ${nombre} no lleva links .md rotos`, async () => {
-    const {total, malos} = rotos(await armar());
+  test(`C-11: ${nombre} no lleva links rotos y conserva los que pueden viajar`, async () => {
+    const archivos = await armar();
+    const {total, malos} = rotos(archivos);
     console.log(`# ${nombre}: ${malos.length} rotos de ${total}`);
     assert.ok(total > 0, "el chequeo no encontró links: está roto");
     assert.deepEqual(malos, [], `${malos.length} rotos de ${total}`);
+    const {problemas, esperados} = conservados(archivos);
+    assert.ok(esperados > 0, "no hay links que conservar: el chequeo está roto");
+    assert.deepEqual(problemas, [], "links que podían viajar y se perdieron o apuntan a otro archivo");
   });

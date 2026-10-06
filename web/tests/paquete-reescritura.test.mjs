@@ -75,3 +75,49 @@ test("visor: un link dentro de un [ … ] de plantilla no deja un [ suelto", () 
   assert.match(html, /\[ninguna \/ lista, ej\.: R01=OFF — ver <a href="custom\.md"><code>custom\.md<\/code><\/a>\]/);
   assert.ok(!/<a href="custom\.md">[^<]*\[/.test(html), "el link se comió el [");
 });
+
+// ---- vuelta 2 -----------------------------------------------------------
+const MAPA2 = new Map([...MAPA, ["mi doc.md", "p/sdd/mi doc.md"], ["harness/verify.py", "p/harness/verify.py"]]);
+const rw2 = (txt, origen = "SDD-MASTER.md") => Paquete.reescribirLinks(txt, origen, MAPA2.get(origen) || "p/" + origen, MAPA2);
+
+test("fences: ``` y ~~~; un ``` dentro de un bloque de 4 no lo cierra (forma de prompts/handback.md)", () => {
+  const L = "[x](scenarios.md)";
+  const cuatro = "````markdown\n" + L + "\n```\n" + L + "\n```\n" + L + "\n````\n" + L;
+  assert.equal(rw2(cuatro), "````markdown\n" + L + "\n```\n" + L + "\n```\n" + L + "\n````\nx");
+  const tilde = "~~~\n" + L + "\n~~~\n" + L;
+  assert.equal(rw2(tilde), "~~~\n" + L + "\n~~~\nx");
+  // un ~~~ no cierra un ``` ni al revés
+  const mezcla = "```\n" + L + "\n~~~\n" + L + "\n```\n" + L;
+  assert.equal(rw2(mezcla), "```\n" + L + "\n~~~\n" + L + "\n```\nx");
+  // el cierre puede ser más largo que la apertura
+  assert.equal(rw2("```\n" + L + "\n`````\n" + L), "```\n" + L + "\n`````\n" + "x");
+});
+
+test("la ruta reescrita se vuelve a codificar: %20 sigue siendo %20", () => {
+  assert.equal(rw2("[d](mi%20doc.md)"), "[d](mi%20doc.md)");
+});
+
+test("extensión .MD sin distinguir mayúsculas, y el enlazar de un archivo .MD", () => {
+  assert.equal(rw2("[s](SCEN.MD) [h](harness.md)"), "s [h](harness.md)");
+  const out = Paquete.enlazar([
+    {nombre: "p/sdd/X.MD", origen: "X.MD", contenido: "[h](harness.md) [s](otro.md)"},
+    {nombre: "p/sdd/harness.md", origen: "harness.md", contenido: ""}]);
+  assert.equal(out[0].contenido, "[h](harness.md) s");
+});
+
+test("título y <…> se reescriben igual; escapado e imagen no se tocan", () => {
+  assert.equal(rw2('[a](agents/leader.md "t") [b](scenarios.md \'t\')'), '[a](../agents/leader.md "t") b');
+  assert.equal(rw2("[a](<agents/leader.md>) [b](<scenarios.md>) [c](<mi doc.md>)"),
+               "[a](<../agents/leader.md>) b [c](<mi%20doc.md>)");
+  assert.equal(rw2("\[a](scenarios.md) ![a](scenarios.md)"), "\[a](scenarios.md) ![a](scenarios.md)");
+});
+
+test("links de referencia: los incluidos se reescriben; los excluidos se van y el uso queda como texto", () => {
+  const t = "ver [a][1], [b][2] y [c][].\n\n[1]: agents/leader.md\n[2]: scenarios.md\n[c]: scenarios.md\n";
+  assert.equal(rw2(t), "ver [a][1], b y c.\n\n[1]: ../agents/leader.md\n");
+});
+
+test("archivo relativo que no es .md y no viaja: queda el texto; si viaja, se reescribe", () => {
+  assert.equal(rw2("[schema](../supabase/schema.sql) [v](harness/verify.py) [d](harness/)"),
+               "schema [v](../harness/verify.py) [d](harness/)");
+});
