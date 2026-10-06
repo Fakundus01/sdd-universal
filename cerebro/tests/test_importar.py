@@ -266,6 +266,15 @@ class TestCLI(Base):
         self.assertIn("0 nuevas", out)
         self.assertIn("8 sin cambios", out)
 
+    def test_una_nota_invalida_se_informa_importa_el_resto_y_sale_con_1(self):
+        armar(self.repo, loops={"mala.md": LOOP_CUMPLIDO.replace("2026-09-30", "2026-13-45")})
+        code, out, err = self.cli("importar-sdd", str(self.repo))
+        self.assertEqual(code, 1)
+        self.assertIn("saltada (formato)", err)
+        self.assertIn("fecha", err)
+        self.assertIn("2 con errores de formato", out)
+        self.assertEqual(len(notas.listar(self.base)), 6)
+
     def test_editada_a_mano_sale_por_stderr(self):
         armar(self.repo)
         self.cli("importar-sdd", str(self.repo))

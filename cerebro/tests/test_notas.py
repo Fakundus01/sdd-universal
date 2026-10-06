@@ -4,6 +4,7 @@ from __future__ import annotations
 import os
 import subprocess
 import unittest
+from unittest import mock
 
 from soporte import NOTA, ConCerebro
 
@@ -249,6 +250,18 @@ class TestInicializar(ConCerebro):
         avisos: list[str] = []
         self.assertEqual(notas.listar(self.base, avisos), [buena])
         self.assertTrue(any("junta" in a for a in avisos), avisos)
+
+    def test_listar_revisa_cada_archivo_aunque_la_carpeta_no_se_haya_detectado_como_enlace(self):
+        """Defensa en profundidad: si un enlace se escapa del filtro de carpetas, sus archivos igual no entran."""
+        buena = self.nota("p", "a.md", "A", "x")
+        fuera = self.afuera / "fuera"
+        fuera.mkdir()
+        (fuera / "ajena.md").write_text(VALIDA, encoding="utf-8")
+        crear_enlace(self, self.base / "proyectos" / "junta", fuera)
+        avisos: list[str] = []
+        with mock.patch.object(notas, "_es_enlace", return_value=False):
+            self.assertEqual(notas.listar(self.base, avisos), [buena])
+        self.assertTrue(any("junta" in x and "sale" in x for x in avisos), avisos)
 
     def test_listar_con_proyectos_como_enlace_hacia_afuera_no_lee_nada(self):
         ajeno = self.afuera / "ajeno"
