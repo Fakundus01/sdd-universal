@@ -99,6 +99,13 @@ class Card:
                         meta[key.strip()] = _clean_value(value)
         return cls(path, meta, body, cls._criteria(body))
 
+    @property
+    def deps(self) -> list[str]:
+        """`depende_de: [A, B]`, `[A,B]`, con comillas o sin corchetes; ausente o `[]` es sin dependencias."""
+        raw = self.meta.get("depende_de", "").strip().strip("[]")
+        items = (item.strip().strip("'\"").strip() for item in raw.split(","))
+        return [i for i in items if i and not PLACEHOLDER_RE.match(i)]
+
     @staticmethod
     def _criteria(body: str) -> list[str]:
         match = re.search(r"^##\s+Criterios de aceptaci[oó]n\s*$(.*?)(?=^##\s|\Z)", body, re.M | re.S | re.I)
@@ -190,8 +197,43 @@ class HarnessChecks:
             if len(ids) > 1:
                 self.report.fail(f"rama {branch}: {len(ids)} tarjetas in_progress ({', '.join(ids)}); máximo 1 por rama")
                 errors += 1
+        errors += self._check_graph()
         if self.cards and not errors:
             self.report.ok(f"Tarjetas válidas ({len(self.cards)})")
+
+    def _check_graph(self) -> int:
+        """orchestration.md §10: cada `depende_de` existe, el grafo no tiene ciclos y no se despacha fuera de orden."""
+        by_id = {c.id: c for c in self.cards}
+        errors = 0
+        for card in self.cards:
+            rel = self._rel(card.path)
+            for dep in card.deps:
+                if dep not in by_id:
+                    self.report.fail(f"{rel}: depende_de {dep} y esa tarjeta no existe (sdd/cards/{dep}.md)")
+                    errors += 1
+                elif card.state in ("in_progress", "review", "done") and by_id[dep].state != "done":
+                    self.report.fail(f"{rel}: {card.state} pero depende de {dep}, que está {by_id[dep].state or 'sin estado'} "
+                                     "(despacho fuera de orden: esperá a que sea done)")
+                    errors += 1
+        seen: set[str] = set()
+
+        def visit(node: str, path: list[str]) -> None:
+            if node in path:
+                cycle = path[path.index(node):] + [node]
+                self.report.fail(f"ciclo en depende_de: {' -> '.join(cycle)} (tarjeta mal partida: re-partila)")
+                nonlocal errors
+                errors += 1
+                return
+            if node in seen:
+                return
+            seen.add(node)
+            for dep in by_id[node].deps:
+                if dep in by_id:
+                    visit(dep, path + [node])
+
+        for card_id in sorted(by_id):
+            visit(card_id, [])
+        return errors
 
     def _check_done(self, card: Card, rel: str, branch: str) -> int:
         if not card.criteria:

@@ -203,3 +203,56 @@ class TestRepoSinCommits(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestGrafoDeTarjetas(ChecksCase):
+    """orchestration.md §10: `depende_de` existe, sin ciclos, y no se despacha antes de tiempo."""
+
+    def test_dependencia_inexistente_falla(self):
+        self.p.card(id="H-1", depende_de="[X-9]")
+        report = self.run_checks()
+        self.assertFails(report, "H-1")
+        self.assertFails(report, "X-9")
+        self.assertFails(report, "no existe")
+
+    def test_ciclo_entre_dos_falla_y_lo_muestra(self):
+        self.p.card(id="H-1", depende_de="[H-2]")
+        self.p.card(id="H-2", depende_de="[H-1]")
+        self.assertFails(self.run_checks(), "ciclo")
+        self.assertFails(self.run_checks(), "H-1 -> H-2 -> H-1")
+
+    def test_autodependencia_es_ciclo(self):
+        self.p.card(id="H-1", depende_de="[H-1]")
+        self.assertFails(self.run_checks(), "H-1 -> H-1")
+
+    def test_in_progress_con_dependencia_sin_done_falla(self):
+        self.p.card(id="H-1", estado="pending")
+        self.p.card(id="H-2", estado="in_progress", rama="feat/x", depende_de="[H-1]")
+        report = self.run_checks()
+        self.assertFails(report, "H-2")
+        self.assertFails(report, "fuera de orden")
+
+    def test_review_con_dependencia_sin_done_falla(self):
+        self.p.card(id="H-1", estado="in_progress", rama="feat/a")
+        self.p.card(id="H-2", estado="review", rama="feat/b", depende_de="[H-1]")
+        self.assertFails(self.run_checks(), "fuera de orden")
+
+    def test_sin_depende_de_o_vacio_es_valido(self):
+        self.p.card(id="H-1")
+        self.p.card(id="H-2", depende_de="[]")
+        report = self.run_checks()
+        self.assertEqual(report.messages("FAIL"), [])
+
+    def test_formas_de_la_lista_y_dependencia_done_es_valida(self):
+        self.p.card(id="H-1", estado="done", rama="main")
+        self.p.review("H-1")
+        self.p.card(id="H-2")
+        for forma in ("[H-1, H-2]", "[H-1,H-2]", '["H-1", \'H-2\']', "H-1"):
+            self.p.card(id="H-3", depende_de=forma)
+            fails = [f for f in self.run_checks().messages("FAIL") if "H-3" in f]
+            self.assertEqual(fails, [], f"forma {forma!r}")
+
+    def test_pending_con_dependencia_sin_done_es_valida(self):
+        self.p.card(id="H-1")
+        self.p.card(id="H-2", depende_de="[H-1]")
+        self.assertEqual(self.run_checks().messages("FAIL"), [])

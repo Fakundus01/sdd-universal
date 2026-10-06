@@ -22,7 +22,7 @@ titulo: Tarjeta de prueba
 estado: {estado}
 feature: {feature}
 rama: {rama}
----
+{extra}---
 
 # Tarjeta {id}
 
@@ -66,9 +66,10 @@ class Project:
         return self.git("rev-parse", "--short", "HEAD")
 
     def card(self, id: str = "H-1", estado: str = "pending", feature: str = "Login", rama: str = "",
-             criterios: str = "1. Con datos válidos entra") -> Path:
+             criterios: str = "1. Con datos válidos entra", depende_de: str | None = None) -> Path:
+        extra = "" if depende_de is None else f"depende_de: {depende_de}\n"
         return self.write(f"sdd/cards/{id}.md", CARD.format(id=id, estado=estado, feature=feature, rama=rama,
-                                                            criterios=criterios))
+                                                            criterios=criterios, extra=extra))
 
     def review(self, id: str = "H-1", rama: str = "main", verdict: str = "APPROVED",
                title_hash: str = "a942c177") -> Path:

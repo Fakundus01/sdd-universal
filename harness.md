@@ -158,9 +158,10 @@ sdd/
 1. Existen los archivos base (`harness.config.json`, `sdd/SDD-MASTER.md`, `sdd/progress/<rama>/current.md` — lo crea si falta; en modo LITE no, ver §10).
 2. Toda ruta citada en los docs de `cited_paths_docs` y en las tarjetas `done` existe (`src/x.ts:120` y `#L3` se aceptan). En las **celdas de tabla** también se revisa el nombre suelto entre backticks (`consultas.py`, sin carpeta): tiene que existir algún archivo con ese nombre en el proyecto. Solo con extensiones de archivo conocidas, así `os.path` o `Node.js` no cuentan. Las tarjetas pendientes y `design.md` pueden citar archivos que todavía no existen: R08 los escribe antes que el código.
 3. Tarjetas: frontmatter válido, una sola `in_progress` por rama, toda `done` con `rama`, criterios de aceptación y un `review_<ID>.md` en `APPROVED` con hash. La plantilla trae `rama: main` desde el principio; una `review` sin `rama` ya avisa, y el `FAIL` dice qué `rama:` agregar (la carpeta de su review, si la encuentra).
-4. Handbacks de la rama: commiteados, con hash real, sin TAB literal.
-5. `status.md` coherente con las tarjetas (una feature al 100% tiene todas sus tarjetas `done`).
-6. Lint de los archivos cambiados (`lint_file`).
+4. Grafo de tarjetas (`orchestration.md` §10): cada `depende_de` nombra una tarjeta que existe, sin ciclos, y una `in_progress`/`review`/`done` no depende de una que no esté `done`.
+5. Handbacks de la rama: commiteados, con hash real, sin TAB literal.
+6. `status.md` coherente con las tarjetas (una feature al 100% tiene todas sus tarjetas `done`).
+7. Lint de los archivos cambiados (`lint_file`).
 
 Cada uno de estos checks tiene su test **con rojo forzado** (`harness/tests/`, en el repo del SDD Universal: no viaja en el ZIP del proyecto). El arnés se prueba con las mismas reglas que exige.
 
@@ -223,6 +224,7 @@ Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.35 | 2026-10-06 | §7: el arnés revisa `depende_de` de las tarjetas (existe, sin ciclos, sin despacho fuera de orden), por `orchestration.md` §10 (tarjeta L-2). |
 | 0.33.2 | 2026-10-05 | Review R30 de v0.33.1 (R3): la salida perdida de un subproceso (`stdout=None` en Windows bajo carga) se reintenta una vez y, si se repite, es un `FAIL` «salida no disponible» en `verify.py` y un aviso en los hooks, en vez de un traceback (§3). También en `git` (`repo.py`) y en los tests (`support.py`), donde era el flaky de la suite. |
 | 0.33 | 2026-10-05 | Review R30 de v0.33: `sdd/spec.md` y `sdd/sdd-lite.md` entran a los `cited_paths_docs` por default, así H13 se dispara en el caso que lo originó (B1); en LITE, el relevo va a `sdd/sdd-lite.md` y el registro del e2e a `sdd/e2e.md`, sin crear `progress/` (M1). |
 | 0.32 | 2026-10-05 | Hallazgos de usar el paquete en 4 proyectos reales: en LITE, `verify.py` ya no crea `sdd/progress/<rama>/current.md` en cada pre-commit (§10, H7); las rutas citadas se revisan también como nombre suelto en celdas de tabla (§7.2, H13); la plantilla de tarjeta trae `rama: main` y el `FAIL` de una `done` sin `rama` dice cómo arreglarlo (§7.3, H23); el ejemplo de `lint_file` pasa a `oxlint`, el que trae `create-vite` (§2, H9). |
