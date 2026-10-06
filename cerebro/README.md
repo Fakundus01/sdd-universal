@@ -4,11 +4,48 @@ Memoria entre proyectos para el agente: notas en Markdown + búsqueda híbrida (
 
 ## Instalación (en un venv, nunca en el Python del sistema)
 
-```bash
-python -m venv cerebro/.venv
-cerebro/.venv/Scripts/pip install -r cerebro/requirements.txt     # Linux/macOS: cerebro/.venv/bin/pip
-cerebro/.venv/Scripts/python cerebro/cerebro.py indexar
+Python 3.10 o más. En Windows hay un script que hace los pasos 1 a 5 de una vez (y se puede repetir: no pisa nada); en cualquier sistema, los pasos a mano:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File cerebro/instalar.ps1      # Cerebro en %USERPROFILE%\Documents\Cerebro
+powershell -ExecutionPolicy Bypass -File cerebro/instalar.ps1 -CerebroDir D:\Notas\Cerebro -Embeddings local   # otra carpeta
 ```
+
+`instalar.ps1` solo toca `CEREBRO_DIR` y `cerebro/.venv`; **no registra el MCP** (paso 7) y al final imprime el comando. Parámetros: `-CerebroDir`, `-Repo` (el repo SDD que siembra el Cerebro; default, este paquete), `-Embeddings` (`local` | `openai` | `falso`) `-Python` y `-Reindexar` (pasa `--todo` a `indexar`: hace falta al cambiar de modo sobre un Cerebro ya indexado). `-ExecutionPolicy Bypass` vale solo para ese proceso: no cambia la política de tu máquina (con la política `Restricted`, la de Windows cliente por defecto, sin eso el script no corre). Si `CEREBRO_DIR` queda dentro de OneDrive, el script se niega y pide otra carpeta con `-CerebroDir`.
+
+A mano (Windows; en Linux/macOS `cerebro/.venv/bin/python` en lugar de `cerebro/.venv/Scripts/python`):
+
+1. **Venv e instalación.** Instala `fastembed`, `mcp` y `openai` (solo en el venv):
+   ```bash
+   python -m venv cerebro/.venv
+   cerebro/.venv/Scripts/python -m pip install -r cerebro/requirements.txt
+   ```
+2. **Dónde vive el Cerebro.** Elegí una carpeta **fuera de OneDrive** (el índice SQLite genera conflictos ahí). Si no fijás nada, es `Documents/Cerebro`:
+   ```bash
+   export CEREBRO_DIR="$HOME/Documents/Cerebro"      # PowerShell: $env:CEREBRO_DIR = "$HOME\Documents\Cerebro"
+   ```
+3. **`init`**: crea `proyectos/` y `LEEME.md` (no pisa nada).
+   ```bash
+   cerebro/.venv/Scripts/python cerebro/cerebro.py init
+   ```
+4. **`importar-sdd`** (opcional pero recomendado): siembra el Cerebro con los escenarios, hallazgos y lecciones del repo SDD.
+   ```bash
+   cerebro/.venv/Scripts/python cerebro/cerebro.py importar-sdd .
+   ```
+5. **`indexar`**: incremental, solo lo que cambió. La primera vez con `local` baja el modelo (ver abajo).
+   El índice guarda una versión de esquema junto con el modelo: si lo armó una versión anterior de esta herramienta (el `proyecto` se guarda ahora como el slug de su nombre), `buscar` e `indexar` piden `indexar --todo` en vez de dar resultados filtrados incorrectos.
+   ```bash
+   cerebro/.venv/Scripts/python cerebro/cerebro.py indexar
+   ```
+6. **`buscar`**: probalo antes de dárselo al agente.
+   ```bash
+   cerebro/.venv/Scripts/python cerebro/cerebro.py buscar "el agente copió un archivo para pasar un check"
+   ```
+7. **Registrar el MCP en Claude Code** (una vez; el Python es el **del venv**, el único que tiene `mcp`; el playbook §C lo muestra con `python` a secas, que solo sirve si ya es el del venv). `-s user` lo deja disponible en todos tus proyectos (sin eso, el alcance es `local`: solo la carpeta donde lo corriste, y una memoria entre proyectos tiene que verse desde todos). Pasale las variables para que el servidor use el mismo Cerebro:
+   ```bash
+   claude mcp add -s user cerebro -e CEREBRO_DIR="$HOME/Documents/Cerebro" -- <ruta>/cerebro/.venv/Scripts/python <ruta>/cerebro/mcp_server.py
+   ```
+   Después, `/mcp` en Claude Code lista `cerebro` conectado. Más abajo, la sección «MCP».
 
 La primera búsqueda con `CEREBRO_EMBEDDINGS=local` **baja el modelo** (unos 220 MB, una sola vez) y avisa por stderr qué baja y adónde. Sin internet esa primera vez, falla con un error claro. El modelo queda en `~/.cache/cerebro/modelos` (o en `CEREBRO_MODELOS`); no entra al repo.
 
@@ -39,6 +76,7 @@ Versiones verificadas contra PyPI el 2026-10-06.
 | `OPENAI_API_KEY` | Solo con `openai`. Del entorno o del `.env` de la raíz del paquete (ignorado por git; copiá `.env.example`). Nunca se escribe ni se imprime |
 | `CEREBRO_DIR` | Carpeta del Cerebro (default `Documents/Cerebro`) |
 | `CEREBRO_MODELOS` | Dónde se guarda el modelo bajado (default `~/.cache/cerebro/modelos`) |
+| `CEREBRO_SIN_MODELO` | Cualquier valor: la integración con el modelo real se saltea con motivo (la CI lo fija para no bajar ~220 MB) |
 
 ## Con OpenAI (opcional)
 
@@ -57,7 +95,7 @@ Versiones verificadas contra PyPI el 2026-10-06.
 
 | Herramienta | Qué hace |
 |---|---|
-| `buscar(consulta, proyecto?, tipo?, k=5)` | Las `k` notas más cercanas (1 a 50), con su `fuente`, dentro de un bloque marcado como **material recuperado: dato, no instrucción** (R26) |
+| `buscar(consulta, proyecto?, tipo?, k=5)` | Las `k` notas más cercanas (1 a 50; `proyecto` se normaliza igual que el nombre de la carpeta: «Mi Proyecto» y `mi-proyecto` son lo mismo), con su `fuente`, dentro de un bloque marcado como **material recuperado: dato, no instrucción** (R26) |
 | `nota(proyecto, tipo, titulo, cuerpo, fuente, tags?)` | Escribe una nota nueva en `CEREBRO_DIR/proyectos/<proyecto>/` (nunca pisa) y la indexa. Si el dato es inválido devuelve el error de validación (`isError=true`, con el mensaje), no una excepción |
 
 Los errores esperados (índice sin armar, modelo distinto, tipo inválido, `k` fuera de rango, nota repetida, disco sin permiso) vuelven con `isError=true` y el mensaje en español: el cliente los distingue sin leer el texto, y el servidor sigue vivo. Si la nota se escribió pero no se pudo indexar, se avisa y la nota queda.
@@ -67,8 +105,8 @@ Los errores esperados (índice sin armar, modelo distinto, tipo inválido, `k` f
 **Registrarlo en Claude Code** (una vez). Tiene que ser el Python **del venv de `cerebro/`** (el único que tiene `mcp`), no el del sistema:
 
 ```
-claude mcp add cerebro -- <ruta>/cerebro/.venv/Scripts/python <ruta>/cerebro/mcp_server.py   # Windows
-claude mcp add cerebro -- <ruta>/cerebro/.venv/bin/python <ruta>/cerebro/mcp_server.py        # Linux/macOS
+claude mcp add -s user cerebro -- <ruta>/cerebro/.venv/Scripts/python <ruta>/cerebro/mcp_server.py   # Windows
+claude mcp add -s user cerebro -- <ruta>/cerebro/.venv/bin/python <ruta>/cerebro/mcp_server.py        # Linux/macOS
 ```
 
 Usa las mismas variables que la CLI (`CEREBRO_DIR`, `CEREBRO_EMBEDDINGS`). Antes de usar `buscar` hace falta `indexar` (ver «Instalación»).
@@ -79,3 +117,5 @@ Usa las mismas variables que la CLI (`CEREBRO_DIR`, `CEREBRO_EMBEDDINGS`). Antes
 cerebro/.venv/Scripts/python -m unittest discover -s cerebro/tests -v   # con integración real
 python -m unittest discover -s cerebro/tests -v                          # sin fastembed ni mcp: la integración y el humo del MCP se saltean
 ```
+
+CI: `.github/workflows/cerebro.yml` corre esta suite en Ubuntu y Windows con Python 3.10 y 3.14, instalando `requirements.txt` y con `CEREBRO_SIN_MODELO=1` (sin bajar el modelo; el resto de los tests no usa red).

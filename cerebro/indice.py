@@ -38,6 +38,11 @@ CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(texto, tokenize='unicode61 rem
 """
 
 
+# Versión del contenido del índice (no del SQL): sube cuando cambia lo que se guarda y un índice viejo daría
+# resultados filtrados incorrectos sin avisar. 2: `notas.proyecto` es el slug del nombre (C-7).
+VERSION_ESQUEMA = "2"
+
+
 class ErrorIndice(Exception):
     pass
 
@@ -204,6 +209,11 @@ class Indice:
         meta = dict(con.execute("SELECT clave, valor FROM meta"))
         if not meta:
             return
+        if meta.get("esquema") != VERSION_ESQUEMA:
+            raise ErrorModelo(
+                f"el índice se armó con otra versión del esquema ({meta.get('esquema') or 'anterior'}; la actual es "
+                f"{VERSION_ESQUEMA}): guardaba el `proyecto` de otra forma y el filtro daría resultados incorrectos. "
+                "Corré `cerebro.py indexar --todo`")
         if (meta.get("modelo"), meta.get("dim")) != (self.embedder.nombre, str(self.embedder.dim)):
             raise ErrorModelo(
                 f"el índice se armó con el modelo «{meta.get('modelo')}» (dim {meta.get('dim')}) y el activo es "
@@ -254,7 +264,7 @@ class Indice:
             else:
                 self._verificar_modelo(con)
             con.executemany("INSERT OR REPLACE INTO meta(clave, valor) VALUES (?, ?)",
-                            [("modelo", self.embedder.nombre), ("dim", str(self.embedder.dim))])
+                            [("modelo", self.embedder.nombre), ("dim", str(self.embedder.dim)), ("esquema", VERSION_ESQUEMA)])
             previas = dict(con.execute("SELECT ruta, hash FROM notas"))
             vigentes = set()
             for archivo in notas_mod.listar(base, resumen.avisos):
@@ -274,7 +284,7 @@ class Indice:
                 vectores = self._embeber([f"{nota.titulo}\n\n{f}" for f in fragmentos])
                 self._borrar(con, ruta)
                 con.execute("INSERT INTO notas VALUES (?, ?, ?, ?, ?, ?, ?)",
-                            (ruta, firma, nota.proyecto, nota.tipo, nota.fecha, nota.fuente, nota.titulo))
+                            (ruta, firma, notas_mod.slug(nota.proyecto), nota.tipo, nota.fecha, nota.fuente, nota.titulo))
                 for orden, (frag, vector) in enumerate(zip(fragmentos, vectores)):
                     cur = con.execute("INSERT INTO fragmentos(ruta, orden, texto, vector) VALUES (?, ?, ?, ?)",
                                       (ruta, orden, frag, vector))

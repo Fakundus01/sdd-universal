@@ -403,7 +403,7 @@ class TestGuardiaDeModelo(ConIndice):
         self.assertTrue(ind.buscar("UnboundLocalError"))
         con = sqlite3.connect(self.db)
         self.addCleanup(con.close)
-        self.assertEqual(dict(con.execute("SELECT clave, valor FROM meta")), {"modelo": "otro", "dim": "32"})
+        self.assertEqual(dict(con.execute("SELECT clave, valor FROM meta")), {"modelo": "otro", "dim": "32", "esquema": "2"})
 
     def test_buscar_sin_indice_es_error_claro(self):
         ind = self.abrir()

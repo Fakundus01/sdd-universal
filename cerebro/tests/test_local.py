@@ -261,7 +261,7 @@ class TestMetaConLocal(ConCerebro):
         con = sqlite3.connect(self.base / ".cerebro" / "indice.sqlite")
         self.addCleanup(con.close)
         self.assertEqual(dict(con.execute("SELECT clave, valor FROM meta")),
-                         {"modelo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "dim": "384"})
+                         {"modelo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "dim": "384", "esquema": "2"})
 
 
 def coseno(a, b) -> float:
@@ -279,8 +279,13 @@ class TestSymlinksHF(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
 
 
-@unittest.skipUnless(HAY_FASTEMBED, "fastembed no está instalado: `python -m venv cerebro/.venv` y "
-                                    "`cerebro/.venv/Scripts/pip install -r cerebro/requirements.txt`")
+SIN_MODELO = bool(os.environ.get("CEREBRO_SIN_MODELO"))
+MOTIVO_INTEGRACION = ("CEREBRO_SIN_MODELO está fijada (la CI no baja el modelo de ~220 MB)" if SIN_MODELO else
+                      "fastembed no está instalado: `python -m venv cerebro/.venv` y "
+                      "`cerebro/.venv/Scripts/pip install -r cerebro/requirements.txt`")
+
+
+@unittest.skipUnless(HAY_FASTEMBED and not SIN_MODELO, MOTIVO_INTEGRACION)
 class TestLocalIntegracion(unittest.TestCase):
     """Modelo real: la primera corrida lo baja (~220 MB) a `CEREBRO_MODELOS` o `~/.cache/cerebro/modelos`."""
 
@@ -294,6 +299,25 @@ class TestLocalIntegracion(unittest.TestCase):
         self.assertEqual(len(a), e.dim)
         self.assertGreater(coseno(a, b), coseno(a, ajena) + 0.15)
         self.assertGreater(coseno(a, b), coseno(b, ajena) + 0.15)
+
+
+class TestIntegracionSeSalteaEnCI(unittest.TestCase):
+    """La CI instala `requirements.txt` (con fastembed) pero no baja el modelo de ~220 MB: lo pide con una variable."""
+
+    def correr(self, valor: str | None):
+        env = {k: v for k, v in os.environ.items() if k != "CEREBRO_SIN_MODELO"}
+        if valor is not None:
+            env["CEREBRO_SIN_MODELO"] = valor
+        r = subprocess.run([sys.executable, "-m", "unittest", "-v", "test_local.TestLocalIntegracion"],
+                           cwd=str(Path(__file__).parent), env=env, capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=120)
+        return r.stdout + r.stderr
+
+    def test_con_la_variable_se_saltea_con_motivo(self):
+        salida = self.correr("1")
+        self.assertIn("skipped", salida)
+        self.assertIn("CEREBRO_SIN_MODELO", salida)
+        self.assertIn("OK (skipped=1)", salida)
 
 
 if __name__ == "__main__":

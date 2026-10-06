@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 import os
 import subprocess
 import sys
@@ -12,6 +13,7 @@ from unittest import mock
 from soporte import CEREBRO, ConCerebro, Contador
 
 import config
+from notas import escribir_nota
 import embedders
 from embedders import ErrorEmbedder, Falso
 from indice import Indice
@@ -71,6 +73,105 @@ class TestCLI(ConCerebro):
         code, out, _ = self.cli("revisar")
         self.assertNotEqual(code, 0)
         self.assertIn("proyectos/p/mala.md: tipo:", out)
+
+    def test_revisar_avisa_si_el_proyecto_no_es_el_slug_de_la_carpeta(self):
+        self.cli("init")
+        self.nota("sdd-universal", "buena.md", "Buena", "x")
+        rara = self.base / "proyectos" / "sdd-universal" / "rara.md"
+        rara.write_text("---\nproyecto: SDD Universal\ntipo: leccion\nfecha: 2026-10-06\nfuente: x\n---\n# R\n",
+                        encoding="utf-8")
+        code, out, err = self.cli("revisar")
+        self.assertEqual(code, 0, out + err)  # es un aviso: la nota es válida y a mano se escribe como uno quiere
+        self.assertIn("proyectos/sdd-universal/rara.md", err)
+        self.assertIn("SDD Universal", err)
+        self.assertIn("sdd-universal", err)
+        self.assertNotIn("buena.md", err)
+        self.assertIn("2 nota", out)
+        self.assertIn("1 aviso", out)
+
+    def test_buscar_proyecto_normaliza_el_filtro_con_slug(self):
+        self.cli("init")
+        escribir_nota(self.base, "Mi Proyecto", "leccion", "Hallazgo raro", "palabra zarzaparrilla", "x")
+        emb = Contador()
+        self.cli("indexar", embedder=emb)
+        for nombre in ("Mi Proyecto", "mi-proyecto", "  MI proyecto "):
+            with self.subTest(nombre=nombre):
+                code, out, err = self.cli("buscar", "zarzaparrilla", "--json", "--proyecto", nombre, embedder=emb)
+                self.assertEqual(code, 0, err)
+                self.assertEqual([r["proyecto"] for r in json.loads(out)], ["mi-proyecto"])
+
+    def escribir_a_mano(self, carpeta: str, nombre: str, proyecto: str, titulo: str = "A mano",
+                        cuerpo: str = "palabra membrillo") -> Path:
+        ruta = self.base / "proyectos" / carpeta / nombre
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        ruta.write_text(f"---\nproyecto: {proyecto}\ntipo: leccion\nfecha: 2026-10-06\nfuente: x\n---\n"
+                        f"# {titulo}\n\n{cuerpo}\n", encoding="utf-8")
+        return ruta
+
+    def test_nota_a_mano_con_proyecto_natural_se_alcanza_por_el_slug_y_por_el_nombre(self):
+        self.cli("init")
+        self.escribir_a_mano("sdd-universal", "a.md", "SDD Universal")
+        emb = Contador()
+        self.cli("indexar", embedder=emb)
+        for filtro in ("SDD Universal", "sdd-universal"):
+            with self.subTest(filtro=filtro):
+                code, out, err = self.cli("buscar", "membrillo", "--json", "--proyecto", filtro, embedder=emb)
+                self.assertEqual(code, 0, err)
+                self.assertEqual([r["proyecto"] for r in json.loads(out)], ["sdd-universal"])
+
+    def test_proyecto_en_blanco_es_sin_filtro(self):
+        self.cli("init")
+        self.nota("p", "a.md", "Uno", "palabra membrillo")
+        self.nota("q", "b.md", "Dos", "palabra membrillo")
+        emb = Contador()
+        self.cli("indexar", embedder=emb)
+        code, out, err = self.cli("buscar", "membrillo", "--json", "--proyecto", "   ", embedder=emb)
+        self.assertEqual(code, 0, err)
+        self.assertEqual(sorted(r["proyecto"] for r in json.loads(out)), ["p", "q"])
+
+    def test_revisar_no_avisa_por_una_nota_en_una_subcarpeta_del_proyecto(self):
+        self.cli("init")
+        self.escribir_a_mano("p/sub", "x.md", "p")
+        code, out, err = self.cli("revisar")
+        self.assertEqual(code, 0, out + err)
+        self.assertEqual(err, "")
+        self.assertNotIn("aviso", out)
+
+    def test_aviso_de_revisar_dice_como_se_indexa_la_nota(self):
+        self.cli("init")
+        self.escribir_a_mano("sdd-universal", "a.md", "SDD Universal")
+        self.escribir_a_mano("sdd-universal", "b.md", "otro nombre!!")
+        code, out, err = self.cli("revisar")
+        self.assertEqual(code, 0, out + err)
+        linea_a = next(l for l in err.splitlines() if "a.md" in l)
+        linea_b = next(l for l in err.splitlines() if "b.md" in l)
+        self.assertIn("se indexa como «sdd-universal»", linea_a)  # el índice y el filtro la alcanzan
+        self.assertNotIn("no la encuentra", linea_a)
+        self.assertIn("se indexa como «otro-nombre»", linea_b)
+        self.assertIn("no la encuentra", linea_b)
+        self.assertIn("proyecto: sdd-universal", linea_b)
+
+    def test_indice_con_otro_esquema_pide_indexar_todo(self):
+        self.cli("init")
+        self.nota("p", "a.md", "Uno", "palabra membrillo")
+        emb = Contador()
+        self.cli("indexar", embedder=emb)
+        con = sqlite3.connect(config.ruta_indice(self.base))
+        con.execute("DELETE FROM meta WHERE clave = 'esquema'")  # así quedaba un índice armado con el código anterior
+        con.commit()
+        con.close()
+        for comando in (("buscar", "membrillo"), ("indexar",)):
+            with self.subTest(comando=comando):
+                code, out, err = self.cli(*comando, embedder=emb)
+                self.assertEqual(code, 2, out)
+                self.assertIn("esquema", err)
+                self.assertIn("la actual es 2)", err)
+                self.assertIn("indexar --todo", err)
+        code, out, err = self.cli("indexar", "--todo", embedder=emb)
+        self.assertEqual(code, 0, err)
+        code, out, err = self.cli("buscar", "membrillo", embedder=emb)
+        self.assertEqual(code, 0, err)
+        self.assertIn("Uno", out)
 
     def test_indexar_buscar_json(self):
         self.cli("init")
