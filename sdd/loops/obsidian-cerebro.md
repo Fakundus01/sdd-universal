@@ -28,11 +28,10 @@ graph LR
   C-2 --> C-4[C-4 MCP: buscar y nota]
   C-2 --> C-5[C-5 sembrar: escenarios, hallazgos, lecciones]
   C-3 --> C-6[C-6 embedder OpenAI + guardia de modelo]
-  C-3 & C-4 & C-5 --> C-7[C-7 instalación en la máquina del owner]
-  C-6 --> C-7
-  C-1 & C-7 --> C-8[C-8 cierre: review del loop, changelog, status]
+  C-3 & C-4 & C-5 & C-6 --> C-7[C-7 CI de cerebro/ y guía de instalación]
+  C-1 & C-7 --> C-8[C-8 leader: instalación real con OK, OpenAI con OK, cierre]
 ```
-C-1 y C-2 van en paralelo de entrada; después C-3, C-4 y C-5 (tope 3). Cada tarjeta en su rama `v0.36-C-<n>` y su worktree. **Ninguna tarjeta en tier ECONÓMICO** (S42): C-2, C-4 y C-6 tocan rutas, escritura en disco o una API paga.
+Tarjetas en `sdd/cards/C-*.md`; C-8 la hace el leader (instalar en la máquina del owner, registrar el MCP y la primera llamada a OpenAI llevan cada una su OK). C-1 y C-2 van en paralelo de entrada; después C-3, C-4 y C-5 (tope 3). Cada tarjeta en su rama `v0.36-C-<n>` y su worktree. **Ninguna tarjeta en tier ECONÓMICO** (S42): C-2, C-4 y C-6 tocan rutas, escritura en disco o una API paga.
 
 ## Verificación
 Los seis objetivos de arriba @ el hash de la rama; al final, un reviewer independiente los re-ejecuta (R30) en `sdd/progress/v0.36-obsidian-cerebro/review_obsidian-cerebro.md`.

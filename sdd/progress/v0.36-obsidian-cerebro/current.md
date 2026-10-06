@@ -1,25 +1,10 @@
-# Sesión actual — rama `v0.36-obsidian-cerebro`
+# current.md · v0.36-obsidian-cerebro
 
-> Mantenelo al día mientras trabajás. Si la sesión se corta o se limpia el contexto, la próxima arranca leyendo esto (plantilla completa: `prompts/relevo.md`).
+- **Feature / rol:** loop `obsidian-cerebro` (R33) · leader
+- **Loop:** `sdd/loops/obsidian-cerebro.md` — aprobado 2026-10-06, tope 10 vueltas
 
-- **Feature / tarjeta:** _ninguna_
-- **Rol:** _leader / implementer / sesión aparte_
-- **Última actualización:** _—_
-
-## Plan
-_3–5 bullets antes de tocar código._
-
-## Bitácora
-- _archivos tocados, decisiones con su porqué, bloqueos_
-
-## Lo que se probó y no anduvo
-- _intento → por qué falló_
-
-## Verificación
-- _último verify.py, nivel, resultado @ hash_
-
-## Tarjetas en vuelo
-- _ninguna_
+## Bitácora (vuelta = tarjeta cerrada o bloqueada)
+- base · 4cc292e · web/tests 48/49 (conteo de escenarios 40 → 42), verify --quick VERDE
 
 ## Próximo paso
-_Lo primero que hace la próxima sesión. Concreto: archivo, comando o decisión pendiente._
+C-1 y C-2 en paralelo. C-3 y C-4 instalan `fastembed`/`mcp` en un venv del worktree: esperan el OK del owner.
