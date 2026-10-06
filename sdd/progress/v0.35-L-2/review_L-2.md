@@ -1,98 +1,80 @@
-# Review L-2 @ 1c19422
-**Veredicto:** CHANGES_REQUESTED
+# Review L-2 @ d0cfe53
+**Veredicto:** APPROVED
 
-Vuelta 2 (re-review). Diff revisado: `git diff abcb57c..1c19422` (vuelta 1 del implementer, sobre mi review de `f7673be`). Los dos cambios que pedí están resueltos, y todas las sondas y mutantes de la vuelta anterior dan bien. Pero la vuelta 1 metió una **regresión con traceback** en `Card.parse`: una tarjeta sin frontmatter tira `verify.py` abajo.
+Vuelta 3 (última). Diff revisado: `git diff a0213f6..d0cfe53` (vuelta 2 del implementer, sobre mi review de `1c19422`). Están resueltos los dos cambios requeridos y las cuatro mejoras. Repetí todas las sondas: ninguna da traceback. Todos los mutantes no equivalentes mueren.
 
 ## Verificación re-ejecutada
 ```text
-$ python -m unittest discover -s harness/tests -v      # @ 1c19422, tail
-Ran 160 tests in 85.476s
-OK (skipped=1)                                       # 17 de TestGrafoDeTarjetas en ok; el skip es el POSIX de siempre
+$ python -m unittest discover -s harness/tests -v      # @ d0cfe53, tail
+Ran 163 tests in 71.735s
+OK (skipped=1)                                       # 20 de TestGrafoDeTarjetas en ok; el skip es el POSIX de siempre
 
-$ cd harness/tests && python test_checks.py           # directo: ahora la clase está antes de __main__
-Ran 48 tests in 32.631s
+$ cd harness/tests && python test_checks.py
+Ran 51 tests in 28.389s
 OK
 
 $ python harness/verify.py --changed
 [FAIL]  falta harness.config.json en la raíz (plantilla: harness/harness.config.example.json)
-ROJO — 1 FAIL, 0 WARN                                # ajeno a L-2: la base 23b9298 tampoco trae config
+ROJO — 1 FAIL, 0 WARN                                # ajeno a L-2: el repo del paquete no trae config (la base 23b9298 tampoco)
 ```
+El rojo de `verify.py` en este repo está documentado desde la vuelta 1 y es anterior a la tarjeta. La verificación que pide la tarjeta es la suite (criterio 5), y está en verde.
 
-### Regresión encontrada (bloquea)
-Corrí `verify.py --quick` en un proyecto temporal con `sdd/cards/H-1.md` válida y un `sdd/cards/README.md` sin frontmatter:
-```text
-== HEAD 1c19422  rc 1
-  File ".../harness/checks.py", line 182, in load_cards
-    self.cards = [Card.parse(p) for p in sorted(folder.glob("*.md"))] if folder.is_dir() else []
-  File ".../harness/checks.py", line 107, in parse
-    card.deps, card.deps_error = deps, deps_error
-UnboundLocalError: cannot access local variable 'deps' where it is not associated with a value
+## Lo pedido en la vuelta anterior
+| Pedido @ 1c19422 | Estado @ d0cfe53 | Cómo lo verifiqué |
+|---|---|---|
+| Req. 1: `UnboundLocalError` en `Card.parse` sin frontmatter | resuelto: `deps`/`deps_error` se inicializan antes del `if` (`harness/checks.py:94-95`) | sondas de `verify.py --quick` (abajo) y mutante «init dentro de `if sep`» muerto (ERROR en `test_formas_raras_...`) |
+| Req. 2: test con rojo forzado de formas raras de archivo | `test_formas_raras_de_archivo_en_cards_dan_fail_nunca_excepcion` (sin frontmatter, sin cierre, vacío, binario) | el handback pega su ERROR contra `1c19422`; yo lo reproduje con el mutante |
+| Mejora: un ciclo se informa una vez | `assertEqual(..., 1)` en `test_ciclo_entre_dos_...` | el mutante «no marcar `done`», que antes vivía, ahora muere (3 FAIL) |
+| Mejora: el DFS no cuelga | tope de pasos `2·(V+E)+10` con un FAIL «el recorrido no termina» | el mutante sin detección de ciclo antes colgaba y ahora da rojo (4 FAIL); con el tope demasiado chico también muere |
+| Mejora: recortar el ciclo largo | `test_ciclo_largo_se_informa_recortado` | sonda: ciclo de 2000 → `N0 -> … -> N1999 -> N0 -> (2000 tarjetas)` |
+| Mejora: `"[A]"` y `# nada` | `test_lista_entre_comillas_y_comentario_solo_son_validos` | sondas sin FAIL; los dos mutantes mueren |
 
-== base 23b9298  rc 1
-[FAIL]  sdd/cards/README.md: el id del frontmatter (vacío) no coincide con el nombre del archivo
-[FAIL]  sdd/cards/README.md: estado inválido '' (válidos: ...)
-ROJO — 2 FAIL, 0 WARN
-```
-También pasa con un frontmatter sin cerrar (`---\nid: X\n...` sin el segundo `---`) y con un `.md` vacío. Las tres formas, llamando a `Card.parse` directo, dan `UnboundLocalError`.
-
-### Sondas a mano (proyectos temporales con `support.Project`)
-| Caso | Resultado @ 1c19422 |
+## Sondas
+`verify.py --quick` de punta a punta en proyectos temporales, con `H-1.md` válida y un `sdd/cards/README.md` raro:
+| README.md | Resultado |
 |---|---|
-| `[X-9]` inexistente | FAIL que nombra la tarjeta y `X-9` |
-| A→B→A / A→A / A→B→C→D→A | FAIL con el ciclo, una vez cada uno |
-| dos ciclos y una cola, diamante con un ciclo aparte | un FAIL por ciclo; el diamante no es un ciclo |
-| `in_progress`/`done` → `pending`/`blocked` | FAIL «despacho fuera de orden» |
-| `[A,B]`, `["A", 'B']`, `[]`, ausente, vacío, `[ A ,  B ]`, `[A, B]  # c`, `[A,,B,]`, `[<ID>]`, `[] # c` | sin FAIL |
-| YAML en varias líneas (`  - A` y `- A` sin sangría) | FAIL «formato no reconocido: lista en varias líneas» |
-| sin corchetes: `A, B`, `"A", "B"`, `A` | FAIL «no está entre corchetes» |
-| `depende_de:` vacío y la línea siguiente es otra clave | sin FAIL (correcto) |
-| duplicados `[A, 'A', "A"]` | un solo FAIL de fuera de orden |
-| `[A B]` (id con espacio) | FAIL claro «A B no existe» |
-| `{a: 1}`, `[[A]]`, `[` partido en dos líneas | FAIL de formato, sin traceback |
-| id vacío | solo el FAIL del id, no inventa un «no existe» |
-| cadena de 1500 y de 2000 tarjetas | sin FAIL y sin traceback |
-| ciclo de 2000 tarjetas | se encuentra, pero el mensaje es una sola línea con los 2000 ids (ver mejoras) |
-| **tarjeta sin frontmatter / sin cierre / vacía** | **`UnboundLocalError`** (arriba) |
+| sin frontmatter / frontmatter sin cierre / vacío / binario / solo `---` | FAIL de id vacío y de estado inválido (igual que la base), sin traceback |
+| BOM + frontmatter | se lee bien |
+| frontmatter con CRLF y `in_progress` → `H-1` pendiente | FAIL «despacho fuera de orden» (las dependencias se leen con CRLF) |
+| latin-1 | FAIL «no existe» con el carácter reemplazado, sin traceback |
+| `depende_de:` vacío como última línea | válido |
 
-### Mutantes (los maté yo, en una copia temporal de `harness/`, `python -m unittest test_checks.TestGrafoDeTarjetas`)
+Sondas del grafo (las mismas de las vueltas 1 y 2) con `support.Project`: inexistente, A→B→A, A→A, A→B→C→D→A, dos ciclos con una cola, diamante con un ciclo aparte, `in_progress`/`done`/`blocked` fuera de orden, `[A,B]`, `["A", 'B']`, `[]`, ausente, vacío, con espacios, con comentario, `[A,,B,]`, `[<ID>]`, `[A B]`, YAML multilínea con y sin sangría, valores sin corchetes, `{a: 1}`, `[[A]]`, `[` partido, `"[A]"`, `# nada`, duplicados, dos claves `depende_de`, id vacío, cadena de 1500 y de 2000 tarjetas, ciclo de 2000. Todas dan el resultado esperado y ninguna tira traceback.
+
+## Mutantes (copia temporal de `harness/`, `python -m unittest test_checks.TestGrafoDeTarjetas`, timeout de 120 s por corrida)
 | Mutante | Resultado |
 |---|---|
-| sacar la llamada a `_check_graph` / sumarla sin `errors` | muertos (11 / 3 FAIL) |
-| sacar `done` / `review` / `in_progress` de la tupla | muertos (1 / 1 / 2) |
-| invertir `!= "done"` / `not in by_id` | muertos (4 / 9) |
-| sin `errors += 1` en inexistente / fuera de orden / formato / ciclo | muertos (1 cada uno) |
-| sin el FAIL de formato | muerto (2) |
-| sin detección de ciclo (`if dep in on_path` → `False`) | muerto: la suite **cuelga** (timeout de 180 s), no da rojo |
-| `_check_cycles` no suma | muerto (1) |
-| no limpiar `on_path` | muerto (1 error, el diamante) |
-| aceptar YAML multilínea / sin corchetes (split o ignorado) | muertos (1 cada uno) |
-| sin dedupe / sin quitar comillas / sin filtrar vacíos / regex sin comentario | muertos (1 cada uno) |
-| no saltar las tarjetas de id vacío | muerto (1) |
-| **no marcar `done` al cerrar un nodo** | **vivo**: A↔B se informa dos veces (`A -> B -> A` y `B -> A -> B`) y en grafos con muchos diamantes el DFS se vuelve exponencial |
-| sin `if start in done: continue` | vivo, pero equivalente (solo cambia el costo) |
-| `by_id` incluye las tarjetas de id vacío | vivo, casi equivalente |
-
-La tabla del handback coincide con lo que medí en los mutantes que tienen en común.
+| `deps` inicializado dentro de `if sep` (la regresión) | muerto (1 ERROR) |
+| sin tratar el comentario solo / sin desenvolver las comillas | muertos (1 / 1) |
+| sin detección de ciclo | muerto (4): ya no cuelga |
+| tope demasiado chico / sin recorte del ciclo | muertos (4 / 1) |
+| no marcar `done` / no limpiar `on_path` | muertos (3 / 1 ERROR) |
+| sin `done` / `review` / `in_progress` en la tupla | muertos (1 / 1 / 2) |
+| invertir `!= "done"` / `not in by_id` | muertos (4 / 10) |
+| graph sin sumar a `errors` / ciclo sin `errors += 1` | muertos (3 / 1) |
+| sin FAIL de formato / YAML multilínea aceptada / sin corchetes ignorado | muertos (2 / 1 / 1) |
+| sin dedupe / no saltar el id vacío | muertos (1 / 1) |
+| sin el tope (`if steps > limit` → `False`) | vivo, equivalente: el tope solo se alcanza si el DFS tiene un bug, y el mutante que mete ese bug muere por el tope |
 
 ## Checkpoints
-- C1: [ ] `verify.py --quick` revienta con traceback si en `sdd/cards/` hay un `.md` sin frontmatter (un `README.md`, una tarjeta a medio escribir). En la base daba FAIL.
-- C2: [x] Los criterios 1 a 6 tienen evidencia. Zona: `checks.py`, `tests/` y el handback. `harness.md` no cambió en esta vuelta.
-- C3: [x] Sigue el estilo de `check_cards`. El formato estricto coincide con `prompts/task-card.md` (`depende_de: []`).
-- C4: [ ] Ningún test cubre que una tarjeta sin frontmatter siga dando FAIL y no traceback, y por eso la regresión pasó la suite. Lo demás se mató: los dos pedidos de la vuelta anterior están resueltos.
-- C5: [x] El handback está commiteado con el hash real y trae el apéndice de vueltas. Un detalle: dice «16 tests» en `TestGrafoDeTarjetas` y son 17.
+- C1: [x] La suite está en verde y `verify.py --quick` ya no tira traceback con ningún archivo raro en `sdd/cards/`. El único FAIL de `--changed` es ajeno a L-2 y anterior a la tarjeta.
+- C2: [x] Los criterios 1 a 6 tienen evidencia (tests nombrados en el handback, rojo medido con hash contra `23b9298`, `abcb57c` y `a0213f6`). Zona: `harness/checks.py`, `harness/tests/`, `harness.md` §7 y su historial (vuelta 0), y el handback y `current.md`.
+- C3: [x] Sigue el estilo de `check_cards` (mensajes en español con ruta, conteo de `errors`). El formato de `depende_de` coincide con `prompts/task-card.md`.
+- C4: [x] Re-ejecuté la suite y el archivo directo. Los tests nuevos cubren el camino feliz y los errores, y todos los mutantes no equivalentes mueren. No hay nada skipeado ni debilitado.
+- C5: [x] El handback está completo, commiteado con el hash real y con el apéndice de vueltas. No hay archivos throwaway.
 
 ## Cambios requeridos
-1. `harness/checks.py:99`: `deps, deps_error = [], ""` está dentro de `if sep:`, pero la línea 107 (`card.deps, card.deps_error = deps, deps_error`) corre siempre. Si el archivo no empieza con `---`, si el frontmatter no cierra o si el archivo está vacío, sale `UnboundLocalError` y `verify.py` se cae, cuando antes daba los FAIL de id y estado. Hay que inicializar `deps, deps_error` antes del `if text.startswith("---")`.
-2. `harness/tests/test_checks.py`: falta un test con rojo forzado contra `1c19422` con un `sdd/cards/README.md` sin frontmatter (y otro con el frontmatter sin cerrar). Tiene que pedir que `run_checks()` no lance excepción y que aparezca el FAIL de id vacío, como en la base.
+- Ninguno.
 
-## Mejoras sugeridas (no bloquean)
-- `harness/checks.py:255` (`done.add(node)`): ningún test pide que un ciclo se informe **una sola vez**, que es lo que dicen el docstring de `_check_cycles` y el handback. Alcanza con `assertEqual` de la cantidad de FAIL «ciclo» en `test_ciclo_entre_dos_falla_y_lo_muestra` (`harness/tests/test_checks.py:214`).
-- Sin detección de ciclo, el DFS no termina: `test_ciclo_en_cadena_larga_se_encuentra` cuelga en vez de dar rojo. Un tope de pasos (por ejemplo `len(path) > len(by_id)` → FAIL), o correr ese test con timeout, haría que el mutante falle en vez de colgarse.
-- Un ciclo largo produce un mensaje de miles de ids. Conviene recortarlo (`N0 -> N1 -> … -> N1999 -> N0 (2000 tarjetas)`).
-- `depende_de: "[A]"` (YAML válido) y `depende_de: # nada` dan FAIL con «no está entre corchetes», un texto que confunde en los dos casos. Se puede aceptar la lista entera entre comillas y tratar el comentario solo como vacío, o al menos ajustar el mensaje.
+## Mejoras sugeridas (no bloquean, para una próxima tarjeta)
+- `harness/checks.py:115-119`: `depende_de: "A", "B"` da FAIL, que es correcto, pero el mensaje muestra `'A", "B'` porque el desenvolver comillas se come la primera y la última. Conviene desenvolver solo si lo de adentro empieza con `[`.
+- `harness/checks.py:272`: el recorte agrega el conteo como si fuera otro nodo (`… -> N0 -> (2000 tarjetas)`). Queda más claro `… -> N0 (2000 tarjetas)`.
+- `prompts/task-card.md` y `harness.md` §7.4 podrían decir que `depende_de` va en una línea entre corchetes, porque el arnés ahora rechaza lo demás. Lo sugiere el handback; está fuera de la zona de esta tarjeta.
 
 ## Mejoras al arnés detectadas
-- Un test genérico «toda forma rara de archivo en `sdd/cards/` (sin frontmatter, sin cierre, vacío, binario) da FAIL y nunca excepción» habría atrapado esta regresión. Conviene sumarlo para cualquier cambio en `Card.parse`.
+- Lo que encontró los huecos en las tres vueltas fue matar mutantes en la review. En las tarjetas de checks conviene pedirle al implementer una tabla de mutantes muertos en el handback (en la vuelta 1 ya la trajo) y que el reviewer la reproduzca.
+- Sumar al arnés un test genérico: «cualquier archivo en `sdd/cards/` da FAIL y nunca excepción». Esta tarjeta ya lo agregó en `test_formas_raras_...`.
 
-## Apéndice: vuelta anterior
-- **Vuelta 1 — Review L-2 @ f7673be: CHANGES_REQUESTED.** Pedí (1) un test de una tarjeta `done` con una dependencia que no está `done` (el mutante que sacaba `"done"` sobrevivía) y (2) que un FAIL del grafo apague el `[OK] Tarjetas válidas` (los mutantes `return 0` y sin `errors += 1` sobrevivían). Mejoras sugeridas: DFS iterativo (`RecursionError` con unas 1000 tarjetas), no perder en silencio la lista YAML multilínea ni los valores sin corchetes, deduplicar, el mensaje con id vacío, y mover la clase antes de `__main__`. **Estado en 1c19422:** (1) y (2) resueltos y verificados con mutantes; todas las mejoras aplicadas y verificadas con sondas. La regresión nueva salió de cómo se reescribió `Card.parse` para la mejora del formato.
+## Apéndice: vueltas anteriores
+- **Vuelta 1 — Review L-2 @ f7673be: CHANGES_REQUESTED.** Faltaba un test de `done` fuera de orden (el mutante sin `"done"` sobrevivía), y un FAIL del grafo no apagaba el `[OK] Tarjetas válidas` (los mutantes `return 0` y sin `errors += 1` sobrevivían). Las mejoras sugeridas fueron: DFS recursivo con `RecursionError` en unas 1000 tarjetas, YAML multilínea y valores sin corchetes que se perdían en silencio, duplicados, el mensaje con id vacío y la clase después de `__main__`. Se resolvió en `1c19422`.
+- **Vuelta 2 — Review L-2 @ 1c19422: CHANGES_REQUESTED.** La reescritura de `Card.parse` metió un `UnboundLocalError` con cualquier `.md` sin frontmatter, sin cierre o vacío en `sdd/cards/`, y no había un test que lo cubriera. Las mejoras sugeridas fueron: un test de que el ciclo se informa una sola vez, que el DFS no cuelgue, recortar el ciclo largo, y aceptar `"[A]"` y `# nada`. Se resolvió en `d0cfe53` (esta vuelta).
