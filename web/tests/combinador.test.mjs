@@ -148,8 +148,8 @@ test("H14: IA en el producto suma N4, R12 y el playbook; sin IA no aparece", () 
   assert.match(Prompt.armar(opciones({ia: true, brownfield: true})), /IA EN EL PRODUCTO/);
 });
 
-test("playbooks nuevos: ia-en-el-producto y go-live en el catálogo, Manuales y el ZIP", () => {
-  for (const p of ["ia-en-el-producto", "go-live"]){
+test("playbooks nuevos: ia-en-el-producto, go-live y obsidian-cerebro en el catálogo, Manuales y el ZIP", () => {
+  for (const p of ["ia-en-el-producto", "go-live", "obsidian-cerebro"]){
     assert.ok(PB_META[p], `falta PB_META['${p}']`);
     assert.ok(fs.existsSync(path.join(RAIZ, "playbooks", p + ".md")), `no existe playbooks/${p}.md`);
     assert.ok(CARDS.some(c => c.f === `../playbooks/${p}.md`), `falta la card de ${p}`);

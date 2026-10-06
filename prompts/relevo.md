@@ -1,6 +1,6 @@
 # relevo.md · Relevo de contexto (pasar el testimonio)
 
-Cuándo: el arnés avisa que la sesión pasó `context_threshold` tokens de trabajo, antes de una pausa larga, o cuando el humano lo pide. El chat nuevo no va a saber nada de esta conversación: **solo lo que quede en disco**. Detalle: `harness.md` §6.
+Cuándo: el arnés avisa que la sesión pasó `context_threshold` tokens de trabajo, antes de una pausa larga, o cuando el humano lo pide. El chat nuevo no va a saber nada de esta conversación: **solo lo que quede en disco**. Detalle: [`harness.md`](../harness.md) §6.
 
 **Modo LITE (R18):** no hay `sdd/progress/`, y no se crea. El relevo va en **`sdd/sdd-lite.md`**, en una sección `## Relevo` al final (una sola: se reescribe entera cada vez) con las mismas partes de la plantilla de abajo, menos «Tarjetas en vuelo». Todo lo demás es igual.
 

@@ -6,6 +6,7 @@ desktop.ini
 # Editores
 .vscode/
 .idea/
+.obsidian/
 
 # Herramientas (config local; .claude/launch.json SÍ se versiona)
 .claude/settings.local.json
@@ -22,3 +23,6 @@ desktop.ini
 
 # Entorno local (ADR-012): el clúster de Postgres, su log y el secreto de los JWT
 dev/.data/
+
+# Cerebro (S41): entorno virtual local y modelos
+cerebro/.venv/

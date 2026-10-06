@@ -1,15 +1,15 @@
 # orchestration.md · Orquestación con roles: quién hace qué, y cómo vuelve
 
-**Versión:** 0.35 · 2026-10-06 · **Para agentes:** leer solo si R31 está activa (la herramienta tiene subagentes, o la feature necesita más de una tarjeta). Cada subagente lee **solo su fila** de §2 + su tarjeta. **Para humanos:** cómo se reparte el trabajo entre agentes sin que se autoaprueben ni se pisen.
+**Versión:** 0.36 · 2026-10-06 · **Para agentes:** leer solo si R31 está activa (la herramienta tiene subagentes, o la feature necesita más de una tarjeta). Cada subagente lee **solo su fila** de §2 + su tarjeta. **Para humanos:** cómo se reparte el trabajo entre agentes sin que se autoaprueben ni se pisen.
 
-> Se apoya en `harness.md` (evidencia, tarjetas, memoria en disco). Nace de Relay (chat-commerce-ai). Escenarios S28–S31.
-> Los roles de `teams.md` son de **personas**; los de acá son de **agentes**. Conviven: el `leader` dirige cada OK humano al rol de persona que corresponde (R21).
+> Se apoya en [`harness.md`](harness.md) (evidencia, tarjetas, memoria en disco). Nace de Relay (chat-commerce-ai). Escenarios S28–S31.
+> Los roles de [`teams.md`](teams.md) son de **personas**; los de acá son de **agentes**. Conviven: el `leader` dirige cada OK humano al rol de persona que corresponde (R21).
 
 ---
 
 ## 1 · Activación (R31)
 
-**AUTO:** se activa cuando la herramienta puede lanzar subagentes, o cuando una feature se parte en más de una tarjeta. Se apaga con `R31=OFF` y en modo NOVATO. Sin R31, el trabajo es de un solo agente y R30 se cumple con un reviewer en sesión nueva (`harness.md` §4).
+**AUTO:** se activa cuando la herramienta puede lanzar subagentes, o cuando una feature se parte en más de una tarjeta. Se apaga con `R31=OFF` y en modo NOVATO. Sin R31, el trabajo es de un solo agente y R30 se cumple con un reviewer en sesión nueva ([`harness.md`](harness.md) §4).
 
 **El leader es siempre la sesión principal:** los subagentes no pueden lanzar otros subagentes. Por eso el que despacha nunca es un subagente.
 
@@ -17,15 +17,15 @@
 
 ## 2 · Los siete roles
 
-| Rol | Hace | No hace | Escribe | Tier (`models.md`) |
+| Rol | Hace | No hace | Escribe | Tier ([`models.md`](models.md)) |
 |---|---|---|---|---|
 | `leader` | Descompone la feature en tarjetas, elige modelo y esfuerzo, despacha, verifica que lo que vuelve tenga archivo, decide cuándo escalar al humano. **Único escritor de `sdd/`** (spec, status, tarjetas) | Editar código de producto ni tests. Aceptar resultados que vengan en el chat sin archivo. Cambiar requisitos sin OK humano | `sdd/**`, `current.md` | ALTO |
 | `implementer` | Implementa **una** tarjeta con TDD (R29), se autoverifica con `verify.py --changed`, escribe y commitea el handback | Autoaprobarse. Salir de su zona de archivos. Tocar `sdd/`. Improvisar un workaround ante un error inesperado (→ `blocked`) | código + tests de su zona, `handback_<ID>.md` | MEDIO |
 | `reviewer` | Aprueba o rechaza contra la tarjeta, el diseño y los checkpoints C1–C5. **Re-ejecuta** la verificación y busca casos borde. Mira el diff real, no lo que dice el handback | Editar código ni tests. Aprobar con algo en rojo, skipeado o debilitado | `review_<ID>.md` | ALTO |
-| `analytic` | Investiga antes de implementar: lee código, datos o logs, diagnostica, responde una pregunta acotada | Implementar. Escribir en producción (solo `prod_readonly_query`) | `explore_<tema>.md` | ECONÓMICO / MEDIO |
+| [`analytic`](agents/analytic.md) | Investiga antes de implementar: lee código, datos o logs, diagnostica, responde una pregunta acotada | Implementar. Escribir en producción (solo `prod_readonly_query`) | `explore_<tema>.md` | ECONÓMICO / MEDIO |
 | `infra-implementer` | CI/CD, deploy, migraciones, servicios externos. Sigue el playbook o runbook. **Separa lectura de escritura**: prepara y verifica, pero la escritura en prod la ejecuta el humano o lleva su OK explícito (R32) | Escribir en producción o mergear a `prod_branch` sin OK humano. Mergear sin review | IaC, workflows, migraciones, `handback_<ID>.md` | MEDIO |
-| `looper` | Corre el loop cerrado: lanza la verificación o el E2E, lee el resultado, re-despacha al implementer con la falla, hasta verde o hasta el límite (§6) | Cambiar la aceptación, los tests o el check para que pase | `current.md` (bitácora del loop) | ECONÓMICO |
-| `prompter` | Mejora tarjetas, prompts de rol y el arnés a partir de las fallas (`harness.md` §8) | Cambiar requisitos ni decisiones | `harness_fixes.md`, `agents/`, checks | ALTO |
+| [`looper`](agents/looper.md) | Corre el loop cerrado: lanza la verificación o el E2E, lee el resultado, re-despacha al implementer con la falla, hasta verde o hasta el límite (§6) | Cambiar la aceptación, los tests o el check para que pase | `current.md` (bitácora del loop) | ECONÓMICO |
+| `prompter` | Mejora tarjetas, prompts de rol y el arnés a partir de las fallas ([`harness.md`](harness.md) §8) | Cambiar requisitos ni decisiones | `harness_fixes.md`, `agents/`, checks | ALTO |
 
 **Por qué no hay `spec-keeper`:** en Relay era un rol aparte, único escritor de la spec. Acá lo absorbe el `leader`, que ya es el único escritor de `sdd/` (coherente con R09). Lo que se conserva es la distinción de §5.
 
@@ -68,9 +68,9 @@ Todo subagente escribe su resultado en **un archivo** y al chat devuelve **una s
 - `APPROVED -> …/review_<ID>.md` · `CHANGES_REQUESTED -> …/review_<ID>.md`
 - `retry -> …/current.md` (solo el looper: falla con firma, re-despachar al implementer)
 
-Nunca el diff ni la salida de tests en el chat. Plantillas: tarjeta `prompts/task-card.md`, handback `prompts/handback.md`. Cada paso de mano lee el archivo original, no un resumen de un resumen. Instrucción tipo para despachar:
+Nunca el diff ni la salida de tests en el chat. Plantillas: tarjeta [`prompts/task-card.md`](prompts/task-card.md), handback [`prompts/handback.md`](prompts/handback.md). Cada paso de mano lee el archivo original, no un resumen de un resumen. Instrucción tipo para despachar:
 
-> Implementá la tarjeta `sdd/cards/H-1.md`. Aplicá `agents/implementer.md`. Escribí el handback en `sdd/progress/<rama>/handback_H-1.md`. Respondé solo `done -> <ruta>` o `blocked -> <ruta>`.
+> Implementá la tarjeta `sdd/cards/H-1.md`. Aplicá [`agents/implementer.md`](agents/implementer.md). Escribí el handback en `sdd/progress/<rama>/handback_H-1.md`. Respondé solo `done -> <ruta>` o `blocked -> <ruta>`.
 
 ---
 
@@ -113,13 +113,13 @@ Así nadie cambia la spec para que coincida con lo que construyó.
 
 - **Modelo de ramas recomendado** cuando hay producción real: `main` = producción, `dev` = integración. Las ramas salen de `dev`; `dev → main` es el deploy y lo aprueba el humano. Se declara en `harness.config.json` (`base_branch`, `prod_branch`). En un proyecto chico sin producción, `main` sola alcanza.
 - **Permisos aparte.** El `infra-implementer` corre con permisos de solo lectura sobre producción. Los clasificadores de permisos de las herramientas bloquean, con razón, merges sin review y escrituras en prod: el diseño cuenta con eso en vez de pelearlo. Review antes del merge; la escritura en prod la ejecuta el humano.
-- **Antes de desplegar** (R32): `prod_readonly_query` para ver a quién afecta el cambio en los datos reales, y `playbooks/go-live.md` para capacidad (memoria, conexiones, tier de la base) cuando se reactivan jobs o sube la carga.
+- **Antes de desplegar** (R32): `prod_readonly_query` para ver a quién afecta el cambio en los datos reales, y [`playbooks/go-live.md`](playbooks/go-live.md) para capacidad (memoria, conexiones, tier de la base) cuando se reactivan jobs o sube la carga.
 
 ---
 
 ## 9 · Modelo y esfuerzo por tarjeta
 
-El leader los elige por tarjeta y los escribe en ella, con la tabla de `models.md` §4. Dos reglas fijas: **el ahorro va en los implementers, no en quien decide ni en quien verifica** (un reviewer barato aprueba todo); y **pagos, auth, multi-tenancy y migraciones** van como mínimo en tier MEDIO con esfuerzo alto, aunque el cambio parezca chico.
+El leader los elige por tarjeta y los escribe en ella, con la tabla de [`models.md`](models.md) §4. Dos reglas fijas: **el ahorro va en los implementers, no en quien decide ni en quien verifica** (un reviewer barato aprueba todo); y **pagos, auth, multi-tenancy y migraciones** van como mínimo en tier MEDIO con esfuerzo alto, aunque el cambio parezca chico. **El tier ECONÓMICO es para tarjetas mecánicas** (renombrar, traducir una lista, un dato de config sin incertidumbre): si la tarjeta puede chocar con un obstáculo de diseño (una ruta fija, un check que no cierra), va en MEDIO y dice explícito qué no hacer (copiar archivos, tocar tarjetas). Un implementer barato ante un obstáculo improvisa en vez de devolver `blocked` (S42).
 
 ---
 
@@ -138,9 +138,9 @@ graph LR
   H-2 --> H-4[H-4 UI]
 ```
 
-- **Sin ciclos:** una dependencia circular es una tarjeta mal partida; se re-parte antes de despachar. El arnés lo revisa junto con que cada `depende_de` exista (`harness.md` §7).
+- **Sin ciclos:** una dependencia circular es una tarjeta mal partida; se re-parte antes de despachar. El arnés lo revisa junto con que cada `depende_de` exista ([`harness.md`](harness.md) §7).
 
-Un loop con contrato (R33, `loops.md` §4) recorre este mismo grafo.
+Un loop con contrato (R33, [`loops.md`](loops.md) §4) recorre este mismo grafo.
 
 ---
 
@@ -148,5 +148,6 @@ Un loop con contrato (R33, `loops.md` §4) recorre este mismo grafo.
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.36 | 2026-10-06 | §9: ECONÓMICO solo para tarjetas mecánicas (S42, del loop `dev-de-10`). |
 | 0.35 | 2026-10-06 | §10 Grafo de tarjetas (S40): `depende_de` en la tarjeta, despacho por niveles, bloqueo que se propaga, mermaid en `current.md`, sin ciclos. |
 | 0.30 | 2026-10-02 | Primera versión, destilada de Relay: siete roles (`leader`, `implementer`, `reviewer`, `analytic`, `infra-implementer`, `looper`, `prompter`), con el `spec-keeper` absorbido por el leader; flujo con escalado por complejidad, respuestas de una línea, límites del looper, worktrees y zonas, ramas `dev`/`main` y permisos aparte para infra. |

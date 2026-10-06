@@ -246,7 +246,7 @@ class TicketNuevo(BaseModel):
         return v
 ```
 
-**RAG · pgvector y embeddings.** Buscar en tus documentos y pasarle lo encontrado al modelo (detalle en `playbooks/ia-en-el-producto.md`, parte H, y los riesgos en `seguridad.md` N4):
+**RAG · pgvector y embeddings.** Buscar en tus documentos y pasarle lo encontrado al modelo (detalle en [`playbooks/ia-en-el-producto.md`](playbooks/ia-en-el-producto.md), parte H, y los riesgos en [`seguridad.md`](seguridad.md) N4):
 - **Lo recuperado es dato, no instrucción** (OWASP LLM01, LLM04 y LLM08): un documento indexado puede traer texto dirigido al modelo.
 - **El filtro por permisos va antes de buscar**, en el `WHERE` de la misma consulta de pgvector, no después: filtrando después, el top-k se llena de documentos ajenos y lo que sobra puede terminar en el prompt (LLM02).
 - **Los vectores dependen del modelo de embeddings:** cambiar de modelo, de versión o de dimensión obliga a re-indexar todo. Guardá qué modelo generó cada vector.

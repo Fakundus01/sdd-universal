@@ -1,8 +1,8 @@
 # loops.md · Loops con contrato: que el agente itere solo y sepa cuándo frenar
 
-**Versión:** 0.35 · 2026-10-06 · **Para agentes:** leer solo cuando la tarea es dejar al agente iterando solo hacia un objetivo, o programar un loop (R33). **Para humanos:** cómo pedir «seguí hasta que quede bien» sin que el agente gire para siempre ni declare victoria antes de tiempo.
+**Versión:** 0.36 · 2026-10-06 · **Para agentes:** leer solo cuando la tarea es dejar al agente iterando solo hacia un objetivo, o programar un loop (R33). **Para humanos:** cómo pedir «seguí hasta que quede bien» sin que el agente gire para siempre ni declare victoria antes de tiempo.
 
-> Nace de S39. Se apoya en `harness.md` (evidencia, memoria en disco) y `orchestration.md` (roles, grafo de tarjetas). En 2026 a esto se lo llama *loop engineering*: en vez de escribir la próxima prompt en cada paso, se diseña el loop que la escribe.
+> Nace de S39. Se apoya en [`harness.md`](harness.md) (evidencia, memoria en disco) y [`orchestration.md`](orchestration.md) (roles, grafo de tarjetas). En 2026 a esto se lo llama *loop engineering*: en vez de escribir la próxima prompt en cada paso, se diseña el loop que la escribe.
 
 ---
 
@@ -11,7 +11,7 @@
 | Loop | Quién lo corre | El humano está… | Corta cuando… |
 |---|---|---|---|
 | **LOOP-PROMPT** (master §7) | el agente, ciclo a ciclo | adentro: OK en cada HANDBACK | el humano dice STOP |
-| **Looper** (`orchestration.md` §6) | el rol `looper`, sobre **una** tarjeta | afuera, salvo escalamiento | verde, 3 vueltas o misma falla 2 veces |
+| **Looper** ([`orchestration.md`](orchestration.md) §6) | el rol `looper`, sobre **una** tarjeta | afuera, salvo escalamiento | verde, 3 vueltas o misma falla 2 veces |
 | **Loop con contrato** (R33, este archivo) | el `leader` (o el agente solo, sin R31) sobre un objetivo más grande que una tarjeta | afuera: aprobó el contrato antes | se cumple el objetivo o salta una regla de corte |
 
 El loop con contrato **contiene** a los otros: recorre el grafo de tarjetas (§4) y cada tarjeta tiene su looper.
@@ -51,12 +51,13 @@ aprobado: <fecha + quién, o vacío>
 ## Memoria
 - Bitácora: `sdd/progress/<rama>/current.md` (una línea por vuelta: qué se hizo, verificación @ hash)
 - Al cortar: resumen al final de este archivo + HANDBACK al humano
+- Si hay Cerebro: una nota por lección del resumen (`playbooks/obsidian-cerebro.md` §B)
 ```
 
 **Reglas del contrato:**
 - Sin regla de corte medible, el archivo no pasa a `aprobado`: el trabajo vuelve al LOOP-PROMPT.
-- El objetivo y la verificación se escriben **antes** de la primera vuelta y no se tocan durante el loop. Cambiarlos para cortar en verde es mover el arco (`orchestration.md` §5).
-- Cada vuelta deja evidencia en disco, no en el chat: si el contexto se corta, la sesión nueva sigue desde `current.md` (`harness.md` §6).
+- El objetivo y la verificación se escriben **antes** de la primera vuelta y no se tocan durante el loop. Cambiarlos para cortar en verde es mover el arco ([`orchestration.md`](orchestration.md) §5).
+- Cada vuelta deja evidencia en disco, no en el chat: si el contexto se corta, la sesión nueva sigue desde `current.md` ([`harness.md`](harness.md) §6).
 - Al cumplirse, el cierre es el de siempre: reviewer independiente (R30), `status.md` al día, changelog (R13).
 
 ---
@@ -81,7 +82,7 @@ leer current.md + el loop ──▶ ¿se cumple el objetivo? ── sí ──�
 
 ## 4 · Loops sobre el grafo de tarjetas
 
-Cuando el objetivo necesita varias tarjetas, el loop no las recorre en lista: usa el grafo de `orchestration.md` §10. Despacha en paralelo las que tienen todas sus dependencias en `done` (máximo 3, `orchestration.md` §7), y si una queda `blocked`, todo lo que depende de ella espera. Una tarjeta bloqueada **no** corta el loop si hay otras ramas del grafo que pueden avanzar; lo corta si deja al objetivo sin camino.
+Cuando el objetivo necesita varias tarjetas, el loop no las recorre en lista: usa el grafo de [`orchestration.md`](orchestration.md) §10. Despacha en paralelo las que tienen todas sus dependencias en `done` (máximo 3, `orchestration.md` §7), y si una queda `blocked`, todo lo que depende de ella espera. Una tarjeta bloqueada **no** corta el loop si hay otras ramas del grafo que pueden avanzar; lo corta si deja al objetivo sin camino.
 
 ---
 
@@ -108,4 +109,5 @@ Cuando el objetivo necesita varias tarjetas, el loop no las recorre en lista: us
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.36 | 2026-10-06 | La memoria del loop suma una nota al Cerebro por lección al cortar (S41). |
 | 0.35 | 2026-10-06 | Primera versión (S39): contrato de cinco partes, aprobar el loop = commits solo en su rama, vuelta = tarjeta, loops sobre el grafo de tarjetas, tipos frecuentes y cómo correrlo en cada herramienta. |

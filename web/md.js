@@ -23,7 +23,9 @@ const Md = (() => {
     t = t.replace(/`([^`]+)`/g, (_, c) => { spans.push(c); return SEP + (spans.length - 1) + SEP; });
     t = t.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
     t = t.replace(/(^|[\s(¡¿«])\*([^*\n]+)\*(?=[\s).,;:!?»]|$)/g, "$1<i>$2</i>");
-    t = t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, txt, u) =>
+    // El texto del link no admite "[": un [x](y) dentro de un [ … ] de plantilla
+    // es el link de adentro, como en GitHub (sin un "[" suelto dentro del <a>).
+    t = t.replace(/\[([^\[\]]+)\]\(([^)\s]+)\)/g, (m, txt, u) =>
       `<a href="${u}"${u.startsWith("http") ? ' target="_blank" rel="noopener"' : ""}>${txt}</a>`);
     t = t.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${spans[+i]}</code>`);
     return t;

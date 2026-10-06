@@ -4,16 +4,17 @@
 
 | ID | Playbook | Categoría | Nivel | Estado |
 |---|---|---|---|---|
-| deploy-vercel | Deploy de un front en Vercel | infra | novato+pro | ✓ |
-| env-setup | .env local/dev/prod + entornos virtuales + credenciales | código | novato+pro | ✓ |
-| create-react-vite | Crear un proyecto React con Vite (npm) | código | novato+pro | ✓ |
-| publish-github-vercel | Publicar este mismo sitio SDD en GitHub + Vercel | infra | novato+pro | ✓ |
-| supabase-auth | Inicio de sesión con Supabase (mail + contraseña) + RLS y datos por usuario | infra | novato+pro | ✓ |
-| resend-smtp | Que los mails de confirmación y recupero lleguen de verdad (Gmail o Resend como SMTP) | infra | novato+pro | ✓ |
-| git-basico | Git desde cero: init, add, commit, push, ramas y cómo deshacer sin miedo | herramientas | novato | ✓ |
-| consumir-api-externa | Consumir un repo o API de datos ajeno sin quedar rehén: copia propia, licencia, sincronización con registro | datos | novato+pro | ✓ |
-| ia-en-el-producto | Un modelo de IA adentro del producto: tope de gasto como reserva, registro siempre, streaming que se cierra, salida como dato y tests que no gastan | código | pro | ✓ |
-| go-live | Antes de desplegar: datos de prod en solo lectura, capacidad, monitoreo y OK humano (R32) | infra | novato+pro | ✓ |
+| [deploy-vercel](deploy-vercel.md) | Deploy de un front en Vercel | infra | novato+pro | ✓ |
+| [env-setup](env-setup.md) | .env local/dev/prod + entornos virtuales + credenciales | código | novato+pro | ✓ |
+| [create-react-vite](create-react-vite.md) | Crear un proyecto React con Vite (npm) | código | novato+pro | ✓ |
+| [publish-github-vercel](publish-github-vercel.md) | Publicar este mismo sitio SDD en GitHub + Vercel | infra | novato+pro | ✓ |
+| [supabase-auth](supabase-auth.md) | Inicio de sesión con Supabase (mail + contraseña) + RLS y datos por usuario | infra | novato+pro | ✓ |
+| [resend-smtp](resend-smtp.md) | Que los mails de confirmación y recupero lleguen de verdad (Gmail o Resend como SMTP) | infra | novato+pro | ✓ |
+| [git-basico](git-basico.md) | Git desde cero: init, add, commit, push, ramas y cómo deshacer sin miedo | herramientas | novato | ✓ |
+| [consumir-api-externa](consumir-api-externa.md) | Consumir un repo o API de datos ajeno sin quedar rehén: copia propia, licencia, sincronización con registro | datos | novato+pro | ✓ |
+| [ia-en-el-producto](ia-en-el-producto.md) | Un modelo de IA adentro del producto: tope de gasto como reserva, registro siempre, streaming que se cierra, salida como dato y tests que no gastan | código | pro | ✓ |
+| [obsidian-cerebro](obsidian-cerebro.md) | Obsidian para ver el SDD como grafo + un vault «Cerebro» con lo aprendido en todos los proyectos, con búsqueda semántica local (y OpenAI opcional) por MCP | herramientas | novato+pro | ✓ |
+| [go-live](go-live.md) | Antes de desplegar: datos de prod en solo lectura, capacidad, monitoreo y OK humano (R32) | infra | novato+pro | ✓ |
 | pipelines-ci | CI/CD con GitHub Actions: tests + deploy automático + gate de spec (si el código diverge de la spec, el build falla) | infra | pro | ⏳ |
 | azure-fundamentos | Azure a fondo: Resource Groups, Storage, DNS, Policies, control de costos | infra | pro | ⏳ |
 | aws-fundamentos | AWS: IAM, S3, EC2/Lambda, costos y free tier | infra | pro | ⏳ |
@@ -25,4 +26,4 @@
 | consumir-apis | Consumir APIs de terceros: dónde encontrarlas (catálogos públicos), costos, límites, keys | código | novato+pro | ⏳ |
 | docker-basico | Docker: tu app en un contenedor | infra | pro | ⏳ |
 
-**Regla de calidad:** todo playbook usa `_template.md`, tiene verificación observable y errores comunes. Los de infraestructura incluyen SIEMPRE una sección de costos (qué es gratis, qué factura, cómo poner alertas de gasto).
+**Regla de calidad:** todo playbook usa [`_template.md`](_template.md), tiene verificación observable y errores comunes. Los de infraestructura incluyen SIEMPRE una sección de costos (qué es gratis, qué factura, cómo poner alertas de gasto).

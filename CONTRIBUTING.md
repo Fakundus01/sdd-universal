@@ -26,17 +26,17 @@ Por eso los formularios te piden **el caso**, no solo la idea.
 Tu caso  →  issue de escenario  →  fila en scenarios.md  →  si aplica a muchos, regla nueva
 ```
 
-Una fila en `scenarios.md` ya es una contribución completa. **No hace falta que propongas la solución**: el caso bien contado vale más que una solución apurada, porque la solución se diseña una vez y el caso no se puede inventar.
+Una fila en [`scenarios.md`](scenarios.md) ya es una contribución completa. **No hace falta que propongas la solución**: el caso bien contado vale más que una solución apurada, porque la solución se diseña una vez y el caso no se puede inventar.
 
 Si tu propuesta llega a regla, entra con el formato estándar y tiene que pasar el checklist de `scenarios.md §4`: caso real, formato, eje al que pertenece, costo en tokens, y entrada en el historial.
 
 ## Si querés mandar código o texto
 
 1. **Fijate primero si va en `custom.md`.** Si es un gusto personal (apagar R01, cambiar el máximo de líneas), eso ya se resuelve sin tocar el núcleo — armalo desde [Mis reglas](https://sdd-universal.vercel.app/web/) en la web.
-2. **El núcleo no se edita para casos particulares.** `SDD-MASTER.md` no puede pasar las ~400 líneas (R20): si tu aporte es detalle, va a un archivo ruteado, no al master.
+2. **El núcleo no se edita para casos particulares.** [`SDD-MASTER.md`](SDD-MASTER.md) no puede pasar las ~400 líneas (R20): si tu aporte es detalle, va a un archivo ruteado, no al master.
 3. **Un cambio, un PR**, con el caso que lo justifica en la descripción.
 4. **Si tocás la web:** cero dependencias nuevas en el front. Es un constraint del proyecto (`sdd/spec.md`, C2), no una preferencia — traer una librería para algo que se resuelve en 40 líneas se rechaza aunque funcione.
-5. **Si tocás algo con datos o login:** pasá por `seguridad.md` y decí en el PR qué niveles toca tu cambio (R27).
+5. **Si tocás algo con datos o login:** pasá por [`seguridad.md`](seguridad.md) y decí en el PR qué niveles toca tu cambio (R27).
 
 ## Los archivos generados no se editan a mano
 

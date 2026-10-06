@@ -16,7 +16,7 @@ El SDD **nunca se duplica**: cada herramienta lee su archivo de entrada, y ese a
 | GitHub Copilot | `.github/copilot-instructions.md` | ídem |
 | Gemini CLI | `GEMINI.md` (versiones nuevas también leen `AGENTS.md`) | ídem |
 | Windsurf | `.windsurf/rules/` | ídem |
-| Meta AI y agentes solo-chat | no leen archivos del repo | pegar `SDD-COMPACT.md` como primer mensaje (S10) |
+| Meta AI y agentes solo-chat | no leen archivos del repo | pegar [`SDD-COMPACT.md`](SDD-COMPACT.md) como primer mensaje (S10) |
 
 **Si solo vas a crear un espejo, que sea `AGENTS.md`:** se volvió el estándar de facto que la mayoría de las herramientas ya soporta. `CLAUDE.md` conviene tenerlo igual porque Claude lo prioriza.
 
@@ -65,7 +65,7 @@ Si un ciclo típico empieza a gastar más que el anterior sin que el proyecto ha
 
 ## 4 · Tier por rol de agente (R31)
 
-Cuando hay orquestación (`orchestration.md`), el `leader` elige modelo y esfuerzo **por tarjeta** y lo escribe en ella. Default por rol:
+Cuando hay orquestación ([`orchestration.md`](orchestration.md)), el `leader` elige modelo y esfuerzo **por tarjeta** y lo escribe en ella. Default por rol:
 
 | Rol | Tier | Esfuerzo | Por qué |
 |---|---|---|---|

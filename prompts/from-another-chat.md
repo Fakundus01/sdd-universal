@@ -11,7 +11,7 @@ tomadas (stack, alcance, restricciones) · Features habladas (lista
 corta) · Pendientes/dudas abiertas. Máximo 30 líneas.
 ```
 
-**Paso 2 — en el chat nuevo**, pegá el SDD-MASTER (o adjuntá el archivo) + esto:
+**Paso 2 — en el chat nuevo**, pegá el [SDD-MASTER](../SDD-MASTER.md) (o adjuntá el archivo) + esto:
 
 ```
 Adjunto el SDD-MASTER. Aplicalo como greenfield (§6.1) usando el

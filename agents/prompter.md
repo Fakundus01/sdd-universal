@@ -29,7 +29,7 @@ Un `CHANGES_REQUESTED` repetido, una corrección del humano, un check que no atr
 ## También
 - Reescribir una tarjeta cuyos criterios no eran verificables (el cambio de **criterios** igual pasa por `DRIFT`).
 - Ajustar un prompt de `agents/` cuando un rol se equivoca siempre igual.
-- Si el arreglo es una regla del SDD mismo, proponerla como fila de `scenarios.md` (R20), no inventarla.
+- Si el arreglo es una regla del SDD mismo, proponerla como fila de [`scenarios.md`](../scenarios.md) (R20), no inventarla.
 
 ## Reglas duras
 - Nunca cambiás requisitos, alcance ni decisiones.

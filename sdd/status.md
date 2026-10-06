@@ -1,6 +1,6 @@
 # status.md · SDD Hub
 
-**Versión:** 0.35.0 · **Última actualización:** 2026-10-06 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
+**Versión:** 0.36.0 · **Última actualización:** 2026-10-06 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
 
 ## Features
 
@@ -35,7 +35,9 @@
 
 | F26 | R33 y grafo de tarjetas en la web y el arnés (loop `dev-de-10`) | Complete | 100% | 0.35: R33 en el configurador; `verify.py` revisa `depende_de` y ciclos; espejos EN al día; el paquete usa su propio arnés (clave `master`); smoke de la interfaz en CI (D2) |
 
-**Avance total: 25 / 25 features vigentes = 100%** (F19 retirada)
+| F27 | Cerebro entre proyectos y grafo del paquete (loop `obsidian-cerebro`) | In Progress | 80% | 0.36: `cerebro/` (búsqueda híbrida local y OpenAI, MCP, instalador, CI), instalado en la máquina del owner; MD del núcleo enlazados y el ZIP reescribe links. Falta: S42 por síntoma y enlazar el resto del repo |
+
+**Avance total: 25 / 26 features vigentes completas** (F19 retirada; F27 en curso) (F19 retirada)
 
 ## Bloqueos
 
@@ -59,7 +61,7 @@ El 2026-10-03 todas estaban vencidas. Con el OK del owner («hacé las deudas qu
 ## Próximo ciclo
 
 0. **Owner:** OK para el push de `v0.35-loops-grafo` y el merge a `main` (R01, R32). El loop `dev-de-10` está cumplido (`sdd/loops/dev-de-10.md`).
-0b. v0.36: Obsidian (el repo como vault y un vault «Cerebro» entre proyectos) con RAG local primero y OpenAI después, cada uno con su fase de MD.
+0b. v0.36 cortada (loop `obsidian-cerebro`, 10/10 vueltas). **Owner:** OK para el merge de `v0.36-obsidian-cerebro` a `main` (el MCP del Cerebro apunta a este checkout). Deudas de F27: S42 por síntoma, enlazar `sdd/`, `skills/`, `imports/`; re-importar el Cerebro sin links relativos; `cerebro/tests` en `verify.py --full`.
 1. Ejemplos de punta a punta con el SDD (e-commerce, landing, ticketera con IA, chatbot), cada uno en su repo: lo que falle ahí entra a `scenarios.md` (R20).
 2. **Owner:** hacer O3 (3 personas ajenas, 2 minutos cada una) y anotar el resultado acá; decidir D6 (dominio para el SMTP), que pesa todavía menos en local, donde no hay mails.
 3. Cuando la web salga a otros: reactivar Supabase, correr los dos `.sql` y repetir la prueba de dos cuentas (ver Bloqueos).
