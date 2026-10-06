@@ -1,6 +1,6 @@
-# Review C-5 @ 51767ab
+# Review C-5 @ 8cf57af
 
-**Veredicto:** CHANGES_REQUESTED
+**Veredicto:** APPROVED (vuelta 2 @ 8cf57af; la vuelta 1 @ 51767ab fue CHANGES_REQUESTED, abajo)
 
 Base `6c1a023`, diff revisado `git diff 6c1a023..51767ab` (8 archivos: `cerebro/importar.py` nuevo, `cerebro/cerebro.py`, `cerebro/notas.py`, `cerebro/indice.py`, 3 archivos de `cerebro/tests/`, `sdd/progress/v0.36-C-5/current.md`; el handback entra en `97cd458`).
 
@@ -113,3 +113,93 @@ Zona: respetada. `cerebro.py` solo agrega `import importar`, el parser y `_cmd_i
   - M1, M2, M4, M5, M9–M12, M14, M15 y M17–M20 no los re-verifiqué.
   - Pedido: en la vuelta 2, la tabla debe pegar el comando y el `Ran N tests` de cada corrida.
 - **Incidente mío:** durante la segunda tanda (R10–R13) otro agente estaba editando este mismo worktree sin commitear (`cerebro/importar.py`, `cerebro/tests/test_importar.py`, `cerebro/tests/test_indice.py`, 112 tests). Mi script revertía cada mutante con `git checkout -- cerebro/importar.py`, y **eso descartó los cambios sin commitear de ese agente en `cerebro/importar.py`**. Los tests modificados siguen en el árbol. Por eso las corridas de R11 (3.11), R12 y R13 de esa tanda dan 112 tests: no valen, y para esos tres vale la tanda anterior. Esa tanda corrió sobre `51767ab` limpio (`git status` limpio antes y después).
+
+## Vuelta 2 @ 8cf57af
+**Veredicto:** APPROVED
+
+Diff revisado `git diff d31db56..8cf57af`: `cerebro/importar.py`, `cerebro/cerebro.py` (solo el aviso de huérfanas en `_cmd_importar_sdd`) y `cerebro/tests/test_importar.py` + `test_indice.py`; el handback entra en `fbe3e5a`. `notas.py` e `indice.py` no se tocaron. El árbol no cambió mientras revisaba (`git status` limpio antes y después de cada tanda; HEAD `fbe3e5a`).
+
+### Verificación re-ejecutada
+```text
+$ python -m unittest discover -s cerebro/tests       (3.14.0)
+Ran 112 tests in 2.524s
+OK
+$ py -3.11 -m unittest discover -s cerebro/tests
+Ran 112 tests in 2.506s
+OK
+$ python harness/verify.py --changed
+[FAIL]  Ruta citada que no existe: sdd/cards/C-2.md → `cerebro/requirements.txt`
+ROJO — 1 FAIL, 0 WARN          (el mismo FAIL previo y ajeno de la vuelta 1)
+```
+Tests viejos modificados: solo los que fijaban lo que la vuelta 1 pidió cambiar. `S99` ya no se importa, así que los conteos del CLI bajan de 8/6 a 7/5, el título del hallazgo pasa de «H1 · Dónde» a la frase entera y `.roto` va de 2 a 3 roturas. Ninguno se debilitó: cada uno se reemplazó por una aserción igual o más estricta.
+
+### Contaminación por mutantes (incidentes)
+El reviewer de C-3 corrió por error mi `mut.py` (R1–R4) en este worktree, y antes mi propia tanda pisó un `importar.py` sin commitear. Revisé `8cf57af` contra cada mutante:
+- R1: la guardia `… or carpeta.resolve().parent != raiz_real` está entera (`importar.py:262`).
+- R2: está `if marca != _hash(resto):` (`:284`).
+- R4: `celdas` conserva `and not interior.endswith("\\|")` (`:54`).
+- R3: `:286` dice `elif actual == texto:`. **Es textualmente mi mutante R3 de la vuelta 1.** Pero el handback lo declara como cambio deliberado («normalización CRLF redundante») y es correcto: `Path.read_text` abre con saltos universales y ya convierte `\r\n` en `\n`. Hay un test nuevo (`test_nota_guardada_con_crlf_por_otro_editor_no_cuenta_como_cambio`) y mi R3 nuevo (leer con `read_bytes().decode()`, sin esa conversión) muere. Comportamiento correcto y cubierto, venga de donde venga la línea.
+- Lo que borró el incidente está rehecho: los 8 pedidos y decisiones del leader están en el código y cada uno tiene test (abajo).
+
+### Pedidos de la vuelta 1 y decisiones del leader
+| Pedido | Código | Evidencia |
+|---|---|---|
+| R1: `proyectos/sdd-universal` enlace afuera | guardia intacta | `test_proyecto_sdd_universal_como_enlace_hacia_afuera_no_escribe_afuera`; R1 muere (3.14 y 3.11) |
+| Ids únicos entre archivos de hallazgos | id `<sufijo del archivo>-hN` (`importar.py:115`) | sonda: `hallazgos-2026-11.md` con H1 → 1 nueva y luego 0 actualizadas; `-2026-10-web.md` con H1 → id distinto; N2 muere |
+| Duplicados antes de escribir | `importar.py:252-257` | sonda: S10 repetido → `error: el id «S10» está repetido en scenarios.md; no se importó nada…`, rc 2, 73 archivos antes y después; N1 muere |
+| Tercera rotura `.roto` | test con 3 roturas | R7 muere |
+| Solo filas de la matriz | `_matriz` (`:64-72`) | `test_solo_filas_de_la_matriz_no_de_otras_tablas`; N3 muere. Sin la sección «## 1»: aviso y 0 escenarios, sin explotar |
+| Título de hallazgo = frase entera | `_una_linea(paso)` | comparación fila a fila (abajo); N6 muere |
+| «Versión» que cambia no reescribe | la fecha sale del nombre de la nota existente (`:266-267`) | sonda: 0.19 → 0.20 → 0 actualizadas; N4 muere |
+| Huérfanas avisadas | `:291-296` + CLI | sonda: fila S08 borrada → `aviso: huérfana: scenarios.md#S08 …`, «1 huérfanas (se dejan)», no se borra; las notas sin marca no cuentan (N5 muere); N7 muere |
+
+### Corrida real (CLI, `CEREBRO_DIR` temporal, `CEREBRO_EMBEDDINGS=falso`)
+```text
+$ cerebro.py importar-sdd .
+importadas: 42 escenario, 26 hallazgo, 3 leccion
+71 nuevas, 0 actualizadas, 0 sin cambios, 0 editadas a mano (no se pisaron), 0 huérfanas (se dejan)   rc=0
+$ cerebro.py revisar
+71 nota(s) revisadas, 0 error(es).   rc=0
+$ cerebro.py importar-sdd .
+0 nuevas, 0 actualizadas, 71 sin cambios, 0 editadas a mano (no se pisaron), 0 huérfanas (se dejan)   rc=0
+por tipo en disco: 42 escenario, 26 hallazgo, 3 leccion
+```
+Comparé las 68 filas (42 S + 26 H) con mi separador propio. Título (escenario = situación; hallazgo = «Qué pasó» en una línea), las 4 columnas, `tipo` y `fuente` → **0 diferencias**. También repetí: nota editada a mano → no se pisa y avisa; fila cambiada → se actualiza en el mismo archivo; nota borrada → se recrea.
+
+### Mutantes (míos, `subprocess.run(..., timeout=120)` matando solo al hijo, `Ran N tests` visible, 3.14 y 3.11, revertidos con `git checkout`; `git status` limpio al final; scripts en `scratchpad/c5rev/`)
+| # | Mutante | Resultado (todas las corridas `Ran 112 tests`) |
+|---|---|---|
+| R1 | sin `carpeta.resolve().parent != raiz_real` | muerto (`test_proyecto_sdd_universal_como_enlace_…`) |
+| R2 | editada = solo marca ausente | muerto (3) |
+| R3 | leer la nota sin saltos universales (`read_bytes().decode`) | muerto (`test_nota_guardada_con_crlf_…`) |
+| R4 | `celdas` sin el caso `\|` final | muerto (`test_celdas_con_pipe_escapado_al_final_de_la_fila`) |
+| R5 | `_sin_marca` quita toda línea `importado:` | **sobrevive** (ver nota) |
+| R6 | sin líneas de continuación | muerto |
+| R7 | `.roto`: `while` → `if` | muerto |
+| R8 | `listar` sin podar `subdirs` | muerto (3) |
+| R9 | `_es_enlace` sin junctions | muerto (2) |
+| R10 | no saltea «Pendiente» | muerto (4) |
+| R11 | importa loops no cumplidos | muerto |
+| R12 | no cuenta `por_tipo` | muerto |
+| R13 | entra en carpetas con punto | muerto (`test_carpetas_con_punto_dentro_de_proyectos_no_se_listan`) |
+| N1 | sin detección de ids repetidos | muerto (3) |
+| N2 | id de hallazgo sin el archivo | muerto |
+| N3 | `_matriz` no corta en el próximo `## ` | muerto (5) |
+| N4 | no conserva la fecha de la nota existente | muerto |
+| N5 | huérfanas sin exigir la marca | muerto |
+| N6 | título de hallazgo «Hn · Dónde» | muerto |
+| N7 | sin huérfanas | muerto (2) |
+
+19/20 muertos. La tabla del implementer ahora dice el comando (`subprocess.run(timeout=120)`, `sys.executable -m unittest …`) y «Ran 112 tests» en la cabecera. No pega la salida de cada corrida, pero mis corridas independientes confirman todas sus filas salvo R5.
+
+### Observaciones (BAJA, no bloquean)
+- R5 no es estrictamente equivalente, como dice el handback. Las celdas no pueden tener una línea `importado: …`, pero el cuerpo de una **lección** es el bullet completo: un bullet de «Resumen al cortar» que empiece con `importado: …` daría una línea así. El original quita solo la 1.ª, la del frontmatter, y anda bien. Con el mutante esa nota contaría como editada. Es alcanzable en teoría y no da daño real: no pide cambios.
+- Una nota importada que se borra a mano se vuelve a crear sin aviso (ya estaba en H4 de la vuelta 1; el leader no lo pidió).
+- Migración: las notas que creó la vuelta 1 con ids `h1…h26` quedan como huérfanas y se crean `…-2026-10-h1.md`. Como el Cerebro real todavía no se sembró (eso es C-8), no afecta.
+
+### Checkpoints
+- C1: [x] suite 112/112 en 3.14 y 3.11; el FAIL de `verify.py` es previo y ajeno.
+- C2: [x] los 7 criterios, más los pedidos de la vuelta 1, con evidencia; zona respetada.
+- C3: [x] ids únicos y detectados antes de escribir; solo stdlib; mensajes en español sin traceback.
+- C4: [x] 19/20 mutantes muertos; el vivo no tiene impacto.
+- C5: [x] handback con apéndice y commiteado; árbol limpio.
