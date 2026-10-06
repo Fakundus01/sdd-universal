@@ -123,3 +123,60 @@ Observación: con esa consulta del playbook la nota de la lección esperada no q
 
 ## Próximo paso sugerido
 - Push de la rama con OK del owner y mirar la primera corrida de `cerebro` en Actions; después registrar el MCP (`claude mcp add`, comando que imprime `instalar.ps1`) contra el Cerebro real.
+
+---
+
+# Vuelta 2 (review `08f8155`) — `v0.36-C-7` @ `4108600` (este handback entra en el commit siguiente)
+
+Zona ampliada por el leader: filtro `proyecto` en `cerebro.py`/`mcp_server.py` y aviso de `revisar`.
+
+| Hallazgo | Qué se hizo |
+|---|---|
+| H1 ALTA | Default de `instalar.ps1` = `$env:USERPROFILE\Documents\Cerebro` (fallback `$HOME`). Verificado igual a `config.cerebro_dir()`: ambos `C:\Users\Facundo\Documents\Cerebro` (`GetFolderPath('MyDocuments')` daba `...\OneDrive\Documents`). Comentario de cabecera y README corregidos. El script se niega (exit 1, sin crear nada) si la ruta cae bajo `$env:OneDrive`, `OneDriveConsumer`, `OneDriveCommercial` o tiene un segmento `OneDrive` / `OneDrive - ...`. Probado con `$env:OneDrive` simulado (`%TEMP%\FakeOD\Cerebro`) y con segmento (`%TEMP%\OneDrive - Empresa\Cerebro`): ambos «queda dentro de OneDrive ... Elegi otra carpeta con -CerebroDir», carpeta no creada. |
+| H2 | `claude mcp add -s user` en el README (3 lugares, con la explicación del alcance `local`) y en lo que imprime el script. |
+| H3 | `buscar --proyecto` y `buscar(proyecto=...)` usan `notas.slug()` (`_filtro_proyecto` en la CLI). Tests `test_buscar_proyecto_normaliza_el_filtro_con_slug` (CLI, 3 variantes: «Mi Proyecto», `mi-proyecto`, «  MI proyecto ») y el del MCP. A mano: `--proyecto 'SDD Universal'` sobre el Cerebro de prueba devuelve notas de `sdd-universal`. |
+| H4 | `revisar` **avisa por stderr, no falla** (decisión: la nota es válida y a mano en Obsidian se escribe como uno quiere; fallar rompería Cerebros existentes). Nombra archivo, valor del frontmatter y carpeta esperada, y suma «N aviso(s) de proyecto» al resumen. Test `test_revisar_avisa_si_el_proyecto_no_es_el_slug_de_la_carpeta` (exit 0, aviso solo en la nota rara). |
+| H5 | `-Reindexar` (pasa `--todo`); si `indexar` falla, el script imprime la pista. El mensaje del modelo ya no dice «la primera vez baja» como si fuera siempre. Probado `falso` -> `local` sin `-Reindexar` (exit 1 con pista) y con `-Reindexar` (71 nuevas, exit 0). |
+| H6 | Barato: mensajes propios para Python < 3.10 / inexistente y para fallo de pip («sin red? sin permiso?»). |
+| H7 | `\x0b \x0c \x1c \x1d \x1e` sumados a la tupla de separadores del test. |
+| H8 | `test_un_servidor_que_cierra_stdin_sin_leer_no_rompe_el_helper`: manda 5 MB a un servidor que muere sin leer, la escritura falla con `OSError` de forma determinista. |
+| H9 | `exigir_respuestas()` (con su test): si el servidor no contesta el id N, el `AssertionError` trae su stderr y no un `KeyError`. |
+| H10 | README: `powershell -ExecutionPolicy Bypass -File ...` (solo ese proceso). El script escapa `'` en las rutas que imprime (`Q`). |
+
+Rojo antes (R29), base `08f8155`, venv:
+```text
+$ cd cerebro/tests && python -m unittest test_cli test_mcp_server test_notas
+ERROR: test_si_el_servidor_no_contesta_el_error_trae_su_stderr   (NameError: falta exigir_respuestas)
+ERROR: test_initialize_tools_list_y_buscar                       (idem)
+FAIL: test_buscar_proyecto_normaliza_el_filtro_con_slug (test_cli) (nombre='Mi Proyecto')
+FAIL: test_buscar_proyecto_normaliza_el_filtro_con_slug (test_cli) (nombre='  MI proyecto ')
+FAIL: test_revisar_avisa_si_el_proyecto_no_es_el_slug_de_la_carpeta
+FAIL: test_buscar_proyecto_normaliza_el_filtro_con_slug (test_mcp_server) (nombre='Mi Proyecto')
+Ran 75 tests ... FAILED (failures=4, errors=2)
+```
+(H7 y H8: el código ya los cumplía, faltaba el test; se demuestran con los mutantes N5 y N6.)
+
+Verde después:
+```text
+venv:                          Ran 213 tests in 12.368s  OK
+CEREBRO_SIN_MODELO=1 (venv):   Ran 213 tests in 10.483s  OK (skipped=1)
+sistema 3.14:                  Ran 213 tests in 8.377s   OK (skipped=3)
+Python 3.11:                   Ran 213 tests in 7.222s   OK (skipped=3)
+verify.py --quick:             VERDE — 0 FAIL, 0 WARN
+```
+
+`instalar.ps1` de nuevo, `CEREBRO_DIR` = `%TEMP%\Cerebro prueba ñ` (espacio y ñ): `falso` exit 0 (71 nuevas); `local` sin `-Reindexar` exit 1 con pista; `local -Reindexar` exit 0 (71 nuevas, modelo ya en caché); segunda corrida `0 nuevas, 71 sin cambios` en importar e indexar, exit 0; `buscar 'R30 UnboundLocalError' --proyecto 'SDD Universal'` responde.
+
+Mutantes (suite completa, `subprocess.run(timeout=120)`, restaurado en `finally`; todos muertos):
+| # | Mutante | Resultado |
+|---|---|---|
+| N1 | CLI `buscar` sin normalizar | muerto (Ran 213, failures=2) |
+| N2 | MCP `buscar` sin normalizar | muerto (failures=1) |
+| N3 | `revisar` nunca avisa | muerto (failures=1) |
+| N4 | `revisar` avisa siempre | muerto (failures=1) |
+| N5 | regex sin `\x1d\x1e` | muerto (failures=7) |
+| N6 | `conversar`: `except ValueError` en vez de `OSError` | muerto (errors=1) |
+| N7 | humo sin `exigir_respuestas` | muerto (failures=1) |
+| N8 | `revisar` falla (exit 1) con aviso | muerto (failures=1) |
+
+Pendiente para el leader: playbook §C (venv, `-s user`, `instalar.ps1`) sigue fuera de zona. No registré el MCP ni toqué el modelo; sin llamadas a OpenAI.
