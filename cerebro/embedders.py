@@ -9,6 +9,7 @@ import math
 import os
 import re
 import sys
+import time
 import unicodedata
 from pathlib import Path
 
@@ -139,8 +140,147 @@ class Local(Embedder):
         return vectores
 
 
+MODELO_OPENAI = "text-embedding-3-small"
+DIM_OPENAI = 1536
+URL_OPENAI = "https://api.openai.com/v1"  # fija: el SDK leería OPENAI_BASE_URL del entorno y la clave iría a otro host
+LOTE_OPENAI = 64
+REINTENTOS_OPENAI = 3
+ESPERA_MAXIMA = 20.0
+_CLAVE_SK = re.compile(r"sk-[A-Za-z0-9_\-]{6,}")
+
+
+class _Secreto:
+    """Guarda la clave sin que `repr`, `str` o un volcado de `__dict__` la muestren."""
+
+    __slots__ = ("_valor",)
+
+    def __init__(self, valor: str) -> None:
+        self._valor = valor
+
+    def valor(self) -> str:
+        return self._valor
+
+    def __repr__(self) -> str:
+        return "<clave oculta>"
+
+    __str__ = __repr__
+
+
+def _sin_clave(texto: str, clave: str) -> str:
+    """El texto que vuelve de la API puede repetir la clave (el 401 lo hace): se tacha antes de mostrarlo."""
+    texto = texto.replace(clave, "[clave]")
+    texto = _CLAVE_SK.sub("sk-***", texto)
+    return texto if len(texto) <= 300 else texto[:300] + "..."
+
+
+class OpenAIEmbedder(Embedder):
+    """Embeddings de OpenAI (`text-embedding-3-small`, 1536 dim) con el SDK `openai`, importado de forma
+    perezosa. Por lotes; reintento propio y acotado ante 429/5xx/red (el SDK va con `max_retries=0`: dos capas
+    de reintentos multiplican los requests); 401 y el resto, error claro. La clave sale de `OPENAI_API_KEY` y
+    no aparece en ningún mensaje de error ni en el `repr`: los errores del SDK se traducen a `ErrorEmbedder`
+    fuera del `except`, sin encadenar la excepción original. `http_client`/`esperar` se inyectan en los tests."""
+
+    nombre = MODELO_OPENAI
+    dim = DIM_OPENAI
+
+    def __init__(self, clave: str | None = None, http_client=None, esperar=None, reintentos: int = REINTENTOS_OPENAI,
+                 lote: int = LOTE_OPENAI) -> None:
+        if clave is None:
+            from config import clave_openai
+
+            clave = clave_openai()
+        if not clave:
+            raise ErrorEmbedder("falta la clave de OpenAI: definí la variable de entorno OPENAI_API_KEY (o ponela "
+                                "en el archivo `.env` de la raíz del paquete; hay un `.env.example`). Sin clave "
+                                "podés usar CEREBRO_EMBEDDINGS=local, que no la necesita")
+        self._clave = _Secreto(clave)
+        self._http_client = http_client
+        self._esperar = esperar or time.sleep
+        self.reintentos = max(0, reintentos)
+        self.lote = max(1, lote)
+        self._cliente = None
+        self._sdk = None
+
+    def __repr__(self) -> str:
+        return f"OpenAIEmbedder(modelo={self.nombre!r}, dim={self.dim})"
+
+    def _cliente_listo(self):
+        if self._cliente is None:
+            try:
+                import openai
+            except ImportError as e:
+                raise ErrorEmbedder("falta `openai` para los embeddings de OpenAI: instalalo en un venv con "
+                                    "`pip install -r cerebro/requirements.txt` (o usá CEREBRO_EMBEDDINGS=local)") from e
+            extra = {"http_client": self._http_client} if self._http_client is not None else {}
+            self._sdk = openai
+            self._cliente = openai.OpenAI(api_key=self._clave.valor(), base_url=URL_OPENAI, max_retries=0,
+                                          timeout=30.0, **extra)
+        return self._cliente
+
+    def _clasificar(self, e: Exception) -> tuple[str, bool, float | None]:
+        """(mensaje sin clave, ¿se reintenta?, espera pedida por la API). Nunca devuelve ni cita `e`."""
+        oa, clave = self._sdk, self._clave.valor()
+        if isinstance(e, oa.APIStatusError):
+            estado = e.status_code
+            detalle = _sin_clave(str(getattr(e, "message", "") or ""), clave)
+            if estado == 401:
+                return ("OpenAI rechazó la clave (401): revisá OPENAI_API_KEY (¿está vencida o mal copiada?). "
+                        f"Detalle: {detalle}", False, None)
+            if estado == 429 and getattr(e, "code", None) == "insufficient_quota":
+                return ("OpenAI dice que la cuenta no tiene cuota o crédito (429 insufficient_quota): revisá el "
+                        f"plan y la facturación. Detalle: {detalle}", False, None)
+            if estado == 429 or estado >= 500:
+                try:
+                    espera = max(0.0, min(float(e.response.headers.get("retry-after", "")), ESPERA_MAXIMA))
+                except (ValueError, TypeError, AttributeError):
+                    espera = None
+                return f"OpenAI no pudo atender el pedido ({estado}) tras los reintentos. Detalle: {detalle}", True, espera
+            return f"OpenAI rechazó el pedido ({estado}): {detalle}", False, None
+        if isinstance(e, oa.APIConnectionError):
+            return "no pude conectar con la API de OpenAI (¿hay internet?); probá de nuevo en un rato", True, None
+        return f"falló la llamada a OpenAI ({type(e).__name__})", False, None
+
+    def _lote(self, textos: list[str]) -> list[list[float]]:
+        entrada = [t if t.strip() else " " for t in textos]  # la API rechaza el texto vacío
+        cliente = self._cliente_listo()
+        intento = 0
+        while True:
+            fallo = respuesta = None
+            try:
+                respuesta = cliente.embeddings.create(model=self.nombre, input=entrada, encoding_format="float")
+            except Exception as e:
+                fallo = self._clasificar(e)
+            if fallo is None:
+                break
+            mensaje, reintentable, espera = fallo
+            if not reintentable or intento >= self.reintentos:
+                raise ErrorEmbedder(mensaje)  # fuera del `except`: sin __context__ con la excepción del SDK
+            self._esperar(espera if espera is not None else min(2.0 ** intento, ESPERA_MAXIMA))
+            intento += 1
+        problema = None
+        try:
+            datos = sorted(respuesta.data, key=lambda d: d.index)
+            if [d.index for d in datos] != list(range(len(textos))):
+                problema = f"trajo {len(datos)} vectores con índices que no cuadran para {len(textos)} textos"
+            else:
+                vectores = [[float(x) for x in d.embedding] for d in datos]
+        except Exception:  # portal cautivo (texto plano), `data` ausente o null, embedding no numérico, `index` roto
+            problema = "no tiene la forma esperada (¿un proxy o un portal cautivo en el medio?)"
+        if problema:  # fuera del `except`: sin __context__, y no se cita nada de la respuesta (podría llevar la clave)
+            raise ErrorEmbedder(f"OpenAI devolvió una respuesta que no sirve: {problema}")
+        if any(len(v) != self.dim for v in vectores):
+            raise ErrorEmbedder(f"el modelo «{self.nombre}» devolvió vectores que no son de dim {self.dim}")
+        return vectores
+
+    def embed(self, textos: list[str]) -> list[list[float]]:
+        vectores: list[list[float]] = []
+        for i in range(0, len(textos), self.lote):
+            vectores.extend(self._lote(textos[i:i + self.lote]))
+        return vectores
+
+
 def obtener(modo: str | None = None) -> Embedder:
-    """El embedder de `CEREBRO_EMBEDDINGS`. El de OpenAI llega con C-6."""
+    """El embedder de `CEREBRO_EMBEDDINGS`."""
     if modo is None:
         from config import modo_embeddings
 
@@ -149,7 +289,6 @@ def obtener(modo: str | None = None) -> Embedder:
         return Falso()
     if modo == "local":
         return Local()
-    if modo in MODOS:
-        raise ErrorEmbedder(f"el embedder «{modo}» todavía no está disponible en esta versión "
-                            "(para probar sin modelos: CEREBRO_EMBEDDINGS=falso)")
+    if modo == "openai":
+        return OpenAIEmbedder()
     raise ErrorEmbedder(f"CEREBRO_EMBEDDINGS={modo!r} no existe: usá uno de {', '.join(MODOS)}")
