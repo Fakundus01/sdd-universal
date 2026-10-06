@@ -99,6 +99,8 @@ class HarnessConfig:
             raise ConfigError(f"{CONFIG_NAME} tiene que ser un objeto JSON")
         known = {k: v for k, v in data.items() if k in KNOWN_KEYS}
         cls._validate(known)
+        if "master" in known:
+            cls._validate_master_real(root, known["master"])
         if not (known.get("test") or "").strip():
             raise ConfigError(f"{CONFIG_NAME}: falta 'test' — sin la suite que define «verde» no hay R30")
         cfg = cls(**known)
@@ -107,6 +109,8 @@ class HarnessConfig:
 
     @staticmethod
     def _validate(data: dict) -> None:
+        if "master" in data:
+            HarnessConfig._validate_master(data["master"])
         for key, value in data.items():
             if key in STR_KEYS and value is not None and not isinstance(value, str):
                 raise ConfigError(f"{CONFIG_NAME}: '{key}' tiene que ser un texto (un comando), no {type(value).__name__}")
@@ -114,8 +118,6 @@ class HarnessConfig:
                 raise ConfigError(f"{CONFIG_NAME}: '{key}' tiene que ser una lista de textos, ej. [\".py\"]")
             if key in INT_KEYS and (isinstance(value, bool) or not isinstance(value, int)):
                 raise ConfigError(f"{CONFIG_NAME}: '{key}' tiene que ser un número entero, ej. 400000")
-        if "master" in data:
-            HarnessConfig._validate_master(data["master"])
         tokens = split_template(data.get("lint_file") or "")
         if tokens and "{file" in tokens[0]:
             raise ConfigError(f"{CONFIG_NAME}: 'lint_file' arranca con {{file}}: el ejecutable sería el archivo "
@@ -136,6 +138,14 @@ class HarnessConfig:
         if value.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", value) or norm == ".." or norm.startswith("../"):
             raise ConfigError(f"{CONFIG_NAME}: 'master' ({value}) tiene que ser relativa y quedar dentro del repo: "
                               "sin ruta absoluta ni `..` que salga de la raíz")
+
+    @staticmethod
+    def _validate_master_real(root: Path, value: str) -> None:
+        """Además de lo léxico: que un enlace (junction/symlink) del repo no lo saque hacia afuera."""
+        try:
+            (root / value).resolve().relative_to(root.resolve())
+        except (ValueError, OSError):
+            raise ConfigError(f"{CONFIG_NAME}: 'master' ({value}) resuelve fuera del repo (¿un enlace a otra carpeta?)") from None
 
     def lints(self, rel_path: str) -> bool:
         """¿Corresponde pasarle lint_file a este archivo?"""

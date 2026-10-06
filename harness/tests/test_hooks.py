@@ -61,6 +61,15 @@ class TestSessionStart(HooksCase):
         self.assertIn("Leé SDD-MASTER.md y", out)
         self.assertNotIn("sdd/SDD-MASTER.md", out)
 
+    def test_modo_lite_se_lee_del_master_configurado(self):
+        self.p.write("harness.config.json", json.dumps({"test": PASS_CMD, "master": "SDD-MASTER.md"}))
+        (self.p.root / "sdd/SDD-MASTER.md").unlink()
+        self.p.write("SDD-MASTER.md", "# master\n\n- **Modo por tamaño (R18):** LITE — chico\n")
+        self.p.write("sdd/sdd-lite.md", "estado lite\n")
+        _, out, _ = call("session-start", {}, self.p.root)
+        self.assertIn("sdd/sdd-lite.md", out)
+        self.assertNotIn("progress/main/current.md", out)
+
     def test_sin_master_configurado_nombra_el_de_siempre(self):
         _, out, _ = call("session-start", {}, self.p.root)
         self.assertIn("Leé sdd/SDD-MASTER.md y", out)

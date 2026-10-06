@@ -93,6 +93,15 @@ class TestVerify(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn(f"@ {self.p.git('rev-parse', '--short', 'HEAD')} — e2e verde", record)
 
+    def test_e2e_con_master_lite_configurado_se_registra_en_sdd_e2e(self):
+        (self.p.root / "sdd/SDD-MASTER.md").unlink()
+        self.p.write("SDD-MASTER.md", "# master\n\n- **Modo por tamaño (R18):** LITE — chico\n")
+        self.config(e2e=PASS_CMD, master="SDD-MASTER.md")
+        code, out = run(self.p, "--quick", "--e2e")
+        self.assertEqual(code, 0, out)
+        self.assertIn("e2e verde", (self.p.root / "sdd/e2e.md").read_text(encoding="utf-8"))
+        self.assertFalse((self.p.root / "sdd/progress/e2e.md").exists())
+
     def test_e2e_rojo_no_se_registra(self):
         self.config(e2e=FAIL_CMD)
         code, _ = run(self.p, "--quick", "--e2e")
