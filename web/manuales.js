@@ -46,6 +46,7 @@ const MANUALES = [
   {t: "Git desde cero, sin miedo",     d: "el ciclo diario y cómo deshacer sin romper nada",   f: "../playbooks/git-basico.md"},
   {t: "IA en el producto",             d: "tope de gasto reservado, RAG con permisos, agentes que actúan con aprobación y evals", f: "../playbooks/ia-en-el-producto.md"},
   {t: "Antes de desplegar (go-live)",  d: "datos de prod en solo lectura, capacidad y OK humano (R32)", f: "../playbooks/go-live.md"},
+  {t: "Obsidian y Cerebro",           d: "el SDD como grafo y un vault con lo aprendido en todos tus proyectos", f: "../playbooks/obsidian-cerebro.md"},
   {t: "Consumir un repo o API ajeno",  d: "copia propia, licencia y sincronización con registro", f: "../playbooks/consumir-api-externa.md"},
   {t: "Catálogo de playbooks",         d: "el índice completo, con el estado de cada receta",  f: "../playbooks/catalog.md"}
 ];
