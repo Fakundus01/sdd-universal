@@ -230,6 +230,27 @@ class TestLocalUnitario(unittest.TestCase):
             embedders._importar_fastembed()
             self.assertEqual(vista["al_importar"], "0")
 
+    def test_el_cargador_real_le_pasa_modelo_y_cache_a_fastembed(self):
+        pedido: dict = {}
+
+        class TextEmbedding:
+            def __init__(self, **kwargs) -> None:
+                pedido.update(kwargs)
+
+        with mock.patch.object(embedders, "_importar_fastembed", return_value=TextEmbedding):
+            Local(avisar=lambda m: None, cache=self.cache).embed([])  # vacío: no carga
+            self.assertEqual(pedido, {})
+            Local(avisar=lambda m: None, cache=self.cache)._modelo_listo()
+        self.assertEqual(pedido, {"model_name": embedders.MODELO_LOCAL, "cache_dir": str(self.cache)})
+
+    def test_cache_por_defecto_y_variable_de_entorno(self):
+        with mock.patch.dict(os.environ, {"CEREBRO_MODELOS": str(self.cache)}):
+            self.assertEqual(embedders.dir_modelos(), self.cache)
+        sin = {k: v for k, v in os.environ.items() if k != "CEREBRO_MODELOS"}
+        with mock.patch.dict(os.environ, sin, clear=True):
+            self.assertEqual(embedders.dir_modelos(), Path.home() / ".cache" / "cerebro" / "modelos")
+            self.assertFalse(embedders.dir_modelos().is_relative_to(Path(tempfile.gettempdir())))
+
 
 class TestMetaConLocal(ConCerebro):
     def test_el_indice_guarda_modelo_y_dim_del_local(self):

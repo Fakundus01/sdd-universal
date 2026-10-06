@@ -135,3 +135,42 @@ Mutantes vuelta 3 (`subprocess.run(..., timeout=120)` con el intérprete del ven
 | M11 `glob("*/*.onnx")`→`glob("*/*")` | muerto | test_snapshots_vacio_o_sin_onnx_no_cuenta_como_bajado [otros archivos sin onnx] |
 | M1 aviso a stdout | muerto | test_el_aviso_va_a_stderr_y_stdout_queda_limpio |
 | M3 sin aviso previo | muerto | test_aviso_sale_antes_de_la_carga_del_modelo y _aunque_la_carga_falle |
+
+## Vuelta 4 (implementer ALTO, review CHANGES_REQUESTED @ 7c5d48c)
+
+**Declaración de lo borrado en la vuelta 3.** Además del reemplazo declarado (`test_el_entorno_del_proceso_no_queda_cambiado`), la vuelta 3 borró sin declararlo dos tests de `cerebro/tests/test_local.py` (en `3ca371f`, líneas 225 y 239):
+- `test_el_cargador_real_le_pasa_modelo_y_cache_a_fastembed` (cubría `embedders.py:93-94`): mataba sin red `cache_dir=None` y el `model_name` equivocado.
+- `test_cache_por_defecto_y_variable_de_entorno` (cubría `embedders.py:67-71`, único test de `dir_modelos()`).
+Con el borrado, la suite pasó de 96 a 95 tests y M9, M15 y M17 sobrevivieron. M16 moría solo por la integración, con red y modelo. La tabla de la vuelta 3 tampoco lo detectó porque corría solo `test_local.py` (Ran 22) y no incluía esos mutantes.
+
+**Restauración** (solo `cerebro/tests/test_local.py`; `embedders.py` sin cambios desde `7c5d48c`):
+- `test_el_cargador_real_le_pasa_modelo_y_cache_a_fastembed`, adaptado a `_importar_fastembed`: `mock.patch.object(embedders, "_importar_fastembed", return_value=TextEmbedding)` con una clase falsa que registra los kwargs. No toca `sys.modules` ni el entorno, y no baja modelos. Exige que `embed([])` no cargue nada y que la carga pida exactamente `{"model_name": MODELO_LOCAL, "cache_dir": str(cache)}`.
+- `test_cache_por_defecto_y_variable_de_entorno`: con `CEREBRO_MODELOS` devuelve esa ruta. Sin ella devuelve exactamente `Path.home()/.cache/cerebro/modelos` y no queda dentro de `tempfile.gettempdir()`. Es un poco más estricto que el original, que solo miraba las dos últimas partes.
+
+**Rojo y verde** (los dos tests pasan contra el código bueno por diseño: el rojo es el mutante). Script `scratchpad/c3impl4/mut.py`: un mutante por vez sobre `cerebro/embedders.py`, la **suite completa** (`subprocess.run([py, "-m", "unittest", "discover", "-s", "cerebro/tests"], timeout=120)`) con el venv y con el Python del sistema. Las corridas usaron `HTTP(S)_PROXY=http://127.0.0.1:9` para que ningún mutante pudiera bajar un modelo. Al final se restauraron los bytes originales (`restaurado: True`).
+
+| Corrida | venv | sistema (sin fastembed) |
+|---|---|---|
+| base (verde) | Ran 97 tests, OK | Ran 97 tests, OK (skipped=2) |
+| M9 `CEREBRO_MODELOS` ignorado (`propio = ""`) | Ran 97, FAILED (failures=1): test_cache_por_defecto_y_variable_de_entorno | Ran 97, FAILED (failures=1, skipped=2): el mismo |
+| M15 `cache_dir=None` | Ran 97, FAILED (failures=1): test_el_cargador_real_le_pasa_modelo_y_cache_a_fastembed | Ran 97, FAILED (failures=1, skipped=2): el mismo |
+| M16 `model_name` fijo a `all-MiniLM-L6-v2` | Ran 97, FAILED (failures=1, errors=1): test_el_cargador_real_… + la integración (sin red) | Ran 97, FAILED (failures=1, skipped=2): test_el_cargador_real_… (muere **sin red ni fastembed**) |
+| M17 caché por defecto en `tempfile.gettempdir()` | Ran 97, FAILED (failures=1, errors=1): test_cache_por_defecto_… + la integración (sin red) | Ran 97, FAILED (failures=1, skipped=2): test_cache_por_defecto_… |
+
+Limpieza: el intento de carga de la integración bajo M17 creó `%TEMP%\cerebro\modelos`, vacío, a las 10:11:47. Antes de la corrida no existía, así que lo borré. `~/.cache/cerebro/modelos` sigue igual: solo el modelo multilingüe. M16 no bajó nada.
+
+**Suite final** (código sin mutar):
+```text
+$ cerebro/.venv/Scripts/python -m unittest discover -s cerebro/tests -v
+test_mismo_sentido_con_otras_palabras_queda_mas_cerca_que_una_frase_ajena ... ok
+test_cache_por_defecto_y_variable_de_entorno ... ok
+test_el_cargador_real_le_pasa_modelo_y_cache_a_fastembed ... ok
+Ran 97 tests in 4.291s
+OK
+$ python -m unittest discover -s cerebro/tests -v   (sistema, sin fastembed)
+Ran 97 tests in 1.834s
+OK (skipped=2)
+$ python harness/verify.py --changed
+VERDE — 0 FAIL, 0 WARN
+```
+95 → 97: vuelven los dos tests borrados.
