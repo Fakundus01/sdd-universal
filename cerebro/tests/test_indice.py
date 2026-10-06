@@ -14,6 +14,11 @@ SINONIMOS = {"parar": "detener", "detiene": "detener", "frena": "detener", "bucl
 
 
 class TestFragmentar(unittest.TestCase):
+    def test_tope_por_defecto_es_1500(self):
+        partes = fragmentar("# T" + chr(10) * 2 + "x" * 4000)
+        self.assertGreater(len(partes), 1)
+        self.assertTrue(all(len(x) <= 1500 for x in partes), [len(x) for x in partes])
+
     def test_por_encabezado(self):
         cuerpo = "# Título\n\nIntro.\n\n## Contexto\n\nAlgo.\n\n### Detalle\n\nMás.\n\n## Qué pasó\n\nOtra."
         partes = fragmentar(cuerpo)
