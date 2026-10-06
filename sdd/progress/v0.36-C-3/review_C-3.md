@@ -1,5 +1,83 @@
-# Review C-3 @ 1d11328
-**Veredicto:** CHANGES_REQUESTED
+# Review C-3 @ 3ca371f
+**Veredicto:** CHANGES_REQUESTED (vuelta 2; la vuelta 1 @ 1d11328 también fue CHANGES_REQUESTED, abajo)
+
+## Vuelta 2 @ 3ca371f
+
+Diff revisado `git diff 1d11328..3ca371f` (código) + `bae57b7` (handback). Solo `cerebro/embedders.py`, `cerebro/README.md`, `cerebro/tests/test_local.py`, `sdd/progress/v0.36-C-3/handback_C-3.md`. Mi `review_C-3.md` no fue tocado. Zona OK.
+
+### Verificación re-ejecutada
+```text
+$ cerebro/.venv/Scripts/python -m unittest discover -s cerebro/tests -v   (Python 3.14.0, fastembed 0.8.1)
+test_mismo_sentido_con_otras_palabras_queda_mas_cerca_que_una_frase_ajena (test_local.TestLocalIntegracion...) ... ok
+Ran 96 tests in 3.608s
+OK
+$ python -m unittest discover -s cerebro/tests -v   (Python del sistema, sin fastembed)
+test_mismo_sentido_... ... skipped 'fastembed no está instalado: `python -m venv cerebro/.venv` y `cerebro/.venv/Scripts/pip install -r cerebro/requirements.txt`'
+Ran 96 tests in 1.946s
+OK (skipped=1)
+$ python harness/verify.py --changed
+VERDE — 0 FAIL, 0 WARN
+```
+Repetida la suite del venv al final, con el árbol ya limpio tras los mutantes (por el aviso de `taskkill /IM python.exe` de otro agente): `Ran 96 tests … OK`.
+
+### Validez de las corridas de mutantes (vuelta 1 y 2)
+Mis dos rondas usan `subprocess.run([<venv>/python.exe, "-m", "unittest", …], timeout=…)` de Python, no `timeout.exe`. Vuelta 1: los vivos devolvieron rc 0, y cada muerto mostró el nombre concreto del test que falló, así que la suite corrió de verdad. Vuelta 2: cada corrida muestra el `Ran 96 tests` (abajo). Ninguna corrida se cortó: todas terminaron con conteo y en 3–5 s, muy por debajo del timeout de 120 s.
+
+### Mutantes (los 10 de la vuelta 1 + 3 nuevos; uno por vez sobre `cerebro/embedders.py`, venv, `timeout=120` de subprocess, revertidos)
+| # | Mutante | Resultado | Salida |
+|---|---|---|---|
+| M1 | aviso a stdout | muerto | Ran 96, failures=1 (`test_el_aviso_va_a_stderr_y_stdout_queda_limpio`) |
+| M2 | `import fastembed` ansioso | muerto | Ran 96, failures=1 (`test_importar_el_nucleo_no_importa_fastembed`) |
+| M3 | aviso después de cargar | muerto | Ran 96, failures=2 (`test_aviso_sale_antes_de_la_carga_del_modelo`, `test_aviso_sale_aunque_la_carga_falle`) |
+| M4 | sin `except ErrorEmbedder: raise` | muerto | Ran 96, failures=1 (`test_sin_fastembed_error_con_el_comando_de_instalacion`) |
+| M5 | huella sin `.lower()` | muerto | Ran 96, failures=1 |
+| M6 | `OSError` → `True` en `_en_cache` | muerto | Ran 96, failures=4 |
+| M7 | `any` → `all` en dim | muerto | Ran 96, failures=1 (`test_un_solo_vector_de_dimension_mezclada_es_error`) |
+| M8 | sin chequeo de cantidad | muerto | Ran 96, failures=1 (`test_distinta_cantidad_de_vectores_es_error`) |
+| M9 | `CEREBRO_MODELOS` ignorado | muerto | Ran 96, failures=1 |
+| M10 | `obtener("local")` → `Falso()` | muerto | Ran 96, failures=1 |
+| M11 | `_en_cache`: `glob("*/*.onnx")` → `glob("*/*")` (cualquier archivo del snapshot cuenta) | **SOBREVIVE** | Ran 96, OK |
+| M12 | el entorno no se restaura | muerto | Ran 96, failures=1 (`test_el_entorno_del_proceso_no_queda_cambiado`) |
+| M13 | no fija `HF_HUB_DISABLE_SYMLINKS_WARNING` | muerto | Ran 96, failures=1 (el mismo test) |
+
+12/13 muertos. `git checkout -- cerebro/embedders.py` al final (el script reescribía con LF); `git status` limpio.
+
+### Sondas propias (CLI real, `CEREBRO_DIR` y `CEREBRO_MODELOS` temporales en el scratchpad)
+- **Primera descarga real** (cache vacío, con red): `indexar` → 32 s, rc 0, stdout solo «2 nuevas, …». En stderr sale **primero** «cerebro: bajando el modelo … (unos 220 MB, una sola vez) a <dir> ...» y después las barras de HF. Luego `buscar --json`: stdout es JSON válido, stderr vacío (modelo ya bajado: sin aviso). Quedó `snapshots/<rev>/model_optimized.onnx`.
+- En esa misma descarga, stderr muestra **dos veces** `UserWarning: huggingface_hub cache-system uses symlinks … This warning can be disabled by setting the HF_HUB_DISABLE_SYMLINKS_WARNING environment variable` (ver H7).
+- Cache parcial sin red: `snapshots/abc/` vacío → avisa y da el error claro (antes no avisaba: H6 de la vuelta 1 resuelto). `snapshots/abc/config.json` sin `.onnx` → también avisa. Así que el código es correcto, pero ese caso no tiene test (M11).
+- Regresiones: ninguna. `meta`, el cambio de embedder sin `--todo`, «falta fastembed» y «sin red» (vuelta 1) siguen igual; la suite completa pasa.
+
+### Hallazgos vuelta 2
+1. **MEDIA, H7** — `cerebro/embedders.py:80-94` + `cerebro/README.md:15` + `cerebro/tests/test_local.py:212`. **`HF_HUB_DISABLE_SYMLINKS_WARNING` no tiene efecto.** `huggingface_hub` lo lee una sola vez, al importarse (`huggingface_hub/constants.py:282`: `HF_HUB_DISABLE_SYMLINKS_WARNING = _is_true(os.environ.get(...))`). Ese import ocurre en `from fastembed import TextEmbedding` (línea 80), **antes** de que la línea 87 fije la variable. Lo medí así:
+   - tras `_cargar_fastembed` real, `huggingface_hub.constants.HF_HUB_DISABLE_SYMLINKS_WARNING` vale `False`;
+   - en la descarga real, el `UserWarning` sale dos veces;
+   - fijando la variable antes del import, la constante vale `True`.
+
+   Ya pasaba en la vuelta 1 (el `setdefault` también iba después del import). Pero ahora el README afirma algo que no ocurre («silencia un aviso de symlinks»), y `test_el_entorno_del_proceso_no_queda_cambiado` prueba un no-op: simula `TextEmbedding` y nunca mira lo que lee `huggingface_hub`. Lo esperado, una de dos:
+   - fijar la variable **antes** de `from fastembed import …`, con un test que importe `huggingface_hub.constants` en un subproceso y exija `True`, o que exija que la descarga no emita ese `UserWarning`;
+   - o quitar el manejo de la variable y la frase del README.
+2. **BAJA** (no bloquea por sí sola) — `cerebro/tests/test_local.py:174-182`: el caso «descarga cortada» del handback no se prueba con un snapshot que tenga otros archivos (`config.json`, `tokenizer.json`) y le falte el `.onnx`. Por eso M11 vive. Agregar ese caso al `subTest`.
+
+### Checkpoints vuelta 2
+- C1: [x] suite 96/96 (venv, integración corrida) y 96 con 1 skip con motivo (sistema); `verify.py --changed` VERDE.
+- C2: [x] los 5 criterios se cumplen; zona respetada.
+- C3: [x] carga perezosa probada; aviso antes de la carga y por stderr; cache parcial bien detectada.
+- C4: [ ] H7: un test verde y una afirmación del README sobre un comportamiento que, medido, no ocurre. M11 vive.
+- C5: [x] handback vuelta 2 commiteado, con la corrección honesta de la tabla de la vuelta 1.
+
+### Cambios requeridos (vuelta 2)
+1. **MEDIA** — H7 (arriba).
+2. **BAJA** — test de snapshot sin `.onnx` pero con otros archivos (mata M11).
+
+### Incidente del reviewer (para el leader)
+El scratchpad lo comparten varios agentes. Mi `mut.py` de la vuelta 1 fue sobrescrito por el script de mutantes de otro agente para **C-5**: R1–R13 sobre `C:\Users\Facundo\Estudio_Trabajo\sdd-universal-C-5`, cada uno seguido de `git checkout -- <archivo>`. Lo copié sin mirarlo y lo corrí una vez por error. Salieron R1, R2 y R3 (suite de C-5, «Ran 99») y la salida se cortó ahí, probablemente por el `taskkill` que avisó el leader.
+- Efectos posibles en el worktree C-5: (a) el `git checkout -- cerebro/importar.py` / `notas.py` / `indice.py` de ese script pudo **borrar cambios sin commitear** de quien estuviera trabajando ahí; (b) si se cortó en mitad de R4, pudo quedar un mutante aplicado.
+- Lo que vi: justo después, `git status` de C-5 mostraba ` M cerebro/importar.py`, ` M cerebro/tests/test_importar.py` y ` M cerebro/tests/test_indice.py`. Minutos más tarde `importar.py` ya no aparecía modificado (alguien lo restauró o volvió a correr).
+- **Hay que revisar el estado de C-5** antes de seguir con esa tarjeta, y repetir los mutantes de C-5 que se hayan corrido a esa hora.
+- Desde entonces uso una subcarpeta propia (`scratchpad/c3rev/`). No volví a tocar C-5.
+
+## Vuelta 1 @ 1d11328
 
 Base `6c1a023`, diff revisado `git diff 6c1a023..1d11328` (código en `168cba9`, handback `13f4c53`, README `1d11328`). 7 archivos: `.gitignore`, `cerebro/README.md`, `cerebro/embedders.py`, `cerebro/requirements.txt`, `cerebro/tests/test_local.py`, `sdd/progress/v0.36-C-3/{current,handback_C-3}.md`. Zona respetada.
 
