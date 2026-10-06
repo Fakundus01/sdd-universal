@@ -122,3 +122,27 @@ Visor de la web (leído en `web/inicio.js` y `web/md.js`; no se abrió navegador
 
 ## Próximo paso sugerido
 - El leader mira el grafo en Obsidian (objetivo 6) y decide si hace falta enlazar los 10 MD sin salida.
+
+## Vuelta 2 (`406a5c5`) — review `cd571e8`
+- **H1** (links rotos en los ZIP): no es de esta tarjeta (C-11, `web/paquete.js`); no se sacaron links por eso.
+- **H4 (falsos positivos):** se sacó el link (vuelve a quedar como en la base) en toda mención de `AGENTS.md`, `CLAUDE.md`, `custom.md` o `sdd-lite.md` que habla del archivo **del proyecto** o de la plantilla que el usuario completa. Se mantienen: `[prompts/sdd-lite.md]` cuando el texto nombra explícitamente la plantilla (`harness.md`, `SDD-MASTER.md` §3) y la fila de `README.md` que lista `custom.md` como archivo del paquete. Links sacados (58 en 13 archivos, incluidos los de H5 y H2):
+  - `CONTRIBUTING.md`: custom.md. `GUIDE.md`: AGENTS, CLAUDE (l.18), custom.md (l.32, 71, 85), sdd-lite.md (l.75). `README.md`: custom.md (l.52). `blocks.md`: custom.md (l.33, 45). `harness.md` l.57: AGENTS, CLAUDE. `historial-master.md` l.29: custom, AGENTS, CLAUDE. `models.md`: CLAUDE, AGENTS (tabla de espejos), custom.md (l.47). `scenarios.md`: sdd-lite (l.15), AGENTS y CLAUDE (l.28), custom.md (l.49, 77). `seguridad.md`: custom.md (l.128).
+  - `SDD-MASTER.md` y `SDD-MASTER-EN.md` (9 cada uno): AGENTS y CLAUDE (l.30-31), custom.md (l.32, 50, 77, 152), sdd-lite.md (l.89, 253, 383/384).
+- **H2:** el link anidado en el placeholder de `SDD-MASTER(-EN).md:77` salió con lo anterior.
+- **H5:** sin links en `SDD-COMPACT.md` y `SDD-COMPACT-EN.md` (8 cada uno). Ninguno queda huérfano (tienen entrada desde el master y otros MD); sí quedan **sin salida**, así que el criterio «SDD-COMPACT con links de salida» ya no se cumple, por decisión del leader; no se compensó con links artificiales.
+- **`harness.config.json`:** probé `cited_paths_docs` = los 50 MD del alcance + los defaults del proyecto. `verify.py --quick` dio **ROJO, 48 FAIL**, todos citas legítimas de rutas de «un proyecto normal» o ejemplos (`sdd/sdd-lite.md`, `sdd/SDD-MASTER.md`, `GEMINI.md`, `metrics.md`, `.claude/agents/`, `sdd/cards/H-1.md`, `harness_fixes.md`…): harness.md 17, scenarios.md 8, historial-master.md 5, agents/README.md 3, orchestration.md 3, prompts/relevo.md 3, SDD-MASTER.md 2, SDD-MASTER-EN.md 2, README.md 1, models.md 1, teams.md 1, playbooks/obsidian-cerebro.md 1 (`(harness.md)`, ejemplo preexistente en un code span), prompts/sdd-lite.md 1. No se forzó: **revertido**, `harness.config.json` sin cambios.
+
+Medición después de la vuelta 2 (`measure.py`):
+```text
+MD en alcance: 50  links entre ellos: 251
+huerfanos: 0 []
+SDD-MASTER.md salida: 20
+SDD-COMPACT.md salida: 0
+scenarios.md salida: 13
+loops.md salida: 2
+orchestration.md salida: 10
+sin salida: ['agents\\analytic.md', 'playbooks\\_template.md', 'playbooks\\consumir-api-externa.md', 'playbooks\\create-react-vite.md', 'playbooks\\deploy-vercel.md', 'playbooks\\publish-github-vercel.md', 'playbooks\\resend-smtp.md', 'prompts\\loop-prompt.md', 'prompts\\maintenance-prompt.md', 'prompts\\start-prompt.md', 'SDD-COMPACT-EN.md', 'SDD-COMPACT.md']
+componentes: 1 (50 nodos)
+```
+- Texto intacto: quitando todos los links nuevos, los 38 archivos quedan idénticos a la base (`f0e2d8e`): 0 diferencias. Links netos agregados: 244.
+- `verify.py --quick` VERDE (0 FAIL, 0 WARN); `node --test` pass 49 / fail 0; smoke PASS (22 pasos, 0 errores).

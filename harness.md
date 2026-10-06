@@ -54,7 +54,7 @@ Se activa con **R29/R30** (ON por default). Funciona con un solo agente: no hace
 | `base_branch` / `prod_branch` | no | Ramas de integración y de producción (default: `main` / `main`). |
 | `context_threshold` | no | Tokens de *trabajo* de la sesión antes de pedir relevo (§6). Default 400000. |
 | `master` | no | Ruta del [`SDD-MASTER.md`](SDD-MASTER.md), relativa a la raíz. Default `sdd/SDD-MASTER.md`. Para repos donde el núcleo no vive en `sdd/` (el propio paquete, que lo tiene en la raíz). Tiene que quedar **dentro** del repo: una ruta absoluta o con `..` que salga de la raíz se rechaza al cargar la config. La usan el chequeo de que el master existe y la lectura del modo (LITE/FULL). |
-| `cited_paths_docs` | no | Docs cuyas rutas citadas tienen que existir (§7). Default [`AGENTS.md`](AGENTS.md), [`CLAUDE.md`](CLAUDE.md), `sdd/testing.md`, `sdd/spec.md` y `sdd/sdd-lite.md` (los que existan). El master y [`orchestration.md`](orchestration.md) no van por default: citan archivos opcionales (`GEMINI.md`, `metrics.md`) y darían falsos positivos. |
+| `cited_paths_docs` | no | Docs cuyas rutas citadas tienen que existir (§7). Default `AGENTS.md`, `CLAUDE.md`, `sdd/testing.md`, `sdd/spec.md` y `sdd/sdd-lite.md` (los que existan). El master y [`orchestration.md`](orchestration.md) no van por default: citan archivos opcionales (`GEMINI.md`, `metrics.md`) y darían falsos positivos. |
 
 JSON y no YAML/TOML: lo leen la stdlib de Python y de Node sin dependencias (R28). Los comentarios van en `sdd/design.md`, no en el JSON. Tipos inválidos o claves desconocidas dan error o aviso, nunca un traceback.
 
