@@ -180,24 +180,25 @@ Everything the agent **reads** (third-party repos in R15, web results in R19, is
 
 **R27 · SECURITY-BY-SURFACE — [ON] — fixed**
 R17 is enough for a script; it is not enough for anything with users. At kickoff, and every time a new feature changes what the project does, the agent classifies the **attack surface** with six questions — login? personal data stored? money moving? AI receiving user text or reading external content? user file uploads? public API? — and applies from `seguridad.md` **only the levels that apply** (N0 base + whichever match). The classification and active levels are recorded in `security.md` with a date.
+
 A 200-item checklist doesn't get read; six controls that do apply get done. That's why levels are exclusive by default: what doesn't apply doesn't show up. **Reclassifying is not optional:** adding login to a project that didn't have it activates a whole level, and that is exactly the moment it gets forgotten.
 
-**R28 · JUSTIFIED-DEPENDENCY — [ON] — toggleable**
+**R28 · JUSTIFIED-DEPENDENCY — [ON] — can be turned off**
 Before adding a new dependency (library, framework, service, CI action): one line in `decisions.md` with what problem it solves, why what's already there (or a reasonable own module) isn't enough, and how alive it is (latest release, maintenance). If the line names a version, it is checked against the registry (npm, PyPI…) before writing it: from memory it comes out wrong. Two dependencies for the same job: pick one and record why. R19 audits on top of that record — the dependency nobody remembers the reason for is exactly the one nobody dares remove, and the one that shows up abandoned or vulnerable one day.
 
-**R29 · RED-FIRST-TDD — [ON] — toggleable**
+**R29 · RED-FIRST-TDD — [ON] — can be turned off**
 Red → green → refactor: the test is written first and seen failing for the right reason. The red is **measured** against the base (with its hash), never inferred; with a new module, against an empty stub that imports (an import error is not a red). Every new check, guard or hook is proven by breaking it on purpose once and pasting the output: a check that never saw a red may not be running at all. DATA/GAME variants and detail: `harness.md` §5.
 
 **R30 · CLOSED-LOOP — [ON] — fixed**
 Nothing is `done` without **executable evidence** —command + literal output + commit hash— and without an **independent reviewer** who re-runs the verification (a `reviewer` subagent, a fresh session or the human; never whoever implemented it), even if the change looks trivial. Project-specific commands (test, lint, e2e) are declared in `harness.config.json`, never in the core. In-flight work lives in `sdd/progress/<branch>/`, not in the chat. Detail: `harness.md`.
 
-**R31 · ROLE-ORCHESTRATION — [AUTO: with subagents or a feature of more than one card] — toggleable**
+**R31 · ROLE-ORCHESTRATION — [AUTO: with subagents or a feature of more than one card] — can be turned off**
 Apply `orchestration.md`: `leader` (main session, sole writer of `sdd/`), `implementer`, `reviewer`, `analytic`, `infra-implementer`, `looper`, `prompter`. One card per agent with an explicit file zone; each subagent writes its result to a file and returns only `done -> <path>`. OFF for NOVICE (R23).
 
 **R32 · PRODUCTION-WITH-OK — [ON] — fixed**
 Before deploying, look at production **data** with a read-only query, not just the code: who does the change affect? Writing to production or merging into the prod branch is done by the human or carries their explicit OK: R01 covers the commit, this covers what a revert can't undo. With new load or reactivated jobs: `playbooks/go-live.md`.
 
-**R33 · LOOP-WITH-A-CONTRACT — [ON] — can be disabled**
+**R33 · LOOP-WITH-A-CONTRACT — [ON] — can be turned off**
 Before letting the agent iterate on its own, write `sdd/loops/<name>.md` with **trigger, measurable goal, verification (one command), stop rule and memory**. Without a stop rule that can be measured there is no autonomous loop: fall back to the per-cycle HANDBACK (§7). Approving the file is the R01 OK **only for commits on the loop's branch**; push, merge and production still need OK (R01, R32). The loop never changes its goal or its verification to stop on green (R25). Detail and card graph: `loops.md`, `orchestration.md` §10.
 
 ---
@@ -225,7 +226,7 @@ repo/
     ├── orchestration.md           # agent roles, the closed loop and the card graph (R31)
     ├── loops.md                   # contract for autonomous loops (R33)
     ├── loops/<name>.md            # each loop: trigger, goal, verification, stop rule, memory
-    ├── cards/<ID>.md              # cards: the work queue with acceptance, state and depends_on
+    ├── cards/<ID>.md              # cards: the work queue with acceptance, state and depende_de
     ├── progress/<branch>/         # current.md + handbacks + reviews: in-flight work
     ├── spec.md                    # what the project is, problem, scope, features + status
     ├── design.md                  # technical design, layers, decisions with their why
@@ -273,10 +274,6 @@ Team: [just me / N people: names] · Branches: [if applicable]
 Stack: [chosen, or "recommend one for the project"]
 AI in the product: [no / yes: what for]
 Mode: [STRICT / TRUST] · Rules off: [e.g. R01=OFF / none]
-
-Note: I dictate my messages by voice, so if any word doesn't make
-sense (especially tool names), quote it back and ask me what I meant
-instead of assuming (R04).
 
 Steps: run the Socratic questionnaire (R04) asking whatever is
 missing (how I like to work, languages — a single language like
