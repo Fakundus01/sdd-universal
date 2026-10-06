@@ -1,4 +1,4 @@
-# Review C-7 @ 9d338ad
+# Review C-7 @ 4108600
 **Veredicto:** CHANGES_REQUESTED
 
 Reviewer independiente (tier ALTO). Base `3dd1edd`, código `9d338ad`, handback en `1023705`. Trabajé en el worktree `sdd-universal-C-7-rev`. Las dependencias salieron del venv de `sdd-universal-C-7` (Python 3.14.0), salvo en las corridas reales de `instalar.ps1`, que crearon su propio venv en este worktree (después lo borré). No hice ninguna llamada a OpenAI, no leí claves ni `.env`, no registré el MCP y no toqué el modelo.
@@ -104,3 +104,87 @@ Python 3.10 no está instalado acá. Lo cubrí así: `ast.parse(..., feature_ver
 ## Mejoras al arnés detectadas
 - Un check que compare el default de `CEREBRO_DIR` de los scripts de instalación con `config.cerebro_dir()` y que falle si cae bajo `%OneDrive%`. La regla está en el playbook pero nada la ejecuta.
 - En las tarjetas que publican un comando `claude mcp add`, pedir que declaren el alcance (`-s user|project|local`).
+
+---
+
+## Vuelta 2 @ 4108600
+**Veredicto:** CHANGES_REQUESTED
+
+Revisé el código `4108600` (HEAD de la tarjeta `bc687da`). La zona se amplió por el leader para tocar `cerebro.py` y `mcp_server.py`, y lo declara el handback. Mismas reglas que en la vuelta 1: no hice llamadas a OpenAI, no registré el MCP (`~/.claude.json` sigue con 0 menciones de `mcp_server.py`) y el modelo de `~/.cache/cerebro/modelos` está intacto. Al final borré el venv del worktree, los `__pycache__` y los temporales.
+
+### Verificación re-ejecutada
+```text
+venv C-7 (3.14.0):                Ran 213 tests in 12.373s  OK
+CEREBRO_SIN_MODELO=1 (venv):      Ran 213 tests in 10.503s  OK (skipped=1)
+python del sistema (3.14.0):      Ran 213 tests in 8.345s   OK (skipped=3)
+Python 3.11:                      OK (skipped=3)
+python harness/verify.py --quick: [OK] Tarjetas válidas (13) · [OK] Rutas citadas existen (163 revisadas) · VERDE — 0 FAIL, 0 WARN
+```
+(`verify.py` volvió a crear `sdd/progress/v0.36-C-7-rev/current.md`: lo borré.)
+
+### Hallazgos de la vuelta 1 → estado
+| Hallazgo | Estado | Evidencia mía |
+|---|---|---|
+| H1 ALTA | **resuelto** | Evalué el default del `param` con el parser de PowerShell: da `C:\Users\Facundo\Documents\Cerebro`, igual que `config.cerebro_dir()`. Probé el rechazo con 5 casos: `$env:OneDrive\CerebroRevC7` (el OneDrive real), la misma ruta en minúsculas, `$env:OneDrive` simulado en `%TEMP%\FakeOD rev`, un segmento `OneDrive - Empresa` y un segmento `x\OneDrive`. Los 5 terminan con EXIT 1 y «queda dentro de OneDrive… Elegi otra carpeta con -CerebroDir», sin crear la carpeta ni el venv. |
+| H2 | **resuelto** | `-s user` está en README:45, en README:107-108 y en lo que imprime el script. Pasé el comando impreso a un eco de `sys.argv`: los argumentos quedan bien partidos, incluida una ruta con espacio, `ñ` y `'`. |
+| H3 | **resuelto** | Después de `nota("Mi Proyecto")`, la buscan por CLI y por MCP «Mi Proyecto», `mi-proyecto`, «MI PROYECTO» y «mi proyecto!»: las 4 la encuentran. Tests de CLI y de MCP, más Q1 y Q2 muertos. |
+| H4 | **resuelto a medias** → H11 | `revisar` avisa por stderr con EXIT 0, y su resumen dice «1 aviso(s) de proyecto». Pero el texto del aviso es falso y la nota quedó inalcanzable por filtro (ver H11). |
+| H5 | **resuelto** | Corrida real abajo. Sin `-Reindexar`, EXIT 1 con la pista «volve a correr este script con -Reindexar». Con `-Reindexar`, EXIT 0 y 71 nuevas. |
+| H6 | **resuelto** | Python inexistente: «hace falta Python 3.10 o mas (-Python '…' no lo cumple o no existe)». Sin red con el venv nuevo: «pip no pudo instalar requirements.txt (sin red? sin permiso?)». Las dos terminan con EXIT 1 y sin crear el `CEREBRO_DIR`. |
+| H7 | **resuelto** | M4 ahora muere (failures=7). |
+| H8 | **resuelto** | M11 ahora muere (errors=1, `test_un_servidor_que_cierra_stdin_sin_leer_no_rompe_el_helper`). |
+| H9 | **resuelto** | Con `exigir_respuestas`, X2 y X4 pasan de `errors` (KeyError) a `failures` con el stderr del servidor. Q4 muerto. |
+| H10 | **resuelto** | El README dice `-ExecutionPolicy Bypass`. `Q` escapa la `'`. Pegué la línea `$env:CEREBRO_DIR = '…ñ''o'` que imprime el script y el resultado es exactamente la ruta. |
+
+### instalar.ps1 de verdad, con `CEREBRO_DIR` = `%TEMP%\Cerebro prueba ñ'o` (espacio, ñ y comilla simple)
+```text
+1. falso, venv nuevo:        EXIT 0 en 64 s; importar 71 nuevas; indexar 71 nuevas
+2. local sin -Reindexar:     EXIT 1 en 4 s; «el índice se armó con el modelo «falso»…» y la pista de -Reindexar
+3. local -Reindexar:         EXIT 0 en 7 s; indexar 71 nuevas
+4. local otra vez:           EXIT 0 en 3 s; importar 0 nuevas, 71 sin cambios; indexar 0 nuevas, 71 sin cambios
+buscar (la línea impresa, pegada tal cual, con -k 2): 2 resultados, EXIT 0
+```
+
+### Mutantes (suite completa, `subprocess.run(timeout=120)`, uno por vez y restaurados; `git status` limpio al final)
+| # | Resultado |
+|---|---|
+| M1 | muerto: Ran 213, failures=4 |
+| M2 | muerto: Ran 213, failures=5 |
+| M3 | muerto: Ran 213, failures=18 |
+| M4 (`\x1d\x1e`) | **muerto ahora**: Ran 213, failures=7 |
+| M5 | muerto: Ran 213, failures=2 errors=5 |
+| M6 | muerto: Ran 213, failures=16 errors=6 |
+| M7 | muerto: Ran 213, failures=33 |
+| M8 | muerto: Ran 213, failures=1 |
+| M9 | muerto: Ran 213, failures=3 |
+| M10 | muerto: failures=1 |
+| M11 (`except ValueError`) | **muerto ahora**: Ran 213, errors=1 |
+| M12 | muerto: Ran 213, failures=6 |
+| Q1 CLI `_filtro_proyecto` devuelve el valor crudo | muerto: Ran 213, failures=2 |
+| Q2 MCP `buscar` sin `slug` | muerto: Ran 213, failures=1 |
+| Q3 `revisar`: `!=` → `==` | muerto: Ran 213, failures=1 |
+| Q4 `exigir_respuestas` nunca falla | muerto: Ran 213, failures=1 |
+| Q5 `_filtro_proyecto` sin `proyecto.strip()` (`"   "` → filtro `nota`) | **sobrevive**: Ran 213, OK (H12) |
+| Q6 `revisar` sale con 1 si hay avisos | muerto: Ran 213, failures=1 |
+| Q7 `carpeta = a.parent.name` | **sobrevive**: Ran 213, OK (H12) |
+| X1 5 MB a stderr (tiene que pasar) | pasa: Ran 213, OK |
+| X2 servidor colgado | muerto: Ran 213, failures=1, suite en 51.6 s |
+| X3 `RuntimeError` en `buscar` | muerto: Ran 213, failures=1 errors=13 |
+| X4 cae al arrancar con 5 MB de stderr | muerto: Ran 213, failures=1 en 10.9 s |
+
+`instalar.ps1` no tiene tests automáticos (la tarjeta tampoco los pide): su chequeo de OneDrive lo probé a mano, con los 5 casos de la tabla de arriba.
+
+### Hallazgos nuevos
+1. **H11 MEDIA** (`cerebro/cerebro.py:124-126`, más `cerebro/indice.py:277`, que es la causa): ahora el filtro se normaliza con `slug()`, pero el índice sigue guardando el `proyecto` **crudo** del frontmatter. Entonces una nota escrita a mano (Obsidian, el camino que el playbook §B presenta como normal) con `proyecto: SDD Universal` en `proyectos/sdd-universal/` **no aparece con ningún `--proyecto`**. Lo probé: con `"SDD Universal"`, `False`; con `sdd-universal`, `False`; sin filtro, `True`. En la vuelta 1, `--proyecto "SDD Universal"` sí la encontraba, así que es una regresión de esta vuelta. Y el aviso nuevo de `revisar` dice lo contrario: «`buscar --proyecto` la encuentra como «SDD Universal», no como «sdd-universal»». Eso es falso: con el filtro normalizado, «SDD Universal» se convierte en `sdd-universal`.
+
+   **Se espera** una de dos cosas:
+   - **(a), la preferida:** guardar `notas.slug(nota.proyecto)` en `indice.py:277`. Así el filtro, la carpeta y el índice usan el mismo valor y las notas a mano vuelven a ser alcanzables. Hay que ampliar la zona a `indice.py`. Hay que avisar que un índice ya armado necesita `indexar --todo`, o subir la versión del esquema. El aviso de `revisar` queda como informativo, con texto verdadero.
+   - **(b), la mínima, dentro de la zona actual:** corregir el texto del aviso. Por ejemplo: «`buscar --proyecto` no la encuentra (el filtro usa el nombre de la carpeta): corregí el frontmatter a `proyecto: <carpeta>`».
+
+   En los dos casos hace falta un test que lo fije: una nota a mano con `proyecto` natural, y que `buscar --proyecto <carpeta>` la encuentre (a) o que el aviso no diga que la encuentra (b).
+2. **H12 BAJA** (`cerebro/cerebro.py:79`, `:121`): Q5 y Q7 sobreviven. Ningún test cubre `--proyecto "   "`: hoy significa «sin filtro», y sin el `.strip()` filtraría por `nota`. Tampoco hay test de una nota en una subcarpeta (`proyectos/p/sub/x.md`), donde `parts[0]` y `parent.name` dan valores distintos. Con dos subtests alcanza.
+
+### Cambios requeridos
+1. H11: (a) o (b), con test.
+
+Lo demás de la vuelta 1 quedó resuelto y verificado.
