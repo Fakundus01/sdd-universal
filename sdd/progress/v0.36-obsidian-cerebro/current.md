@@ -15,6 +15,7 @@
 - v4 · C-4 done (review CHANGES_REQUESTED → arreglos → APPROVED @ 12b1bd1, merge 9181c4f); errores de herramienta con isError=true. Deuda (humo stderr, NUL/ , proyecto=slug) → criterio 4 de C-7. Pendiente C-8: playbook §C paso 5 con el Python del venv
 - v5 · C-3 done (4 vueltas de review; la 4.ª con implementer ALTO tras 3 CHANGES_REQUESTED; APPROVED @ 1c795aa, merge 548943b, README de C-3 + sección MCP de C-4 unidos a mano); suite 97 con venv, OK sin venv (3 salteados)
 - v6 · C-6 done (review en worktree propio; CHANGES_REQUESTED → arreglos → APPROVED @ 9b71e38); openai==3.24.0 (usa httpx2); suite 202 OK; sin llamadas reales
+- OK del owner («OK instalar, OK MCP», 2026-10-06): en C-8, instalar el Cerebro en su máquina (`Documents\Cerebro`, venv de `cerebro/`, modelo local) y registrar el MCP con `claude mcp add`. OpenAI sigue pendiente (clave en `.env` la pone el owner + OK de la primera llamada)
 
 ## Próximo paso
 C-7 (CI, instalar.ps1, deuda de reviews). Después C-8 (leader, con OK del owner: instalar, registrar MCP, primera llamada a OpenAI, playbook §C paso 5 con el Python del venv).
