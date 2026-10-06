@@ -133,3 +133,76 @@ Mutantes de la vuelta (uno por vez, suite completa con `subprocess.run(timeout=1
 | N1 no-md excluido deja el link · N2 carpetas se vuelven texto | 66/63/3 · 66/64/2 | muertos |
 
 Pendiente que no es de esta tarjeta (de la review, sin cambio pedido): `soloSkills` no pasa por `enlazar` (hoy sin links `.md`); el visor no muestra `[ver [1]](x.md)` como link (preexistente).
+
+## Vuelta 3 (@ 1245f98; base de la vuelta: `6c8bdb9`) — implementer ALTO
+
+Pedidos de la review «Vuelta 2» y decisión del leader. No se rediseñó nada de lo aprobado.
+
+### Hecho
+1. **Prosa que parece definición (media, `web/paquete.js:228`).** La def de referencia ahora exige que después del destino venga nada o un título válido: resto `(\s*|\s+(?:"…"|'…'|\(…\))\s*)$`. `[Importante]: config.json no se commitea nunca…`, `[Ojo]: README.md lo escribo yo` y `[Ver]: scenarios.md y nada más` quedan intactas. Las defs con título (`"T"`, `'T'`, `(T)`) se sacan / reescriben igual que antes.
+2. **custom.md no pasa por la reescritura (decisión del leader).** `proyecto` y `soloMd` marcan el custom.md con `usuario: true`; `enlazar` lo mete en el mapa (los links a él se siguen resolviendo) pero no lo reescribe. Test con el flujo real (`archivosDe("proyecto"|"soloMd")`) con notas en CRLF que incluyen prosa tipo def, una def `[s]: scenarios.md`, links en línea a lo que viaja y a lo que no, `[a][s]`, UTF-8 y `<…> "t"`: `custom.md` sale **byte a byte** igual.
+   - Contrato del test de los tres ZIP ajustado a esa decisión: `rotos()` y `conservados()` saltean el custom.md (`origen === "custom.md"`, independiente del flag del código); su cobertura es el test byte a byte. Por eso los conteos bajan en 1 donde había custom: completo 80→79, soloMd 64→63, NOVATO 30 (sin custom).
+3. **N9, N13 y CRLF (baja).** Tests `[a][S]`/`[B][]` contra defs en minúsculas excluidas → texto; `[h]: <agents/leader.md>` → `[h]: <../agents/leader.md>`. CRLF cerrado (barato, sale con el punto 1: el `\s*` final se lleva el `\r`), con test: def incluida reescrita conservando el `\r`, def excluida sacada y su uso a texto.
+- `?v=38` → `?v=39` en `web/{index,admin,guia,demo}.html` y `web/tests/rutas.test.mjs`.
+
+### Rojo visto (base `6c8bdb9`, tests nuevos sobre el código sin cambiar)
+```text
+$ node --test web/tests/paquete-reescritura.test.mjs
+✖ prosa que empieza como una definición de referencia queda intacta
+✖ definiciones con CRLF: se reconocen y el retorno de carro se conserva
+ℹ tests 20
+ℹ pass 18
+ℹ fail 2
+    actual: '',
+    expected: '[Importante]: config.json no se commitea nunca, tiene la clave del cliente.\n[Ojo]: README.md lo escribo yo\n[Ver]: scenarios.md y nada más\n',
+    actual: 'ver [a][s] y [h][1]\r\n\r\n[1]: agents/leader.md\r\n[s]: scenarios.md\r\n',
+    expected: 'ver a y [h][1]\r\n\r\n[1]: ../agents/leader.md\r\n',
+
+$ node --test web/tests/paquete-links.test.mjs
+✖ C-11: proyecto deja custom.md byte a byte como lo escribió la persona
+✖ C-11: soloMd deja custom.md byte a byte como lo escribió la persona
+ℹ tests 5
+ℹ pass 3
+ℹ fail 2
+  +   'Ver escenarios, [el master](SDD-MASTER.md#r01), [a][s] y mi guía.\r\n' +
+  -   'Ver [escenarios](scenarios.md), [el master](SDD-MASTER.md#r01), [a][s] y [mi guía](../docs/guía.md).\r\n' +
+```
+Los tests de N9, N13 y def-con-título pasan sobre la base (el código ya lo hacía): su rojo es el de los mutantes N9/N13/V2 de abajo.
+
+### Verde
+```text
+$ node --test "web/tests/*.test.mjs"      @ 1245f98
+# proyecto completo (PRO): 0 rotos de 79
+# proyecto mínimo (NOVATO): 0 rotos de 30
+# sdd-archivos.zip (soloMd): 0 rotos de 63
+ℹ tests 74
+ℹ pass 74
+ℹ fail 0
+$ node web/tests/smoke/smoke.mjs
+PASS smoke: 22 pasos, 0 errores de consola
+$ python harness/verify.py --quick
+[OK]    Memoria en disco: sdd/progress/v0.36-C-11/current.md
+[FAIL]  sdd/cards/C-11.md: in_progress pero depende de C-10, que está in_progress (despacho fuera de orden: esperá a que sea done)
+[OK]    Rutas citadas existen (184 revisadas)
+ROJO — 1 FAIL, 0 WARN
+```
+El único FAIL es el esperado (orden de despacho por C-10).
+
+### Mutantes (uno por vez, suite completa `web/tests/*.test.mjs`, `subprocess.run(timeout=300)`; base 74/74/0; `paquete.js` restaurado byte a byte tras cada uno)
+Script: `scratchpad/c11impl3/mutantes.py`.
+
+| # | Mutante | Suite (tests/pass/fail) | Resultado |
+|---|---|---|---|
+| V1 | el resto de la def vuelve a `(.*)` (la regresión) | 74/72/2 | muerto |
+| V2 | el título `(…)` no se acepta | 74/73/1 | muerto |
+| V3 | sin el `\s*` final cuando no hay título (CRLF) | 74/73/1 | muerto |
+| V4 | la def incluida pierde el resto (título / `\r`) | 74/72/2 | muerto |
+| V5 | `enlazar` reescribe también lo de la persona | 74/72/2 | muerto |
+| V6 | `proyecto`: custom.md sin `usuario` | 74/73/1 | muerto |
+| V7 | `soloMd`: custom.md sin `usuario` | 74/73/1 | muerto |
+| N9 | id de ref sensible a mayúsculas en el uso | 74/73/1 | **muerto** (sobrevivía) |
+| N13 | la def incluida pierde los `<>` | 74/73/1 | **muerto** (sobrevivía) |
+
+### Sigue latente (sin cambio pedido)
+- Def excluida con el título en la línea siguiente: la línea `"T"` queda suelta (ahora además la def sin título en su línea se reconoce y se saca; el título suelto sigue).
+- `[h](x.md (t))` en línea no se reescribe; carpetas / sin extensión no se tocan.
