@@ -6,6 +6,7 @@
 ## Bitácora (vuelta = tarjeta cerrada o bloqueada)
 - base · 4cc292e · web/tests 48/49 (conteo de escenarios 40 → 42), verify --quick VERDE
 - v1 · C-1 done (review APPROVED, merge); web/tests en verde en la rama del loop
+- OK del owner («OK venv», 2026-10-06): C-3, C-4 y C-6 pueden instalar `fastembed`, `mcp` y `openai` en `cerebro/.venv` de su worktree (no en el Python del sistema)
 
 ## Próximo paso
 C-1 y C-2 en paralelo. C-3 y C-4 instalan `fastembed`/`mcp` en un venv del worktree: esperan el OK del owner.
