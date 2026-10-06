@@ -262,6 +262,70 @@ class TestEmbedder(SinEntorno):
         with self.assertRaises(ErrorEmbedder):
             embedder(s).embed(["a"])
 
+    # --- respuestas 200 malformadas (portal cautivo, proxy, campos null), indices y borde 500 ---
+
+    def respuesta_200(self, cuerpo=None, texto=None, datos=None):
+        if texto is not None:
+            return lambda r: httpx.Response(200, text=texto)
+        if datos is not None:
+            cuerpo = {"object": "list", "data": datos, "model": "m", "usage": {"prompt_tokens": 1, "total_tokens": 1}}
+        return (200, cuerpo, {})
+
+    def test_respuesta_200_malformada_es_error_claro_sin_encadenar(self):
+        bueno = [0.5] * 1536
+        casos = {
+            "texto plano de portal cautivo": self.respuesta_200(texto=f"Inicie sesion en el wifi {CLAVE}"),
+            "sin data": self.respuesta_200(cuerpo={"object": "list"}),
+            "data null": self.respuesta_200(cuerpo={"object": "list", "data": None}),
+            "embedding string": self.respuesta_200(datos=[{"object": "embedding", "index": 0, "embedding": "abc"}]),
+            "embedding no numerico": self.respuesta_200(datos=[{"object": "embedding", "index": 0, "embedding": ["x"] * 1536}]),
+            "embedding null": self.respuesta_200(datos=[{"object": "embedding", "index": 0, "embedding": None}]),
+            "sin index": self.respuesta_200(datos=[{"object": "embedding", "embedding": bueno}]),
+            "index null": self.respuesta_200(datos=[{"object": "embedding", "index": None, "embedding": bueno}]),
+            "cantidad que no cuadra": self.respuesta_200(datos=[]),
+        }
+        for nombre, resp in casos.items():
+            with self.subTest(nombre):
+                s = Servidor(resp)
+                with self.assertRaises(ErrorEmbedder) as ctx:
+                    embedder(s).embed(["a"])
+                self.assertEqual(len(s.requests), 1)  # una respuesta rara no se reintenta
+                self.assertIn("OpenAI", str(ctx.exception))
+                self.assertIn("respuesta", str(ctx.exception))
+                self.assert_sin_clave(ctx.exception)
+
+    def test_index_duplicado_o_faltante_es_error(self):
+        v = [0.5] * 1536
+        for nombre, indices in {"duplicado": [0, 0], "faltante": [0, 2], "desde 1": [1, 2]}.items():
+            with self.subTest(nombre):
+                datos = [{"object": "embedding", "index": i, "embedding": v} for i in indices]
+                s = Servidor(self.respuesta_200(datos=datos))
+                with self.assertRaises(ErrorEmbedder) as ctx:
+                    embedder(s).embed(["a", "b"])
+                self.assertIn("respuesta", str(ctx.exception))
+
+    def test_500_se_reintenta(self):
+        """Borde exacto: 500 reintenta (el mutante `> 500` lo dejaba pasar)."""
+        s = Servidor(error_api(500, "boom"), lambda r: s.ok(r))
+        reloj = Reloj()
+        v = embedder(s, reloj).embed(["a"])
+        self.assertEqual(len(v), 1)
+        self.assertEqual(len(s.requests), 2)
+        self.assertEqual(reloj.esperas, [1.0])
+
+    def test_la_clave_se_tacha_antes_de_truncar_a_300(self):
+        """Clave sin prefijo sk- que cruza el corte de 300: si se truncara antes de tachar, quedaria un pedazo."""
+        otra = "clave-falsa-DISTINTIVA-777"
+        mensaje = "x" * 240 + otra + "y" * 50
+        s = Servidor(error_api(400, mensaje))
+        e = OpenAIEmbedder(clave=otra, http_client=s.http_client(), esperar=Reloj())
+        with self.assertRaises(ErrorEmbedder) as ctx:
+            e.embed(["a"])
+        texto = str(ctx.exception)
+        self.assertNotIn("clave-falsa", texto)
+        self.assertNotIn("DISTINTIVA", texto)
+        self.assertIn("[clave]", texto)
+
     def test_texto_vacio_se_manda_como_un_espacio(self):
         s = Servidor()
         embedder(s).embed(["", "hola"])
@@ -418,6 +482,46 @@ class TestCliYGuardia(ConCerebroSinEntorno):
         self.assertEqual(code, 2)
         self.assertNotIn(CLAVE, out + err)
         self.assertIn("OPENAI_API_KEY", err)
+
+    def test_la_cli_con_respuesta_200_malformada_sale_con_2_sin_traceback_ni_clave(self):
+        self.nota("p", "a.md", "Titulo", "cuerpo de la nota")
+        s = Servidor(lambda r: httpx.Response(200, text=f"Portal cautivo {CLAVE}"))
+        code, out, err = self.cli("indexar", embedder=embedder(s))
+        self.assertEqual(code, 2)
+        self.assertNotIn("Traceback", out + err)
+        self.assertNotIn(CLAVE, out + err)
+        self.assertIn("respuesta", err)
+
+    def test_la_cli_real_en_subproceso_con_respuesta_malformada(self):
+        """Por el `main` de verdad en un proceso aparte: el transporte simulado se inyecta dentro del subproceso
+        (sin red); el embedder sale de `obtener("openai")` con la clave del entorno."""
+        import subprocess
+        import sys
+
+        self.nota("p", "a.md", "Titulo", "cuerpo de la nota")
+        raiz = Path(__file__).resolve().parent.parent
+        lineas = [
+            "import sys, importlib, importlib.util",
+            f"sys.path.insert(0, {str(raiz)!r})",
+            "h = importlib.import_module('httpx2' if importlib.util.find_spec('httpx2') else 'httpx')",
+            "import embedders",
+            "orig = embedders.OpenAIEmbedder.__init__",
+            "def init(self, *a, **k):",
+            f"    k['http_client'] = h.Client(transport=h.MockTransport(lambda r: h.Response(200, text='portal cautivo {CLAVE}')))",
+            "    k['esperar'] = lambda s: None",
+            "    orig(self, *a, **k)",
+            "embedders.OpenAIEmbedder.__init__ = init",
+            "import cerebro",
+            "sys.exit(cerebro.main(['indexar']))",
+        ]
+        codigo = chr(10).join(lineas)
+        entorno = {**os.environ, "CEREBRO_EMBEDDINGS": "openai", "OPENAI_API_KEY": CLAVE, "CEREBRO_DIR": str(self.base)}
+        p = subprocess.run([sys.executable, "-c", codigo], capture_output=True, text=True, timeout=120,
+                           env=entorno, cwd=self.base)
+        self.assertEqual(p.returncode, 2, p.stdout + p.stderr)
+        self.assertNotIn("Traceback", p.stderr)
+        self.assertNotIn(CLAVE, p.stdout + p.stderr)
+        self.assertIn("respuesta", p.stderr)
 
     def test_al_indexar_solo_se_manda_el_fragmento_sin_el_frontmatter(self):
         self.nota("p", "a.md", "Titulo de la nota", "El cuerpo que si se indexa.")

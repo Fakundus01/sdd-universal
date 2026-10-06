@@ -257,10 +257,17 @@ class OpenAIEmbedder(Embedder):
                 raise ErrorEmbedder(mensaje)  # fuera del `except`: sin __context__ con la excepción del SDK
             self._esperar(espera if espera is not None else min(2.0 ** intento, ESPERA_MAXIMA))
             intento += 1
-        datos = sorted(respuesta.data, key=lambda d: d.index)
-        if [d.index for d in datos] != list(range(len(textos))):
-            raise ErrorEmbedder(f"OpenAI devolvió {len(datos)} vectores para {len(textos)} textos")
-        vectores = [[float(x) for x in d.embedding] for d in datos]
+        problema = None
+        try:
+            datos = sorted(respuesta.data, key=lambda d: d.index)
+            if [d.index for d in datos] != list(range(len(textos))):
+                problema = f"trajo {len(datos)} vectores con índices que no cuadran para {len(textos)} textos"
+            else:
+                vectores = [[float(x) for x in d.embedding] for d in datos]
+        except Exception:  # portal cautivo (texto plano), `data` ausente o null, embedding no numérico, `index` roto
+            problema = "no tiene la forma esperada (¿un proxy o un portal cautivo en el medio?)"
+        if problema:  # fuera del `except`: sin __context__, y no se cita nada de la respuesta (podría llevar la clave)
+            raise ErrorEmbedder(f"OpenAI devolvió una respuesta que no sirve: {problema}")
         if any(len(v) != self.dim for v in vectores):
             raise ErrorEmbedder(f"el modelo «{self.nombre}» devolvió vectores que no son de dim {self.dim}")
         return vectores

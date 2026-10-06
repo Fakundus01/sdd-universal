@@ -44,6 +44,8 @@ Versiones verificadas contra PyPI el 2026-10-06.
 
 `CEREBRO_EMBEDDINGS=openai` usa `text-embedding-3-small` (1536 dimensiones). Qué sale de tu máquina: el texto de cada fragmento indexado y de cada consulta (sin el frontmatter), hacia `api.openai.com`; las notas no deben llevar secretos ni datos de personas.
 
+**Decisión (2026-10-06, playbook §D.4):** mandar el texto de las notas a `api.openai.com` es una decisión que se toma a propósito (la primera llamada real la hace el leader con OK del owner), no un valor por defecto: el modo por defecto sigue siendo `local`. Verificado el 2026-10-06 contra `openai` 3.24.0 (solo con transporte simulado: todavía no hubo ninguna llamada real).
+
 - **Clave:** `OPENAI_API_KEY` del entorno, o del `.env` de la raíz del paquete (copiá `.env.example`; `.env` está en el `.gitignore`). Sin clave el error nombra la variable y el modo local sigue andando. La clave no se escribe, no se imprime y se tacha de cualquier mensaje de la API (el 401 la repite).
 - **Cambiar de modo:** los vectores de dos modelos no se comparan. El índice guarda modelo y dimensión; si cambian, se niega y pide `indexar --todo`. Con OpenAI, `indexar --todo` re-embebe todo (cuesta tokens); el incremental solo manda lo que cambió.
 - **Red:** lotes de 64 textos; ante 429, 5xx o corte de red reintenta hasta 3 veces con espera creciente (respeta `Retry-After`, tope 20 s); 401, cuota agotada y 4xx fallan al instante con un mensaje claro. El SDK va con `max_retries=0` (el reintento es uno solo, el nuestro). La URL es siempre `https://api.openai.com/v1`: se ignora `OPENAI_BASE_URL` para que la clave no viaje a otro host.
