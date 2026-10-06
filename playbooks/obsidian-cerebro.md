@@ -67,7 +67,7 @@ La herramienta vive en `cerebro/` del paquete (como `harness/`) y se copia al pr
 En Windows, todo de una vez: `powershell -ExecutionPolicy Bypass -File cerebro\instalar.ps1` (venv + dependencias + `init` + `importar-sdd` + `indexar`; no registra el MCP). Se niega a instalar el Cerebro dentro de OneDrive. A mano, los mismos pasos:
 
 1. `python -m venv cerebro/.venv` y `cerebro/.venv/Scripts/pip install -r cerebro/requirements.txt` (`fastembed`, `mcp`, `openai`; decisiones en `cerebro/README.md`). **Siempre en el venv**, nunca en el Python del sistema; los pasos que siguen usan el Python del venv.
-   [NOVATO] Instala las librerías en una carpeta aparte. La primera búsqueda baja un modelo de ~1 GB una sola vez.
+   [NOVATO] Instala las librerías en una carpeta aparte. La primera búsqueda baja un modelo de ~220 MB una sola vez.
 2. `python cerebro/cerebro.py init` → crea la carpeta y el `LEEME.md`.
 3. `python cerebro/cerebro.py importar-sdd <repo>` → siembra el Cerebro con los escenarios, hallazgos y lecciones del paquete (idempotente).
 4. `python cerebro/cerebro.py indexar` → indexa las notas (incremental: solo lo que cambió; `--todo` al cambiar de modelo).
@@ -80,7 +80,7 @@ En Windows, todo de una vez: `powershell -ExecutionPolicy Bypass -File cerebro\i
 | Pieza | Qué hace |
 |---|---|
 | Búsqueda | **Híbrida**: palabras (SQLite FTS5, BM25) + vectores (coseno), fusionadas por rango recíproco (RRF). Lo exacto («R30», «UnboundLocalError») lo encuentra la primera; lo parecido dicho con otras palabras, la segunda |
-| Embeddings locales | `fastembed`, modelo multilingüe (las notas están en español), en CPU, sin servidor. Hoy `paraphrase-multilingual-mpnet-base-v2`: el MiniLM chico no alcanzaba el objetivo de búsqueda del loop (DRIFT del 2026-10-06) |
+| Embeddings locales | `fastembed`, modelo multilingüe (las notas están en español), en CPU, sin servidor. Hoy `paraphrase-multilingual-MiniLM-L12-v2` (~220 MB): `mpnet` (~1 GB) se probó y solo ganaba con una frase exacta (loop `obsidian-cerebro`, 2026-10-06) |
 | Fragmentos | Por encabezado, ~1500 caracteres; el frontmatter va como filtro, no como texto |
 | Índice | `.cerebro/indice.sqlite`: guarda **modelo, dimensión y versión de esquema**. Si cambian, se niega a mezclar y pide `indexar --todo`. El `proyecto` se indexa como slug: `--proyecto "Mi Proyecto"` y `mi-proyecto` filtran igual |
 | Escritura (`nota`) | Solo dentro de `CEREBRO_DIR/proyectos/`; el nombre sale de un slug saneado; nunca pisa una nota existente |

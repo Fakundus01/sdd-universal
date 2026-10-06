@@ -15,7 +15,10 @@ A pedido del owner, una vez aprobado este archivo.
 ## Objetivo (medible)
 1. `node --test "web/tests/*.test.mjs"` → `fail 0` (hoy 48/49: el conteo de escenarios de la web dice 40 y son 42).
 2. `python -m unittest discover -s cerebro/tests` → `OK`, sin red ni modelos (embedder falso), y en CI (`.github/workflows/cerebro.yml`, Windows + Ubuntu).
-3. Búsqueda que sirve, sobre el Cerebro sembrado con lo real del paquete: `python cerebro/cerebro.py buscar "el loop no sabe cuándo frenar"` trae la nota de S39 entre las 3 primeras, y `buscar "copió un archivo para que pase el check"` trae la de S42 entre las 3 primeras, con embeddings **locales**.
+3. Búsqueda que sirve, sobre el Cerebro sembrado con lo real del paquete y con embeddings **locales** (MiniLM): para S39 y para S42, cada una con sus 5 consultas fijas, la nota queda entre las 5 primeras en al menos 3 de las 5 (`buscar "<consulta>" -k 5`). Las consultas se fijaron el 2026-10-06 antes de medir y no se cambian para que pase:
+   - S39: «el loop no sabe cuándo frenar» · «el loop sigue sin criterio de corte» · «el agente no sabe cuándo parar de iterar» · «seguir iterando sin una condición de fin» · «no hay un criterio para terminar el ciclo de mejoras»
+   - S42: «copió un archivo para que pase el check» · «el agente tocó archivos para que el chequeo dé verde» · «copiaron un archivo para que el test pase» · «hizo trampa copiando archivos para pasar la verificación» · «duplicó un archivo para que la validación no falle»
+   _DRIFT (R25), 2026-10-06, decidido por el owner: el objetivo original medía una frase por escenario; con MiniLM S42 quedaba 10.ª, y mpnet (C-9) la metía 3.ª solo con esa frase exacta y empeoraba S39 con paráfrasis. Se vuelve a MiniLM y se mide un conjunto._
 4. MCP: `claude mcp list` muestra `cerebro` conectado, y una llamada a `buscar` desde Claude Code devuelve resultados con su `fuente`.
 5. OpenAI: con `CEREBRO_EMBEDDINGS=openai` y la clave del owner en `.env`, `indexar --todo` + las dos búsquedas del objetivo 3 dan el mismo top 3 o mejor; sin la clave, el modo OpenAI falla con un mensaje claro y el local sigue andando.
 6. `python harness/verify.py --quick` en verde, sin `DRIFT` abierto, y el repo se abre en Obsidian con el grafo conectado (lo confirma el owner con una captura o un «sí»).
