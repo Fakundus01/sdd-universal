@@ -121,3 +121,8 @@ test("archivo relativo que no es .md y no viaja: queda el texto; si viaja, se re
   assert.equal(rw2("[schema](../supabase/schema.sql) [v](harness/verify.py) [d](harness/)"),
                "schema [v](../harness/verify.py) [d](harness/)");
 });
+
+test("usos de referencia: la imagen y el escapado no se tocan aunque la definición no viaje", () => {
+  const t = "![b][2] y " + String.fromCharCode(92) + "[b][2]\n\n[2]: scenarios.md\n";
+  assert.equal(rw2(t), "![b][2] y " + String.fromCharCode(92) + "[b][2]\n\n");
+});
