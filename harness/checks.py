@@ -75,6 +75,8 @@ class Card:
     meta: dict[str, str]
     body: str
     criteria: list[str] = field(default_factory=list)
+    deps: list[str] = field(default_factory=list)
+    deps_error: str = ""  # `depende_de` en un formato que no se sabe leer (vacío si está bien)
 
     @property
     def id(self) -> str:
@@ -89,15 +91,41 @@ class Card:
         text = path.read_text(encoding="utf-8-sig", errors="replace")
         meta: dict[str, str] = {}
         body = text
+        deps: list[str] = []
+        deps_error = ""
         if text.startswith("---"):
             head, sep, rest = text[3:].partition("\n---")
             if sep:
                 body = rest
-                for line in head.splitlines():
+                lines = head.splitlines()
+                for n, line in enumerate(lines):
                     key, colon, value = line.partition(":")
                     if colon and key.strip():
                         meta[key.strip()] = _clean_value(value)
-        return cls(path, meta, body, cls._criteria(body))
+                        if key.strip() == "depende_de":
+                            deps, deps_error = cls._parse_deps(value, lines[n + 1:])
+        card = cls(path, meta, body, cls._criteria(body))
+        card.deps, card.deps_error = deps, deps_error
+        return card
+
+    @staticmethod
+    def _parse_deps(value: str, following: list[str]) -> tuple[list[str], str]:
+        """`depende_de: [A, B]` (o `[A,B]`, con comillas). Ausente o `[]` es sin dependencias; cualquier otra
+        forma (lista YAML en varias líneas, valores sin corchetes) se rechaza en vez de perderse en silencio."""
+        value = value.strip()
+        if value[:1] == "#":
+            value = ""  # `depende_de: # nada`: solo un comentario
+        if value[:1] in ("'", '"') and len(value) > 1 and value[-1] == value[0]:
+            value = value[1:-1].strip()  # `depende_de: "[A]"`, YAML válido
+        if not value:
+            if following and re.match(r"\s*-\s", following[0]):
+                return [], "lista en varias líneas; escribila en una línea, `depende_de: [A, B]`"
+            return [], ""
+        match = re.match(r"^\[([^\[\]]*)\]\s*(?:#.*)?$", value)
+        if not match:
+            return [], f"{value!r} no está entre corchetes; escribí `depende_de: [A, B]`"
+        items = (item.strip().strip("'\"").strip() for item in match.group(1).split(","))
+        return list(dict.fromkeys(i for i in items if i and not PLACEHOLDER_RE.match(i))), ""
 
     @staticmethod
     def _criteria(body: str) -> list[str]:
@@ -190,8 +218,65 @@ class HarnessChecks:
             if len(ids) > 1:
                 self.report.fail(f"rama {branch}: {len(ids)} tarjetas in_progress ({', '.join(ids)}); máximo 1 por rama")
                 errors += 1
+        errors += self._check_graph()
         if self.cards and not errors:
             self.report.ok(f"Tarjetas válidas ({len(self.cards)})")
+
+    def _check_graph(self) -> int:
+        """orchestration.md §10: cada `depende_de` existe, el grafo no tiene ciclos y no se despacha fuera de orden."""
+        by_id = {c.id: c for c in self.cards if c.id}
+        errors = 0
+        for card in self.cards:
+            if not card.id:
+                continue  # ya falla por id vacío; sus dependencias no se juzgan
+            rel = self._rel(card.path)
+            if card.deps_error:
+                self.report.fail(f"{rel}: depende_de con formato no reconocido: {card.deps_error}")
+                errors += 1
+            for dep in card.deps:
+                if dep not in by_id:
+                    self.report.fail(f"{rel}: depende_de {dep} y esa tarjeta no existe (sdd/cards/{dep}.md)")
+                    errors += 1
+                elif card.state in ("in_progress", "review", "done") and by_id[dep].state != "done":
+                    self.report.fail(f"{rel}: {card.state} pero depende de {dep}, que está {by_id[dep].state or 'sin estado'} "
+                                     "(despacho fuera de orden: esperá a que sea done)")
+                    errors += 1
+        return errors + self._check_cycles(by_id)
+
+    def _check_cycles(self, by_id: dict[str, Card]) -> int:
+        """DFS iterativo (una cadena larga no tira RecursionError); cada ciclo se informa una vez."""
+        errors = 0
+        done: set[str] = set()
+        steps = 0
+        limit = 2 * (len(by_id) + sum(len(c.deps) for c in by_id.values())) + 10  # tope: nunca cuelga
+        for start in sorted(by_id):
+            if start in done:
+                continue
+            path = [start]
+            on_path = {start}
+            stack = [iter([d for d in by_id[start].deps if d in by_id])]
+            while stack:
+                steps += 1
+                if steps > limit:
+                    self.report.fail("depende_de: el recorrido del grafo no termina (error del arnés; avisá al leader)")
+                    return errors + 1
+                dep = next(stack[-1], None)
+                if dep is None:
+                    node = path.pop()
+                    done.add(node)
+                    on_path.discard(node)
+                    stack.pop()
+                    continue
+                if dep in on_path:
+                    cycle = path[path.index(dep):] + [dep]
+                    shown = cycle if len(cycle) <= 12 else cycle[:5] + ["…"] + cycle[-4:] + [f"({len(cycle) - 1} tarjetas)"]
+                    self.report.fail(f"ciclo en depende_de: {' -> '.join(shown)} (tarjeta mal partida: re-partila)")
+                    errors += 1
+                elif dep not in done:
+                    path.append(dep)
+                    on_path.add(dep)
+                    stack.append(iter([d for d in by_id[dep].deps if d in by_id]))
+        return errors
 
     def _check_done(self, card: Card, rel: str, branch: str) -> int:
         if not card.criteria:
