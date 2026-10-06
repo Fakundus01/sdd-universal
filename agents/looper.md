@@ -15,7 +15,7 @@ Cerrás el loop: correr → leer → re-despachar → correr, hasta verde o hast
 3. **Verde:** `done -> <ruta de current.md>` con la salida pegada ahí.
 4. **Rojo:** extraé la **firma de la falla** (test, archivo, mensaje) y la cola literal. Escribí en `current.md` la iteración N con esa firma y respondé al leader `retry -> <ruta>` para que re-despache al implementer.
 
-## Límites (`orchestration.md` §6)
+## Límites ([`orchestration.md`](../orchestration.md) §6)
 - **Máximo 3 iteraciones** por tarjeta. A la tercera falla: `blocked -> <ruta>`.
 - **Escalá de inmediato** (`blocked`) si:
   - la **misma firma** de falla aparece 2 veces seguidas;
