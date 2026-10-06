@@ -1,7 +1,7 @@
 # Handback L-2 — verify.py revisa depende_de: que exista y que no haya ciclos
 
 - **Estado:** done
-- **Rama / commit:** `v0.35-L-2` @ `HASH_NUEVO` (vuelta 2; base de la vuelta `a0213f6`)
+- **Rama / commit:** `v0.35-L-2` @ `61c14da` (vuelta 2; base de la vuelta `a0213f6`)
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
@@ -111,4 +111,4 @@ OK
 
 ## Apéndice: vueltas
 - Vuelta 1 (f1f39f0): review R30 CHANGES_REQUESTED sobre `f7673be`. Req. 1 (test de `done` fuera de orden) y 2 (el FAIL del grafo apaga el OK) resueltos; mejoras: DFS iterativo, FAIL por formato no reconocido, dedupe, id vacío, clase de tests antes de `__main__`, tabla de mutantes (que además encontró dos huecos más: aserto del OK en formato y fuera de orden, y el diamante).
-- Vuelta 2 (HASH_NUEVO): review R30 CHANGES_REQUESTED sobre `1c19422`. Req. 1 (`UnboundLocalError` en `Card.parse` sin frontmatter/sin cierre/vacío) y 2 (test genérico de formas raras de archivo en `sdd/cards/`, incluido un binario) resueltos; mejoras: un solo ciclo con assert, tope de pasos del DFS, ciclo largo recortado, `"[A]"` y comentario solo aceptados. Archivos de la vuelta: `harness/checks.py`, `harness/tests/test_checks.py`, este handback.
+- Vuelta 2 (61c14da): review R30 CHANGES_REQUESTED sobre `1c19422`. Req. 1 (`UnboundLocalError` en `Card.parse` sin frontmatter/sin cierre/vacío) y 2 (test genérico de formas raras de archivo en `sdd/cards/`, incluido un binario) resueltos; mejoras: un solo ciclo con assert, tope de pasos del DFS, ciclo largo recortado, `"[A]"` y comentario solo aceptados. Archivos de la vuelta: `harness/checks.py`, `harness/tests/test_checks.py`, este handback.
