@@ -4,6 +4,28 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ---
 
+## [0.36.0] — 2026-10-06 · paquete + web + cerebro
+
+Obsidian y el Cerebro entre proyectos (S41, S42), con el loop `obsidian-cerebro` (`sdd/loops/obsidian-cerebro.md`): 11 tarjetas, 10 de 10 vueltas, **cortado** por tope con dos objetivos parciales por decisión del owner.
+
+### Agregado
+- **`cerebro/`** (C-2…C-7): notas en Markdown con frontmatter validado, índice SQLite con FTS5 y vectores, búsqueda híbrida (RRF), escritura contenida en `CEREBRO_DIR`; embedder local `fastembed` (MiniLM multilingüe) y de OpenAI (`text-embedding-3-small`) con guardia de modelo y esquema; `importar-sdd` siembra escenarios, hallazgos y lecciones; servidor MCP (`buscar`, `nota`) con la marca R26; `instalar.ps1` (se niega a instalar en OneDrive); CI `cerebro.yml` en Windows y Ubuntu.
+- El Cerebro instalado en la máquina del owner (`Documents\Cerebro`, 71 notas) y el MCP registrado con alcance de usuario.
+- Los MD del paquete se enlazan con links markdown (C-10): el núcleo forma un solo grafo en Obsidian.
+- El ZIP de la web reescribe esos links a sus rutas dentro del ZIP o los deja como texto si el destino no viaja; las notas del usuario (`custom.md`) viajan tal cual (C-11).
+
+### Modificado
+- La web cuenta 42 escenarios y lista el playbook `obsidian-cerebro` (C-1); `?v=39`.
+- `scenarios.md` S42: el problema nombra la trampa y la copia.
+- Playbook `obsidian-cerebro` §C: instalador, venv, `importar-sdd`, `claude mcp add -s user`, modelo y esquema.
+
+### Verificado
+- Cierre: `web/tests` 74/74, smoke PASS, `cerebro/tests` 219 OK y verde en GitHub, `verify.py --quick` VERDE. Reviews en `sdd/progress/v0.36-C-*/`; review del loop en `sdd/progress/v0.36-obsidian-cerebro/review_obsidian-cerebro.md`.
+- No cumplido: búsqueda de S42 por síntoma (0/5 local, 1/5 OpenAI); grafo de todo el repo (solo el núcleo está enlazado).
+- C-9 (modelo mpnet) aprobada por su review pero descartada por el owner: solo mejoraba la frase exacta del objetivo.
+
+---
+
 ## [0.35.0] — 2026-10-06 · paquete + web + arnés
 
 Loop engineering y grafo de tarjetas (S39, S40), hechos con el primer loop con contrato del paquete (`sdd/loops/dev-de-10.md`): 7 tarjetas en un grafo, implementers y reviewers independientes en worktrees, 8 de 8 vueltas.

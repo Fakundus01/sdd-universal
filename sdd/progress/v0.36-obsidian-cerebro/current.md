@@ -31,6 +31,7 @@
 - v9 · C-10 done (2 vueltas; APPROVED @ 406a5c5): 244 links markdown en 36 MD, texto intacto, grafo simulado 0 huérfanos / 1 componente de 50; `SDD-COMPACT` sin links por tokens
 - v10 · C-11 done (3 vueltas, la 3.ª con implementer ALTO; APPROVED @ 1245f98): el ZIP reescribe links (0 rotos en 408 combinaciones), `custom.md` del usuario viaja byte a byte. Merges bac5eb8 y 7bd9251. Tope de 10 vueltas alcanzado
 - Objetivo 6: captura nueva del owner (2026-10-06) tras C-10/C-11: núcleo del paquete denso y conectado; quedan puntos sueltos que deberían ser MD fuera del alcance de C-10 (`sdd/`, `examples/`, `web/`, `cerebro/`, `skills/`); lo confirma la review del loop
+- Review del loop (R30) APPROVED @ aba801a, recomienda `cortado`. Owner (2026-10-06): objetivo 6 «no, quiero todo enlazado» → parcial, deuda. Loop `cortado`; changelog 0.36.0, F27 en `status.md`
 
 ## Próximo paso
-Captura nueva del grafo (owner) y review del loop (R30) que re-ejecuta los seis objetivos; después resumen al cortar, lecciones al Cerebro y HANDBACK.
+Cerrado. Lecciones al Cerebro, HANDBACK al owner, OK para el merge a `main`.

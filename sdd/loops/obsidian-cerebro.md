@@ -1,6 +1,6 @@
 ---
 loop: obsidian-cerebro
-estado: corriendo
+estado: cortado
 rama: v0.36-obsidian-cerebro
 aprobado: 2026-10-06 · owner («OK» en el chat)
 ---
@@ -52,4 +52,20 @@ Los seis objetivos de arriba @ el hash de la rama; al final, un reviewer indepen
 - Al cortar: resumen abajo, HANDBACK al owner y —ahora que existe— una nota por lección en el Cerebro.
 
 ## Resumen al cortar
-(vacío)
+**Cortado el 2026-10-06** por tope: 10 de 10 vueltas; review del loop APPROVED @ aba801a (`sdd/progress/v0.36-obsidian-cerebro/review_obsidian-cerebro.md`), que recomienda `cortado` y no `cumplido`.
+
+| Objetivo | Al cortar |
+|---|---|
+| 1 · `web/tests` | 74/74, smoke PASS (base: 48/49) |
+| 2 · `cerebro/tests` | 219 OK (venv, sin modelo y sistema); `cerebro.yml` verde en GitHub (ubuntu/windows × 3.10/3.14) |
+| 3 · búsqueda (5 consultas fijas por escenario, MiniLM) | **No cumplido, con deuda (decisión del owner):** S39 5/5 en el top 5; S42 0/5 (con OpenAI 1/5) |
+| 4 · MCP | `cerebro` conectado con alcance de usuario; `buscar` desde Claude Code devuelve resultados con `fuente` |
+| 5 · OpenAI | igual o mejor que local en el top 3 de las 10 consultas; sin clave, error claro y el local sigue |
+| 6 · verify + grafo | `verify.py --quick` VERDE; **parcial (decisión del owner):** los 50 MD del núcleo forman un solo componente, pero el owner quiere todo el repo enlazado (`sdd/`, `skills/`, `imports/`…) |
+
+- **Dos DRIFT, decididos por el owner:** el objetivo 3 medía una frase por escenario; cambiar a mpnet (C-9) la «pasaba» solo con esa frase y empeoraba S39 con paráfrasis → C-9 descartada y objetivo medido con un conjunto fijado antes.
+- **Lo que atajaron los reviewers**, que los tests no veían: escritura fuera del Cerebro por un enlace (C-2, C-5), el aviso de descarga sin atar a stderr (C-3), la marca R26 rompible con separadores Unicode (C-4), un traceback con respuestas 200 malformadas (C-6), el instalador poniendo el Cerebro en OneDrive (C-7), tests borrados en silencio (C-3), el ZIP de la web rompiendo 74 links y después borrando notas del usuario (C-11).
+- **Lección:** un objetivo de búsqueda con una sola frase se puede pasar sin mejorar nada; se mide con un conjunto de paráfrasis fijado antes y consultas de control.
+- **Lección:** subagentes en paralelo comparten el scratchpad y pueden compartir worktree: el reviewer va en su propio worktree y cada agente con su subcarpeta; nunca `taskkill /IM`; en Windows `timeout` de cmd es `timeout.exe` y los mutantes salían «muertos» sin correr.
+- **Lección:** una confirmación visual del owner se verifica con la captura; el primer «sí» del grafo no correspondía a lo que se veía.
+- **Pendiente fuera del loop:** S42 del objetivo 3; enlazar el resto del repo (objetivo 6); re-importar el Cerebro real después de C-10 y no llevar links relativos a las notas (H4, H5 de la review); `cerebro/tests` en `verify.py --full`; merge a `main` con OK (el MCP apunta al checkout principal); decidir si se borra la rama `v0.36-C-9`.
