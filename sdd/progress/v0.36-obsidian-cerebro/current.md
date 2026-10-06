@@ -27,6 +27,7 @@
 - Owner (2026-10-06): objetivo 3 «no cumplido, con deuda» (S42); OK de push de la rama del loop (sin PR ni merge); objetivo 6 ✓ («sí, se ve conectado» en Obsidian)
 - Objetivo 2 ✓ en GitHub: cerebro.yml verde en ubuntu/windows × 3.10/3.14 (la 1.ª corrida falló: un test de defensa de `listar` dependía de que el enlace fuera junction; corregido para todas las plataformas, mutante verificado); web.yml verde
 - Objetivo 6: la captura del owner muestra el grafo casi todo suelto (los MD se citan con rutas en código, no con links) → el «sí» no alcanza; owner eligió «Tarjeta para enlazar» → C-10 (vuelta 9)
+- Review C-10: CHANGES_REQUESTED. Texto intacto (302 links), grafo simulado 0 huérfanos / 1 componente de 50; pero el ZIP de la web rompe links (completo 74/139, NOVATO 48/86, sdd-archivos 57/120). Leader: opción (a) → C-11 (paquete.js reescribe links al empaquetar, vuelta 10 = tope); C-10 vuelta 2 saca los falsos positivos y los links de SDD-COMPACT. El owner escribió «Apruebo» antes del veredicto: anotado, sin merge hasta R30
 
 ## Próximo paso
 C-8 (leader): instalar con `cerebro/instalar.ps1` en `%USERPROFILE%\Documents\Cerebro` (OK dado), objetivo 3 con embeddings locales, registrar el MCP con `-s user` (OK dado), playbook §C al día (venv, `-s user`, instalar.ps1), texto de `mcp_server.py:84`. OpenAI: espera la clave del owner en `.env` y su OK.
