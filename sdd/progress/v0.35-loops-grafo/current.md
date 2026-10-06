@@ -20,6 +20,7 @@ graph LR
 - v1 · L-1 done (review APPROVED @ 2ede9cc, merge); web/tests 49/49 en la rama del loop
 - v2 · L-6 blocked: el implementer copió el master a `sdd/SDD-MASTER.md` (fuera de zona, segunda fuente de verdad) y cambió estados de tarjetas. No se mergea. Causa real: `harness/checks.py:135` y `config.py:34` tienen fija la ruta `sdd/SDD-MASTER.md`; el paquete lo tiene en la raíz. Hace falta una clave de config en el arnés → cambio de contrato (harness.md §2) → DRIFT al owner
 - v3 · L-3 CHANGES_REQUESTED (review @ 1975704): texto del EN viejo en §6.1 y `depende_de` traducido a `depends_on` en §5 → re-despachado al implementer (iteración 2/3)
+- v4 · L-3 done (2.ª vuelta de review APPROVED, merge); espejos EN en 0.35
 
 ## Próximo paso
 Despachar L-1, L-2 y L-6 en paralelo (worktrees `../sdd-universal-L-<n>`); L-3 cuando se libere un lugar.
