@@ -76,7 +76,7 @@ test("0.34: onboarding y login son vistas con su ruta, no diálogos encima de to
   assert.match(html, /<section class="vista" data-vista="preferencias"/);
   assert.match(html, /<section class="vista" data-vista="login"/);
   assert.doesNotMatch(html, /id="obdlg"/, "el onboarding sigue siendo un <dialog>");
-  assert.match(html, /<script src="rutas\.js\?v=37"><\/script>\s*\n<script src="shell\.js/, "rutas.js tiene que correr primero");
+  assert.match(html, /<script src="rutas\.js\?v=38"><\/script>\s*\n<script src="shell\.js/, "rutas.js tiene que correr primero");
   const tit = leer("web/app.js").match(/const TITULOS = (\{[\s\S]*?\});/);
   assert.ok(tit, "TITULOS en app.js");
   assert.deepEqual(Object.keys(vm.runInNewContext(`(${tit[1]})`)).sort(), [...VISTAS].sort());
@@ -92,11 +92,11 @@ test("ningún link de la web apunta a #/: van a la ruta", () => {
   assert.match(leer("web/inicio.js"), /combinador\?c=/);
 });
 
-test("cache-busting en ?v=37", () => {
+test("cache-busting en ?v=38", () => {
   for (const f of ["web/index.html", "web/admin.html", "web/guia.html", "web/demo.html"]){
     const vs = [...leer(f).matchAll(/\?v=([\d.]+)"/g)].map(m => m[1]);
     assert.ok(vs.length > 2, f);
-    assert.deepEqual([...new Set(vs)], ["37"], f);
+    assert.deepEqual([...new Set(vs)], ["38"], f);
   }
 });
 

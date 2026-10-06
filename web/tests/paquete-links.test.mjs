@@ -40,7 +40,7 @@ const PLAYBOOKS = fs.readdirSync(path.join(RAIZ, "playbooks"))
 // custom.md lo arma la web: acá linkea a un MD que viaja y a uno que no
 const CUSTOM = ["# custom", "", "Ver [el master](SDD-MASTER.md#r01) y [escenarios](scenarios.md).", ""].join("\n");
 const BASE = {nombre: "Prueba", tipoNombre: "Web", prompt: "P", playbooks: PLAYBOOKS,
-  custom: "# custom\n", conTecnologias: true, conGuia: true, brownfield: false,
+  custom: CUSTOM, conTecnologias: true, conGuia: true, brownfield: false,
   conSkills: true, conHarness: true};
 
 /* Links relativos a un archivo (cualquier extensión) fuera de bloques y code

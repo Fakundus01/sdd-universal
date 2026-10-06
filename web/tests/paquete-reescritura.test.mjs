@@ -40,7 +40,7 @@ test("ancla: se conserva en el destino reescrito y en el texto no queda rastro s
 });
 
 test("externos, anclas puras y otros tipos de archivo no se tocan", () => {
-  const t = "[a](https://x.dev/y.md) [b](#sec) [c](mailto:a@b.c) [d](harness/verify.py) [e](agents/)";
+  const t = "[a](https://x.dev/y.md) [b](#sec) [c](mailto:a@b.c) [d](/abs/x.md) [e](agents/)";
   assert.equal(rw(t), t);
 });
 
@@ -109,7 +109,7 @@ test("título y <…> se reescriben igual; escapado e imagen no se tocan", () =>
   assert.equal(rw2('[a](agents/leader.md "t") [b](scenarios.md \'t\')'), '[a](../agents/leader.md "t") b');
   assert.equal(rw2("[a](<agents/leader.md>) [b](<scenarios.md>) [c](<mi doc.md>)"),
                "[a](<../agents/leader.md>) b [c](<mi%20doc.md>)");
-  assert.equal(rw2("\[a](scenarios.md) ![a](scenarios.md)"), "\[a](scenarios.md) ![a](scenarios.md)");
+  assert.equal(rw2("\\[a](scenarios.md) ![a](scenarios.md)"), "\\[a](scenarios.md) ![a](scenarios.md)");
 });
 
 test("links de referencia: los incluidos se reescriben; los excluidos se van y el uso queda como texto", () => {

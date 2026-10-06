@@ -166,10 +166,15 @@ SDD Universal · https://sdd-universal.vercel.app
 
   /* Los MD del paquete se escribieron para el layout del repo (núcleo en la
      raíz, agents/ al lado). El ZIP los acomoda distinto (sdd/…, agents/ en la
-     raíz) y deja afuera varios: cada link relativo a un .md se resuelve contra
-     la ruta del archivo EN EL PAQUETE y se reescribe contra su ruta en el ZIP.
-     Si el destino no viene, queda el texto: un link roto es un agente que
-     improvisa. Externos, anclas y código (bloques y code spans) no se tocan.
+     raíz) y deja afuera varios: cada link relativo a un archivo se resuelve
+     contra la ruta del archivo EN EL PAQUETE y se reescribe contra su ruta en
+     el ZIP. Si el destino no viene (sea .md o no), queda el texto: un link
+     roto es un agente que improvisa.
+     Sintaxis que entiende: [t](x), [t](<x>), [t](x "título"), y definiciones
+     de referencia (`[id]: x`) con sus usos `[t][id]` / `[id][]`. No se toca:
+     externos, anclas, rutas absolutas, imágenes `![..](..)`, escapados
+     `\[..](..)`, destinos sin extensión (carpetas) ni nada dentro de bloques
+     (``` y ~~~, con su largo) o code spans.
      mapa: ruta en el paquete -> ruta en el ZIP, de todo lo que viaja. */
   function reescribirLinks(texto, origen, destino, mapa){
     const dir = p => p.includes("/") ? p.slice(0, p.lastIndexOf("/")) : "";
@@ -187,28 +192,69 @@ SDD Universal · https://sdd-universal.vercel.app
       while (i < d.length && i < t.length - 1 && d[i] === t[i]) i++;
       return [...d.slice(i).map(() => ".."), ...t.slice(i)].join("/");
     };
+    // undefined: no es asunto nuestro · null: no viaja · string: destino nuevo
+    const nuevo = u => {
+      if (/^(#|\?|[a-z][a-z0-9+.-]*:|\/)/i.test(u)) return undefined;
+      const i = u.search(/[#?]/);
+      const ruta = i < 0 ? u : u.slice(0, i), resto = i < 0 ? "" : u.slice(i);
+      if (!/\.[a-z0-9]+$/i.test(ruta)) return undefined;
+      let dec = ruta;
+      try { dec = decodeURI(ruta); } catch (e) { /* queda tal cual */ }
+      const abs = norm(dir(origen) + "/" + dec);
+      const dest = abs === null ? undefined : mapa.get(abs);
+      return dest === undefined ? null : encodeURI(relativa(destino, dest)) + resto;
+    };
+
+    // 1) qué líneas son prosa: fuera de los bloques de código
+    const L = texto.split("\n");
+    const prosa = [];
+    let abre = null;
+    for (const l of L){
+      if (abre){
+        const c = l.match(/^\s*(`{3,}|~{3,})\s*$/);
+        if (c && c[1][0] === abre[0] && c[1].length >= abre.length) abre = null;
+        prosa.push(false);
+        continue;
+      }
+      const o = l.match(/^\s*(`{3,}(?=[^`]*$)|~{3,})/);
+      if (o) abre = o[1];
+      prosa.push(!o);
+    }
+
+    // 2) definiciones de referencia: se reescriben o, si no viajan, se sacan
+    const fuera = new Set(), sacar = new Set();
+    L.forEach((l, k) => {
+      if (!prosa[k]) return;
+      const m = l.match(/^( {0,3}\[([^\]]+)\]:\s*)(<[^>\n]*>|\S+)(.*)$/);
+      if (!m) return;
+      const ang = m[3][0] === "<", r = nuevo(ang ? m[3].slice(1, -1) : m[3]);
+      if (r === undefined) return;
+      if (r === null){ fuera.add(m[2].toLowerCase()); sacar.add(k); }
+      else L[k] = m[1] + (ang ? `<${r}>` : r) + m[4];
+    });
+
+    // 3) links en línea (y usos de las referencias que no viajan)
     const spans = [];
-    let fence = false;
-    return texto.split("\n").map(l => {
-      if (/^\s*```/.test(l)){ fence = !fence; return l; }
-      if (fence) return l;
+    // el texto admite un nivel de [corchetes]: [ver [1]](x.md); el prefijo \ o ! los deja pasar
+    const enLinea = /(\\|!)?\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\((<[^>\n]*>|[^)\s]+)((?:\s+(?:"[^"]*"|'[^']*'))?)\)/g;
+    const usoRef = /(\\|!)?\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\[([^\]]*)\]/g;
+    return L.map((l, k) => {
+      if (sacar.has(k)) return null;
+      if (!prosa[k]) return l;
       spans.length = 0;
       // los code spans se esconden detrás de un centinela U+0000 (como en md.js)
-      l = l.replace(/`[^`]*`/g, m => "\u0000" + (spans.push(m) - 1) + "\u0000");
-      // el texto admite un nivel de [corchetes]: [ver [1]](x.md)
-      l = l.replace(/\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\(([^)\s]+)\)/g, (m, txt, u) => {
-        if (/^(#|[a-z][a-z0-9+.-]*:|\/)/i.test(u)) return m;
-        const i = u.search(/[#?]/);
-        const ruta = i < 0 ? u : u.slice(0, i), resto = i < 0 ? "" : u.slice(i);
-        if (!/\.md$/i.test(ruta)) return m;
-        let dec = ruta;
-        try { dec = decodeURI(ruta); } catch (e) { /* queda tal cual */ }
-        const abs = norm(dir(origen) + "/" + dec);
-        const dest = abs === null ? undefined : mapa.get(abs);
-        return dest === undefined ? txt : `[${txt}](${relativa(destino, dest)}${resto})`;
+      l = l.replace(/(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/g, m => "\u0000" + (spans.push(m) - 1) + "\u0000");
+      l = l.replace(enLinea, (m, pre, txt, d, tit) => {
+        if (pre) return m;
+        const ang = d[0] === "<", r = nuevo(ang ? d.slice(1, -1) : d);
+        if (r === undefined) return m;
+        return r === null ? txt : `[${txt}](${ang ? `<${r}>` : r}${tit})`;
       });
-      return l.replace(/\u0000(\d+)\u0000/g, (_, k) => spans[+k]);
-    }).join("\n");
+      if (fuera.size)
+        l = l.replace(usoRef, (m, pre, txt, id) =>
+          !pre && fuera.has((id || txt).toLowerCase()) ? txt : m);
+      return l.replace(/\u0000(\d+)\u0000/g, (_, j) => spans[+j]);
+    }).filter(l => l !== null).join("\n");
   }
 
   /* Reescribe los links de todos los MD con `origen` (su ruta en el paquete).
