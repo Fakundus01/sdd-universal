@@ -10,13 +10,13 @@ El SDD **nunca se duplica**: cada herramienta lee su archivo de entrada, y ese a
 
 | Herramienta | Archivo que lee | Contenido del espejo |
 |---|---|---|
-| Claude Code / Cowork | `CLAUDE.md` (o la skill `sdd-universal`) | `Leé sdd/SDD-MASTER.md y obedecé sus reglas.` |
-| OpenAI Codex / ChatGPT | `AGENTS.md` (estándar abierto) | ídem |
+| Claude Code / Cowork | [`CLAUDE.md`](CLAUDE.md) (o la skill `sdd-universal`) | `Leé sdd/SDD-MASTER.md y obedecé sus reglas.` |
+| OpenAI Codex / ChatGPT | [`AGENTS.md`](AGENTS.md) (estándar abierto) | ídem |
 | Cursor | `.cursor/rules/sdd.mdc` con `alwaysApply: true` (también lee `AGENTS.md`) | ídem |
 | GitHub Copilot | `.github/copilot-instructions.md` | ídem |
 | Gemini CLI | `GEMINI.md` (versiones nuevas también leen `AGENTS.md`) | ídem |
 | Windsurf | `.windsurf/rules/` | ídem |
-| Meta AI y agentes solo-chat | no leen archivos del repo | pegar `SDD-COMPACT.md` como primer mensaje (S10) |
+| Meta AI y agentes solo-chat | no leen archivos del repo | pegar [`SDD-COMPACT.md`](SDD-COMPACT.md) como primer mensaje (S10) |
 
 **Si solo vas a crear un espejo, que sea `AGENTS.md`:** se volvió el estándar de facto que la mayoría de las herramientas ya soporta. `CLAUDE.md` conviene tenerlo igual porque Claude lo prioriza.
 
@@ -44,7 +44,7 @@ Ruteo del Protocolo de Lectura (nadie lee todo) · archivos ≤300 líneas (R05)
 
 ### b) De sesión — hábitos que multiplican el ahorro
 
-1. **Prefijo estable → caché.** El master va SIEMPRE al principio de la sesión y no se edita a mitad del chat: los proveedores (Claude, OpenAI, Gemini) cachean prefijos repetidos y las relecturas cuestan una fracción. Lo volátil (`custom.md`, la tarea del día) va al final.
+1. **Prefijo estable → caché.** El master va SIEMPRE al principio de la sesión y no se edita a mitad del chat: los proveedores (Claude, OpenAI, Gemini) cachean prefijos repetidos y las relecturas cuestan una fracción. Lo volátil ([`custom.md`](custom.md), la tarea del día) va al final.
 2. **El estado vive en archivos, no en el chat.** Podés cerrar una sesión larga sin miedo: HANDBACK + MDs reconstruyen todo. Sesión nueva = contexto limpio y barato. Nunca arrastres un chat de 200 mensajes "por las dudas".
 3. **Releer solo lo que cambió.** El changelog dice qué se tocó; no se re-abre `design.md` si nadie lo modificó.
 4. **Diffs, no archivos enteros.** Pedir "mostrame el diff" en vez de "mostrame el archivo".
@@ -65,7 +65,7 @@ Si un ciclo típico empieza a gastar más que el anterior sin que el proyecto ha
 
 ## 4 · Tier por rol de agente (R31)
 
-Cuando hay orquestación (`orchestration.md`), el `leader` elige modelo y esfuerzo **por tarjeta** y lo escribe en ella. Default por rol:
+Cuando hay orquestación ([`orchestration.md`](orchestration.md)), el `leader` elige modelo y esfuerzo **por tarjeta** y lo escribe en ella. Default por rol:
 
 | Rol | Tier | Esfuerzo | Por qué |
 |---|---|---|---|
