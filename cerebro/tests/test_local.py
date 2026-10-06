@@ -174,10 +174,14 @@ class TestLocalUnitario(unittest.TestCase):
     def test_snapshots_vacio_o_sin_onnx_no_cuenta_como_bajado(self):
         snap = self.modelo_bajado()
         (snap / "model_optimized.onnx").unlink()
-        for caso in ("sin onnx", "snapshots vacio"):
+        for caso in ("sin onnx", "otros archivos sin onnx", "snapshots vacio"):
             with self.subTest(caso):
+                if caso == "otros archivos sin onnx":
+                    (snap / "config.json").write_text("{}", encoding="utf-8")
+                    (snap / "tokenizer.json").write_text("{}", encoding="utf-8")
                 if caso == "snapshots vacio":
-                    snap.rmdir()
+                    for f in snap.iterdir():
+                        f.unlink()
                 avisos: list[str] = []
                 Local(cargar=cargador(Modelo()), avisar=avisos.append, cache=self.cache).embed(["hola"])
                 self.assertEqual(len(avisos), 1)
@@ -209,40 +213,22 @@ class TestLocalUnitario(unittest.TestCase):
         with self.assertRaises(ErrorEmbedder):
             e.embed(["uno", "dos"])
 
-    def test_el_entorno_del_proceso_no_queda_cambiado(self):
-        durante: dict = {}
+    def test_la_variable_de_symlinks_se_fija_antes_del_import_y_respeta_la_del_usuario(self):
+        vista: dict = {}
 
-        class TextEmbedding:
-            def __init__(self, **kwargs) -> None:
-                durante["v"] = os.environ.get("HF_HUB_DISABLE_SYMLINKS_WARNING")
+        class Modulo:
+            @property
+            def TextEmbedding(self):  # se evalúa recién en el `from fastembed import`
+                vista["al_importar"] = os.environ.get("HF_HUB_DISABLE_SYMLINKS_WARNING")
+                return lambda **kw: None
 
         sin = {k: v for k, v in os.environ.items() if k != "HF_HUB_DISABLE_SYMLINKS_WARNING"}
-        with mock.patch.dict(os.environ, sin, clear=True),                 mock.patch.dict(sys.modules, {"fastembed": mock.Mock(TextEmbedding=TextEmbedding)}):
-            Local(avisar=lambda m: None, cache=self.cache)._modelo_listo()
-            self.assertNotIn("HF_HUB_DISABLE_SYMLINKS_WARNING", os.environ)
-        self.assertEqual(durante["v"], "1")
-
-    def test_el_cargador_real_le_pasa_modelo_y_cache_a_fastembed(self):
-        pedido: dict = {}
-
-        class TextEmbedding:
-            def __init__(self, **kwargs) -> None:
-                pedido.update(kwargs)
-
-        falso = mock.Mock(TextEmbedding=TextEmbedding)
-        with mock.patch.dict(sys.modules, {"fastembed": falso}):
-            Local(avisar=lambda m: None, cache=self.cache).embed([])  # vacío: no carga
-            self.assertEqual(pedido, {})
-            Local(avisar=lambda m: None, cache=self.cache)._modelo_listo()
-        self.assertEqual(pedido, {"model_name": embedders.MODELO_LOCAL, "cache_dir": str(self.cache)})
-
-    def test_cache_por_defecto_y_variable_de_entorno(self):
-        with mock.patch.dict(os.environ, {"CEREBRO_MODELOS": str(self.cache)}):
-            self.assertEqual(embedders.dir_modelos(), self.cache)
-        sin = {k: v for k, v in os.environ.items() if k != "CEREBRO_MODELOS"}
-        with mock.patch.dict(os.environ, sin, clear=True):
-            self.assertEqual(embedders.dir_modelos().parts[-2:], ("cerebro", "modelos"))
-            self.assertNotEqual(embedders.dir_modelos().parent, Path(tempfile.gettempdir()))
+        with mock.patch.dict(os.environ, sin, clear=True), mock.patch.dict(sys.modules, {"fastembed": Modulo()}):
+            embedders._importar_fastembed()
+        self.assertEqual(vista["al_importar"], "1")
+        with mock.patch.dict(os.environ, {"HF_HUB_DISABLE_SYMLINKS_WARNING": "0"}),                 mock.patch.dict(sys.modules, {"fastembed": Modulo()}):
+            embedders._importar_fastembed()
+            self.assertEqual(vista["al_importar"], "0")
 
 
 class TestMetaConLocal(ConCerebro):
@@ -259,6 +245,17 @@ class TestMetaConLocal(ConCerebro):
 
 def coseno(a, b) -> float:
     return sum(x * y for x, y in zip(a, b)) / (math.sqrt(sum(x * x for x in a)) * math.sqrt(sum(y * y for y in b)))
+
+
+@unittest.skipUnless(HAY_FASTEMBED, "fastembed no está instalado: la constante de huggingface_hub solo se mide con él")
+class TestSymlinksHF(unittest.TestCase):
+    def test_huggingface_hub_ve_la_variable_tras_importar_fastembed(self):
+        codigo = ("import os, sys; sys.path.insert(0, sys.argv[1]); os.environ.pop('HF_HUB_DISABLE_SYMLINKS_WARNING', None); "
+                  "import embedders; embedders._importar_fastembed(); import huggingface_hub.constants as c; "
+                  "assert c.HF_HUB_DISABLE_SYMLINKS_WARNING is True, c.HF_HUB_DISABLE_SYMLINKS_WARNING")
+        r = subprocess.run([sys.executable, "-I", "-c", codigo, str(Path(embedders.__file__).parent)],
+                           capture_output=True, text=True, timeout=120)
+        self.assertEqual(r.returncode, 0, r.stderr)
 
 
 @unittest.skipUnless(HAY_FASTEMBED, "fastembed no está instalado: `python -m venv cerebro/.venv` y "

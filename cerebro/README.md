@@ -12,7 +12,7 @@ cerebro/.venv/Scripts/python cerebro/cerebro.py indexar
 
 La primera búsqueda con `CEREBRO_EMBEDDINGS=local` **baja el modelo** (unos 220 MB, una sola vez) y avisa por stderr qué baja y adónde. Sin internet esa primera vez, falla con un error claro. El modelo queda en `~/.cache/cerebro/modelos` (o en `CEREBRO_MODELOS`); no entra al repo.
 
-Durante la carga del modelo se fija `HF_HUB_DISABLE_SYMLINKS_WARNING=1` (silencia un aviso de symlinks de Windows) y se restaura al terminar: el entorno del proceso no queda cambiado.
+Antes de importar `fastembed` se fija `HF_HUB_DISABLE_SYMLINKS_WARNING=1` con `setdefault` (`huggingface_hub` lo lee una sola vez, al importarse): silencia el aviso de symlinks de Windows sin modo desarrollador y respeta el valor que ya tengas. Queda fijada en el entorno del proceso.
 
 Sin `fastembed` el núcleo igual funciona: los tests corren con el embedder falso (`CEREBRO_EMBEDDINGS=falso`) y la integración con el modelo real se saltea con motivo.
 

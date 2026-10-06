@@ -75,23 +75,23 @@ def _avisar_stderr(mensaje: str) -> None:
     print(mensaje, file=sys.stderr, flush=True)
 
 
-def _cargar_fastembed(nombre: str, cache: str):
+def _importar_fastembed():
+    """Importa fastembed. `huggingface_hub` lee `HF_HUB_DISABLE_SYMLINKS_WARNING` una sola vez, al importarse, así
+    que la variable se fija ANTES del import (en Windows sin modo desarrollador el aviso de symlinks es solo ruido).
+    `setdefault` respeta lo que el usuario ya traiga; queda fijada en el proceso, que es donde `huggingface_hub`
+    la necesita."""
+    os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
     try:
         from fastembed import TextEmbedding
     except ImportError as e:
         raise ErrorEmbedder("falta `fastembed` para los embeddings locales: instalalo en un venv con "
                             "`pip install -r cerebro/requirements.txt` (o probá sin modelos con "
                             "CEREBRO_EMBEDDINGS=falso)") from e
-    # Windows sin modo desarrollador: el aviso de symlinks es solo ruido. Se acota a la carga y se restaura.
-    previo = os.environ.get("HF_HUB_DISABLE_SYMLINKS_WARNING")
-    os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
-    try:
-        return TextEmbedding(model_name=nombre, cache_dir=cache)
-    finally:
-        if previo is None:
-            os.environ.pop("HF_HUB_DISABLE_SYMLINKS_WARNING", None)
-        else:
-            os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = previo
+    return TextEmbedding
+
+
+def _cargar_fastembed(nombre: str, cache: str):
+    return _importar_fastembed()(model_name=nombre, cache_dir=cache)
 
 
 class Local(Embedder):
