@@ -180,3 +180,54 @@ Mutantes (suite completa, `subprocess.run(timeout=120)`, restaurado en `finally`
 | N8 | `revisar` falla (exit 1) con aviso | muerto (failures=1) |
 
 Pendiente para el leader: playbook §C (venv, `-s user`, `instalar.ps1`) sigue fuera de zona. No registré el MCP ni toqué el modelo; sin llamadas a OpenAI.
+
+---
+
+# Vuelta 3 (review `42cf1dd`) — `v0.36-C-7` @ `7d95dbf` (este handback entra en el commit siguiente)
+
+Zona ampliada: `cerebro/indice.py` (solo lo que guarda `proyecto` y la marca de esquema). Opción (a) del leader.
+
+- **H11:** el índice guarda `notas.slug(nota.proyecto)`. Una nota a mano con `proyecto: SDD Universal` en `proyectos/sdd-universal/` aparece con `--proyecto "SDD Universal"` y con `--proyecto sdd-universal`, por CLI y por MCP. `meta` guarda ahora `esquema` (`VERSION_ESQUEMA = "2"`; ojo: `ESQUEMA` ya era el SQL de las tablas, por eso el nombre). `buscar` e `indexar` incremental con un índice de otro esquema (o sin la marca: los armados con el código anterior) fallan con `ErrorModelo` (el mismo tipo que la guardia de modelo): «el índice se armó con otra versión del esquema (anterior; la actual es 2) ... Corré `cerebro.py indexar --todo`»; `indexar --todo` lo reconstruye. Texto del aviso de `revisar` corregido: dice con qué valor se indexa la nota y si `--proyecto <carpeta>` la alcanza (cuando `slug(proyecto) == carpeta`: «el filtro `--proyecto` la alcanza igual»; si no: «`buscar --proyecto <carpeta>` no la encuentra», con la corrección sugerida). Sigue siendo aviso, exit 0.
+- **H12:** tests para `--proyecto "   "` (sin filtro) y para una nota en `proyectos/p/sub/x.md` (sin aviso).
+- Tests existentes adaptados, sin debilitarlos: `test_indice.py:406` y `test_local.py:263` comparaban `meta` con un dict exacto de dos claves; ahora incluye `"esquema": "2"` (sigue siendo igualdad exacta).
+- `instalar.ps1`: la pista de `-Reindexar` también menciona el índice de una versión anterior.
+- README: una frase sobre el esquema en el paso 5.
+
+Rojo antes (R29), base `42cf1dd`, venv (`python -m unittest test_cli test_mcp_server`):
+```text
+FAIL: test_aviso_de_revisar_dice_como_se_indexa_la_nota
+FAIL: test_indice_con_otro_esquema_pide_indexar_todo (comando=('buscar', 'membrillo'))
+FAIL: test_indice_con_otro_esquema_pide_indexar_todo (comando=('indexar',))
+FAIL: test_nota_a_mano_con_proyecto_natural_se_alcanza_por_el_slug_y_por_el_nombre (filtro='SDD Universal')
+FAIL: test_nota_a_mano_con_proyecto_natural_se_alcanza_por_el_slug_y_por_el_nombre (filtro='sdd-universal')
+FAIL: test_nota_a_mano_con_proyecto_natural_se_alcanza_por_mcp (filtro='SDD Universal')
+FAIL: test_nota_a_mano_con_proyecto_natural_se_alcanza_por_mcp (filtro='sdd-universal')
+Ran 50 tests in 3.802s
+FAILED (failures=7)
+```
+Los tests de H12 (`test_proyecto_en_blanco_es_sin_filtro`, `test_revisar_no_avisa_por_una_nota_en_una_subcarpeta_del_proyecto`) pasaban en el código de base, como dice la review: lo que cubren son los mutantes Q5 y Q7 (abajo, muertos).
+
+Verde después:
+```text
+venv:                          Ran 219 tests in 12.500s  OK
+CEREBRO_SIN_MODELO=1 (venv):   Ran 219 tests in 10.549s  OK (skipped=1)
+sistema 3.14:                  Ran 219 tests in 8.526s   OK (skipped=3)
+Python 3.11:                   Ran 219 tests in 7.440s   OK (skipped=3)
+verify.py --quick:             VERDE — 0 FAIL, 0 WARN
+```
+
+Mutantes (suite completa, `subprocess.run(timeout=120)`, uno por vez, restaurados; todos muertos):
+| # | Mutante | Resultado |
+|---|---|---|
+| R1 | el índice guarda el `proyecto` crudo | muerto (Ran 219, failures=4) |
+| R2 | sin guardia de esquema | muerto (failures=2) |
+| R3 | la marca de esquema no se escribe | muerto (failures=13, errors=45) |
+| R4 | guardia solo en `buscar`, no en `indexar` incremental | muerto (failures=8, errors=2) |
+| Q5 | filtro sin `.strip()` | muerto (failures=1) |
+| Q7 | `carpeta = a.parent.name` | muerto (failures=1) |
+| R6 | el aviso siempre dice que la alcanza | muerto (failures=1) |
+| R7 | el aviso nunca dice que la alcanza | muerto (failures=1) |
+
+`instalar.ps1` con `CEREBRO_DIR` = `%TEMP%\Cerebro v3 ñ`, `local`: corrida nueva exit 0 (71 nuevas); simulado un índice viejo (borrada la fila `esquema`): sin `-Reindexar` exit 1 con «el índice se armó con otra versión del esquema (anterior; la actual es 2)... Corré `cerebro.py indexar --todo`» y la pista de `-Reindexar`; con `-Reindexar` exit 0 (71 nuevas). Carpetas temporales borradas.
+
+Nota para el leader: quien ya tenga un Cerebro indexado con el código anterior necesita `indexar --todo` una vez (el mensaje lo dice). Playbook §C sigue fuera de zona (venv, `-s user`, `instalar.ps1`).
