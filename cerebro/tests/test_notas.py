@@ -70,6 +70,13 @@ class TestParsear(unittest.TestCase):
         errores = self.errores(VALIDA.replace("fecha: 2026-10-06", "fecha: 2026-02-30"))
         self.assertTrue(errores and ": fecha:" in errores[0], errores)
 
+    def test_fecha_solo_acepta_aaaa_mm_dd(self):
+        # En 3.11+ date.fromisoformat acepta 20261006 y 2026-W41-3: el formato lo exige la regex.
+        for fecha in ("20261006", "2026-10-6", "2026-W41-3", "2026-10-06T10:00", "\u0662\u0660\u0662\u0666-10-06"):
+            with self.subTest(fecha=fecha):
+                errores = self.errores(VALIDA.replace("fecha: 2026-10-06", f"fecha: {fecha}"))
+                self.assertTrue(errores and ": fecha:" in errores[0], errores)
+
     def test_tipo_ausente(self):
         errores = self.errores(VALIDA.replace("tipo: leccion\n", ""))
         self.assertEqual(len(errores), 1, errores)
@@ -102,10 +109,31 @@ class TestSlug(unittest.TestCase):
                 self.assertNotIn(s.split(".")[0].upper(), notas.RESERVADOS)
                 self.assertRegex(s, r"^[a-z0-9][a-z0-9-]*$")
 
+    def test_sin_ascii_lleva_sufijo_determinista_y_no_choca(self):
+        a, b = slug("\u65e5\u672c\u8a9e"), slug("\ud55c\uad6d\uc5b4")
+        self.assertRegex(a, r"^nota-[0-9a-f]{6}$")
+        self.assertEqual(a, slug("\u65e5\u672c\u8a9e"))
+        self.assertNotEqual(a, b)
+        self.assertEqual(slug("..."), "nota")
+
     def test_largo_acotado(self):
         s = slug("palabra " * 40)
         self.assertLessEqual(len(s), 60)
         self.assertFalse(s.endswith("-"))
+
+
+def crear_enlace(test: unittest.TestCase, enlace, destino) -> None:
+    """Symlink o, en Windows, junction (no pide permisos). Si no se puede, skipTest con el motivo."""
+    try:
+        os.symlink(destino, enlace, target_is_directory=True)
+        return
+    except (OSError, NotImplementedError):
+        pass
+    if os.name == "nt":
+        r = subprocess.run(["cmd", "/c", "mklink", "/J", str(enlace), str(destino)], capture_output=True)
+        if r.returncode == 0:
+            return
+    test.skipTest("este sistema no deja crear symlinks ni junctions")
 
 
 class TestEscribir(ConCerebro):
@@ -165,6 +193,14 @@ class TestEscribir(ConCerebro):
             self.escribir(proyecto="escape")
         self.assertEqual(list(destino.iterdir()), [])
 
+    def test_proyectos_como_enlace_hacia_afuera_se_rechaza(self):
+        destino = self.afuera / "otro"
+        destino.mkdir()
+        crear_enlace(self, self.base / "proyectos", destino)
+        with self.assertRaises(ErrorNota):
+            self.escribir(proyecto="p")
+        self.assertEqual(list(destino.iterdir()), [])
+
     def test_campos_invalidos(self):
         for kw in ({"tipo": "receta"}, {"fuente": ""}, {"fuente": "a\ntipo: x"}, {"titulo": "a\n---"},
                    {"proyecto": "a\nb"}, {"tags": ["a]"]}, {"tags": ["a\nb"]}, {"fecha": "ayer"}, {"proyecto": "..."}):
@@ -202,6 +238,17 @@ class TestInicializar(ConCerebro):
         (self.base / ".cerebro").mkdir()
         (self.base / ".cerebro" / "c.md").write_text("x", encoding="utf-8")
         self.assertEqual(notas.listar(self.base), [a])
+
+    def test_listar_no_sigue_enlaces_que_salen_de_cerebro_dir(self):
+        notas.inicializar(self.base)
+        buena = self.nota("p", "a.md", "A", "x")
+        fuera = self.afuera / "fuera"
+        fuera.mkdir()
+        (fuera / "ajena.md").write_text(VALIDA, encoding="utf-8")
+        crear_enlace(self, self.base / "proyectos" / "junta", fuera)
+        avisos: list[str] = []
+        self.assertEqual(notas.listar(self.base, avisos), [buena])
+        self.assertTrue(any("junta" in a for a in avisos), avisos)
 
 
 if __name__ == "__main__":

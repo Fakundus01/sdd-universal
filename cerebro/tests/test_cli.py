@@ -190,6 +190,23 @@ class TestCLI(ConCerebro):
         self.assertTrue(escritas, "los nombres hostiles se sanean, no se pierden")
         self.assertTrue(all(p.parent.parent == self.base / "proyectos" for p in escritas), escritas)
 
+    def test_indice_roto_error_claro_y_todo_lo_recupera(self):
+        self.cli("init")
+        self.nota("p", "a.md", "UnboundLocalError", "x")
+        self.cli("indexar")
+        db = config.ruta_indice(self.base)
+        db.write_bytes(b"conflicto de OneDrive " * 100)
+        for args in (["indexar"], ["buscar", "x"]):
+            with self.subTest(args=args):
+                code, out, err = self.cli(*args)
+                self.assertEqual(code, 2)
+                self.assertIn("indexar --todo", err)
+                self.assertNotIn("Traceback", out + err)
+        code, out, err = self.cli("indexar", "--todo")
+        self.assertEqual(code, 0, err)
+        code, out, _ = self.cli("buscar", "UnboundLocalError", "--json")
+        self.assertEqual(len(json.loads(out)), 1)
+
     def test_sin_subcomando(self):
         with self.assertRaises(SystemExit) as ctx:
             self.cli()

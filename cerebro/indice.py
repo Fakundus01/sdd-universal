@@ -6,6 +6,7 @@ va a `notas` y sirve de filtro.
 """
 from __future__ import annotations
 
+import functools
 import hashlib
 import math
 import re
@@ -45,6 +46,35 @@ class ErrorModelo(ErrorIndice):
     pass
 
 
+class ErrorCorrupto(ErrorIndice):
+    pass
+
+
+def _traducir(e: sqlite3.DatabaseError, ruta: Path) -> ErrorIndice:
+    """Un error de SQLite como un error del índice, con la salida que corresponde a cada causa."""
+    texto = str(e)
+    if isinstance(e, sqlite3.OperationalError):
+        if "no such module" in texto or "fts5" in texto.lower():
+            return ErrorIndice(f"el SQLite de este Python no sirve para el índice ({texto}); hace falta FTS5")
+        if "locked" in texto or "busy" in texto:
+            return ErrorIndice(f"el índice {ruta} está en uso por otro proceso ({texto}): esperá y reintentá")
+        return ErrorIndice(f"no pude usar el índice {ruta}: {texto}")
+    return ErrorCorrupto(
+        f"el índice {ruta} está dañado o no es una base de datos ({texto}). Se rehace con "
+        "`cerebro.py indexar --todo` (guarda el archivo roto con otro nombre); o borrá ese archivo y corré `indexar`")
+
+
+def _traduciendo(metodo):
+    @functools.wraps(metodo)
+    def envuelto(self, *args, **kwargs):
+        try:
+            return metodo(self, *args, **kwargs)
+        except sqlite3.DatabaseError as e:
+            self.close()
+            raise _traducir(e, self.ruta_db) from None
+    return envuelto
+
+
 @dataclass
 class Resumen:
     nuevas: int = 0
@@ -52,6 +82,7 @@ class Resumen:
     sin_cambios: int = 0
     borradas: int = 0
     invalidas: list[str] = field(default_factory=list)
+    avisos: list[str] = field(default_factory=list)
 
 
 def _solo_encabezados(texto: str) -> bool:
@@ -134,9 +165,10 @@ def _coseno(a: tuple[float, ...], b: list[float]) -> float:
 
 
 class Indice:
-    def __init__(self, ruta_db: Path, embedder) -> None:
+    def __init__(self, ruta_db: Path, embedder, timeout: float = 5.0) -> None:
         self.ruta_db = Path(ruta_db)
         self.embedder = embedder
+        self.timeout = timeout
         self._con: sqlite3.Connection | None = None
 
     def __enter__(self) -> "Indice":
@@ -159,12 +191,12 @@ class Indice:
                 if not crear:
                     raise ErrorIndice("no hay índice todavía: corré `cerebro.py indexar`")
                 self.ruta_db.parent.mkdir(parents=True, exist_ok=True)
-            con = sqlite3.connect(self.ruta_db)
+            con = sqlite3.connect(self.ruta_db, timeout=self.timeout)
             try:
                 con.executescript(ESQUEMA)
-            except sqlite3.OperationalError as e:
+            except sqlite3.DatabaseError:
                 con.close()
-                raise ErrorIndice(f"el SQLite de este Python no sirve para el índice ({e}); hace falta FTS5") from None
+                raise
             self._con = con
         return self._con
 
@@ -193,8 +225,20 @@ class Indice:
         con.execute("DELETE FROM notas WHERE ruta = ?", (ruta,))
 
     def indexar(self, base: Path, todo: bool = False) -> Resumen:
-        """Incremental por hash del contenido; `todo` reconstruye. Todo en una transacción: si algo falla,
-        el índice queda como estaba."""
+        """Incremental por hash del contenido; `todo` reconstruye (y si el archivo del índice está roto, lo
+        aparta como `indice.sqlite.roto` y arma uno nuevo). Todo en una transacción: si algo falla, el índice
+        queda como estaba."""
+        try:
+            return self._indexar(base, todo)
+        except ErrorCorrupto:
+            if not todo or not self.ruta_db.is_file():
+                raise
+        self.close()
+        self.ruta_db.replace(self.ruta_db.with_name(self.ruta_db.name + ".roto"))
+        return self._indexar(base, todo)
+
+    @_traduciendo
+    def _indexar(self, base: Path, todo: bool) -> Resumen:
         base = Path(base)
         con = self._abrir(crear=True)
         resumen = Resumen()
@@ -208,7 +252,7 @@ class Indice:
                             [("modelo", self.embedder.nombre), ("dim", str(self.embedder.dim))])
             previas = dict(con.execute("SELECT ruta, hash FROM notas"))
             vigentes = set()
-            for archivo in notas_mod.listar(base):
+            for archivo in notas_mod.listar(base, resumen.avisos):
                 ruta = archivo.relative_to(base).as_posix()
                 texto = archivo.read_text(encoding="utf-8", errors="replace")
                 firma = hashlib.sha256(texto.encode("utf-8")).hexdigest()
@@ -241,6 +285,7 @@ class Indice:
 
     # --- buscar ---
 
+    @_traduciendo
     def buscar(self, consulta: str, proyecto: str | None = None, tipo: str | None = None,
                k: int = 5) -> list[dict]:
         """Top-N por FTS5 (BM25) y top-N por coseno, con los filtros aplicados antes; fusión RRF (k=60);

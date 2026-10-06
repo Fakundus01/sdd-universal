@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime
+import hashlib
 import re
 import unicodedata
 from dataclasses import dataclass, field
@@ -133,17 +134,39 @@ def _slug_crudo(texto: str) -> str:
 
 def slug(texto: str) -> str:
     """Solo `[a-z0-9-]`: sin `..`, separadores, unidades ni nombres reservados de Windows."""
-    s = _slug_crudo(texto) or "nota"
+    s = _slug_crudo(texto)
+    if not s:
+        # Un título sin ASCII (日本語) no puede colisionar con otro del mismo día: sufijo determinista.
+        if any(c.isalnum() for c in texto):
+            return "nota-" + hashlib.sha256(texto.strip().encode("utf-8")).hexdigest()[:6]
+        return "nota"
     return f"{s}-nota" if s.upper() in RESERVADOS else s
 
 
-def listar(base: Path) -> list[Path]:
-    """Las notas de `proyectos/` (sin carpetas con punto)."""
-    raiz = Path(base) / "proyectos"
+def listar(base: Path, avisos: list[str] | None = None) -> list[Path]:
+    """Las notas de `proyectos/` (sin carpetas con punto). Los enlaces (symlinks, junctions) que salen de
+    CEREBRO_DIR se saltean; cada uno suma una línea a `avisos`."""
+    base = Path(base)
+    raiz = base / "proyectos"
+    avisos = avisos if avisos is not None else []
     if not raiz.is_dir():
         return []
-    return sorted(p for p in raiz.rglob("*.md")
-                  if p.is_file() and not any(parte.startswith(".") for parte in p.relative_to(raiz).parts))
+    raiz_real = raiz.resolve()
+    if raiz_real.parent != base.resolve():
+        avisos.append("proyectos: es un enlace que sale de CEREBRO_DIR; no se lee")
+        return []
+    nombres = [p for p in raiz.rglob("*.md")
+               if not any(parte.startswith(".") for parte in p.relative_to(raiz).parts)]
+    validas = []
+    for p in nombres:
+        try:
+            p.resolve().relative_to(raiz_real)
+        except ValueError:
+            avisos.append(f"{p.relative_to(base).as_posix()}: enlace que sale de CEREBRO_DIR; se saltea")
+            continue
+        if p.is_file():
+            validas.append(p)
+    return sorted(validas)
 
 
 def inicializar(base: Path) -> list[Path]:

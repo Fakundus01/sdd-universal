@@ -62,6 +62,8 @@ def _cmd_indexar(base: Path, args, emb) -> int:
     _exigir_base(base)
     with Indice(config.ruta_indice(base), emb) as ind:
         r = ind.indexar(base, todo=args.todo)
+    for aviso in r.avisos:
+        print(f"aviso: {aviso}", file=sys.stderr)
     for error in r.invalidas:
         print(f"saltada (formato): {error}", file=sys.stderr)
     print(f"{r.nuevas} nuevas, {r.actualizadas} actualizadas, {r.sin_cambios} sin cambios, "
@@ -93,7 +95,10 @@ def _cmd_buscar(base: Path, args, emb) -> int:
 
 def _cmd_revisar(base: Path, args, emb) -> int:
     _exigir_base(base)
-    archivos = notas.listar(base)
+    avisos: list[str] = []
+    archivos = notas.listar(base, avisos)
+    for aviso in avisos:
+        print(f"aviso: {aviso}", file=sys.stderr)
     errores: list[str] = []
     for a in archivos:
         ruta = a.relative_to(base).as_posix()

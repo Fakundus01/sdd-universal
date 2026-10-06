@@ -8,7 +8,7 @@ from soporte import ConCerebro, Constante, Contador
 
 import indice
 from embedders import Falso
-from indice import ErrorModelo, Indice, fragmentar, rrf
+from indice import ErrorIndice, ErrorModelo, Indice, fragmentar, rrf
 
 SINONIMOS = {"parar": "detener", "detiene": "detener", "frena": "detener", "bucle": "ciclo"}
 
@@ -245,6 +245,117 @@ class TestBuscar(ConIndice):
         ind = self.abrir(Constante())
         ind.indexar(self.base)
         self.assertEqual(ind.buscar("que paso")[0]["ruta"], "proyectos/sdd-universal/2026-10-06-corte.md")
+
+
+class Falla(Falso):
+    """Embedder que lanza desde su llamada número `en` (1 = la primera)."""
+
+    def __init__(self, en: int, **kw) -> None:
+        super().__init__(**kw)
+        self.en = en
+        self.llamadas = 0
+
+    def embed(self, textos):
+        self.llamadas += 1
+        if self.llamadas >= self.en:
+            raise RuntimeError("se cayó el embedder")
+        return super().embed(textos)
+
+
+class TestTodoONada(ConIndice):
+    def foto(self) -> list:
+        con = sqlite3.connect(self.db)
+        try:
+            return [con.execute(q).fetchall() for q in (
+                "SELECT * FROM meta ORDER BY 1", "SELECT * FROM notas ORDER BY 1",
+                "SELECT * FROM fragmentos ORDER BY 1", "SELECT rowid, texto FROM fts ORDER BY 1")]
+        finally:
+            con.close()
+
+    def test_si_el_embedder_falla_a_mitad_el_indice_queda_como_estaba(self):
+        self.abrir().indexar(self.base)
+        antes = self.foto()
+        self.nota("p", "nueva1.md", "Nueva uno", "algo")
+        self.nota("p", "nueva2.md", "Nueva dos", "otro")
+        (self.base / "proyectos" / "turnos" / "2026-10-06-css.md").unlink()
+        with self.assertRaises(RuntimeError):
+            self.abrir(Falla(2, sinonimos=SINONIMOS)).indexar(self.base)
+        self.assertEqual(self.foto(), antes)
+
+    def test_si_el_embedder_falla_a_mitad_de_todo_el_indice_queda_como_estaba(self):
+        self.abrir().indexar(self.base)
+        antes = self.foto()
+        self.assertTrue(antes[1])
+        with self.assertRaises(RuntimeError):
+            self.abrir(Falla(2, sinonimos=SINONIMOS)).indexar(self.base, todo=True)
+        self.assertEqual(self.foto(), antes)
+
+
+class Dirigido(Falso):
+    """Vectores a mano (dim 3): la consulta y `marca-x` quedan juntas, `marca-s` cerca, `marca-w` lejos."""
+
+    def __init__(self) -> None:
+        super().__init__(dim=3, nombre="dirigido")
+
+    def embed(self, textos):
+        def vec(t):
+            if "marca-x" in t:
+                return [1.0, 0.0, 0.0]
+            if "marca-s" in t:
+                return [0.8, 0.6, 0.0]
+            if "marca-w" in t:
+                return [0.5, 0.0, 0.866]
+            return [1.0, 0.0, 0.0] if t.strip() == "bucle" else [0.0, 0.0, 1.0]
+        return [vec(t) for t in textos]
+
+
+class TestOrdenBM25(ConCerebro):
+    def test_la_nota_mas_relevante_para_las_palabras_va_primero(self):
+        # Por coseno: x, s, w; por BM25: s (cuatro veces «bucle»), w (una). Con BM25 al derecho gana s;
+        # con la lista de palabras al revés, w le pasa a s.
+        self.nota("p", "x.md", "Equis", "marca-x sin la palabra")
+        self.nota("p", "s.md", "Fuerte", "bucle bucle bucle bucle marca-s")
+        self.nota("p", "w.md", "Debil", "bucle marca-w y otras palabras de relleno que diluyen la frecuencia")
+        ind = Indice(self.base / ".cerebro" / "indice.sqlite", Dirigido())
+        self.addCleanup(ind.close)
+        ind.indexar(self.base)
+        rutas = [r["ruta"] for r in ind.buscar("bucle")]
+        self.assertEqual(rutas, ["proyectos/p/s.md", "proyectos/p/w.md", "proyectos/p/x.md"])
+
+
+class TestIndiceRoto(ConIndice):
+    def roto(self) -> None:
+        self.db.parent.mkdir(parents=True)
+        self.db.write_bytes(b"esto no es sqlite " * 100)
+
+    def test_archivo_que_no_es_base_de_datos_error_claro(self):
+        self.roto()
+        for llamar in (lambda i: i.indexar(self.base), lambda i: i.buscar("x")):
+            with self.assertRaises(ErrorIndice) as ctx:
+                llamar(self.abrir())
+            msg = str(ctx.exception)
+            self.assertIn("indexar --todo", msg)
+            self.assertIn("borr", msg)
+            self.assertNotIn("FTS5", msg)
+
+    def test_todo_rehace_un_indice_roto_y_guarda_el_viejo(self):
+        self.roto()
+        r = self.abrir().indexar(self.base, todo=True)
+        self.assertEqual(r.nuevas, 3)
+        self.assertTrue(self.abrir().buscar("UnboundLocalError"))
+        self.assertTrue(list(self.db.parent.glob("indice.sqlite.*")), "el archivo roto se renombra, no se pierde")
+
+    def test_base_bloqueada_no_dice_que_falta_fts5(self):
+        self.abrir().indexar(self.base)
+        otro = sqlite3.connect(self.db, isolation_level=None)
+        self.addCleanup(otro.close)
+        otro.execute("BEGIN EXCLUSIVE")
+        ind = Indice(self.db, Falso(sinonimos=SINONIMOS), timeout=0.1)
+        self.addCleanup(ind.close)
+        with self.assertRaises(ErrorIndice) as ctx:
+            ind.buscar("UnboundLocalError")
+        self.assertNotIn("FTS5", str(ctx.exception))
+        self.assertIn("en uso", str(ctx.exception))
 
 
 class TestGuardiaDeModelo(ConIndice):
