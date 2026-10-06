@@ -9,7 +9,7 @@ graph LR
   L-1[L-1 R33 en la web] --> L-4[L-4 smoke UI en CI · D2]
   L-2[L-2 verify: depende_de y ciclos]
   L-3[L-3 espejos EN a 0.35]
-  L-6[L-6 harness.config.json]
+  L-7[L-7 clave master] --> L-6[L-6 harness.config.json]
   L-1 & L-2 & L-3 & L-4 & L-6 --> L-5[L-5 cierre]
 ```
 
@@ -26,5 +26,7 @@ graph LR
 - (L-2) 2.º review CHANGES_REQUESTED @ 1c19422: regresión, `Card.parse` tira UnboundLocalError con una tarjeta sin frontmatter → iteración 3/3
 - v5 · L-2 done (3.er review APPROVED @ d0cfe53, merge); harness/tests OK, web/tests 49/49 en la rama del loop
 
+- DRIFT de L-6 resuelto por el owner: opción A → `harness.md` §2 con la clave `master`; L-7 nueva (arnés), L-6 vuelve a pending con `depende_de: [L-7]`, tier MEDIO y rama nueva `v0.35-L-6b`
+
 ## Próximo paso
-L-1, L-2, L-3 y L-4 done. L-6 blocked esperando el DRIFT del owner (clave `master` en el arnés: A/B/C). L-5 (cierre: review del loop, changelog, status con D2 tachada) depende de L-6.
+Despachar L-7 → review → L-6 → review → L-5 (cierre). Vueltas usadas 5/8; quedan justas: L-7, L-6, L-5.

@@ -26,14 +26,14 @@ graph LR
   L-1[L-1 R33 en la web] --> L-4[L-4 smoke UI en CI · D2]
   L-2[L-2 verify: depende_de y ciclos]
   L-3[L-3 espejos EN a 0.35]
-  L-6[L-6 harness.config.json]
+  L-7[L-7 clave master en el arnés] --> L-6[L-6 harness.config.json]
   L-1 --> L-5[L-5 cierre: review R30 + changelog]
   L-6 --> L-5
   L-2 --> L-5
   L-3 --> L-5
   L-4 --> L-5
 ```
-L-1, L-2, L-3 y L-6 están listas de entrada (zonas distintas: `web/`, `harness/`, `*-EN.md`, `harness.config.json`); van de a 3 en paralelo, cada una en su rama `v0.35-L-<n>` y su worktree. L-6 apareció en la vuelta 0: este repo no tenía `harness.config.json`, así que el objetivo 6 no se podía medir. Tarjetas en `sdd/cards/`; L-5 la hace el leader.
+L-1, L-2, L-3 y L-6 están listas de entrada (zonas distintas: `web/`, `harness/`, `*-EN.md`, `harness.config.json`); van de a 3 en paralelo, cada una en su rama `v0.35-L-<n>` y su worktree. L-6 apareció en la vuelta 0: este repo no tenía `harness.config.json`, así que el objetivo 6 no se podía medir. Tarjetas en `sdd/cards/`; L-5 la hace el leader. L-7 nació del DRIFT de L-6 (opción A del owner, 2026-10-06): el arnés tenía fija la ruta `sdd/SDD-MASTER.md`.
 
 ## Verificación
 Los seis comandos o chequeos de arriba, @ el hash de la rama. Al final, un reviewer independiente los re-ejecuta (R30) y escribe `sdd/progress/v0.35-loops-grafo/review_dev-de-10.md`.

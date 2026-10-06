@@ -1,6 +1,6 @@
 # harness.md · El arnés: que lo que el agente dice que hizo sea cierto
 
-**Versión:** 0.33.2 · 2026-10-05 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
+**Versión:** 0.35 · 2026-10-06 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
 
 > Nace de **Relay**, el sistema que se usó en producción en `chat-commerce-ai` (features H-1 a H-11). Escenarios S28–S31.
 > El SDD gobierna *qué* se construye; el arnés hace cumplir *que esté construido*.
@@ -53,6 +53,7 @@ Se activa con **R29/R30** (ON por default). Funciona con un solo agente: no hace
 | `deploy` | no | **Documental: el agente jamás lo ejecuta** (R32). Está para que el humano y el `infra-implementer` sepan cuál es el comando. |
 | `base_branch` / `prod_branch` | no | Ramas de integración y de producción (default: `main` / `main`). |
 | `context_threshold` | no | Tokens de *trabajo* de la sesión antes de pedir relevo (§6). Default 400000. |
+| `master` | no | Ruta del `SDD-MASTER.md`, relativa a la raíz. Default `sdd/SDD-MASTER.md`. Para repos donde el núcleo no vive en `sdd/` (el propio paquete, que lo tiene en la raíz). Tiene que quedar **dentro** del repo: una ruta absoluta o con `..` que salga de la raíz se rechaza al cargar la config. La usan el chequeo de que el master existe y la lectura del modo (LITE/FULL). |
 | `cited_paths_docs` | no | Docs cuyas rutas citadas tienen que existir (§7). Default `AGENTS.md`, `CLAUDE.md`, `sdd/testing.md`, `sdd/spec.md` y `sdd/sdd-lite.md` (los que existan). El master y `orchestration.md` no van por default: citan archivos opcionales (`GEMINI.md`, `metrics.md`) y darían falsos positivos. |
 
 JSON y no YAML/TOML: lo leen la stdlib de Python y de Node sin dependencias (R28). Los comentarios van en `sdd/design.md`, no en el JSON. Tipos inválidos o claves desconocidas dan error o aviso, nunca un traceback.
@@ -224,7 +225,7 @@ Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
-| 0.35 | 2026-10-06 | §7: el arnés revisa `depende_de` de las tarjetas (existe, sin ciclos, sin despacho fuera de orden), por `orchestration.md` §10 (tarjeta L-2). |
+| 0.35 | 2026-10-06 | §2: clave `master` para un núcleo fuera de `sdd/` (DRIFT de la tarjeta L-6, opción A elegida por el owner: el paquete no podía usar su propio arnés sin una copia del master). §7: el arnés revisa `depende_de` de las tarjetas (existe, sin ciclos, sin despacho fuera de orden), por `orchestration.md` §10 (tarjeta L-2). |
 | 0.33.2 | 2026-10-05 | Review R30 de v0.33.1 (R3): la salida perdida de un subproceso (`stdout=None` en Windows bajo carga) se reintenta una vez y, si se repite, es un `FAIL` «salida no disponible» en `verify.py` y un aviso en los hooks, en vez de un traceback (§3). También en `git` (`repo.py`) y en los tests (`support.py`), donde era el flaky de la suite. |
 | 0.33 | 2026-10-05 | Review R30 de v0.33: `sdd/spec.md` y `sdd/sdd-lite.md` entran a los `cited_paths_docs` por default, así H13 se dispara en el caso que lo originó (B1); en LITE, el relevo va a `sdd/sdd-lite.md` y el registro del e2e a `sdd/e2e.md`, sin crear `progress/` (M1). |
 | 0.32 | 2026-10-05 | Hallazgos de usar el paquete en 4 proyectos reales: en LITE, `verify.py` ya no crea `sdd/progress/<rama>/current.md` en cada pre-commit (§10, H7); las rutas citadas se revisan también como nombre suelto en celdas de tabla (§7.2, H13); la plantilla de tarjeta trae `rama: main` y el `FAIL` de una `done` sin `rama` dice cómo arreglarlo (§7.3, H23); el ejemplo de `lint_file` pasa a `oxlint`, el que trae `create-vite` (§2, H9). |
