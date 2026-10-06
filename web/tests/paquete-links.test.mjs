@@ -37,7 +37,7 @@ async function archivosDe(fn, opciones){
 
 const PLAYBOOKS = fs.readdirSync(path.join(RAIZ, "playbooks"))
   .filter(f => f.endsWith(".md") && !f.startsWith("_")).map(f => f.replace(/\.md$/, ""));
-// custom.md lo arma la web: acá linkea a un MD que viaja y a uno que no
+// custom.md lo arma la web (texto de la persona): viaja tal cual, sin reescribir
 const CUSTOM = ["# custom", "", "Ver [el master](SDD-MASTER.md#r01) y [escenarios](scenarios.md).", ""].join("\n");
 const BASE = {nombre: "Prueba", tipoNombre: "Web", prompt: "P", playbooks: PLAYBOOKS,
   custom: CUSTOM, conTecnologias: true, conGuia: true, brownfield: false,
@@ -65,11 +65,16 @@ function linksArchivo(texto){
 
 const resolver = (desde, l) => path.posix.normalize(path.posix.join(path.posix.dirname(desde), decodeURI(l)));
 
+/* custom.md es texto de la persona: viaja tal cual (decisión del leader,
+   vuelta 3) y lo cubre su propio test byte a byte, más abajo. Los links que
+   la persona escriba son de ella; acá se cuentan solo los MD del paquete. */
+const DE_LA_PERSONA = a => a.origen === "custom.md";
+
 function rotos(archivos){
   const presentes = new Set(archivos.map(a => a.nombre));
   let total = 0; const malos = [];
   for (const a of archivos){
-    if (!a.nombre.endsWith(".md")) continue;
+    if (!a.nombre.endsWith(".md") || DE_LA_PERSONA(a)) continue;
     for (const l of linksArchivo(a.contenido)){
       total++;
       if (!presentes.has(resolver(a.nombre, l))) malos.push(`${a.nombre} -> ${l}`);
@@ -89,8 +94,8 @@ function conservados(archivos){
     if (!a.origen) continue;
     if (a.origen !== "custom.md")
       assert.ok(fs.existsSync(path.join(RAIZ, a.origen)), `el origen ${a.origen} de ${a.nombre} no existe en el repo`);
-    if (!a.nombre.endsWith(".md")) continue;
-    const orig = a.origen === "custom.md" ? CUSTOM : leer(a.origen);
+    if (!a.nombre.endsWith(".md") || DE_LA_PERSONA(a)) continue;
+    const orig = leer(a.origen);
     const esperado = linksArchivo(orig)
       .map(l => mapa.get(path.posix.normalize(path.posix.join(path.posix.dirname(a.origen), decodeURI(l)))))
       .filter(Boolean);
@@ -120,4 +125,26 @@ for (const [nombre, armar] of Object.entries(ZIPS))
     const {problemas, esperados} = conservados(archivos);
     assert.ok(esperados > 0, "no hay links que conservar: el chequeo está roto");
     assert.deepEqual(problemas, [], "links que podían viajar y se perdieron o apuntan a otro archivo");
+  });
+
+/* Vuelta 3 (decisión del leader): lo que escribe la persona en la web
+   (las «Notas personales» que terminan en custom.md) no pasa por la
+   reescritura. Solo se reescriben los MD que vienen del paquete. */
+const NOTAS = [
+  "# custom.md · Overrides personales", "",
+  "## Notas personales", "",
+  "[Importante]: config.json no se commitea nunca, tiene la clave del cliente.",
+  "[Ojo]: README.md lo escribo yo",
+  "[s]: scenarios.md",
+  "Ver [escenarios](scenarios.md), [el master](SDD-MASTER.md#r01), [a][s] y [mi guía](../docs/guía.md).",
+  "[x]: <agents/leader.md> \"t\"", ""
+].join("\r\n");
+
+for (const [fn, extra, nombre] of [["proyecto", {nivel: "PRO"}, "prueba/sdd/custom.md"],
+                                   ["soloMd", {}, "custom.md"]])
+  test(`C-11: ${fn} deja custom.md byte a byte como lo escribió la persona`, async () => {
+    const archivos = await archivosDe(fn, {...BASE, ...extra, custom: NOTAS});
+    const c = archivos.find(a => a.nombre === nombre);
+    assert.ok(c, `no vino ${nombre}`);
+    assert.equal(c.contenido, NOTAS);
   });

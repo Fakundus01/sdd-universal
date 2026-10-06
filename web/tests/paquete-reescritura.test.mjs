@@ -126,3 +126,31 @@ test("usos de referencia: la imagen y el escapado no se tocan aunque la definici
   const t = "![b][2] y " + String.fromCharCode(92) + "[b][2]\n\n[2]: scenarios.md\n";
   assert.equal(rw2(t), "![b][2] y " + String.fromCharCode(92) + "[b][2]\n\n");
 });
+
+// Vuelta 3 (C-11): una definición de referencia es `[id]: destino` y, a lo
+// sumo, un título; cualquier otra cosa después del destino es prosa.
+test("prosa que empieza como una definición de referencia queda intacta", () => {
+  const t = "[Importante]: config.json no se commitea nunca, tiene la clave del cliente.\n" +
+            "[Ojo]: README.md lo escribo yo\n" +
+            "[Ver]: scenarios.md y nada más\n";
+  assert.equal(rw2(t), t);
+});
+
+test("definición excluida con título (\"…\", '…' o (…)): se saca igual", () => {
+  const t = "x [a][s] [b][t] [c][u]\n\n[s]: scenarios.md \"T\"\n[t]: scenarios.md 'T'\n[u]: scenarios.md (T)  \n";
+  assert.equal(rw2(t), "x a b c\n\n");
+  assert.equal(rw2('[h]: agents/leader.md "T"'), '[h]: ../agents/leader.md "T"');
+});
+
+test("uso de referencia con otras mayúsculas que la definición excluida: queda el texto", () => {
+  assert.equal(rw2("ver [a][S] y [B][]\n\n[s]: scenarios.md\n[b]: scenarios.md\n"), "ver a y B\n\n");
+});
+
+test("definición incluida entre <…>: conserva los <>", () => {
+  assert.equal(rw2("[h]: <agents/leader.md>"), "[h]: <../agents/leader.md>");
+});
+
+test("definiciones con CRLF: se reconocen y el retorno de carro se conserva", () => {
+  assert.equal(rw2("ver [a][s] y [h][1]\r\n\r\n[1]: agents/leader.md\r\n[s]: scenarios.md\r\n"),
+               "ver a y [h][1]\r\n\r\n[1]: ../agents/leader.md\r\n");
+});

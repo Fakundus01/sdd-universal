@@ -225,7 +225,10 @@ SDD Universal · https://sdd-universal.vercel.app
     const fuera = new Set(), sacar = new Set();
     L.forEach((l, k) => {
       if (!prosa[k]) return;
-      const m = l.match(/^( {0,3}\[([^\]]+)\]:\s*)(<[^>\n]*>|\S+)(.*)$/);
+      // después del destino solo puede venir un título; si no, es prosa
+      // («[Ojo]: README.md lo escribo yo») y no se toca. El \s* final se
+      // lleva el \r de un archivo con CRLF.
+      const m = l.match(/^( {0,3}\[([^\]]+)\]:\s*)(<[^>\n]*>|\S+)(\s*|\s+(?:"[^"]*"|'[^']*'|\([^)]*\))\s*)$/);
       if (!m) return;
       const ang = m[3][0] === "<", r = nuevo(ang ? m[3].slice(1, -1) : m[3]);
       if (r === undefined) return;
@@ -258,11 +261,13 @@ SDD Universal · https://sdd-universal.vercel.app
   }
 
   /* Reescribe los links de todos los MD con `origen` (su ruta en el paquete).
-     Va al final, cuando ya se sabe qué viaja y dónde. */
+     Va al final, cuando ya se sabe qué viaja y dónde. Lo que escribió la
+     persona (`usuario`: el custom.md) entra al mapa, para que los links a
+     él se resuelvan, pero no se reescribe: viaja byte a byte. */
   function enlazar(archivos){
     const mapa = new Map();
     for (const a of archivos) if (a.origen) mapa.set(a.origen, a.nombre);
-    return archivos.map(a => a.origen && /\.md$/i.test(a.nombre)
+    return archivos.map(a => a.origen && !a.usuario && /\.md$/i.test(a.nombre)
       ? {...a, contenido: reescribirLinks(a.contenido, a.origen, a.nombre, mapa)} : a);
   }
 
@@ -298,8 +303,8 @@ SDD Universal · https://sdd-universal.vercel.app
     for (const t of PLANTILLAS)
       archivos.push({nombre: `${carpeta}/sdd/prompts/${t}.md`, origen: `prompts/${t}.md`, contenido: await traerP(`../prompts/${t}.md`)});
 
-    if (custom)           archivos.push({nombre: `${carpeta}/sdd/custom.md`, origen: "custom.md", contenido: custom});
-    if (conTecnologias)   archivos.push({nombre: `${carpeta}/sdd/tecnologias.md`, origen: "tecnologias.md", contenido: await traerP("../tecnologias.md")});
+    if (custom)           archivos.push({nombre: `${carpeta}/sdd/custom.md`, origen: "custom.md", usuario: true, contenido: custom});
+    if (conTecnologias)archivos.push({nombre: `${carpeta}/sdd/tecnologias.md`, origen: "tecnologias.md", contenido: await traerP("../tecnologias.md")});
     if (conGuia)          archivos.push({nombre: `${carpeta}/sdd/GUIDE.md`, origen: "GUIDE.md", contenido: await traerP("../GUIDE.md")});
 
     for (const p of playbooks)
@@ -345,8 +350,8 @@ SDD Universal · https://sdd-universal.vercel.app
     ];
     for (const t of PLANTILLAS)
       archivos.push({nombre: `prompts/${t}.md`, origen: `prompts/${t}.md`, contenido: await traer(`../prompts/${t}.md`)});
-    if (custom)         archivos.push({nombre: "custom.md", origen: "custom.md", contenido: custom});
-    if (conTecnologias) archivos.push({nombre: "tecnologias.md", origen: "tecnologias.md", contenido: await traer("../tecnologias.md")});
+    if (custom)         archivos.push({nombre: "custom.md", origen: "custom.md", usuario: true, contenido: custom});
+    if (conTecnologias)archivos.push({nombre: "tecnologias.md", origen: "tecnologias.md", contenido: await traer("../tecnologias.md")});
     if (conGuia)        archivos.push({nombre: "GUIDE.md", origen: "GUIDE.md", contenido: await traer("../GUIDE.md")});
     for (const p of playbooks)
       archivos.push({nombre: `playbooks/${p}.md`, origen: `playbooks/${p}.md`, contenido: await traer(`../playbooks/${p}.md`)});
