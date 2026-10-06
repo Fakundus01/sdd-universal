@@ -15,6 +15,8 @@ graph LR
 
 ## Bitácora (una línea por vuelta)
 - v0 · 25f9ec1 · tarjetas escritas; línea de base: web/tests 47/49 (los 2 de R33), harness/tests OK, verify --quick FAIL (sin harness.config.json → L-6)
+- v0 · 4e09c8d · dev/tests 17/17 (objetivo 3 en verde desde la base)
 
 ## Próximo paso
 Despachar L-1, L-2 y L-6 en paralelo (worktrees `../sdd-universal-L-<n>`); L-3 cuando se libere un lugar.
+- v1 · L-1 done (review APPROVED @ 2ede9cc, merge); web/tests 49/49 en la rama del loop
