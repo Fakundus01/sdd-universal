@@ -5,6 +5,7 @@
 
 ## Bitácora (vuelta = tarjeta cerrada o bloqueada)
 - base · 4cc292e · web/tests 48/49 (conteo de escenarios 40 → 42), verify --quick VERDE
+- v1 · C-1 done (review APPROVED, merge); web/tests en verde en la rama del loop
 
 ## Próximo paso
 C-1 y C-2 en paralelo. C-3 y C-4 instalan `fastembed`/`mcp` en un venv del worktree: esperan el OK del owner.
