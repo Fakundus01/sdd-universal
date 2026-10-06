@@ -1,7 +1,7 @@
-# Review C-11 @ fd5325c
-**Veredicto:** CHANGES_REQUESTED
+# Review C-11 @ 1245f98
+**Veredicto:** APPROVED
 
-> Vuelta 1 (@ `959670f`) abajo; la vuelta 2 está al final, en «Vuelta 2 @ fd5325c».
+> Vueltas: 1 (@ `959670f`) abajo; 2 (@ `fd5325c`) y 3 (@ `1245f98`) al final, en sus secciones. El veredicto de arriba es el de la vuelta 3.
 
 Reviewer independiente (ALTO), worktree `sdd-universal-C-11-rev` @ `aaeccf2` (= `959670f` + MD de C-10 vuelta 2). Scripts propios fuera del repo (`scratchpad/c11rev/sim.mjs`, `bordes.mjs`, `mut.py`).
 
@@ -270,3 +270,99 @@ El FAIL es el esperado (orden de despacho por C-10).
 - Una def excluida con el título en la línea siguiente deja suelta la línea `"T"`.
 - `[h](x.md (t))` (título entre paréntesis) no se reescribe.
 - Las carpetas y los archivos sin extensión no se tocan aunque no viajen (hoy, 0 rotos en los MD reales).
+
+---
+
+## Vuelta 3 @ 1245f98
+**Veredicto:** APPROVED
+
+Rama en `2da1c24` (código `1245f98`, base de la vuelta `6c8bdb9`). La regresión de la vuelta 2 está corregida por dos lados: `custom.md` (texto de la persona) ya no pasa por la reescritura, y la regex de definiciones solo acepta un título después del destino. N9 y N13 mueren, y sobre el código nuevo no sobrevive ningún mutante.
+
+### Verificación re-ejecutada
+```text
+$ node --test "web/tests/*.test.mjs"
+# proyecto completo (PRO): 0 rotos de 79
+# proyecto mínimo (NOVATO): 0 rotos de 30
+# sdd-archivos.zip (soloMd): 0 rotos de 63
+ℹ tests 74
+ℹ pass 74
+ℹ fail 0
+$ node web/tests/smoke/smoke.mjs
+PASS smoke: 22 pasos, 0 errores de consola
+$ python harness/verify.py --quick      @ 2da1c24
+[FAIL]  sdd/cards/C-11.md: in_progress pero depende de C-10, que está in_progress (despacho fuera de orden: esperá a que sea done)
+ROJO — 1 FAIL, 0 WARN
+```
+Ese FAIL es el único y es el esperado (orden de despacho por C-10). El `current.md` que creó `verify.py` en mi rama se borró.
+
+### Diff `6c8bdb9..2da1c24`
+- Archivos tocados: `web/paquete.js` (regex de definición en `:231`; `usuario` en `enlazar` `:270` y en `custom.md` `:306`/`:353`), `web/tests/{paquete-links,paquete-reescritura,rutas}.test.mjs`, `?v=39` en `web/{index,admin,guia,demo}.html` (todas las `?v=` quedan en 39), `current.md` y el handback. Zona respetada; ningún `.md` del paquete tocado.
+- Ningún test debilitado. `rotos()` y `conservados()` dejan de mirar `custom.md` por la decisión del leader (los links de la persona son de ella), y en su lugar entra un test más fuerte: `custom.md` byte a byte en `proyecto` y `soloMd`, con prosa tipo definición, una definición real, links, `<…>` y CRLF.
+
+### Regresión de la vuelta 2: corregida
+- **Flujo real** (`notas.mjs`): con las notas `[Importante]: config.json no se commitea nunca, tiene la clave del cliente.` y `[Ojo]: README.md lo escribo yo`, `custom.md` sale idéntico en `proyecto` y en `soloMd`.
+- **Simulación:** `custom.md` con CRLF, prosa tipo definición, una definición real excluida, una con título, un uso `[a][s]`, código inline con `](x.md)` y un bloque `~~~` con un link sale **byte a byte igual en las 204 combinaciones que lo incluyen**.
+- **Regex de definiciones en los MD del paquete** (`defs3.mjs`, `bordes2.mjs`):
+
+| Caso | Salida | Veredicto |
+|---|---|---|
+| `[Ver]: ../scenarios.md y nada más` | intacta | Correcto (prosa) |
+| `[Ojo]: README.md lo escribo yo` | intacta | Correcto |
+| `[Importante]: config.json no se commitea nunca.\r\n` | intacta | Correcto |
+| `[ID]: ../harness.md manda, sigue la frase` | intacta | Correcto |
+| def excluida sin título / `"T"` / `'T'` / `(T)` | se saca; uso → texto | Correcto |
+| def incluida `<../harness.md> "T"` | `<../sdd/harness.md> "T"` | Correcto |
+| def excluida `<…>` con CRLF | se saca; los `\r\n` del resto se conservan | Correcto |
+| def incluida con CRLF y título | reescrita, `\r` conservado | Correcto |
+| `[Ojo]: README.md` sola en la línea | se saca | Es definición en CommonMark (GitHub no la muestra); consistente |
+| def en continuación de párrafo (`texto\n[s]: x.md`) | se saca | En CommonMark sería prosa (latente; ningún MD real) |
+| título con comilla escapada `"a \" b"` | no se reconoce: queda la def | Latente |
+| título en la línea siguiente | queda suelta la línea `"T"` | Latente (ya anotado en la vuelta 2) |
+
+En los MD reales del paquete no hay ninguna línea que empiece con `[x]:` (grep vacío), así que estos bordes latentes no afectan a ningún ZIP de hoy.
+
+### Simulación independiente (408 combinaciones, MD actuales)
+`sim3.mjs`: lo mismo que en la vuelta 2, más el contrato nuevo (`custom.md` viaja tal cual y no cuenta para «rotos»).
+
+| | Resultado |
+|---|---|
+| Diferencias contra la reimplementación | **0** |
+| Links que viajan, al mismo archivo lógico | 20 024 |
+| Excluidos como texto idéntico | 21 636 |
+| `custom.md` byte a byte | 204 / 204 |
+| Links rotos en los MD del paquete (cualquier extensión y carpetas) | **0** |
+| Por ZIP con todo | completo 79, NOVATO 30, soloMd 63 |
+
+Los bordes de la vuelta 2 (`\[a](x.md)`, `![a](x.md)`, referencias, título, `<>`, `%20`, `.MD`, fences, `playbooks/supabase-auth.md:36` → texto, `agents/looper.md:18`, `SDD-MASTER.md:28`) dan lo mismo que en la vuelta 2.
+
+### Mutantes (uno por vez, suite completa, `subprocess.run(timeout=300)`; base 74/74/0; revertidos, árbol limpio)
+| # | Mutante | Suite | Resultado |
+|---|---|---|---|
+| R1–R7, R9–R14, R16, R17 | los de las vueltas 1 y 2 | 74/72/2 … 74/61/13 | muertos los 15 |
+| R8 | `..` fuera de la raíz no corta | 74/74/0 | sobrevive (casi equivalente) |
+| R15 | `relativa` compara el último segmento | 74/74/0 | sobrevive (equivalente) |
+| N1–N8, N10–N12, N14, N15 | los de la vuelta 2 | 74/73/1 … 74/69/5 | muertos los 13 |
+| N9 | id de ref sensible a mayúsculas en el uso | 74/73/1 | **muerto** (antes sobrevivía) |
+| N13 | la def pierde los `<>` | 74/73/1 | **muerto** (antes sobrevivía) |
+| N16 | `enlazar` reescribe también `custom.md` (sin `!a.usuario`) | 74/72/2 | muerto |
+| N17 | `proyecto`: `custom.md` sin `usuario` | 74/73/1 | muerto |
+| N18 | `soloMd`: `custom.md` sin `usuario` | 74/73/1 | muerto |
+| N19 | la def acepta cualquier resto (la regresión) | 74/73/1 | muerto |
+| N20 | la def sin `\s*` final (CRLF) | 74/73/1 | muerto |
+| N21 | título `(…)` no admitido | 74/73/1 | muerto |
+| N22 | título `'…'` no admitido | 74/73/1 | muerto |
+| N23 | título `"…"` no admitido | 74/73/1 | muerto |
+
+40 mutantes, 38 muertos. Los dos que sobreviven (R8, R15) son equivalentes en la práctica.
+
+### Checkpoints
+- C1: [x] el único FAIL de `verify --quick` es el orden de despacho por C-10, ajeno al código, ya conocido y aceptado por el leader; las rutas citadas existen.
+- C2: [x] zona respetada; los pedidos de las vueltas 1 y 2 con evidencia; criterios 1–5 de la tarjeta cumplidos.
+- C3: [x]
+- C4: [x] re-ejecutado; tests nuevos (prosa intacta, títulos, mayúsculas, `<>`, CRLF, `custom.md` byte a byte); nada skipeado ni debilitado; sin mutantes no equivalentes vivos.
+- C5: [x] handback de la vuelta 3 y `current.md` commiteados.
+
+### Hallazgos menores (sin cambio requerido)
+- `web/paquete.js:307` y `:354`: `if (conTecnologias)archivos.push(…)` perdió la alineación (falta el espacio). Es solo estilo.
+- Latentes de la regex de definiciones (continuación de párrafo, comilla escapada en el título, título en la línea siguiente): hoy ningún MD del paquete tiene líneas `[x]:`. Si algún día se usan referencias, conviene un check.
+- Siguen igual que en las vueltas anteriores: `soloSkills` no pasa por `enlazar` (sin links hoy) y el visor no muestra `[ver [1]](x.md)` como link (preexistente).
