@@ -57,6 +57,7 @@ No technical change happens without being documented and approved in the `sdd/` 
 | Classifying the attack surface, writing `security.md`, or touching login/data/payments/AI/files | `seguridad.md` (R27) |
 | Closing something as done, writing tests or checks, resuming after a context cut | `harness.md` (R29, R30) |
 | Splitting work across agents with roles (leader, implementer, reviewer…) | `orchestration.md` (R31) — each role, only its row |
+| Letting the agent iterate alone toward a goal, or scheduling a loop | `loops.md` (R33) + the loop file |
 
 **Subagents (R11):** each subagent receives only its row of this table plus the specific task. Never the whole package.
 
@@ -77,7 +78,7 @@ No technical change happens without being documented and approved in the `sdd/` 
 
 ---
 
-## §4 · Rule Catalog (R01–R32)
+## §4 · Rule Catalog (R01–R33)
 
 To turn a rule off or on, write in any message: `R01=OFF` / `R01=ON`. The agent confirms and records it in §3.
 
@@ -195,6 +196,9 @@ Apply `orchestration.md`: `leader` (main session, sole writer of `sdd/`), `imple
 
 **R32 · PRODUCTION-WITH-OK — [ON] — fixed**
 Before deploying, look at production **data** with a read-only query, not just the code: who does the change affect? Writing to production or merging into the prod branch is done by the human or carries their explicit OK: R01 covers the commit, this covers what a revert can't undo. With new load or reactivated jobs: `playbooks/go-live.md`.
+
+**R33 · LOOP-WITH-A-CONTRACT — [ON] — can be disabled**
+Before letting the agent iterate on its own, write `sdd/loops/<name>.md` with **trigger, measurable goal, verification (one command), stop rule and memory**. Without a stop rule that can be measured there is no autonomous loop: fall back to the per-cycle HANDBACK (§7). Approving the file is the R01 OK **only for commits on the loop's branch**; push, merge and production still need OK (R01, R32). The loop never changes its goal or its verification to stop on green (R25). Detail and card graph: `loops.md`, `orchestration.md` §10.
 
 ---
 

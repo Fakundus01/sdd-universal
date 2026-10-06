@@ -1,4 +1,4 @@
-# SDD-COMPACT v0.30 · cheat-sheet universal (cuadro de sintaxis)
+# SDD-COMPACT v0.35 · cheat-sheet universal (cuadro de sintaxis)
 # Uso: pegar como primer mensaje en agentes solo-chat, o como único contexto de subagentes baratos.
 # Toggle: "Rxx=OFF" apaga una regla. Overrides personales → custom.md.
 
@@ -39,12 +39,13 @@ R29 tdd:           rojo→verde→refactor; rojo MEDIDO contra la base con hash,
 R30 loop-cerrado:  done ⇔ evidencia{comando + salida literal + hash} + reviewer independiente que RE-EJECUTA (subagente reviewer | sesión nueva | humano; nunca quien implementó), aunque sea trivial; comandos del proyecto en harness.config.json; trabajo en vuelo en sdd/progress/<rama>/
 R31 roles:         [AUTO: subagentes o feature >1 tarjeta] ⇒ orchestration.md: leader(sesión principal, único escritor de sdd/) | implementer | reviewer | analytic | infra-implementer | looper(máx 3 vueltas) | prompter; 1 tarjeta x agente + zona de archivos; subagente responde solo "done -> <ruta>"; OFF con NOVATO
 R32 prod-ok:       antes de deploy ⇒ mirar DATOS de prod en solo lectura (¿a quién afecta?); escribir en prod / merge a rama prod ⇒ lo ejecuta el humano o con su OK explícito; carga nueva ⇒ playbooks/go-live
+R33 loop-contrato: agente iterando solo ⇒ ANTES sdd/loops/<nombre>.md{disparador, objetivo medible, verificación(comando), corte, memoria}; sin corte medible ⇒ no hay loop, HANDBACK por ciclo; aprobarlo = OK de commits SOLO en su rama (push/merge/prod siguen con OK); nunca cambiar objetivo/verificación para cortar en verde
 
 ## ARCHIVOS (modo FULL, multi-usuario: sufijo -<usuario>)
 spec | design | diagram | testing | costs | security | decisions | status | glossary
 contracts/contracts-<u> | features/features-<u> | changelog/changelog-<u>
-capa extra: GUIDE(humanos) | teams(roles/OKs) | models(espejos+tiers) | harness(evidencia+TDD+memoria, R29/R30) | orchestration(roles de agente, R31) | scenarios(adaptar SDD) | tecnologias(catálogo p/ R12) | seguridad(niveles p/ R27)
-arnés: harness.config.json | sdd/cards/<ID>.md(tarjetas=cola) | sdd/progress/<rama>/{current,handback_<ID>,review_<ID>}
+capa extra: GUIDE(humanos) | teams(roles/OKs) | models(espejos+tiers) | harness(evidencia+TDD+memoria, R29/R30) | orchestration(roles de agente + grafo de tarjetas, R31) | loops(loops con contrato, R33) | scenarios(adaptar SDD) | tecnologias(catálogo p/ R12) | seguridad(niveles p/ R27)
+arnés: harness.config.json | sdd/cards/<ID>.md(tarjetas=cola, depende_de=grafo) | sdd/loops/<nombre>.md | sdd/progress/<rama>/{current,handback_<ID>,review_<ID>}
 Ruteo: planning⇒spec+features+status · implementar⇒design+contracts+testing · commit⇒changelog · infra⇒costs+security
 
 ## LOOP

@@ -8,6 +8,7 @@ id: H-1
 titulo: <verbo + objeto, ej. "Validar el stock antes de confirmar la orden">
 estado: pending          # pending | in_progress | review | done | blocked
 feature: <nombre de la feature en status.md>
+depende_de: []           # IDs de tarjetas que tienen que estar done antes (orchestration.md §10)
 rama: main              # donde se trabaja: la de sdd/progress/<rama>/; cambiala si no es main
 ---
 
@@ -48,4 +49,5 @@ rama: main              # donde se trabaja: la de sdd/progress/<rama>/; cambiala
 - Sin criterios de aceptación, la tarjeta no sale de `pending` (el check del arnés lo marca).
 - `rama` va desde el principio (`main` si se trabaja directo ahí): el arnés la usa para encontrar `sdd/progress/<rama>/review_<ID>.md`, y una `done` sin `rama` es un `FAIL` justo al cerrar.
 - Una tarjeta que toca más de ~5 archivos o dos capas se parte (`orchestration.md` §3).
+- `depende_de` solo nombra tarjetas que existen y nunca forma un ciclo: si dos tarjetas se necesitan entre sí, están mal partidas.
 - Cambiar los criterios después de despachar es cambiar un requisito: bloque `DRIFT` (R25).

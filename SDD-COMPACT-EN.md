@@ -39,11 +39,12 @@ R29 tdd:          red→green→refactor; red MEASURED against the base with has
 R30 closed-loop:  done ⇔ evidence{command + literal output + hash} + independent reviewer who RE-RUNS it (reviewer subagent | fresh session | human; never the implementer), even if trivial; project commands in harness.config.json; in-flight work in sdd/progress/<branch>/
 R31 roles:        [AUTO: subagents or feature >1 card] ⇒ orchestration.md: leader(main session, sole writer of sdd/) | implementer | reviewer | analytic | infra-implementer | looper(max 3 rounds) | prompter; 1 card per agent + file zone; subagent replies only "done -> <path>"; OFF for NOVICE
 R32 prod-ok:      before deploy ⇒ look at prod DATA read-only (who is affected?); write to prod / merge to prod branch ⇒ done by the human or with their explicit OK; new load ⇒ playbooks/go-live
+R33 loop-contract: agent iterating alone ⇒ FIRST sdd/loops/<name>.md{trigger, measurable goal, verification(command), stop rule, memory}; no measurable stop ⇒ no loop, HANDBACK per cycle; approving it = commit OK ONLY on its branch (push/merge/prod still need OK); never change goal/verification to stop on green
 
 ## FILES (FULL mode, multi-user: -<user> suffix)
 spec | design | diagram | testing | costs | security | decisions | status | glossary
 contracts/contracts-<u> | features/features-<u> | changelog/changelog-<u>
-extra layer: GUIDE(humans) | teams(roles/OKs) | models(mirrors+tiers) | harness(evidence+TDD+memory, R29/R30) | orchestration(agent roles, R31) | scenarios(adapt the SDD) | tecnologias(catalog for R12) | seguridad(levels for R27)
+extra layer: GUIDE(humans) | teams(roles/OKs) | models(mirrors+tiers) | harness(evidence+TDD+memory, R29/R30) | orchestration(agent roles + card graph, R31) | loops(loops with a contract, R33) | scenarios(adapt the SDD) | tecnologias(catalog for R12) | seguridad(levels for R27)
 harness: harness.config.json | sdd/cards/<ID>.md(cards=queue) | sdd/progress/<branch>/{current,handback_<ID>,review_<ID>}
 Routing: planning⇒spec+features+status · implement⇒design+contracts+testing · commit⇒changelog · infra⇒costs+security
 

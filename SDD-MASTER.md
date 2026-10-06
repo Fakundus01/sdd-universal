@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.34 · **Fecha:** 2026-10-05 · **Owner:** Facundo Moreno
+**Versión:** 0.35 · **Fecha:** 2026-10-06 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -57,6 +57,7 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 | Clasificar la superficie de ataque, escribir `security.md`, o tocar login/datos/pagos/IA/archivos | `seguridad.md` (R27) |
 | Cerrar algo como done, escribir tests o checks, retomar tras un corte de contexto | `harness.md` (R29, R30) |
 | Repartir el trabajo entre agentes con roles (leader, implementer, reviewer…) | `orchestration.md` (R31) — cada rol, solo su fila |
+| Dejar al agente iterando solo hacia un objetivo, o programar un loop | `loops.md` (R33) + el archivo del loop |
 
 **Subagentes (R11):** cada subagente recibe únicamente su fila de esta tabla + la tarea puntual. Nunca el paquete completo.
 
@@ -77,7 +78,7 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 
 ---
 
-## §4 · Catálogo de Reglas (R01–R32)
+## §4 · Catálogo de Reglas (R01–R33)
 
 Para apagar o prender una regla, escribí en cualquier mensaje: `R01=OFF` / `R01=ON`. El agente confirma y lo registra en §3.
 
@@ -197,6 +198,9 @@ Aplicar `orchestration.md`: `leader` (sesión principal, único escritor de `sdd
 **R32 · PRODUCCIÓN-CON-OK — [ON] — fija**
 Antes de desplegar se miran los **datos** de producción con una consulta de solo lectura, no solo el código: a quién afecta el cambio. Escribir en producción o mergear a la rama de prod lo ejecuta el humano o lleva su OK explícito: R01 cubre el commit, esto cubre lo que no se deshace con un revert. Con carga nueva o jobs reactivados: `playbooks/go-live.md`.
 
+**R33 · LOOP-CON-CONTRATO — [ON] — desactivable**
+Antes de dejar al agente iterando solo, se escribe `sdd/loops/<nombre>.md` con **disparador, objetivo medible, verificación (un comando), regla de corte y memoria**. Sin una regla de corte que se pueda medir no hay loop autónomo: se vuelve al HANDBACK por ciclo (§7). Aprobar el archivo es el OK de R01 **solo para commits en la rama del loop**; push, merge y producción siguen pidiendo OK (R01, R32). El loop nunca cambia su objetivo ni su verificación para cortar en verde (R25). Detalle y grafo de tarjetas: `loops.md`, `orchestration.md` §10.
+
 ---
 
 ## §5 · Mapa de archivos objetivo
@@ -219,8 +223,10 @@ repo/
     ├── teams.md                   # capa enterprise: roles, OKs, ceremonias, subagentes (R21)
     ├── models.md                  # espejos multi-agente + tiers + ahorro de tokens (R22)
     ├── harness.md                 # arnés: evidencia, TDD, rojo forzado, memoria en disco (R29, R30)
-    ├── orchestration.md           # roles de agentes y loop cerrado (R31)
-    ├── cards/<ID>.md              # tarjetas: la cola de trabajo con aceptación y estado
+    ├── orchestration.md           # roles de agentes, loop cerrado y grafo de tarjetas (R31)
+    ├── loops.md                   # contrato de los loops autónomos (R33)
+    ├── loops/<nombre>.md          # cada loop: disparador, objetivo, verificación, corte, memoria
+    ├── cards/<ID>.md              # tarjetas: la cola de trabajo con aceptación, estado y depende_de
     ├── progress/<rama>/           # current.md + handbacks + reviews: el trabajo en vuelo
     ├── spec.md                    # qué es el proyecto, problema, alcance, features + estado
     ├── design.md                  # diseño técnico, capas, decisiones con su porqué
@@ -298,7 +304,7 @@ seguimos con features nuevas.
 
 ## §7 · LOOP-PROMPT y HANDBACK
 
-El loop evita que el humano tenga que redactar una prompt nueva en cada paso: el agente cierra cada ciclo con un bloque HANDBACK y el humano responde con lo mínimo.
+El loop evita que el humano tenga que redactar una prompt nueva en cada paso: el agente cierra cada ciclo con un bloque HANDBACK y el humano responde con lo mínimo. Es el loop **con** el humano adentro; para que el agente itere solo hasta un objetivo, R33 y `loops.md`.
 
 **Instrucción permanente (pegar una sola vez):**
 
@@ -371,6 +377,7 @@ Las versiones de la línea actual (0.32 en adelante). Las anteriores (0.31 hacia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.35 | 2026-10-06 | **R33 · LOOP-CON-CONTRATO** y grafo de tarjetas, vía S39 y S40: un loop autónomo se escribe antes en `sdd/loops/<nombre>.md` (disparador, objetivo medible, verificación, regla de corte, memoria) y aprobarlo autoriza commits solo en su rama. Las tarjetas declaran `depende_de` y el leader despacha por niveles del grafo. Nuevo `loops.md`; `orchestration.md` §10. Recoge lo que en 2026 se llama *loop engineering* y *graph engineering* (de ejecución), sin sumar capas que el paquete ya tenía. |
 | 0.34 | 2026-10-05 | Web sin portón y con rutas reales, a pedido del owner: la app abre sin cuenta; el login es opcional y vive en `/web/login` (vuelve solo a rutas internas); el onboarding deja de ser un diálogo encima de todo y pasa a `/web/preferencias`. Cada vista tiene su URL (`/web/catalogo`, `/web/combinador`…), recargable y compartible, con rewrite en el servidor local y en `vercel.json`. Los links viejos con `#/` redirigen. Arregla el bug de 0.33: el onboarding quedaba arriba del portón y ninguno de los dos se podía tocar (ADR-014, ADR-015 de la web). |
 | 0.33.2 | 2026-10-05 | **S38 · el producto con IA más allá del gasto**, con material aportado por el owner (OWASP Top 10 para LLMs 2025, NIST AI RMF, RAG, Huyen): `seguridad.md` 0.13 con el mapa LLM01–LLM10 y su control en el paquete, reglas para agentes que actúan y NIST para clientes corporativos. El playbook `ia-en-el-producto` suma arquitectura de referencia, RAG, agentes y evals de dos capas (deterministas de alta precisión + un juez, H26). El prompt con IA recorre el OWASP; catálogo con pgvector y embeddings. Menores de la review de 0.33.1: en `eventos` solo se inserta `tipo` y `detalle`, la lección de Pydantic bien descripta, y el arnés reintenta cuando Windows pierde la salida de un proceso. |
 | 0.33.1 | 2026-10-05 | Review R30 de 0.33: el check de rutas en tablas mira `spec.md` y `sdd-lite.md` por defecto; LITE sin `progress/` también en el relevo y en `--e2e`; la tabla de eventos rechaza texto identificante y días que no son hoy; el prompt, la lista y el ZIP salen siempre del mismo estado; el link `#/combinador?c=` vuelve a cargar. N2 de `seguridad.md`: borrar es en el archivo también (`secure_delete` + `VACUUM`, backups). Trampa de Pydantic en `tecnologias.md` (un validador que se llama como su campo lo pisa). El historial viejo pasa a `historial-master.md`. |
