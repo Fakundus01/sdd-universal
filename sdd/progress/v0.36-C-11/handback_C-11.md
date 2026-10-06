@@ -100,3 +100,36 @@ Mutantes (uno por vez, suite completa `web/tests` con `subprocess.run(timeout=18
 
 ## Próximo paso sugerido
 - Review independiente con mutantes propios; después, que C-10 cierre y se re-corra `verify.py --quick`.
+
+## Vuelta 2 (@ 7bc663e; base de la vuelta: `8629fee`)
+Pedido por la review (`review_C-11.md`). Las secciones de arriba describen la vuelta 1; lo nuevo está acá. Cambios de código: `web/paquete.js` (`reescribirLinks` reescrita, mismo contrato), tests en `web/tests/paquete-links.test.mjs` y `paquete-reescritura.test.mjs`, `?v=38` (html + `rutas.test.mjs`).
+
+| # | Pedido | Cómo quedó | Test |
+|---|---|---|---|
+| 1 | el test de los ZIP exige conservar los links que viajan | `conservados()`: por cada MD con `origen`, existe en el repo; la lista ordenada de links del original cuyo destino viaja == los links del ZIP resueltos contra su nombre (mismo archivo lógico). `custom.md` incluido (con un link que viaja y uno que no) | los 3 ZIP; mata R12, R13, R14 |
+| 2 | fences | abre ``` o ~~~ (`{3,}`), cierra solo con el mismo carácter y largo >=, línea sola | unitario con ````` + ```, ~~~, mezcla y cierre más largo |
+| 3 | %20 y mayúsculas | se decodifica para buscar y se re-codifica (`encodeURI`) al escribir; extensión `/i`; `enlazar` también con `.MD` | unitarios; mata R6, R6b, R7, R7b |
+| 4 | bordes | título (`"t"`/`'t'`) y `<x>` se reescriben conservándolos; `\[a](x)` e imagen no se tocan; referencias: la definición incluida se reescribe, la excluida se **saca** y sus usos `[t][id]`/`[id][]` quedan como texto (los usos `[id]` sueltos no se tocan: no se distinguen de corchetes comunes). Todo barato, nada diferido | unitarios |
+| 5 | no-.md que no viaja | cualquier destino relativo con extensión que no viaja pasa a texto (`../supabase/schema.sql` -> texto); sin extensión (carpetas) no se toca; si viaja (p. ej. `harness/verify.py`) se reescribe | unitario + los 3 ZIP resueltos con cualquier extensión |
+
+Rojo de la vuelta (código de `8629fee`, tests nuevos): `node --test "web/tests/*.test.mjs"` -> tests 66 · pass 59 · fail 7 (PRO y soloMd: «1 rotos» = `schema.sql`; fences, %20, título/<>, referencias, no-md). Salida completa en el scratchpad (`c11impl2/rojo2.txt`).
+
+Verde: tests 67 · pass 67 · fail 0; smoke PASS (22 pasos, 0 errores); `verify.py --quick` solo con el FAIL esperado de orden de despacho (C-10 in_progress). Conteos por ZIP: 0 rotos de 80 (PRO), 0 de 30 (NOVATO), 0 de 64 (soloMd) con links de cualquier extensión.
+
+Mutantes de la vuelta (uno por vez, suite completa con `subprocess.run(timeout=180)`; base 67/67/0 salvo donde dice 66 antes de sumar el último test):
+| Mutante | Corrida (tests/pass/fail) | Resultado |
+|---|---|---|
+| R12 origen agents roto | 66/65/1 | muerto |
+| R13 origen playbooks roto | 66/65/1 | muerto |
+| R14 origen harness.md de soloMd roto | 66/65/1 | muerto |
+| R6 sin decodeURI / R6b sin encodeURI | 66/65/1 · 66/64/2 | muertos |
+| R7 / R7b extensión sensible a mayúsculas (link / enlazar) | 66/65/1 c/u | muertos |
+| F1 ~~~ no es fence · F2 sin largo · F3 sin carácter | 66/65/1 c/u | muertos |
+| T1 título no admitido · T2 título se pierde | 66/65/1 · 67/66/1 | muertos |
+| A1 `<x>` no admitido | 66/65/1 | muerto |
+| E1 escapado/imagen se tocan | 66/65/1 | muerto |
+| E2 uso de ref ignora prefijo | 66/66/0 (sobrevivía) -> test nuevo -> 67/66/1 | muerto |
+| X1 def excluida no se saca · X2 incluida no se reescribe · X3 `[id][]` | 66/65/1 c/u | muertos |
+| N1 no-md excluido deja el link · N2 carpetas se vuelven texto | 66/63/3 · 66/64/2 | muertos |
+
+Pendiente que no es de esta tarjeta (de la review, sin cambio pedido): `soloSkills` no pasa por `enlazar` (hoy sin links `.md`); el visor no muestra `[ver [1]](x.md)` como link (preexistente).
