@@ -1,6 +1,7 @@
 """notas.py: formato del playbook §B, slug saneado y escritura contenida (criterios 2 y 6)."""
 from __future__ import annotations
 
+import functools
 import os
 import subprocess
 import unittest
@@ -287,7 +288,10 @@ class TestInicializar(ConCerebro):
         (fuera / "ajena.md").write_text(VALIDA, encoding="utf-8")
         crear_enlace(self, self.base / "proyectos" / "junta", fuera)
         avisos: list[str] = []
-        with mock.patch.object(notas, "_es_enlace", return_value=False):
+        # Con un symlink (Linux, o Windows con permisos) `os.walk` no entra solo; con una junction sí. Para que el
+        # caso sea el mismo en todas las plataformas, el recorrido sigue el enlace como lo haría una junction.
+        recorrer = functools.partial(os.walk, followlinks=True)
+        with mock.patch.object(notas, "_es_enlace", return_value=False), mock.patch.object(notas.os, "walk", recorrer):
             self.assertEqual(notas.listar(self.base, avisos), [buena])
         self.assertTrue(any("junta" in x and "sale" in x for x in avisos), avisos)
 
