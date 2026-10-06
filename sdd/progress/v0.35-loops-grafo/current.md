@@ -24,6 +24,7 @@ graph LR
 - v5 · L-2 CHANGES_REQUESTED: falta el test de `done` con dependencia no done (mutante vivo) y que un FAIL del grafo apague el OK de tarjetas; más formatos de `depende_de` que se pierden en silencio → re-despachado (iteración 2/3)
 - v6 · L-4 done (review APPROVED @ addc1f6, merge); smoke en la rama del loop: PASS, 22 pasos, 0 errores de consola
 - (L-2) 2.º review CHANGES_REQUESTED @ 1c19422: regresión, `Card.parse` tira UnboundLocalError con una tarjeta sin frontmatter → iteración 3/3
+- v5 · L-2 done (3.er review APPROVED @ d0cfe53, merge); harness/tests OK, web/tests 49/49 en la rama del loop
 
 ## Próximo paso
-Despachar L-1, L-2 y L-6 en paralelo (worktrees `../sdd-universal-L-<n>`); L-3 cuando se libere un lugar.
+L-1, L-2, L-3 y L-4 done. L-6 blocked esperando el DRIFT del owner (clave `master` en el arnés: A/B/C). L-5 (cierre: review del loop, changelog, status con D2 tachada) depende de L-6.
