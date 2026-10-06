@@ -1,7 +1,7 @@
 # Handback C-3 — Embedder local con fastembed
 
 - **Estado:** done
-- **Rama / commit:** `v0.36-C-3` @ `168cba9` (código; este handback va en el commit siguiente)
+- **Rama / commit:** `v0.36-C-3` @ `3ca371f` (código vuelta 2; el handback va en el commit siguiente)
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
@@ -24,7 +24,7 @@
 | Archivo | Cambio |
 |---|---|
 | cerebro/embedders.py | `Local`, `dir_modelos`, `obtener("local")` |
-| cerebro/tests/test_local.py | 14 tests (13 unitarios + 1 integración con el modelo real) |
+| cerebro/tests/test_local.py | 23 tests (22 unitarios + 1 integración con el modelo real) |
 | cerebro/requirements.txt | nuevo |
 | cerebro/README.md | nuevo (instalación, modelo, R28, variables) |
 | .gitignore | `cerebro/.venv/` |
@@ -101,3 +101,24 @@ Mutantes (a mano, `timeout 120`, sobre `embedders.py`):
 
 ## Próximo paso sugerido
 - C-4 (MCP) sobre `mcp==2.3.0`; C-6 (OpenAI) reutiliza la interfaz `Embedder`.
+
+## Apéndice: vueltas
+- Vuelta 2 (`3ca371f`, review CHANGES_REQUESTED @ 1d11328): agregados tests de orden del aviso (antes de la carga, y aunque la carga falle), canal (stderr, stdout vacío), pereza del import (subproceso con `-I`, `fastembed` no en `sys.modules`), «sin fastembed» distinto de «sin internet», cantidad de vectores y dimensión mezclada, conversión a float. Código: `_en_cache` exige un `*.onnx` dentro de `snapshots/*/` (snapshots vacío o descarga cortada vuelve a avisar); `HF_HUB_DISABLE_SYMLINKS_WARNING` se fija solo durante la carga y se restaura (README lo documenta).
+- Suite: 96 tests OK con el venv (integración corrida) y 96 OK (1 salteado) con el Python del sistema; `verify.py --changed` VERDE.
+- Rojo de los tests nuevos: los de M1–M4, M7, M8 pasan contra el código bueno por diseño (la review apuntó a mutantes), así que el rojo es el mutante (tabla). Los de `_en_cache` y entorno sí fallaron contra el código de la vuelta 1 (base 41f90db): `FAIL: test_el_entorno_del_proceso_no_queda_cambiado`, `FAIL: test_snapshots_vacio_o_sin_onnx_no_cuenta_como_bajado [sin onnx]` y `[snapshots vacio]` (Ran 22, failures=3).
+- **Corrección de honestidad:** la tabla de mutantes de la vuelta 1 era inválida: el script llamaba a `timeout` y en Windows resolvió `timeout.exe` (falla siempre), así que todos figuraban «muertos» sin correr. Rehecha con `subprocess` y timeout de 120 s (intérprete del venv); resultados reales abajo. En esa corrida sobrevivieron dos (`cache de otro modelo cuenta`, `no convierte a float`) y se agregaron tests.
+
+Mutantes vuelta 2 (sobre `embedders.py`, 120 s por corrida, test que lo mata):
+| Mutante | Resultado | Test que lo mata |
+|---|---|---|
+| M1 aviso a stdout | muerto | test_el_aviso_va_a_stderr_y_stdout_queda_limpio |
+| M2 import ansioso de fastembed | muerto | test_importar_el_nucleo_no_importa_fastembed |
+| M3 aviso después de la carga | muerto | test_aviso_sale_antes_de_la_carga_del_modelo, test_aviso_sale_aunque_la_carga_falle |
+| M4 sin `except ErrorEmbedder` | muerto | test_sin_fastembed_error_con_el_comando_de_instalacion |
+| M7 `any`→`all` en dim | muerto | test_un_solo_vector_de_dimension_mezclada_es_error |
+| M8 sin chequeo de cantidad | muerto | test_distinta_cantidad_de_vectores_es_error |
+| snapshots vacío cuenta como bajado | muerto | test_snapshots_vacio_o_sin_onnx_no_cuenta_como_bajado |
+| entorno queda cambiado | muerto | test_el_entorno_del_proceso_no_queda_cambiado |
+| cache de otro modelo cuenta | sobrevivió → test ajustado → muerto | test_cache_con_otro_modelo_igual_avisa |
+| no convierte a float | sobrevivió → test nuevo → muerto | test_convierte_cualquier_secuencia_numerica_a_lista_de_floats |
+| dim 768, modelo L6, nunca/siempre avisa, recarga cada vez, error de red sin envolver, mensaje sin «internet», lista vacía carga, `obtener` sin local, RuntimeError sin fastembed, `cache_dir=None` | muertos | tests de la vuelta 1 y 2 |
