@@ -1,5 +1,5 @@
-# Review C-7 @ 4108600
-**Veredicto:** CHANGES_REQUESTED
+# Review C-7 @ 7d95dbf
+**Veredicto:** APPROVED
 
 Reviewer independiente (tier ALTO). Base `3dd1edd`, código `9d338ad`, handback en `1023705`. Trabajé en el worktree `sdd-universal-C-7-rev`. Las dependencias salieron del venv de `sdd-universal-C-7` (Python 3.14.0), salvo en las corridas reales de `instalar.ps1`, que crearon su propio venv en este worktree (después lo borré). No hice ninguna llamada a OpenAI, no leí claves ni `.env`, no registré el MCP y no toqué el modelo.
 
@@ -188,3 +188,73 @@ buscar (la línea impresa, pegada tal cual, con -k 2): 2 resultados, EXIT 0
 1. H11: (a) o (b), con test.
 
 Lo demás de la vuelta 1 quedó resuelto y verificado.
+
+---
+
+## Vuelta 3 @ 7d95dbf
+**Veredicto:** APPROVED
+
+Revisé el código `7d95dbf` (HEAD de la tarjeta `1571335`). El leader amplió la zona a `cerebro/indice.py`, con la opción (a) de H11, y el handback lo declara. Mismas reglas: no hice llamadas a OpenAI, no registré el MCP (`~/.claude.json` tiene 0 menciones de `mcp_server.py`) y el modelo de `~/.cache/cerebro/modelos` está intacto. Al final borré el venv del worktree, los `__pycache__`, los temporales y la copia del código viejo.
+
+### Verificación re-ejecutada
+```text
+venv C-7 (3.14.0):                Ran 219 tests in 12.436s  OK
+CEREBRO_SIN_MODELO=1 (venv):      Ran 219 tests in 10.462s  OK (skipped=1)
+python del sistema (3.14.0):      Ran 219 tests in 8.704s   OK (skipped=3)
+Python 3.11:                      Ran 219 tests in 7.485s   OK (skipped=3)
+python harness/verify.py --quick: [OK] Tarjetas válidas (13) · [OK] Rutas citadas existen (163 revisadas) · VERDE — 0 FAIL, 0 WARN
+```
+(Borré el `current.md` de plantilla que creó `verify.py`.)
+
+### H11 con un índice viejo de verdad
+Primero extraje el código de `4108600` con `git archive` al scratchpad. Con ese código armé un índice `falso` en un temporal (`%TEMP%\c7rev3 ñ …`), que incluía la nota a mano `proyecto: SDD Universal` en `proyectos/sdd-universal/`. Su `meta` quedó `{'modelo': 'falso', 'dim': '64'}` y `notas.proyecto` = `SDD Universal`. Después corrí el código nuevo sobre ese índice:
+```text
+buscar membrillo                            -> exit 2, sin traceback: «el índice se armó con otra versión del esquema (anterior; la actual es 2) … Corré `cerebro.py indexar --todo`»
+buscar membrillo --proyecto "SDD Universal" -> exit 2, el mismo mensaje
+indexar                                     -> exit 2, el mismo mensaje
+MCP buscar(proyecto="SDD Universal")        -> ErrorHerramienta con el mismo mensaje
+MCP nota(...)                               -> «nota creada: proyectos/otro/…» + «aviso: no pude indexarla (…indexar --todo); corré `cerebro.py indexar`»
+indexar --todo                              -> exit 0, «2 nuevas»; meta = {'modelo': 'falso', 'dim': '64', 'esquema': '2'}
+buscar --proyecto "SDD Universal" / sdd-universal (CLI)  -> True / True
+buscar(proyecto=...) (MCP)                               -> True / True
+revisar -> exit 0; «se indexa como «sdd-universal» y el filtro `--proyecto` la alcanza igual (para unificarlo: `proyecto: sdd-universal`…)», que es verdad
+```
+Probé `instalar.ps1` sobre otro índice viejo, armado igual con el código de `4108600` en `%TEMP%\Cerebro v3rev ñ`:
+- Sin `-Reindexar`: EXIT 1 con el mensaje del esquema y la pista de `-Reindexar`.
+- Con `-Reindexar`: EXIT 0 y 71 nuevas.
+- Corrida siguiente sin el switch: EXIT 0 e idempotente (0 nuevas, 71 sin cambios).
+
+### H12
+Ahora hay tests para `--proyecto "   "` (sin filtro) y para una nota en `proyectos/p/sub/x.md` (sin aviso). Q5 y Q7 **mueren**.
+
+### Tests cambiados
+`test_indice.py:406` y `test_local.py:263` siguen comparando `meta` con igualdad exacta; solo se agregó `"esquema": "2"`, así que no se debilitaron. El handback lo declara.
+
+### Mutantes (suite completa, `subprocess.run(timeout=120)`, uno por vez y restaurados; `git status` limpio al final)
+Re-apliqué los de las vueltas 1 y 2. Todos mueren, con `Ran 219` en cada corrida:
+
+| Mutantes | Resultado |
+|---|---|
+| M1 a M12 | muertos (failures o errors entre 1 y 33) |
+| Q1 a Q7 | muertos, incluidos **Q5 y Q7**, que en la vuelta 2 sobrevivían |
+| X1 | pasa, como corresponde (5 MB a stderr) |
+| X2 a X4 | muertos (X2 tarda 51.8 s) |
+
+Nuevos, sobre la guardia de esquema y el slug en el índice:
+
+| # | Mutante | Resultado |
+|---|---|---|
+| S1 | la guardia deja pasar un índice sin marca (`not in (None, VERSION)`) | muerto: Ran 219, failures=2 |
+| S2 | `indexar` no escribe la marca `esquema` | muerto: Ran 219, failures=13 errors=45 |
+| S3 | el índice guarda el `proyecto` crudo | muerto: Ran 219, failures=4 |
+| S4 | `revisar` compara con `proyecto.lower()` en vez de con el slug | muerto: Ran 219, failures=1 |
+| S5 | guardia de esquema desactivada (`if False`) | muerto: Ran 219, failures=2 |
+| S6 | `RuntimeError` en vez de `ErrorModelo`, o sea traceback | muerto: Ran 219, errors=2 |
+| S7 | `VERSION_ESQUEMA = "3"` sin migración | muerto: Ran 219, failures=4 |
+
+### Observaciones (no bloquean)
+- `cerebro/mcp_server.py:84`: con un índice de esquema viejo, `nota` termina con «corré `cerebro.py indexar`», sin `--todo`, después de citar el error, que sí dice `--todo`. Es cosmético.
+- `instalar.ps1` sigue sin tests automáticos (la tarjeta no los pide). Su guardia de OneDrive y el `-Reindexar` los verifiqué a mano en las vueltas 2 y 3.
+- Para el leader, fuera de zona: el playbook §C no menciona el venv, `-s user` ni `instalar.ps1`. Y la primera corrida real de `cerebro.yml` en Actions queda para después del push.
+
+Los cuatro criterios de la tarjeta y los hallazgos H1 a H12 están cubiertos con evidencia re-ejecutada.
