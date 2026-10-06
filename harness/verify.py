@@ -102,7 +102,7 @@ class Verifier:
             self.report.fail("--e2e pedido pero no hay 'e2e' en harness.config.json")
             return
         if self._command("e2e", config.e2e):
-            record = e2e_record(self.root)
+            record = e2e_record(self.root, config.master)
             record.parent.mkdir(parents=True, exist_ok=True)
             with record.open("a", encoding="utf-8") as fh:
                 fh.write(f"- {date.today().isoformat()} @ {self.repo.head()} — e2e verde\n")

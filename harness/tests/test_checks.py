@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import tempfile
 import unittest
+from pathlib import Path
 
 from support import Project
 
@@ -189,6 +193,88 @@ class TestE2E(ChecksCase):
         self.p.write("harness.config.json", json.dumps({"test": "x", "e2e": "y"}))
         self.p.write("sdd/progress/e2e.md", "- 2026-10-02 @ a942c177 — e2e verde\n")
         self.assertEqual(self.run_checks().messages("WARN"), [])
+
+
+class TestMasterConfigurable(ChecksCase):
+    """Clave `master` (harness.md §2): el núcleo puede vivir fuera de sdd/ (L-7)."""
+
+    ROOT_MASTER = "# master" + chr(10) * 2 + "- **Modo por tamaño (R18):** LITE — chico" + chr(10)
+
+    def master_en_raiz(self, extra: dict | None = None) -> None:
+        (self.p.root / "sdd/SDD-MASTER.md").unlink()
+        self.p.write("SDD-MASTER.md", self.ROOT_MASTER)
+        cfg = {"test": "x", "master": "SDD-MASTER.md"}
+        cfg.update(extra or {})
+        self.p.write("harness.config.json", json.dumps(cfg))
+
+    def test_default_es_el_de_siempre(self):
+        self.assertEqual(HarnessConfig.load(self.p.root).master, "sdd/SDD-MASTER.md")
+
+    def test_master_en_raiz_da_ok(self):
+        self.master_en_raiz()
+        report = self.run_checks()
+        self.assertEqual([f for f in report.messages("FAIL") if "SDD-MASTER" in f], [])
+
+    def test_modo_se_lee_del_master_configurado(self):
+        self.master_en_raiz()
+        checks = HarnessChecks(self.p.root, HarnessConfig.load(self.p.root), Report())
+        self.assertEqual(checks.mode, "LITE")
+
+    def test_master_inexistente_nombra_la_ruta_configurada(self):
+        self.p.write("harness.config.json", json.dumps({"test": "x", "master": "nucleo/MASTER.md"}))
+        fails = self.run_checks().messages("FAIL")
+        self.assertTrue(any("nucleo/MASTER.md" in f for f in fails), fails)
+        self.assertFalse(any("sdd/SDD-MASTER.md" in f for f in fails), fails)
+
+    def test_ruta_invalida_no_carga(self):
+        for bad in ("/etc/master.md", r"C:\x\master.md", "../fuera/M.md", "sdd/../../M.md", "", 5, None, ["a"]):
+            with self.subTest(master=bad):
+                self.p.write("harness.config.json", json.dumps({"test": "x", "master": bad}))
+                with self.assertRaisesRegex(ConfigError, "master"):
+                    HarnessConfig.load(self.p.root)
+
+    def test_punto_punto_que_sale_da_el_mensaje_lexico(self):
+        self.p.write("harness.config.json", json.dumps({"test": "x", "master": "sdd/../../M.md"}))
+        with self.assertRaisesRegex(ConfigError, "sin ruta absoluta ni `..`"):
+            HarnessConfig.load(self.p.root)
+
+    def test_ruta_con_punto_punto_que_no_sale_es_valida(self):
+        self.p.write("harness.config.json", json.dumps({"test": "x", "master": "sdd/../SDD-MASTER.md"}))
+        self.assertEqual(HarnessConfig.load(self.p.root).master, "sdd/../SDD-MASTER.md")
+
+    def test_e2e_registrado_en_sdd_e2e_con_master_lite_no_avisa(self):
+        self.master_en_raiz({"e2e": "y"})
+        self.p.write("sdd/e2e.md", "- 2026-10-02 @ a942c177 — e2e verde\n")
+        self.assertEqual([w for w in self.run_checks().messages("WARN") if "corrida" in w], [])
+
+    def test_master_no_string_habla_de_una_ruta(self):
+        self.p.write("harness.config.json", json.dumps({"test": "x", "master": 5}))
+        with self.assertRaises(ConfigError) as cm:
+            HarnessConfig.load(self.p.root)
+        self.assertIn("ruta", str(cm.exception))
+        self.assertNotIn("comando", str(cm.exception))
+
+    def test_enlace_que_sale_del_repo_no_carga(self):
+        afuera = tempfile.TemporaryDirectory()
+        self.addCleanup(afuera.cleanup)
+        Path(afuera.name, "SDD-MASTER.md").write_text("# fuera\n", encoding="utf-8")
+        link = self.p.root / "enlace"
+        try:
+            if os.name == "nt":
+                subprocess.run(["cmd", "/c", "mklink", "/J", str(link), afuera.name], check=True, capture_output=True)
+            else:
+                os.symlink(afuera.name, link, target_is_directory=True)
+        except (OSError, subprocess.CalledProcessError) as exc:
+            self.skipTest(f"este sistema no permite crear junction/symlink en el temporal ({exc})")
+        self.addCleanup(lambda: os.rmdir(link) if link.is_dir() and not link.is_symlink() and os.name == "nt" else None)
+        self.p.write("harness.config.json", json.dumps({"test": "x", "master": "enlace/SDD-MASTER.md"}))
+        with self.assertRaisesRegex(ConfigError, "master"):
+            HarnessConfig.load(self.p.root)
+
+    def test_master_es_clave_conocida(self):
+        self.master_en_raiz()
+        self.assertEqual(HarnessConfig.load(self.p.root).unknown_keys, [])
+        self.assertEqual([w for w in self.run_checks().messages("WARN") if "master" in w and "desconoc" in w], [])
 
 
 class TestRepoSinCommits(unittest.TestCase):

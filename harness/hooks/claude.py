@@ -25,7 +25,7 @@ sys.dont_write_bytecode = True  # un __pycache__ del arnés aparecería como «c
 sys.path.insert(0, str(HARNESS))
 
 from checks import Card  # noqa: E402
-from config import ConfigError, HarnessConfig, sdd_mode  # noqa: E402
+from config import DEFAULT_MASTER, ConfigError, HarnessConfig, sdd_mode  # noqa: E402
 from report import force_utf8  # noqa: E402
 from repo import LOST, OutputLost, Repo, run_captured  # noqa: E402
 from verify import decode  # noqa: E402
@@ -50,7 +50,9 @@ class Hooks:
         self.root = root
         self.payload = payload
         self.repo = Repo(root)
-        self.lite = sdd_mode(root) == "LITE"
+        config = load_config(root)
+        self.master = config.master if config else DEFAULT_MASTER
+        self.lite = sdd_mode(root, self.master) == "LITE"
 
     def _memory(self) -> Path:
         """Dónde vive el estado del trabajo: current.md de la rama, o sdd-lite.md en modo LITE (harness.md §10)."""
@@ -61,7 +63,7 @@ class Hooks:
         branch = self.repo.branch
         current = self._memory()
         rel = current.relative_to(self.root).as_posix()
-        print(f"[arnés] Rama `{branch}`. Leé sdd/SDD-MASTER.md y seguí desde el próximo paso de {rel}.")
+        print(f"[arnés] Rama `{branch}`. Leé {self.master} y seguí desde el próximo paso de {rel}.")
         if current.is_file():
             text = current.read_text(encoding="utf-8", errors="replace")
             if len(text) > MAX_CURRENT_CHARS:
