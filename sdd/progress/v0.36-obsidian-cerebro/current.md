@@ -13,6 +13,7 @@
 - review C-3 y C-4: CHANGES_REQUESTED (tests que no atan aviso a stderr/antes de bajar, carga perezosa; R26 con separadores Unicode) → de vuelta a sus implementers
 - v3 · C-5 done (review CHANGES_REQUESTED → arreglos → APPROVED @ 8cf57af, merge 3f2a40d); 71 notas reales (42 escenario, 26 hallazgo, 3 leccion). Incidentes: reviewer revirtió cambios sin commitear del implementer (worktree compartido), `taskkill /IM python.exe` de un implementer, scratchpad compartido entre reviewers → reglas nuevas en los prompts
 - v4 · C-4 done (review CHANGES_REQUESTED → arreglos → APPROVED @ 12b1bd1, merge 9181c4f); errores de herramienta con isError=true. Deuda (humo stderr, NUL/ , proyecto=slug) → criterio 4 de C-7. Pendiente C-8: playbook §C paso 5 con el Python del venv
+- v5 · C-3 done (4 vueltas de review; la 4.ª con implementer ALTO tras 3 CHANGES_REQUESTED; APPROVED @ 1c795aa, merge 548943b, README de C-3 + sección MCP de C-4 unidos a mano); suite 97 con venv, OK sin venv (3 salteados)
 
 ## Próximo paso
-C-3, C-4 y C-5 en paralelo, cada una en su worktree desde la rama del loop. C-3 y C-4 instalan en `cerebro/.venv` de su worktree (OK dado). Después: C-6 (tras C-3), C-7.
+C-6 (embedder OpenAI, sin llamadas reales) y después C-7 (CI, instalar.ps1, deuda de reviews). Después C-8 (leader, con OK del owner: instalar, registrar MCP, primera llamada a OpenAI).

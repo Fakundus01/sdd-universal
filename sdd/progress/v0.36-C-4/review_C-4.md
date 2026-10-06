@@ -1,5 +1,5 @@
 # Review C-4 @ 12b1bd1
-**Veredicto:** APPROVED (vuelta 2; la vuelta 1 @ 7c0fa15 fue CHANGES_REQUESTED, abajo)
+**Veredicto:** APPROVED (vuelta 2; la vuelta 1 @ 7c0fa15 pidió cambios, abajo)
 
 ## Vuelta 2 @ 12b1bd1
 
@@ -81,7 +81,7 @@ ROJO — 1 FAIL, 0 WARN      ← el mismo FAIL previo de la base 6c1a023 (ver vu
 ---
 
 # Vuelta 1 @ 7c0fa15
-**Veredicto:** CHANGES_REQUESTED
+**Vuelta 1 — veredicto:** CHANGES_REQUESTED
 
 Base `6c1a023`, diff revisado `git diff 6c1a023..7c0fa15` (5 archivos; el handback entra en `0452da4`).
 

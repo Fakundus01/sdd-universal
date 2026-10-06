@@ -1,5 +1,5 @@
 # Review C-3 @ 1c795aa
-**Veredicto:** APPROVED (vuelta 4; las vueltas 1 @ 1d11328, 2 @ 3ca371f y 3 @ 7c5d48c fueron CHANGES_REQUESTED, abajo)
+**Veredicto:** APPROVED (vuelta 4; las vueltas 1 @ 1d11328, 2 @ 3ca371f y 3 @ 7c5d48c pidieron cambios, abajo)
 
 ## Vuelta 4 @ 1c795aa
 
