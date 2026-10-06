@@ -1,3 +1,26 @@
+# Review v0.34.1 @ b4af348
+
+Veredicto: APPROVED
+
+Reviewer independiente (R30), base `aa41371`. El reporte completo está en el scratchpad de la sesión: `reve-review-sdd-v0341.md`.
+
+**Suites:** web 49/49, dev 17/17.
+
+**Los cuatro nits de la v0.34 quedaron resueltos.** Lo verifiqué en Chrome a 360, con un perfil limpio.
+- **`canonizar`:** `/web/inicio`, `/web/index.html`, `/web/inicio?x=1#a` y `/web/index.html#seccion` quedan en `/web/…`, sin pasos extra en el historial. «Atrás» vuelve a `/web/`.
+- **Variantes de login:** `/web/login/`, `/web/LOGIN`, `/web/Login/`, `/web/login//`, `/web/login?x=1` y `/web/login/#a` llevan a `/web/`. Las 60 variantes del fuzz siguen sin escapar del origen ni de `/web/`.
+- **`PAGINAS`:** `/web/admin`, `/web/guia` y `/web/demo` sirven su página. `/web/demo-con-sdd`, `/web/demo-sin-sdd` y `/web/index` caen en la app, igual que en `vercel.json`. Los 404 de traversal, mayúsculas y barras dobles se mantienen.
+- **«Prefiero no decir»:** aparece en los pasos 1 a 4. En el 4 termina y guarda `onboarding: true`.
+
+**`canonizar` no rompe el link compartido ni la migración:**
+- `/web/combinador?c=…`, `/web/#/combinador?c=…` y `/web/inicio#/combinador?c=…` terminan todos en `/web/combinador?c=…` con la combinación cargada (`migrar` corre antes que `canonizar`).
+- `/web/index.html#/catalogo` → `/web/catalogo`.
+- `/web/?cat=Base#/catalogo` → `/web/catalogo?cat=Base`.
+
+Sin hallazgos nuevos.
+
+---
+
 # Review v0.34 @ aa45525
 
 Veredicto: APPROVED
