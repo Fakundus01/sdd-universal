@@ -25,6 +25,8 @@
 - Owner eligió «Probar con OpenAI» (2026-10-06): medir las 10 consultas del objetivo 3 (y las 3 de control) con text-embedding-3-small cuando ponga la clave en `.env` y avise. Limpieza: worktrees de C-9 borrados (la rama `v0.36-C-9` queda, sin merge) y el modelo mpnet (1,1 GB) borrado de la caché
 - C-8, con la clave del owner en `.env` (no leída ni impresa): copia temporal del Cerebro indexada con `openai` (71 notas). Objetivo 3 con OpenAI: S39 5/5 (1,1,1,1,2); S42 1/5 (7, >30, 17, 2, 17); control 2, 1, >30. Objetivo 5 ✓: OpenAI igual o mejor que local en las 10, y sin clave → error claro (rc 2) mientras local sigue andando. Objetivo 4 ✓: `claude -p` desde `%TEMP%` llamó `mcp__cerebro__buscar` → S39, S42, H22 con su `fuente` (alcance de usuario confirmado)
 - Owner (2026-10-06): objetivo 3 «no cumplido, con deuda» (S42); OK de push de la rama del loop (sin PR ni merge); objetivo 6 ✓ («sí, se ve conectado» en Obsidian)
+- Objetivo 2 ✓ en GitHub: cerebro.yml verde en ubuntu/windows × 3.10/3.14 (la 1.ª corrida falló: un test de defensa de `listar` dependía de que el enlace fuera junction; corregido para todas las plataformas, mutante verificado); web.yml verde
+- Objetivo 6: la captura del owner muestra el grafo casi todo suelto (los MD se citan con rutas en código, no con links) → el «sí» no alcanza; owner eligió «Tarjeta para enlazar» → C-10 (vuelta 9)
 
 ## Próximo paso
 C-8 (leader): instalar con `cerebro/instalar.ps1` en `%USERPROFILE%\Documents\Cerebro` (OK dado), objetivo 3 con embeddings locales, registrar el MCP con `-s user` (OK dado), playbook §C al día (venv, `-s user`, instalar.ps1), texto de `mcp_server.py:84`. OpenAI: espera la clave del owner en `.env` y su OK.
