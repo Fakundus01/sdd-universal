@@ -42,4 +42,4 @@ TIEMPO: 15 min · REQUISITOS: un proyecto (Python o Node) · RESULTADO: credenci
 
 ## Nota para agentes
 
-Antes del primer commit de cualquier proyecto, verificar Parte A pasos 2–3 SIEMPRE (R17). Revisado el 2026-10-05 con cuatro proyectos reales (`scenarios.md` S36): ambientes que correspondan, dependencias directas en dos archivos, el linter de la plantilla. Con R23-NOVATO: mostrar el contenido esperado de `.gitignore` y esperar confirmación.
+Antes del primer commit de cualquier proyecto, verificar Parte A pasos 2–3 SIEMPRE (R17). Revisado el 2026-10-05 con cuatro proyectos reales ([`scenarios.md`](../scenarios.md) S36): ambientes que correspondan, dependencias directas en dos archivos, el linter de la plantilla. Con R23-NOVATO: mostrar el contenido esperado de `.gitignore` y esperar confirmación.

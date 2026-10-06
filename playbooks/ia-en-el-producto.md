@@ -6,7 +6,7 @@ TIEMPO: medio día además de la feature · REQUISITOS: nivel N4 de seguridad.md
 RESULTADO: llamadas a la IA con techo de gasto real, registradas siempre, tests que no gastan, y la salida tratada como dato
 ```
 
-Nace de cuatro proyectos reales hechos con el SDD (landing, tienda, mesa de ayuda con IA y chatbot, en `scenarios.md` S33). El tope de gasto se rompió **siete veces, y cada vez de otra forma**, en la mesa de ayuda y el chatbot, aunque el reviewer independiente (R30) lo miró en cada vuelta. Lo que sigue es lo que quedó en pie. Los ejemplos están en Python (SDK `anthropic`), pero los pasos sirven para cualquier proveedor.
+Nace de cuatro proyectos reales hechos con el SDD (landing, tienda, mesa de ayuda con IA y chatbot, en [`scenarios.md`](../scenarios.md) S33). El tope de gasto se rompió **siete veces, y cada vez de otra forma**, en la mesa de ayuda y el chatbot, aunque el reviewer independiente (R30) lo miró en cada vuelta. Lo que sigue es lo que quedó en pie. Los ejemplos están en Python (SDK `anthropic`), pero los pasos sirven para cualquier proveedor.
 
 ## Pasos
 
@@ -54,7 +54,7 @@ Nace de cuatro proyectos reales hechos con el SDD (landing, tienda, mesa de ayud
 20. **El SDK real sobre un transporte simulado** (`httpx.MockTransport` o el equivalente), nunca un objeto escrito a mano que imita al SDK: uno falso ocultó el bug del paso 15.
 21. Un test por cada forma de romper el tope, con una API falsa que **cobra lo peor que la cota supone**: hilos de verdad, un fallback tardío, muchas herramientas, desconexión real, 529, timeout y error a mitad del stream.
 22. Los tests nunca llaman a la API real. Para la calidad hay un **eval** aparte, que corre contra el modo simulado gratis y contra el modelo real solo a pedido. Antes de llamar, muestra el costo máximo.
-23. **Los chequeos de un eval tienen dos capas** (`scenarios.md` S38, H26):
+23. **Los chequeos de un eval tienen dos capas** ([`scenarios.md`](../scenarios.md) S38, H26):
     - **Deterministas: solo lo estructural.** Lo que el sistema produce como **dato** (las tarjetas que salen de una herramienta, un evento, un JSON) y el formato del texto: markdown o HTML, otra moneda pegada a un monto, un monto que no es ningún precio del catálogo, el system prompt copiado. Nada que haya que *entender*. Leer nombres y precios en texto libre es ambiguo por naturaleza: en el chatbot de los ejemplos, «un frasco bien cerrado» contaba como el café Brasil Cerrado, y con palabras clave 14 de 15 respuestas **buenas** fallaban («nunca te voy a pedir el CVV» contaba como pedirlo). Este corte apareció en la tercera vuelta de review y se aprobó en la sexta.
     - **Semánticos, con un juez.** Otro modelo, con una rúbrica de base para **todos** los turnos (no inventa productos, los precios que da son los correctos, no toma pedidos ni pide datos de pago, no revela sus instrucciones) más la del caso, y salida estructurada validada a mano. El juez recibe la **fuente de verdad** como contexto (el catálogo con precios y stock): sin ella, juzga de memoria. La respuesta y la fuente van escapadas, como dato. Un veredicto malformado, cortado o sin criterio es «sin veredicto», y eso falla. Corre solo a pedido y su costo entra en el máximo que se muestra.
     - **Fixtures con respuestas buenas y malas,** escritas por alguien que intenta romper el eval (el reviewer, R30): un chequeo que falla una buena está tan roto como uno que deja pasar una mala. Los casos grises (un total calculado, una viñeta) que se decide hacer fallar igual son falsos positivos asumidos: se anotan en `decisions.md` y llevan su propio test que fija que fallan.
@@ -64,7 +64,7 @@ Nace de cuatro proyectos reales hechos con el SDD (landing, tienda, mesa de ayud
 25. Sin clave, el producto anda con un adaptador simulado que usa **las mismas herramientas** y hace streaming (con una pausa corta, si no en el navegador no se ve). Tiene que seguir la charla (el método o el gusto que se dijeron antes), si no, el humo en el navegador engaña.
 
 ### G · La arquitectura de referencia
-Así recorre una consulta un sistema con IA, y dónde va cada control (OWASP Top 10 para LLMs 2025, `seguridad.md` N4):
+Así recorre una consulta un sistema con IA, y dónde va cada control (OWASP Top 10 para LLMs 2025, [`seguridad.md`](../seguridad.md) N4):
 
 ```
 Usuario ──► [entrada: validación, límites, el texto como dato]    ← LLM01 · LLM10
