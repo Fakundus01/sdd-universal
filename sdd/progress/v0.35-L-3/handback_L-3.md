@@ -1,13 +1,14 @@
 # Handback L-3 — Espejos en inglés al día con el canónico 0.35
 
 - **Estado:** done
-- **Rama / commit:** `v0.35-L-3` @ `83d0d01` (cambios de los espejos; base `4e09c8d`; un commit posterior fija solo este hash en el handback)
+- **Rama / commit:** `v0.35-L-3` @ `3b66b6d` (cambios de los espejos tras la vuelta 1; base `4e09c8d`; un commit posterior solo fija este hash en el handback)
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
 - `SDD-MASTER-EN.md` pasó de 0.30 a 0.35: encabezado, R12, R17, R18, R28, R29 (sumas de 0.31–0.34), §5 (`.gitattributes`, `loops.md`, `loops/<name>.md`, `depende_de`, `skills/`, opcionales enterprise), §7 (aclaración del loop con humano vs R33) y §11 (intro con `historial-master.md` como referencia + tabla 0.35 a 0.32 traducida).
 - `SDD-COMPACT-EN.md`: versión 0.35 y la línea del arnés con `depende_de=graph` y `sdd/loops/<name>.md`.
 - R33 ya estaba en el espejo; quedó verificada contra el canónico.
+- Vuelta 1 (review): §6.1 sin el párrafo viejo de dictado, `depende_de` literal en el árbol §5, R26/R27 en el orden del canónico en el compact, línea en blanco en R27, y R33 (y R28/R29/R31) unificadas a «can be turned off».
 
 ## No hecho / pendiente
 - Nada de la tarjeta. `historial-master.md` no se tradujo (por criterio 3).
@@ -79,11 +80,11 @@ ROJO — 1 FAIL, 0 WARN
 ```
 Es preexistente: el repo del paquete no tiene `harness.config.json` en la raíz. No lo creé (fuera de zona).
 
-`git diff --stat` (antes del commit):
+`git diff --stat 4e09c8d HEAD -- <espejos>` (tras la vuelta 1):
 ```text
- SDD-COMPACT-EN.md |  4 ++--
- SDD-MASTER-EN.md  | 37 +++++++++++++++++++++++++------------
- 2 files changed, 27 insertions(+), 14 deletions(-)
+ SDD-COMPACT-EN.md |  6 +++---
+ SDD-MASTER-EN.md  | 50 ++++++++++++++++++++++++++++++--------------------
+ 2 files changed, 33 insertions(+), 23 deletions(-)
 ```
 
 ### Script de comparación (un solo uso, fuera del repo)
@@ -160,3 +161,6 @@ sys.exit(1 if fails else 0)
 
 ## Próximo paso sugerido
 - Review independiente de L-3 (re-ejecutar el script sobre la rama).
+
+## Apéndice: vueltas
+- Vuelta 1 (3b66b6d): el review pidió (1) borrar de §6.1 el párrafo «Note: I dictate…» que el canónico ya no tiene, (2) dejar `depende_de` sin traducir en el árbol §5; y de menores (3) R27 antes de R26 en `SDD-COMPACT-EN.md`, (4) línea en blanco entre los dos párrafos de R27, (5) unificar «can be disabled»/«toggleable» a «can be turned off» (la forma más repetida, 12 de 16 usos). Hecho todo. El script de comparación sigue en `RESULT: IGUAL` (77 OK, 0 FAIL). Bloques de §6: ES [15, 11] líneas, EN [15, 10] (la diferencia de 1 es solo reflow, según el review). El rojo de `verify.py` por `harness.config.json` es preexistente y lo maneja el leader.
