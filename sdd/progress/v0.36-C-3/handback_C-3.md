@@ -1,7 +1,7 @@
 # Handback C-3 — Embedder local con fastembed
 
 - **Estado:** done
-- **Rama / commit:** `v0.36-C-3` @ `3ca371f` (código vuelta 2; el handback va en el commit siguiente)
+- **Rama / commit:** `v0.36-C-3` @ `7c5d48c` (código vuelta 3; el handback va en el commit siguiente)
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
@@ -122,3 +122,16 @@ Mutantes vuelta 2 (sobre `embedders.py`, 120 s por corrida, test que lo mata):
 | cache de otro modelo cuenta | sobrevivió → test ajustado → muerto | test_cache_con_otro_modelo_igual_avisa |
 | no convierte a float | sobrevivió → test nuevo → muerto | test_convierte_cualquier_secuencia_numerica_a_lista_de_floats |
 | dim 768, modelo L6, nunca/siempre avisa, recarga cada vez, error de red sin envolver, mensaje sin «internet», lista vacía carga, `obtener` sin local, RuntimeError sin fastembed, `cache_dir=None` | muertos | tests de la vuelta 1 y 2 |
+- Vuelta 3 (`7c5d48c`, review vuelta 2 @ 3ca371f): H7 (MEDIA) la variable `HF_HUB_DISABLE_SYMLINKS_WARNING` no tenía efecto porque `huggingface_hub` la lee al importarse y se fijaba después del `from fastembed import`. Ahora `_importar_fastembed()` hace `os.environ.setdefault(...)` **antes** del import (respeta lo del usuario; queda en el entorno del proceso, justificado: `huggingface_hub` la necesita ahí). Se reemplazó el test del no-op (`test_el_entorno_del_proceso_no_queda_cambiado`) por `test_la_variable_de_symlinks_se_fija_antes_del_import_y_respeta_la_del_usuario` (módulo falso cuya `TextEmbedding` registra la variable al importarse) y `TestSymlinksHF.test_huggingface_hub_ve_la_variable_tras_importar_fastembed` (subproceso `-I`; exige `huggingface_hub.constants.HF_HUB_DISABLE_SYMLINKS_WARNING is True`; salteado con motivo sin fastembed). README corregido. BAJA (M11): el `subTest` agrega «otros archivos sin onnx» (`config.json`, `tokenizer.json`).
+- Rojo: contra el `embedders.py` de 3ca371f (sin `_importar_fastembed`) los dos tests nuevos fallan (`ERROR ...se_fija_antes_del_import...`, `FAIL ...huggingface_hub_ve_la_variable...`, Ran 22, failures=1 errors=1). Ese rojo es débil (falta la función); el rojo fuerte son los mutantes de abajo.
+- Suite: 95 tests OK con el venv; 95 OK (2 salteados con motivo) con el Python del sistema; `verify.py --changed` VERDE.
+
+Mutantes vuelta 3 (`subprocess.run(..., timeout=120)` con el intérprete del venv, «Ran 22 tests» de `test_local.py` en cada corrida, scripts en `$TEMP/c3impl/`):
+| Mutante | Resultado | Test que lo mata |
+|---|---|---|
+| H7a sin `setdefault` | muerto | ambos tests de symlinks |
+| H7b `setdefault` después del import | muerto | ambos tests de symlinks |
+| H7c pisa el valor del usuario (`__setitem__`) | muerto | test unitario de symlinks |
+| M11 `glob("*/*.onnx")`→`glob("*/*")` | muerto | test_snapshots_vacio_o_sin_onnx_no_cuenta_como_bajado [otros archivos sin onnx] |
+| M1 aviso a stdout | muerto | test_el_aviso_va_a_stderr_y_stdout_queda_limpio |
+| M3 sin aviso previo | muerto | test_aviso_sale_antes_de_la_carga_del_modelo y _aunque_la_carga_falle |
