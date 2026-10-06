@@ -132,3 +132,46 @@ buscar "copió un archivo para que pase el check", top 3:
 
 ## Próximo paso sugerido
 - C-8: medir el objetivo 3 con embeddings locales sobre estas 71 notas (`importar-sdd .` en un `CEREBRO_DIR` real).
+
+## Apéndice: vuelta 2 (review CHANGES_REQUESTED @ 51767ab) — código @ `8cf57af`
+Estado: done. Incidente: el reviewer corrió mutantes en mi worktree y un `git checkout` pudo descartar cambios; verifiqué que `importar.py` tenía todo (suite 112 OK) y commiteé enseguida.
+
+Cambios (secciones «Hecho/Evidencia» de arriba siguen valiendo; esto las completa):
+- ALTA R1: `test_proyecto_sdd_universal_como_enlace_hacia_afuera_no_escribe_afuera`.
+- MEDIA ids: id de hallazgo = `<sufijo del archivo>-hN` (p. ej. `2026-10-h1`); ids repetidos dentro de una fuente se detectan antes de escribir, `ErrorImportar` con el id y el archivo, rc 2, nada escrito (`TestIds`: dos archivos de hallazgos con `H1` → segunda corrida 0 actualizadas).
+- BAJA R7: el test de `.roto` ahora hace tres roturas.
+- Escenarios: solo la sección «## 1 · Matriz» (S99 de otra tabla ya no se importa).
+- Título de hallazgo = «Qué pasó» entero en una línea.
+- La fecha de una nota ya importada se conserva (nombre del archivo): un cambio de «Versión» no reescribe nada; el hash de cambio es por fila.
+- Huérfanas: notas con marca `importado:` cuya fila ya no está → aviso por stderr y `N huérfanas (se dejan)` en el resumen; no se borran; las notas propias sin marca no cuentan.
+- Se quitó la normalización CRLF redundante de `importar.py` (`read_text` ya normaliza) y se agregó un test de nota guardada con CRLF.
+
+Rojo antes, contra el código de 51767ab/d9c84cd con los tests nuevos y `huerfanas` como único stub (`git rev-parse --short HEAD` = d9c84cd; `python -m unittest discover -s cerebro/tests`): `Ran 112 tests`, `FAILED (failures=11, errors=2)` — fallan los de ids, matriz, título, versión, huérfanas y los conteos del CLI; los tests de R1, R7, R13, R4 y R3 pasaban contra el código bueno, así que su rojo se mide contra el mutante (tabla).
+Verde después (`python -m unittest discover -s cerebro/tests`, 3.14 y `py -3.11`): `Ran 112 tests ... OK`.
+`verify.py --changed`: el mismo único FAIL previo (`sdd/cards/C-2.md` cita `cerebro/requirements.txt`).
+
+Mutantes (script Python con `subprocess.run(timeout=120)` y `sys.executable -m unittest discover -s cerebro/tests`, no `timeout.exe`; en cada corrida se imprime «Ran N tests»; `git checkout` del archivo después; `git status` limpio):
+| # | Mutante | Resultado (todas «Ran 112 tests») |
+|---|---|---|
+| R1 | sin `carpeta.resolve().parent != raiz_real` | muerto: `test_proyecto_sdd_universal_como_enlace_hacia_afuera_no_escribe_afuera` |
+| R3 | lee la nota sin normalizar CRLF | muerto: `test_nota_guardada_con_crlf_por_otro_editor_…` |
+| R4 | sin el caso `\|` al final de la fila | muerto: `test_celdas_con_pipe_escapado_al_final_de_la_fila` |
+| R5 | `_sin_marca` quita toda línea `importado:` | **equivalente**: el cuerpo no puede tener una línea que empiece con `importado: ` (las celdas no tienen saltos y las lecciones se aplanan con `" ".join`; las líneas del cuerpo empiezan con `**Etiqueta:**`). Sobrevive sin entrada alcanzable |
+| R7 | `while` → `if` en `.roto` | muerto: `test_un_segundo_indice_roto_…` (3 roturas) |
+| R13 | `listar` entra en carpetas con punto | muerto: `test_carpetas_con_punto_dentro_de_proyectos_no_se_listan` |
+| V1 | id de hallazgo sin archivo de origen | muerto |
+| V2 | sin detección de ids repetidos | muerto (2 tests) |
+| V3 | todas las tablas, no solo la matriz | muerto |
+| V4 | título de hallazgo «Hn · Dónde» | muerto |
+| V5 | la fecha de la nota no se conserva | muerto (`test_cambiar_la_version_…`) |
+| V6 / V7 / V8 | sin huérfanas / huérfana sin marca / CLI sin aviso | muertos |
+
+Corrida real nueva (`CEREBRO_DIR` temporal, borrado):
+```text
+importadas: 42 escenario, 26 hallazgo, 3 leccion
+71 nuevas, 0 actualizadas, 0 sin cambios, 0 editadas a mano (no se pisaron), 0 huérfanas (se dejan)
+71 nota(s) revisadas, 0 error(es).
+0 nuevas, 0 actualizadas, 71 sin cambios, 0 editadas a mano ...     # 2.ª corrida
+buscar "el loop no sabe cuándo frenar" (falso): S39, S22, H22 (informativo)
+buscar "copió un archivo para que pase el check" (falso): S42, S29, S32
+```
