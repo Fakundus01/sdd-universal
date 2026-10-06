@@ -14,7 +14,8 @@ function estadoActual(){
     nivel: $("clvl").value,
     perfil: $("cperf").value,
     playbooks: [...document.querySelectorAll("#pbs input:checked")].map(x => x.value),
-    tecnologias: [...sel]
+    tecnologias: [...sel],
+    ia: $("cia").checked
   };
 }
 
@@ -23,9 +24,14 @@ function aplicarCombinacion(c){
   if (TYPES[c.tipo]) $("ctype").value = c.tipo;
   if (STACKS[c.stack]) $("cstack").value = c.stack;
   $("clvl").value = c.nivel || "PRO";
-  $("cperf").value = c.perfil || "ESTRICTO";
+  ReglasUI.fijarPerfil(c.perfil || "ESTRICTO");
+  $("cperf").value = ReglasUI.perfil();
   document.querySelectorAll("#pbs input").forEach(i => i.checked = (c.playbooks || []).includes(i.value));
-  sel.clear(); (c.tecnologias || []).forEach(t => sel.add(t));
+  $("cia").checked = Boolean(c.ia);
+  // Texto ajeno (link, base): una línea, sin control y con tope (M6, R26).
+  sel.clear();
+  (Array.isArray(c.tecnologias) ? c.tecnologias : []).map(Prompt.limpiarTecnologia).filter(Boolean)
+    .slice(0, 40).forEach(t => sel.add(t));
   renderSel(); renderTech();
   $("go").click();
 }
@@ -92,7 +98,7 @@ Sesion.alCambiar(u => {
 
 // El botón del pie lleva al perfil: cerrar sesión vive ahí, junto con todo
 // lo demás de la cuenta, en vez de escondido detrás de un confirm().
-$("authbtn").onclick = () => Sesion.usuario() ? App.ir("perfil") : $("authdlg").showModal();
+$("authbtn").onclick = () => Sesion.usuario() ? App.ir("perfil") : irALogin();
 $("authx").onclick = () => $("authdlg").close();
 
 /* --- avisos de la barra superior --- */
@@ -178,3 +184,57 @@ $("autholvide").onclick = () => {
     decirAuth("ok", "Si ese mail tiene cuenta, te llega un link para poner una contraseña nueva.");
   });
 };
+
+/* --- entrar: la vista /web/login (ADR-014) ---
+   Entrar es opcional y vive en su ruta. Al terminar vuelve a ?volver=, pero
+   solo si Rutas.volverSeguro lo acepta: un `volver` sin validar es una
+   redirección abierta. El diálogo de cuenta queda para cambiar la contraseña. */
+window.irALogin = function irALogin(){
+  if (App.vistaActual() === "login") return;
+  App.ir("login", true, "?volver=" + encodeURIComponent(location.pathname + location.search));
+};
+
+const volverDeLogin = () =>
+  Rutas.volverSeguro(new URLSearchParams(location.search).get("volver"), Rutas.base(location.pathname));
+
+function pintarLogin(){
+  const u = Sesion.usuario();
+  $("loginform").hidden = Boolean(u);
+  $("loginDentro").hidden = !u;
+  $("loginsin").href = volverDeLogin();
+  if (u){
+    $("loginDentro").innerHTML = `Ya entraste como <b>${esc(u.email)}</b>.<br>
+      <a class="btn b-go" href="${esc(volverDeLogin())}">Seguir →</a>`;
+  } else if (!Sesion.activo()){
+    $("loginmsg").className = "authmsg err";
+    $("loginmsg").textContent = "Las cuentas no están configuradas en esta instalación: todo se guarda en este navegador.";
+    $("loginsend").disabled = true;
+  }
+}
+
+function decirLogin(clase, texto){ $("loginmsg").className = "authmsg " + clase; $("loginmsg").textContent = texto; }
+
+$("loginform").onsubmit = async e => {
+  e.preventDefault();
+  const b = $("loginsend");
+  b.disabled = true; b.textContent = "Entrando…";
+  try {
+    await Sesion.entrar($("loginmail").value.trim(), $("loginpass").value);
+    decirLogin("ok", "¡Hola! Volviendo…");
+    // Navegación completa: la página que sigue arranca ya con la sesión puesta.
+    location.href = volverDeLogin();
+  } catch (err) {
+    decirLogin("err", err.message);
+    b.disabled = false; b.textContent = "Entrar";
+  }
+};
+
+$("loginolvide").onclick = async () => {
+  const email = $("loginmail").value.trim();
+  if (!email){ $("loginmail").focus(); return decirLogin("err", "Escribí tu mail primero."); }
+  try {
+    await Sesion.recuperar(email);
+    decirLogin("ok", "Si ese mail tiene cuenta, te llega un link para poner una contraseña nueva.");
+  } catch (err) { decirLogin("err", err.message); }
+};
+

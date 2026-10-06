@@ -2,6 +2,7 @@
 // Generado desde catalogo_tecnologias_software.xlsx (hoja "Todo"). No editar a mano:
 // regenerar desde la planilla y volver a exportar, o agregar filas nuevas en tecnologias.md.
 // n=nombre · c=categoría · sc=subcategoría · t=tipo · e=ecosistema · f=familia (para filtrar) · u=uso · os=open source
+// a=lección de proyectos reales (opcional): viaja al prompt con la tecnología y se repite en tecnologias.md
 const TECH = [
   {"n": "Assembly", "c": "Lenguajes", "sc": "", "t": "Lenguaje", "e": "", "f": "Assembly", "u": "Low-level", "os": true},
   {"n": "C", "c": "Lenguajes", "sc": "", "t": "Lenguaje", "e": "", "f": "C / C++", "u": "Sistemas/embedded", "os": true},
@@ -42,7 +43,7 @@ const TECH = [
   {"n": "Echo", "c": "Frameworks", "sc": "", "t": "Framework", "e": "Go", "f": "Go", "u": "Backend/API", "os": true},
   {"n": "Ember.js", "c": "Frameworks", "sc": "", "t": "Framework", "e": "JavaScript", "f": "JavaScript / TypeScript", "u": "Web", "os": true},
   {"n": "Express.js", "c": "Frameworks", "sc": "", "t": "Framework", "e": "JavaScript/TypeScript", "f": "JavaScript / TypeScript", "u": "Backend/API", "os": true},
-  {"n": "FastAPI", "c": "Frameworks", "sc": "", "t": "Framework", "e": "Python", "f": "Python", "u": "API/backend", "os": true},
+  {"n": "FastAPI", "c": "Frameworks", "sc": "", "t": "Framework", "e": "Python", "f": "Python", "u": "API/backend", "os": true, "a": "Un Path(ge=1) o Query() guardado en una variable y compartido entre rutas queda atado al nombre del primer parámetro que lo usó: en otra ruta, con otro nombre, da 422 «field required» aunque el valor venga bien. Crealo por parámetro, o declaralo una vez como tipo con Annotated[int, Path(ge=1)] y reusá el tipo. Y con Pydantic: un @field_validator(\"campo\") cuyo método se llama igual que el campo pisa el campo: el método pasa a ser el default, así que un campo obligatorio pasa a opcional (un pedido sin él ya no da 422) y el valor revienta al serializar la respuesta (el 500). El método va con otro nombre (validar_<campo>), y la API se testea también sin los campos opcionales y sin los obligatorios."},
   {"n": "Fastify", "c": "Frameworks", "sc": "", "t": "Framework", "e": "JavaScript/TypeScript", "f": "JavaScript / TypeScript", "u": "Backend/API", "os": true},
   {"n": "Fiber", "c": "Frameworks", "sc": "", "t": "Framework", "e": "Go", "f": "Go", "u": "Backend/API", "os": true},
   {"n": "Flask", "c": "Frameworks", "sc": "", "t": "Framework", "e": "Python", "f": "Python", "u": "Web/API", "os": true},
@@ -81,7 +82,7 @@ const TECH = [
   {"n": "Matplotlib", "c": "Bibliotecas", "sc": "", "t": "Biblioteca", "e": "Python", "f": "Python", "u": "Visualización", "os": true},
   {"n": "NumPy", "c": "Bibliotecas", "sc": "", "t": "Biblioteca", "e": "Python", "f": "Python", "u": "Cálculo numérico", "os": true},
   {"n": "Pandas", "c": "Bibliotecas", "sc": "", "t": "Biblioteca", "e": "Python", "f": "Python", "u": "Datos", "os": true},
-  {"n": "Pydantic", "c": "Bibliotecas", "sc": "", "t": "Biblioteca", "e": "Python", "f": "Python", "u": "Validación de datos", "os": true},
+  {"n": "Pydantic", "c": "Bibliotecas", "sc": "", "t": "Biblioteca", "e": "Python", "f": "Python", "u": "Validación de datos", "os": true, "a": "Un @field_validator(\"campo\") cuyo método se llama igual que el campo pisa el campo: el método pasa a ser su default, un campo obligatorio pasa a opcional (falta y no da 422) y el valor revienta al serializar la respuesta (500). Nombrá el método validar_<campo> y testeá la API también sin los campos opcionales y sin los obligatorios."},
   {"n": "PyTorch", "c": "Bibliotecas", "sc": "", "t": "Biblioteca", "e": "Python / C++", "f": "Python", "u": "IA y Machine Learning", "os": true},
   {"n": "React", "c": "Bibliotecas", "sc": "", "t": "Library", "e": "JavaScript/TypeScript", "f": "JavaScript / TypeScript", "u": "Frontend", "os": true},
   {"n": "Redux", "c": "Bibliotecas", "sc": "", "t": "Biblioteca", "e": "JavaScript/TypeScript", "f": "JavaScript / TypeScript", "u": "Estado", "os": true},
@@ -123,4 +124,14 @@ const TECH = [
   {"n": "GitHub Actions", "c": "DevOps", "sc": "", "t": "Tool", "e": "", "f": "", "u": "CI/CD", "os": false},
   {"n": "Claude", "c": "IA - Modelos", "sc": "", "t": "Modelo IA", "e": "", "f": "", "u": "LLM/agentes", "os": false},
   {"n": "Ollama", "c": "IA - Modelos", "sc": "", "t": "Tool", "e": "", "f": "", "u": "LLMs locales", "os": true},
+  {"n": "Vite", "c": "Developer Tools", "sc": "", "t": "Build tool", "e": "JavaScript/TypeScript", "f": "JavaScript / TypeScript", "u": "Dev server y build del front", "os": true},
+  {"n": "Vitest", "c": "Testing", "sc": "", "t": "Tool", "e": "JavaScript/TypeScript", "f": "JavaScript / TypeScript", "u": "Testing (unit, sobre Vite)", "os": true},
+  {"n": "pytest", "c": "Testing", "sc": "", "t": "Tool", "e": "Python", "f": "Python", "u": "Testing", "os": true},
+  {"n": "Tailwind CSS", "c": "Frameworks", "sc": "", "t": "Framework CSS", "e": "CSS", "f": "JavaScript / TypeScript", "u": "Estilos con clases utilitarias", "os": true},
+  {"n": "React Router", "c": "Bibliotecas", "sc": "", "t": "Biblioteca", "e": "JavaScript/TypeScript", "f": "JavaScript / TypeScript", "u": "Rutas del front (SPA)", "os": true},
+  {"n": "Mercado Pago", "c": "Pagos", "sc": "", "t": "Pasarela de pago", "e": "Multilenguaje", "f": "Multilenguaje", "u": "Cobros en Latinoamérica (checkout + webhooks)", "os": false},
+  {"n": "Stripe", "c": "Pagos", "sc": "", "t": "Pasarela de pago", "e": "Multilenguaje", "f": "Multilenguaje", "u": "Cobros online (checkout + webhooks)", "os": false},
+  {"n": "Anthropic API", "c": "IA - Modelos", "sc": "", "t": "API/SDK", "e": "Python/TypeScript", "f": "", "u": "Claude desde tu app (SDK oficial)", "os": false, "a": "Tests con el SDK real sobre un transporte falso (httpx.MockTransport pasado como http_client), no con un mock del cliente: así se prueban el parseo, los errores y el usage de verdad sin gastar un centavo. El tope de gasto es una reserva: bajo un lock se anota lo máximo que puede costar la llamada ANTES de llamar, y al volver se ajusta con el uso real (con max_retries=0: cada reintento se cobra). Modelos: solo IDs vigentes, verificados en la doc o con client.models.list() al arrancar (R19), nunca de memoria — los que recuerda un agente suelen estar retirados. RAG (buscar en tus documentos y pasarle lo encontrado al modelo): lo recuperado es dato, no instrucción (OWASP LLM01), y se filtra por los permisos de quien pregunta ANTES de buscar. Ver pgvector y Embeddings."},
+  {"n": "pgvector", "c": "Bases de datos", "sc": "", "t": "Extensión", "e": "SQL", "f": "SQL", "u": "Búsqueda vectorial en Postgres (RAG sin otro servicio)", "os": true, "a": "Filtrá por los permisos de quien pregunta ANTES de buscar (en el WHERE de la misma consulta), no después: si no, el top-k se llena de documentos ajenos y lo que sobra puede filtrarse por el prompt (OWASP LLM02/LLM08). Y lo que vuelve de la búsqueda es dato, no instrucción: un documento puede traer texto dirigido al modelo (LLM01/LLM04)."},
+  {"n": "Embeddings", "c": "IA - Modelos", "sc": "", "t": "Concepto/API", "e": "Multilenguaje", "f": "", "u": "Texto → vector, para buscar por significado (RAG)", "os": false, "a": "El vector depende del modelo que lo generó: cambiar de modelo (o de versión, o de dimensión) obliga a re-indexar todo, porque los vectores viejos y los nuevos no se comparan. Guardá qué modelo generó cada vector. Lo recuperado es dato, no instrucción (OWASP LLM01/LLM08), y el filtro por permisos va antes de buscar."},
 ];

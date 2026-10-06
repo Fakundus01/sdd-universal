@@ -256,7 +256,7 @@ const Sesion = (() => {
       return todas[0];
     }
     const fila = {...c, usuario_id: usuario().id};
-    const r = await rest("combinaciones?on_conflict=usuario_id,nombre", {
+    const r = await rest("combinaciones?on_conflict=usuario_id,nombre_clave", {
       method: "POST",
       headers: {Prefer: "resolution=merge-duplicates,return=representation"},
       body: JSON.stringify(fila)
@@ -297,14 +297,25 @@ const Sesion = (() => {
     }).catch(() => {});
   }
 
+  /* Una visita lleva la clase gruesa del dispositivo (movil/escritorio), que
+     es lo que necesita O4. La calcula metricas.js con matchMedia: el
+     user-agent no se lee nunca. Sin metricas.js cargado, va sin clase. */
+  function contarVisita(lugar){
+    if (typeof Metricas === "undefined") return contar("visita", lugar);
+    const cls = Metricas.clase(typeof matchMedia === "function" ? q => matchMedia(q) : null);
+    contar("visita", Metricas.visita(lugar, cls));
+  }
+
   /* Solo devuelve algo si el perfil tiene admin=true; para cualquier otro,
-     RLS filtra y esto es una lista vacía. */
+     RLS filtra y esto es una lista vacía. `treinta` es null si la base
+     todavía no corrió el metricas.sql de 0.33 (no existe la vista). */
   async function metricas(){
-    const [resumen, porDia] = await Promise.all([
+    const [resumen, porDia, treinta] = await Promise.all([
       rest("metricas_resumen?select=*&order=total.desc"),
-      rest("metricas_por_dia?select=*&order=dia.desc")
+      rest("metricas_por_dia?select=*&order=dia.desc"),
+      rest("metricas_30_dias?select=*&order=total.desc").catch(() => null)
     ]);
-    return {resumen, porDia};
+    return {resumen, porDia, treinta};
   }
 
   const esAdmin = async () => Boolean((await traerPerfil())?.admin);
@@ -339,7 +350,7 @@ const Sesion = (() => {
   return {
     activo, usuario, iniciar, salir,
     registrar, entrar, recuperar, pedirLink, cambiarPassword,
-    contar, metricas, esAdmin, TOPE_SIN_CUENTA,
+    contar, contarVisita, metricas, esAdmin, TOPE_SIN_CUENTA,
     listar, guardarCombinacion, borrarCombinacion, migrarLocales,
     guardarTema, traerPerfil, guardarPerfil,
     alCambiar: f => oyentes.push(f)

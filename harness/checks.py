@@ -1,11 +1,12 @@
 """Integridad del arnés: lo que corre `verify.py --quick` (harness.md §7)."""
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from config import HarnessConfig
+from config import HarnessConfig, e2e_record, sdd_mode
 from report import Report
 from repo import Repo
 
@@ -19,6 +20,20 @@ PLACEHOLDER_RE = re.compile(r"^<[^>]+>$")
 LINE_SUFFIX_RE = re.compile(r"(:\d+(:\d+)?|#L\d+(-L?\d+)?)$")  # `src/x.ts:120`, `src/x.ts#L3`
 VERDICT_RE = re.compile(r"^\W*Veredicto\b(.*)$", re.I)
 VERDICT_TOKEN_RE = re.compile(r"\b(APPROVED|CHANGES_REQUESTED)\b")
+# Celdas de tabla (H13): un nombre de archivo sin carpeta (`consultas.py`) también se revisa, contra cualquier
+# carpeta del proyecto. Solo con extensiones de archivo conocidas, para no confundir `os.path` o `req.body`.
+FILE_EXTS = ("py|pyi|ipynb|js|mjs|cjs|jsx|ts|mts|cts|tsx|vue|svelte|astro|go|rs|java|kt|kts|swift|rb|php|cs|fs|"
+             "scala|dart|lua|ex|exs|erl|c|h|cc|cpp|hpp|sql|prisma|graphql|gql|proto|sh|ps1|bat|cmd|html|htm|"
+             "css|scss|sass|less|md|mdx|json|jsonc|yml|yaml|toml|ini|cfg|xml|csv|txt|tf")
+BARE_FILE_RE = re.compile(rf"^[A-Za-z0-9_][\w.-]*\.(?:{FILE_EXTS})$")
+# Librerías que se escriben como un archivo: `Node.js` en una tabla de stack no es una ruta.
+LIBRARY_NAMES = {f"{n}.js" for n in (
+    "node", "next", "nuxt", "vue", "react", "express", "chart", "three", "d3", "p5", "alpine", "ember", "backbone",
+    "moment", "day", "anime", "socket", "angular", "nest", "solid", "preact", "fastify", "koa", "hapi", "electron",
+    "pixi", "phaser", "babylon", "matter", "tone", "paper", "fabric", "leaflet", "highcharts", "plotly", "video",
+    "howler", "lodash", "jquery", "require", "handlebars", "mustache", "mithril", "polymer", "htmx", "deno",
+    "transformers", "pdf", "tensorflow", "highlight", "swiper", "brain", "ml5", "onnxruntime-web", "mermaid")}
+WALK_SKIP = {".git", "node_modules", "__pycache__", ".venv", "venv", ".next", ".nuxt", "dist", "build"}
 
 
 def _clean_value(raw: str) -> str:
@@ -60,6 +75,8 @@ class Card:
     meta: dict[str, str]
     body: str
     criteria: list[str] = field(default_factory=list)
+    deps: list[str] = field(default_factory=list)
+    deps_error: str = ""  # `depende_de` en un formato que no se sabe leer (vacío si está bien)
 
     @property
     def id(self) -> str:
@@ -74,15 +91,41 @@ class Card:
         text = path.read_text(encoding="utf-8-sig", errors="replace")
         meta: dict[str, str] = {}
         body = text
+        deps: list[str] = []
+        deps_error = ""
         if text.startswith("---"):
             head, sep, rest = text[3:].partition("\n---")
             if sep:
                 body = rest
-                for line in head.splitlines():
+                lines = head.splitlines()
+                for n, line in enumerate(lines):
                     key, colon, value = line.partition(":")
                     if colon and key.strip():
                         meta[key.strip()] = _clean_value(value)
-        return cls(path, meta, body, cls._criteria(body))
+                        if key.strip() == "depende_de":
+                            deps, deps_error = cls._parse_deps(value, lines[n + 1:])
+        card = cls(path, meta, body, cls._criteria(body))
+        card.deps, card.deps_error = deps, deps_error
+        return card
+
+    @staticmethod
+    def _parse_deps(value: str, following: list[str]) -> tuple[list[str], str]:
+        """`depende_de: [A, B]` (o `[A,B]`, con comillas). Ausente o `[]` es sin dependencias; cualquier otra
+        forma (lista YAML en varias líneas, valores sin corchetes) se rechaza en vez de perderse en silencio."""
+        value = value.strip()
+        if value[:1] == "#":
+            value = ""  # `depende_de: # nada`: solo un comentario
+        if value[:1] in ("'", '"') and len(value) > 1 and value[-1] == value[0]:
+            value = value[1:-1].strip()  # `depende_de: "[A]"`, YAML válido
+        if not value:
+            if following and re.match(r"\s*-\s", following[0]):
+                return [], "lista en varias líneas; escribila en una línea, `depende_de: [A, B]`"
+            return [], ""
+        match = re.match(r"^\[([^\[\]]*)\]\s*(?:#.*)?$", value)
+        if not match:
+            return [], f"{value!r} no está entre corchetes; escribí `depende_de: [A, B]`"
+        items = (item.strip().strip("'\"").strip() for item in match.group(1).split(","))
+        return list(dict.fromkeys(i for i in items if i and not PLACEHOLDER_RE.match(i))), ""
 
     @staticmethod
     def _criteria(body: str) -> list[str]:
@@ -102,6 +145,8 @@ class HarnessChecks:
         self.report = report
         self.repo = repo or Repo(root)
         self.cards: list[Card] = []
+        self.mode = sdd_mode(root, config.master)
+        self._names: set[str] | None = None
 
     def run_all(self) -> None:
         self.check_required()
@@ -115,8 +160,13 @@ class HarnessChecks:
 
     # ── archivos base ────────────────────────────────────────────────────────
     def check_required(self) -> None:
-        if not (self.root / "sdd" / "SDD-MASTER.md").is_file():
-            self.report.fail("Falta sdd/SDD-MASTER.md: el arnés se apoya en el SDD (R30)")
+        if not (self.root / self.config.master).is_file():
+            self.report.fail(f"Falta {self.config.master}: el arnés se apoya en el SDD (R30)")
+        if self.mode == "LITE":
+            # harness.md §10: en LITE no hay cards/ ni progress/. El pre-commit corre --quick en cada commit:
+            # crear current.md acá ensuciaría el working tree para nada.
+            self.report.ok("Modo LITE (R18): sin memoria en disco; el estado vive en sdd/sdd-lite.md")
+            return
         current = self.repo.progress_dir / "current.md"
         if current.is_file():
             self.report.ok(f"Memoria en disco: {self._rel(current)}")
@@ -149,12 +199,17 @@ class HarnessChecks:
                 errors += 1
                 continue
             branch = card.meta.get("rama", "")
+            if PLACEHOLDER_RE.match(branch):
+                branch = ""  # `rama: <rama>` copiado de una plantilla sin completar
             if card.state == "in_progress":
                 if not branch:
-                    self.report.fail(f"{rel}: in_progress sin 'rama'")
+                    self.report.fail(f"{rel}: in_progress sin 'rama' — agregá `rama: {self.repo.branch}` "
+                                     "(la rama donde se trabaja) al frontmatter")
                     errors += 1
                 else:
                     in_progress.setdefault(branch, []).append(card.id)
+            if card.state == "review" and not branch:
+                self.report.warn(f"{rel}: review sin 'rama' — al pasar a done va a fallar. {self._branch_hint(card)}")
             if card.state == "done":
                 errors += self._check_done(card, rel, branch)
             elif not card.criteria:
@@ -163,15 +218,72 @@ class HarnessChecks:
             if len(ids) > 1:
                 self.report.fail(f"rama {branch}: {len(ids)} tarjetas in_progress ({', '.join(ids)}); máximo 1 por rama")
                 errors += 1
+        errors += self._check_graph()
         if self.cards and not errors:
             self.report.ok(f"Tarjetas válidas ({len(self.cards)})")
+
+    def _check_graph(self) -> int:
+        """orchestration.md §10: cada `depende_de` existe, el grafo no tiene ciclos y no se despacha fuera de orden."""
+        by_id = {c.id: c for c in self.cards if c.id}
+        errors = 0
+        for card in self.cards:
+            if not card.id:
+                continue  # ya falla por id vacío; sus dependencias no se juzgan
+            rel = self._rel(card.path)
+            if card.deps_error:
+                self.report.fail(f"{rel}: depende_de con formato no reconocido: {card.deps_error}")
+                errors += 1
+            for dep in card.deps:
+                if dep not in by_id:
+                    self.report.fail(f"{rel}: depende_de {dep} y esa tarjeta no existe (sdd/cards/{dep}.md)")
+                    errors += 1
+                elif card.state in ("in_progress", "review", "done") and by_id[dep].state != "done":
+                    self.report.fail(f"{rel}: {card.state} pero depende de {dep}, que está {by_id[dep].state or 'sin estado'} "
+                                     "(despacho fuera de orden: esperá a que sea done)")
+                    errors += 1
+        return errors + self._check_cycles(by_id)
+
+    def _check_cycles(self, by_id: dict[str, Card]) -> int:
+        """DFS iterativo (una cadena larga no tira RecursionError); cada ciclo se informa una vez."""
+        errors = 0
+        done: set[str] = set()
+        steps = 0
+        limit = 2 * (len(by_id) + sum(len(c.deps) for c in by_id.values())) + 10  # tope: nunca cuelga
+        for start in sorted(by_id):
+            if start in done:
+                continue
+            path = [start]
+            on_path = {start}
+            stack = [iter([d for d in by_id[start].deps if d in by_id])]
+            while stack:
+                steps += 1
+                if steps > limit:
+                    self.report.fail("depende_de: el recorrido del grafo no termina (error del arnés; avisá al leader)")
+                    return errors + 1
+                dep = next(stack[-1], None)
+                if dep is None:
+                    node = path.pop()
+                    done.add(node)
+                    on_path.discard(node)
+                    stack.pop()
+                    continue
+                if dep in on_path:
+                    cycle = path[path.index(dep):] + [dep]
+                    shown = cycle if len(cycle) <= 12 else cycle[:5] + ["…"] + cycle[-4:] + [f"({len(cycle) - 1} tarjetas)"]
+                    self.report.fail(f"ciclo en depende_de: {' -> '.join(shown)} (tarjeta mal partida: re-partila)")
+                    errors += 1
+                elif dep not in done:
+                    path.append(dep)
+                    on_path.add(dep)
+                    stack.append(iter([d for d in by_id[dep].deps if d in by_id]))
+        return errors
 
     def _check_done(self, card: Card, rel: str, branch: str) -> int:
         if not card.criteria:
             self.report.fail(f"{rel}: done sin criterios de aceptación")
             return 1
         if not branch:
-            self.report.fail(f"{rel}: done sin 'rama' — no se puede ubicar su review")
+            self.report.fail(f"{rel}: done sin 'rama' — no se puede ubicar su review. {self._branch_hint(card)}")
             return 1
         review = self.root / "sdd" / "progress" / Repo.slug(branch) / f"review_{card.id}.md"
         if not review.is_file():
@@ -186,6 +298,15 @@ class HarnessChecks:
             self.report.fail(f"{self._rel(review)}: el título no dice qué hash se revisó (`# Review {card.id} @ <hash>`)")
             return 1
         return 0
+
+    def _branch_hint(self, card: Card) -> str:
+        """Cómo arreglar una tarjeta sin `rama`: si su review ya existe en una sola carpeta, esa es la rama."""
+        progress = self.root / "sdd" / "progress"
+        found = sorted(p.parent.name for p in progress.glob(f"*/review_{card.id}.md")) if progress.is_dir() else []
+        if len(found) == 1:
+            return f"Agregá `rama: {found[0]}` al frontmatter (ahí está su review)."
+        return (f"Agregá `rama: <rama>` al frontmatter: la rama donde se trabajó, la de "
+                f"sdd/progress/<rama>/review_{card.id}.md.")
 
     def check_status_coherence(self) -> None:
         status = self.root / "sdd" / "status.md"
@@ -225,10 +346,37 @@ class HarnessChecks:
                 checked += 1
                 if not (self.root / token).exists():
                     broken.append(f"{self._rel(doc)} → `{token}`")
+            for token in self._bare_names_in_tables(text):
+                checked += 1
+                if token not in self._file_names():
+                    broken.append(f"{self._rel(doc)} → `{token}` (en una tabla: no hay ningún archivo con ese nombre)")
         for item in broken:
             self.report.fail(f"Ruta citada que no existe: {item}")
         if not broken:
             self.report.ok(f"Rutas citadas existen ({checked} revisadas)")
+
+    @staticmethod
+    def _bare_names_in_tables(text: str) -> list[str]:
+        """`consultas.py` (sin carpeta, entre backticks) en una fila de tabla. Con carpeta ya lo cubre la regla
+        general; en prosa no se revisa, porque ahí suele ser genérico («tu `index.js`»)."""
+        names = []
+        for line in text.splitlines():
+            if not line.lstrip().startswith("|"):
+                continue
+            for token in TICK_RE.findall(line):
+                token = LINE_SUFFIX_RE.sub("", token.rstrip(".,:;"))
+                if BARE_FILE_RE.match(token) and token.lower() not in LIBRARY_NAMES:
+                    names.append(token)
+        return names
+
+    def _file_names(self) -> set[str]:
+        """Nombres de los archivos del proyecto, en disco como la regla general. Se arma una vez y solo si hace falta."""
+        if self._names is None:
+            self._names = set()
+            for _, dirs, files in os.walk(self.root):
+                dirs[:] = [d for d in dirs if d not in WALK_SKIP]
+                self._names.update(files)
+        return self._names
 
     # ── handbacks de la rama actual ──────────────────────────────────────────
     def check_handbacks(self) -> None:
@@ -250,9 +398,9 @@ class HarnessChecks:
     def check_e2e_registered(self) -> None:
         if not self.config.e2e or self.e2e_running:
             return
-        record = self.root / "sdd" / "progress" / "e2e.md"
+        record = e2e_record(self.root, self.config.master)
         if not record.is_file() or not record.read_text(encoding="utf-8").strip():
-            self.report.warn("e2e declarado pero sin ninguna corrida verde registrada en sdd/progress/e2e.md "
+            self.report.warn(f"e2e declarado pero sin ninguna corrida verde registrada en {self._rel(record)} "
                              "(corré `verify.py --e2e`): un E2E que nunca corrió no prueba nada")
 
     def _rel(self, path: Path) -> str:

@@ -19,3 +19,6 @@ desktop.ini
 # Supabase: la clave anon es pública y SÍ se versiona (web/supabase-config.js).
 # La service_role nunca entra al repo — si algún día hace falta, va en .env.
 .supabase/
+
+# Entorno local (ADR-012): el clúster de Postgres, su log y el secreto de los JWT
+dev/.data/

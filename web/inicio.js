@@ -22,7 +22,7 @@ async function abrirPreview(url, titulo){
     $("mdcuerpo").innerHTML = Md.render(t);
     $("mdcuerpo").scrollTop = 0;
     $("mdinfo").textContent = `${t.split("\n").length} líneas · ${(t.length / 1024).toFixed(1)} KB`;
-    Sesion.contar("visita", "md:" + url.split("/").pop());
+    Sesion.contar("visita", "md:" + url.split("/").pop().split(/[?#]/)[0]);
   } catch (e) {
     $("mdcuerpo").innerHTML = `<p class="dlg-empty">No se pudo cargar el archivo (${esc(e.message)}).</p>`;
   } finally {
@@ -62,21 +62,23 @@ $("share").onclick = async () => {
   const o = {n: $("comboname").value.trim(), t: $("ctype").value, s: $("cstack").value,
              l: $("clvl").value, p: $("cperf").value, e: $("cexiste").value,
              pb: [...document.querySelectorAll("#pbs input:checked")].map(x => x.value),
-             tec: [...sel]};
-  const url = location.origin + location.pathname + "#/combinador?c=" + b64url.cod(o);
+             tec: [...sel], ia: $("cia").checked};
+  // Ruta real (ADR-015): /web/combinador?c=…; los links viejos con #/ los convierte rutas.js.
+  const url = location.origin + Rutas.url("combinador", "?c=" + b64url.cod(o), location.pathname);
   try { await navigator.clipboard.writeText(url); } catch { /* sin portapapeles */ }
   $("share").textContent = "¡Link copiado!";
   setTimeout(() => $("share").textContent = "🔗 Compartir link", 2200);
 };
 
 function cargarComboDelLink(){
-  const m = location.hash.match(/[?&]c=([A-Za-z0-9_-]+)/);
-  if (!m) return;
+  if (App.vistaActual() !== "combinador") return;
+  const c = new URLSearchParams(location.search).get("c");
+  if (!c || !/^[A-Za-z0-9_-]+$/.test(c)) return;
   try {
-    const o = b64url.dec(m[1]);
+    const o = b64url.dec(c);
     if (o.e) $("cexiste").value = o.e;
     aplicarCombinacion({nombre: o.n, tipo: o.t, stack: o.s, nivel: o.l,
-                        perfil: o.p, playbooks: o.pb, tecnologias: o.tec});
+                        perfil: o.p, playbooks: o.pb, tecnologias: o.tec, ia: o.ia});
     avisar("Cargamos la combinación que venía en el link. Revisala y generá tu paquete.");
   } catch { avisar("El link traía una combinación que no se pudo leer.", true); }
 }
@@ -102,7 +104,7 @@ function pintarBusca(){
   const q = $("kq").value.trim();
   kRes = q.length < 2 ? [] : Buscador.filtrar(itemsBusca(), q, ["t", "d"]).slice(0, 12);
   $("kres").innerHTML = q.length < 2
-    ? `<p class="k-vacio">Escribí al menos dos letras. Busca en las cards, las 120 tecnologías, las 32 reglas y las páginas.</p>`
+    ? `<p class="k-vacio">Escribí al menos dos letras. Busca en las cards, las 130 tecnologías, las 33 reglas y las páginas.</p>`
     : kRes.length
       ? kRes.map((r, i) => `<button type="button" data-k="${i}" class="${i === kMarcada ? "marcada" : ""}">
           <span class="tipo">${r.tipo}</span><b>${Buscador.resaltar(r.t, q)}</b><small>${esc(r.d)}</small>
@@ -157,7 +159,9 @@ function reglasMontar(modo){
 }
 const VISTA_HOOKS = {
   tecnologias(){ if ($("techdlg").open) $("techdlg").close(); techMontar("vista"); renderTech(); },
-  reglas(){ if ($("reglasdlg").open) $("reglasdlg").close(); reglasMontar("vista"); ReglasUI.abrir(false); }
+  reglas(){ if ($("reglasdlg").open) $("reglasdlg").close(); reglasMontar("vista"); ReglasUI.abrir(false); },
+  preferencias(){ Perfil.mostrar(); },
+  login(){ pintarLogin(); }
 };
 // si venís desde el link de la guía, abrimos el configurador directo
 if (sessionStorage.getItem("sdd-abrir-reglas")){
@@ -186,7 +190,8 @@ Buscador.sugerir({
    si preguntamos y después no cambia nada, preguntamos al pedo. */
 window.aplicarPerfil = function aplicarPerfil(p){
   if (p.nivel) $("clvl").value = p.nivel;
-  if (p.perfil_sdd) $("cperf").value = p.perfil_sdd;
+  // El onboarding no pisa una configuración que la persona ya armó en «Mis reglas».
+  if (p.perfil_sdd && !ReglasUI.hayCambios()){ ReglasUI.fijarPerfil(p.perfil_sdd); $("cperf").value = ReglasUI.perfil(); }
   if (p.interes && TYPES[p.interes]) $("ctype").value = p.interes;
   if (p.agente && p.agente !== "otro"){
     const espejos = {claude: "CLAUDE.md", codex: "AGENTS.md",
@@ -196,11 +201,10 @@ window.aplicarPerfil = function aplicarPerfil(p){
 };
 
 (async () => {
-  Sesion.contar("visita", location.pathname);
+  Sesion.contarVisita(location.pathname);
   if (Sesion.activo()) Feedback.empezar();
-  // El portón es quien arranca la sesión (y tapa la página si no hay);
-  // acá solo se espera su resultado para no llamar a Sesion.iniciar() dos veces.
-  const r = await (typeof Porton !== "undefined" ? Porton.arranque : Sesion.iniciar());
+  // Sin portón (ADR-014): la app ya está usable; la sesión, si hay, se suma.
+  const r = await Sesion.iniciar();
 
   // El link del mail vuelve acá con la sesión ya hecha: no se pide acceso de nuevo.
   if (r.error) avisar(r.error, true);
@@ -218,6 +222,7 @@ window.aplicarPerfil = function aplicarPerfil(p){
     if (migradas) avisar(`Subimos a tu cuenta ${migradas} combinación(es) que tenías guardadas en este navegador.`);
   }
   await renderGuardadas();
+  if (App.vistaActual() === "login") pintarLogin();
   await Perfil.iniciar(aplicarPerfil);
   cargarComboDelLink();
   Feedback.terminar();

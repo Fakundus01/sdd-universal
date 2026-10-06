@@ -7,16 +7,49 @@ from pathlib import Path
 
 # El arnés escribe bytecode y estado propio: no es «código cambiado» del proyecto.
 IGNORED_PARTS = ("__pycache__",)
+LOST = "salida no disponible"
+
+
+class OutputLost(Exception):
+    """El proceso corrió pero su salida se perdió dos veces seguidas. Trae el returncode real."""
+
+    def __init__(self, args: object, returncode: int) -> None:
+        super().__init__(f"{LOST}: el hilo que lee la salida murió dos veces (Windows bajo carga, WinError 1)")
+        self.args_run = args
+        self.returncode = returncode
+
+
+def run_captured(args: object, **kwargs: object) -> subprocess.CompletedProcess:
+    """`subprocess.run` con `capture_output`, a prueba de salida perdida.
+
+    En Windows, bajo carga, el hilo que lee el pipe puede fallar en ReadFile con `OSError: [WinError 1]`: Python
+    imprime la traza del hilo y `run` devuelve `stdout=None` (y returncode 0 si el proceso anduvo). Es transitorio:
+    se reintenta una vez; si vuelve a pasar, OutputLost, para que quien llama lo diga claro y no reviente con un
+    `.strip()` sobre None. Reintentar es seguro: lo que corre el arnés (git de lectura, test, lint, e2e) se puede
+    repetir.
+    """
+    proc = None
+    for _ in range(2):
+        proc = subprocess.run(args, capture_output=True, **kwargs)
+        if proc.stdout is not None and proc.stderr is not None:
+            return proc
+    raise OutputLost(args, proc.returncode if proc is not None else -1)
 
 
 class Repo:
     def __init__(self, root: Path) -> None:
         self.root = root
+        self.errors: list[str] = []  # salidas de git perdidas: verify.py las reporta como FAIL
 
     def git(self, *args: str, strip: bool = True) -> str | None:
         try:
-            proc = subprocess.run(["git", *args], cwd=self.root, capture_output=True, text=True,
-                                  encoding="utf-8", errors="replace", timeout=20, stdin=subprocess.DEVNULL)
+            proc = run_captured(["git", *args], cwd=self.root, text=True, encoding="utf-8", errors="replace",
+                                timeout=20, stdin=subprocess.DEVNULL)
+        except OutputLost:
+            msg = f"git: {LOST} en `git {' '.join(args)}` (se reintentó una vez): el resultado no es confiable"
+            if msg not in self.errors:
+                self.errors.append(msg)
+            return None
         except (OSError, subprocess.SubprocessError):
             return None
         if proc.returncode != 0:

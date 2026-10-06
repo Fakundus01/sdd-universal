@@ -10,91 +10,51 @@
 $("ctype").innerHTML = Object.entries(TYPES)
   .map(([k, v]) => `<option value="${k}">${esc(v.name)}</option>`).join("");
 
-function techBlock(){
-  if (!sel.size) return "";
-  const filas = [...sel].map(n => {
-    const t = TECH.find(x => x.n === n) || {n};
-    return `- ${t.n}${t.e ? ` (${t.e})` : ""}${t.u ? ` — ${t.u}` : ""}`;
-  }).join("\n");
-  return `
-TECNOLOGÍAS ELEGIDAS (las saqué del catálogo, no son una decisión de arquitectura):
-${filas}
+/* Los tipos que siempre llevan un modelo adentro: tildan solos «IA en el producto». */
+const TIPOS_CON_IA = new Set(["chatbot"]);
 
-Antes de aceptarlas: decime si esta combinación tiene sentido para este proyecto (R12),
-qué falta, qué sobra y qué chocaría entre sí. Si algo no conviene, proponé el reemplazo
-con el motivo — prefiero cambiar de idea ahora y no a mitad del código (R25). Verificá
-también las versiones actuales contra la web antes de fijarlas (R19).
-`;
+const playbooksTildados = () => [...document.querySelectorAll("#pbs input:checked")].map(x => x.value);
+/* Con IA en el producto, ia-en-el-producto viaja aunque no esté tildado. */
+const playbooksElegidos = () => Prompt.playbooks(playbooksTildados(), $("cia").checked);
+
+/* El texto lo arma prompt.js (puro y testeado); acá solo se junta el estado:
+   los campos, las tecnologías y lo que dice el configurador de reglas.
+   El perfil tiene UNA fuente, el configurador (N4 de la review de 0.33): el
+   select del combinador escribe ahí y lo refleja, así el prompt y el
+   custom.md adjunto nunca dicen dos perfiles distintos. */
+function opcionesPrompt(){
+  // CONFIANZA ya es R01=OFF para Prompt.r01Apagada: no hace falta sumarla acá.
+  const perfil = ReglasUI.perfil(), apagadas = ReglasUI.apagadas();
+  return {
+    tipo: TYPES[$("ctype").value], stack: STACKS[$("cstack").value],
+    nivel: $("clvl").value, perfil,
+    brownfield: $("cexiste").value === "brownfield",
+    playbooks: playbooksTildados(), tecnologias: [...sel], catalogo: TECH,
+    custom: ReglasUI.hayCambios(), apagadas, ia: $("cia").checked,
+    lite: Prompt.esLite({modo: ReglasUI.modo(), tipo: $("ctype").value})
+  };
 }
 
-/* Un proyecto que ya existe NO se arranca igual que uno nuevo: R15 dice que
-   primero se analiza y se genera el sdd/ reflejando lo que HAY, y recién
-   después se trabaja. Mandarle el prompt greenfield a un repo con código es
-   pedirle al agente que empiece por crear una carpeta que ya existe. */
-function promptBrownfield(){
-  const t = TYPES[$("ctype").value], lvl = $("clvl").value, perf = $("cperf").value;
-  const pbs = [...document.querySelectorAll("#pbs input:checked")].map(x => x.value);
-  return `Pegá/adjuntá primero el SDD-MASTER (está en la lista de archivos de abajo). Aplicalo.
+const buildPrompt = () => Prompt.armar(opcionesPrompt());
 
-Este repo YA EXISTE y NO tiene SDD. Aplicá R15: no toques código todavía.
-
-NIVEL: ${lvl}${lvl === "NOVATO"
-  ? " — R23 activa: pensá por tres antes de cada acción con consecuencias, explicame todo en lenguaje simple y un paso por vez."
-  : " — experiencia en código: podés ir al grano."}
-PERFIL: ${perf}${ReglasUI.hayCambios() ? "\nTengo overrides propios en custom.md (va adjunto): leelo DESPUÉS del master." : ""}
-
-QUÉ ES ESTE PROYECTO: ${t.name}
-${t.extra}
-
-Nota: dicto mis mensajes por voz. Si una palabra no te cierra, citámela y
-preguntame qué quise decir en vez de asumir (R04).
-
-PASOS:
-1. Analizá el repo con subagentes económicos (R11): estructura, git log,
-   dependencias y el estilo que ya usa el código. NO toques nada.
-2. Clasificá la superficie de ataque con las seis preguntas de seguridad.md
-   (R27) sobre lo que el proyecto YA hace, y decime qué niveles quedan activos.
-3. Generá sdd/ completo reflejando lo que EXISTE, no lo que te gustaría que
-   existiera. Si algo está a medias, que status.md lo diga con su % real.
-4. Redactá la "prompt de arranque sintética": el contexto reconstruido como si
-   el proyecto hubiera nacido con SDD.
-5. Presentame todo y esperá mi OK. Recién ahí commiteás los MD (R01).
-6. Después de eso, y no antes: proponeme las 3 mejoras que más valor agregan,
-   marcadas [MEJORA PROPUESTA] (R03), y las trabajamos por ciclos con HANDBACK.
-${techBlock()}
-PLAYBOOKS a seguir al pie de la letra cuando toque (R24): ${pbs.length ? pbs.join(", ") : "ninguno por ahora"} — te los adjunto junto con el master.`;
+/* N5: calc, guía y proceso salen en LITE aunque el configurador diga FULL,
+   que es el default y no se distingue de una elección. Se dice en pantalla. */
+function pintarAvisoLite(){
+  const lite = Prompt.TIPOS_LITE.has($("ctype").value) && ReglasUI.modo() === "FULL";
+  $("clitehint").hidden = !lite;
+  $("clitehint").textContent = lite
+    ? "Este tipo sale en modo LITE (R18): un solo sdd/sdd-lite.md, aunque «Mis reglas» diga FULL, que es el default. Si querés otro modo, elegilo ahí (COMPACT o FEDERADO); si el proyecto crece, el agente te propone pasar a FULL."
+    : "";
 }
 
-function buildPrompt(){
-  if ($("cexiste").value === "brownfield") return promptBrownfield();
-  const t = TYPES[$("ctype").value], lvl = $("clvl").value, perf = $("cperf").value;
-  const pbs = [...document.querySelectorAll("#pbs input:checked")].map(x => x.value);
-  return `Pegá/adjuntá primero el SDD-MASTER (está en la lista de archivos de abajo). Aplicalo.
-
-NIVEL: ${lvl}${lvl === "NOVATO"
-  ? " — R23 activa: pensá por tres antes de cada acción con consecuencias (plan → autocrítica → plan corregido), explicame todo en lenguaje simple, un paso por vez, y no asumas que sé nada de programación."
-  : " — experiencia en código: podés ir al grano."}
-PERFIL: ${perf} · MODO: que lo clasifiques vos (R18)${ReglasUI.hayCambios()
-  ? "\nTengo overrides propios en custom.md (va adjunto): leelo DESPUÉS del master y aplicá lo que pise."
-  : ""}
-
-TIPO DE PROYECTO: ${t.name}
-${t.extra}
-
-STACK: ${STACKS[$("cstack").value]}
-${techBlock()}
-PLAYBOOKS a seguir al pie de la letra cuando toque (R24): ${pbs.length ? pbs.join(", ") : "ninguno por ahora"} — te los adjunto junto con el master.
-
-SEGURIDAD (R27): clasificá la superficie de este proyecto con las seis preguntas de
-seguridad.md (¿login? ¿datos de personas? ¿plata? ¿IA con entrada del usuario?
-¿archivos subidos? ¿API pública?), decime qué niveles quedan activos y por qué, y
-registralo en security.md. No me pases el checklist entero: solo lo que aplica.
-
-Arrancá con el cuestionario socrático (R04) sumando las preguntas propias de este tipo de proyecto. Después: propuesta de estructura y stack → mi OK → carpeta del repo (R10, con OK) → generás sdd/ → primer commit solo con los MD (R01). Avisame, como siempre, que R01 es desactivable.`;
-}
+$("ctype").addEventListener("change", () => {
+  if (TIPOS_CON_IA.has($("ctype").value)) $("cia").checked = true;
+  pintarAvisoLite();
+});
+$("cperf").addEventListener("change", () => ReglasUI.fijarPerfil($("cperf").value));
 
 function renderFiles(){
-  const pbs = [...document.querySelectorAll("#pbs input:checked")].map(x => x.value);
+  const pbs = playbooksElegidos();
   const files = [
     {f:"../SDD-MASTER.md", n:"SDD-MASTER.md", d:"el núcleo — siempre"},
     {f:"../seguridad.md", n:"seguridad.md", d:"controles por superficie (R27)"},
@@ -102,6 +62,7 @@ function renderFiles(){
     {f:"../orchestration.md", n:"orchestration.md", d:"roles de agentes (R31)"},
     ...pbs.map(p => ({f:PB_META[p].f, n:p + ".md", d:PB_META[p].d}))
   ];
+  if (opcionesPrompt().lite) files.push({f:"../prompts/sdd-lite.md", n:"prompts/sdd-lite.md", d:"plantilla del modo LITE (R18)"});
   if (sel.size) files.push({f:"../tecnologias.md", n:"tecnologias.md", d:`${sel.size} tecnologías elegidas`});
   if ($("clvl").value === "NOVATO") files.push({f:"../GUIDE.md", n:"GUIDE.md", d:"para vos, no para el agente"});
   $("filelist").innerHTML = files.map(x =>
@@ -114,12 +75,14 @@ function renderFiles(){
 }
 
 function opcionesPaquete(){
-  const pbs = [...document.querySelectorAll("#pbs input:checked")].map(x => x.value);
+  const pbs = playbooksElegidos();
   return {
     nombre: $("comboname").value.trim() || TYPES[$("ctype").value].name,
     tipoNombre: TYPES[$("ctype").value].name,
     nivel: $("clvl").value,
-    prompt: $("ta").value || buildPrompt(),
+    // M3: siempre del estado actual, nunca del textarea. Así el ZIP no puede
+    // llevar un prompt de antes de un cambio.
+    prompt: buildPrompt(),
     playbooks: pbs,
     custom: ReglasUI.hayCambios() ? ReglasUI.generar() : null,
     conTecnologias: sel.size > 0,
@@ -151,7 +114,7 @@ function renderArbol(){
     linea("    ├── seguridad.md", "controles según lo que hacés (R27)"),
     linea("    ├── harness.md", "cómo se cierra algo (R29, R30)"),
     linea("    ├── orchestration.md", "roles de agentes (R31)"),
-    linea("    ├── prompts/", "tarjeta, handback y relevo")
+    linea("    ├── prompts/", "tarjeta, handback, relevo y sdd-lite")
   );
   if (o.custom)         filas.push(linea("    ├── custom.md", "tus reglas"));
   if (o.conTecnologias) filas.push(linea("    ├── tecnologias.md", `${sel.size} elegidas`));
@@ -181,12 +144,24 @@ async function bajar(boton, fn){
   } finally { b.disabled = false; b.textContent = original; Feedback.terminar(); }
 }
 
+/* M3 (review de 0.33): si ya se generó, cualquier cambio que toque el prompt
+   o los archivos (tipo, stack, nivel, perfil, IA, playbooks, tecnologías,
+   reglas) regenera las tres cosas juntas. Antes, destildar «IA en el
+   producto» dejaba un prompt que pedía un playbook que el ZIP ya no traía. */
+function refrescarSalida(){
+  pintarAvisoLite();
+  if ($("out").style.display !== "block") return;
+  $("ta").value = buildPrompt();
+  renderFiles(); renderArbol();
+}
+$("comb").addEventListener("change", e => {
+  if (e.target && e.target.id === "comboname") return;
+  refrescarSalida();
+});
+ReglasUI.alCambiar(() => { $("cperf").value = ReglasUI.perfil(); refrescarSalida(); });
+
 $("zipSkills").onchange = renderArbol;
 $("zipHarness").onchange = renderArbol;
-// El nivel decide GUIDE.md y agents/: si ya se generó, la vista previa lo sigue.
-$("clvl").addEventListener("change", () => {
-  if ($("out").style.display === "block"){ renderFiles(); renderArbol(); }
-});
 $("zipProyecto").onclick = () => {
   Sesion.contar("paquete", "proyecto:" + $("ctype").value);
   bajar("zipProyecto", Paquete.proyecto);
@@ -223,11 +198,14 @@ $("zipSolo").onclick = () => {
     // campos con los defaults, se genera, y se devuelven como estaban para
     // no pisar una combinación que la persona tenga a medias.
     const prestado = ["ctype", "cstack", "clvl", "cperf", "cexiste"].map(id => [id, $(id).value]);
+    const iaPrestada = $("cia").checked;
     try {
-      $("ctype").value = tipo; $("cstack").value = "reco"; $("cperf").value = "ESTRICTO";
+      // El perfil no se presta: es el del configurador (una sola fuente).
+      $("ctype").value = tipo; $("cstack").value = "reco";
       $("clvl").value = $("zrnivel").value; $("cexiste").value = $("zrexiste").value;
+      $("cia").checked = TIPOS_CON_IA.has(tipo);
       const o = {...opcionesPaquete(), nombre: TYPES[tipo].name, prompt: buildPrompt(),
-                 playbooks: ["env-setup"], conSkills: $("zrskills").checked,
+                 playbooks: Prompt.playbooks(["env-setup"], $("cia").checked), conSkills: $("zrskills").checked,
                  conHarness: $("zrharness").checked};
       const n = await Paquete.proyecto({...o, onPaso: (h, t) => Feedback.fijar(h / t)});
       $("zrmsg").textContent = `Listo: ${n} archivos.`;
@@ -238,6 +216,7 @@ $("zipSolo").onclick = () => {
       Feedback.toast("No se pudo armar el paquete", {tipo: "err", id: "zip", duracion: 3200});
     } finally {
       prestado.forEach(([id, v]) => $(id).value = v);
+      $("cia").checked = iaPrestada;
       b.disabled = false; b.textContent = original; Feedback.terminar();
     }
   };

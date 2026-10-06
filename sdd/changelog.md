@@ -4,6 +4,170 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ---
 
+## [0.35.0] — 2026-10-06 · paquete + web + arnés
+
+Loop engineering y grafo de tarjetas (S39, S40), hechos con el primer loop con contrato del paquete (`sdd/loops/dev-de-10.md`): 7 tarjetas en un grafo, implementers y reviewers independientes en worktrees, 8 de 8 vueltas.
+
+### Agregado
+- **R33 · LOOP-CON-CONTRATO** en el master (y COMPACT y espejos EN): un loop autónomo se escribe antes en `sdd/loops/<nombre>.md` (disparador, objetivo medible, verificación, regla de corte, memoria); aprobarlo autoriza commits solo en su rama. `loops.md` nuevo.
+- **Grafo de tarjetas** (`orchestration.md` §10): `depende_de` en la tarjeta, despacho por niveles, bloqueo que se propaga; las tarjetas en paralelo van cada una en su rama.
+- `verify.py` revisa el grafo (L-2): dependencia que no existe, ciclos (DFS iterativo, con tope y mensaje recortado), despacho fuera de orden, `depende_de` en un formato no reconocido; y una tarjeta sin frontmatter da FAIL, nunca una excepción.
+- Clave **`master`** en `harness.config.json` (L-7, DRIFT de L-6 con la opción A del owner): el núcleo puede vivir fuera de `sdd/`; la ruta se contiene dentro del repo (léxica y con `resolve()`).
+- El paquete **usa su propio arnés** (L-6): `harness.config.json` en la raíz; `verify.py --quick` en verde, `e2e` registrado.
+- **Smoke de la interfaz en CI** (L-4, cierra D2): `web/tests/smoke/smoke.mjs`, Chrome headless por CDP sin dependencias.
+
+### Modificado
+- La web muestra 33 reglas y 40 situaciones, con R33 desactivable en el configurador; `og.png` regenerada; `?v=35` (L-1).
+- `SDD-MASTER-EN.md` y `SDD-COMPACT-EN.md` al día con el canónico 0.35: estaban en 0.30 (L-3).
+- Citas a rutas de un proyecto normal escritas como `<proyecto>/…` en `AGENTS.md`, `CLAUDE.md` y `sdd/testing.md`, para que el chequeo de rutas citadas no las tome por rutas de este repo.
+
+### Verificado
+- Línea de base `83e798f` + MD de 0.35: `web/tests` 47/49 (los 2 rojos de R33), `verify.py --quick` ROJO (sin config).
+- Cierre: `web/tests` 49/49, `harness/tests` OK, `dev/tests` 17/17, smoke PASS (22 pasos, 0 errores de consola), `verify.py --quick` VERDE 0 FAIL 0 WARN. Reviews en `sdd/progress/v0.35-L-*/`; review del loop en `sdd/progress/v0.35-loops-grafo/review_dev-de-10.md`.
+- Lo que atajaron los reviewers: texto del EN viejo y `depende_de` traducido a `depends_on` (L-3); dos mutantes vivos y después un `UnboundLocalError` con una tarjeta sin frontmatter (L-2); tres usos del master configurado sin test (L-7). Y el leader rechazó la primera vuelta de L-6, que copió el master a `sdd/` y cambió estados de tarjetas.
+
+---
+
+## [0.34.1] — 2026-10-05 · web
+
+Los nits de la review R30 de 0.34 (aprobada).
+
+### Corregido
+- **Una URL por vista:** `/web/inicio` y `/web/index.html` pasan a `/web/` con `replaceState` (`Rutas.canonizar`, al cargar, después de convertir los `#/` viejos).
+- **`volver` a una variante de login** (`/web/login/`, `/web/login?…`, `/web/login#…`, `/web/LOGIN`) cae en `/web/`, sin una parada de más. `/web/logins` sigue siendo una ruta como cualquier otra.
+- **Paridad dev ↔ Vercel:** dev servía por nombre cualquier `web/<x>.html` que existiera (`/web/demo-con-sdd` daba el widget), y Vercel solo admin, guía y demo. Ahora `dev/servidor.mjs` exporta `PAGINAS = ["admin", "guia", "demo"]`, la misma lista que los rewrites de `vercel.json`, y un test las compara. Cualquier otro nombre sirve la app en los dos lados.
+- **«Prefiero no decir» en los cuatro pasos** del onboarding: en el último se escondía, así que para no contestar el agente había que saltar todo. Ahora deja la respuesta vacía y termina, como en los otros pasos.
+
+### Verificado
+- Rojo sobre `aa41371`: `web/tests` 49 tests, 4 en rojo (`Rutas.canonizar is not a function`, `volver` con `/web/login/`, «Prefiero no decir» escondido, `dev/servidor.mjs no exporta PAGINAS`); `dev/tests` 17, 1 en rojo (`/web/demo-con-sdd` servía el `.html`).
+- Verde: `web/tests` 49/49, `dev/tests` 17/17. `?v=34.1` en las páginas y el tablero (cambiaron `rutas.js` y `perfil.js`).
+- `sdd/`: contracts §7, ADR-015, design §4b, testing, status; `dev/README.md`.
+
+---
+
+## [0.34.0] — 2026-10-05 · web
+
+El bug que reportó el owner y las tres decisiones que tomó para que no vuelva: sin portón, rutas reales y el onboarding como página.
+
+### Corregido
+- **El onboarding aparecía encima del login y no se podía tocar ninguno.** `porton.js` tapaba la página con una capa opaca (`z-index: 99999`) y ponía `inert` a todo el `body`; el onboarding era un `<dialog>` modal, que vive en el top layer, por encima de cualquier `z-index`, y también quedaba `inert`. Los dos se abrían solos al cargar y ninguno sabía del otro. Reproducido en Chrome con clics reales antes de arreglarlo: ni la opción del onboarding ni el campo de mail respondían.
+
+### Modificado
+- **Sin portón (ADR-014).** `porton.js` se borró y salió de la app, el panel, la guía, el demo y el tablero. La app abre directo, sin cuenta. Entrar es opcional y vive en **`/web/login`**, que vuelve a `?volver=` solo si es una ruta interna bajo `/web/` (`Rutas.volverSeguro`: `//evil.com`, `https:`, `/\evil`, `javascript:`, `/web/../` y `%2e%2e` caen en `/web/`). El panel sin sesión manda a `login?volver=/web/admin`. El diálogo de cuenta quedó solo para cambiar la contraseña. El código de cuentas (`sesion.js`, Supabase y el emulador local) no cambia.
+- **Rutas reales (ADR-015).** Cada vista tiene su URL: `/web/catalogo`, `/web/combinador`, `/web/reglas`, `/web/preferencias`, `/web/login`… con `pushState` y `popstate`; se recargan y se comparten. `rutas.js` (nuevo, puro, corre primero) las arma y las lee, y convierte los links viejos `#/x?…` en `/web/x?…` sin recargar. `dev/servidor.mjs` y `vercel.json` resuelven `/web/<nombre>`: su `.html` si existe (`/web/admin`, `/web/guia`, `/web/demo`), si no `index.html`; con barra final, 308 sin barra. El patrón es cerrado y el resto sigue por la lista blanca de siempre. El link de «Compartir» es `/web/combinador?c=…`, y `writeURL` del catálogo solo toca la URL en `/web/catalogo` (antes borraba el `?c=`).
+- **El onboarding es una página: `/web/preferencias`.** Las cuatro preguntas y el nombre, con «Atrás», «Prefiero no decir» y «Saltar todo». La primera visita sin onboarding que entra por Inicio va ahí (con `replaceState`); un link profundo se respeta. «Rehacer» del perfil lleva ahí y vuelve al perfil. La apariencia se queda en `/web/configuracion`, a propósito (`design.md` §4b).
+- **Métricas sin migración:** el cambio de vista se sigue contando como `#/<vista>|clase` (una etiqueta) y la carga como `<pathname>|clase` (`/web/combinador|movil`), que ya entraba en el check. El barrido de `dev/tests` suma las rutas nuevas.
+- Los links de guía, demo y tablero a la app pasaron a rutas (`perfil`, `catalogo`, `configuracion`). El tablero ganó su favicon (pedía `/favicon.ico` y daba 404).
+- A 360 px, las filas de Manuales se salían 15 px de la tarjeta (`minmax(330px, …)`); ahora `minmax(min(100%, 330px), …)`.
+- `?v=34` en las cuatro páginas y en el tablero (que seguía en `?v=29`); el pie dice v0.34 (decía v0.31).
+- `sdd/`: spec 0.10 (C4 sin portón, C5, V10–V14), design §4b, contracts 0.10 §7 (rutas, `volver`, métricas), ADR-014 y ADR-015, status (F19 retirada, F23–F25), testing. `dev/README.md`.
+
+### Verificado
+- **Rojo** sobre `fbdf462`: el repro en Chrome (clics reales: el paso del onboarding y el mail del portón no cambian) y los tests nuevos: `web/tests` 45 tests, 9 en rojo (rutas ×3 sin `rutas.js`, portón, onboarding/login como vistas, links `#/`, `?v=34`, `vercel.json` y el `writeURL` que borraba el `?c=`); `dev/tests` 16, 1 en rojo (`/web/catalogo` daba 404).
+- **Verde:** `web/tests` 45/45, `dev/tests` 16/16.
+- **Smoke en Chrome headless** contra `:4321` reiniciado, a 360 (táctil) y 1280, con perfil limpio: `/web/` sin cuenta entra a `/web/preferencias` sin portón ni diálogos; el onboarding se completa con clics reales y termina en `/web/combinador` con el tipo elegido; se usa el catálogo y se genera un prompt sin cuenta; las once rutas recargan en su vista sin scroll horizontal; `/web/catalogo?cat=Base` marca el chip; atrás/adelante recorren `combinador → catalogo → combinador`; el link compartido carga igual en `/web/combinador?c=…`, `/web/#/combinador?c=…` y `/web/index.html#/combinador?c=…`; `/web/admin` sin sesión → «Entrar» → `/web/login?volver=%2Fweb%2Fadmin` → facundo@sdd.local → vuelve a `/web/admin` con las cuatro tarjetas; con sesión, `login?volver=//evil.com` ofrece `/web/`; «Rehacer» lleva a `/web/preferencias`. Guía, demo, tablero y panel sin portón y con los links del lateral a rutas que dan 200. Cero errores de consola.
+
+---
+
+## [0.33.2] — 2026-10-05 · web
+
+Lo que pidió la segunda vuelta del reviewer (0.33.1 aprobada, con un menor y nits), más material nuevo del owner sobre IA en el producto (OWASP Top 10 para LLMs 2025, RAG, agentes, evals).
+
+### Corregido
+- **R1 · Un anónimo elegía el `id` de `eventos`.** Con el INSERT sobre todas las columnas que Supabase da por defecto, ocupaba ids por delante de la secuencia, y el contador legítimo que caía ahí daba 409 y se perdía en silencio (`contar()` se traga el error). Ahora `anon` y `authenticated` solo tienen `INSERT (tipo, detalle)`: `id` y `dia` los pone la base. Idempotente, en `metricas.sql` (corre igual en `dev/`).
+- **R2 · La lección de Pydantic contaba el síntoma al revés.** Con pydantic 2.13.5, el validador que se llama como su campo pasa a ser el **default**: un campo obligatorio pasa a opcional y el 500 sale al serializar. Corregido en FastAPI y Pydantic (`tecnologias.js`) y en `tecnologias.md`.
+- Nit: se sacó del combinador la línea que sumaba R01 con CONFIANZA; con el configurador como única fuente, `Prompt.r01Apagada` ya lo resuelve.
+
+### Agregado
+- **pgvector y Embeddings** en el catálogo (130), con su lección: lo recuperado es dato, no instrucción (OWASP LLM01/04/08); el filtro por permisos va **antes** de buscar; cambiar el modelo de embeddings obliga a re-indexar. RAG en la entrada de Anthropic API.
+- **El bloque de IA del prompt** pide recorrer la tabla OWASP LLM01–LLM10 de `seguridad.md` (N4) y anotar en `security.md` cuáles aplican, con control y test, y cuáles no y por qué. Y suma: si el agente va a actuar (publicar, mandar, cobrar), el que lee no es el que actúa, y lo sensible lleva aprobación humana.
+- La card y Manuales del playbook `ia-en-el-producto` nombran RAG, agentes y evals. La card de escenarios dice 38 situaciones (S38).
+- **Tests:** R1 y el barrido de todo lo que la web puede mandar contra el formato de `eventos` (`dev/tests`); pgvector/Embeddings, la lección de Pydantic y el bloque OWASP (`web/tests/combinador-ui.test.mjs`).
+
+### Modificado
+- `?v=33.2` en las cuatro páginas.
+- `sdd/`: ADR-013 y contracts (qué columnas se insertan), testing, status, design.
+
+### Limpieza de la base de dev
+La sonda del reviewer dejó 11 filas en `eventos` de `dev/.data/` (ninguna en el repo): ids 351–354 (`juan.perez.30123456` como descarga y `md:`, `/juan.perez/dni-30123456|movil`, `interes:JuanPerez30123456`), 358–360 (`/web/|escritorio`, `ticketera\|escritorio`, `ticketera/py-react/PRO/nuevo`, `md:ia-en-el-producto.md`), 361–363 y 999999999 (`SDD-MASTER.md`; el 362 es el id ocupado por la sonda). Se borraron por id, más la 380 que dejó la prueba manual de R1 con `curl`.
+
+### Verificado
+- Rojo sobre `74ad57e`: `web/tests` 37 tests, 4 en rojo (N3 «37 situaciones» con S38 ya en `scenarios.md`, pgvector/Embeddings, la lección de Pydantic y el bloque OWASP); `dev/tests` 15, 1 en rojo (`insert con id → 201`). El barrido salió verde de entrada (cubre código que ya estaba bien): con un mutante del SQL que no acepta `-` en el stack, falla y nombra `py-react`.
+- Verde: `web/tests` 37/37, `dev/tests` 15/15. Contra :4321 reiniciado: insert con `id` → 401, sin `id` → 201.
+
+---
+
+## [0.33.0] — 2026-10-05 · web
+
+Lo que encontró usar el paquete en cuatro proyectos reales (landing, tienda, mesa de ayuda con IA y chatbot, todos FastAPI + React/Vite/TS), en la parte que vive en `web/`. El resto de la 0.33 (núcleo, arnés, playbooks) está en el changelog del paquete.
+
+### Agregado
+- **Stack «Python back + React/TS front»** (H1): FastAPI + Pydantic + pytest atrás, React + Vite + TypeScript + Vitest adelante, con `contracts.md` como única fuente de la API. El START-PROMPT del master lo daba de ejemplo y el combinador no lo tenía.
+- **8 tecnologías** (H2/H10/H15): Vite, Vitest, pytest, Tailwind CSS, React Router, Mercado Pago, Stripe (categoría nueva: Pagos) y Anthropic API. 128 en total, en `tecnologias.js` y `tecnologias.md` a la vez. Campo opcional `a` con la **lección de proyectos reales**, que viaja al prompt con la tecnología: FastAPI (H17, el `Path(ge=1)` compartido que da 422 en otra ruta; se arregla con `Annotated`) y Anthropic API (SDK real sobre `httpx.MockTransport`, tope de gasto como reserva, modelos vigentes).
+- **Lo que no está en el catálogo ya no se pierde** (H2): buscar algo que no existe ofrece «Sumar igual»; queda como chip punteado con aviso, y el prompt lo manda en un bloque aparte, `PEDIDAS QUE NO ESTÁN EN EL CATÁLOGO`, para que el agente lo verifique.
+- **Tipo «Mesa de ayuda / ticketera»** (H14) con su card, y checkbox **«IA en el producto»** en el combinador: suma al prompt el nivel N4 (R26, tope reservado antes de llamar, salida como dato), la recomendación de modelo de R12 (salvo que esté apagada) y el playbook `ia-en-el-producto`, que entra solo a la lista y al ZIP. El chatbot lo tilda solo. Viaja en el link compartido y en las combinaciones guardadas (columna `ia` en `combinaciones`, idempotente).
+- **Playbooks `ia-en-el-producto` y `go-live`** en el catálogo, Manuales, los checkboxes del combinador y el mapa del ZIP.
+- **Reporte de outcomes en el panel** (D3, ADR-013, F22): O1, O2 y O4 de los últimos 30 días contra su meta, «sin datos» cuando no hay eventos, y O3 como manual con dónde anotarlo y la línea para `status.md`. Para O4, la visita guarda `|movil` o `|escritorio` calculado con `matchMedia("(pointer: coarse)")`; **nunca el user-agent**. `metricas.sql` suma, idempotente, el check `eventos_detalle_visita_check` y la vista `metricas_30_dias`.
+- `web/prompt.js` y `web/metricas.js`: lógica pura, sin DOM, con tests (`combinador.test.mjs`, `metricas.test.mjs`).
+
+### Corregido
+- **Con `R01=OFF` el prompt seguía diciendo «primer commit (R01)» y «avisame que R01 es desactivable»** (H3). Ahora lee el configurador: con R01 apagada, o perfil CONFIANZA (que es R01=OFF según el master), dice `R01=OFF` y que commitee sin esperar el OK. El prompt además lista las reglas apagadas.
+- **Modo LITE sin plantilla** (H4): `prompts/sdd-lite.md` viaja siempre en `sdd/prompts/` (el modo lo clasifica el agente, y el master y `harness.md` la citan), y con LITE elegido, o un tipo que ya es LITE, el prompt dice que `sdd/sdd-lite.md` se arma con ella.
+- **`.gitattributes` del ZIP** (H5): suma `sdd/changelog.md merge=union` y `sdd/sdd-lite.md merge=union`.
+- `dev/servidor.mjs` no ruteaba recursos de `/rest/v1/` con dígitos (`metricas_30_dias` caía al estático con 404).
+- En el panel, una combinación larga (`ticketera/py-react/NOVATO/nuevo`) ensanchaba la tabla a 379 px en un celular de 360. Y la lista de archivos del combinador desbordaba con la descripción larga: ahora se acomoda.
+
+### Modificado
+- `?v=33` en `index.html`, `admin.html`, `guia.html` y `demo.html` (cambiaron `sesion.js` y otros).
+- `sdd/`: spec 0.9 (cómo se mide cada outcome, V8 y V9), ADR-013, contracts 0.9 (§5 `prompt.js`, §6 formato de las métricas), status (F2, F3, F22, D3 cerrada), testing, design.
+
+### Verificado
+- Rojo medido sobre `2b522bd` con los tests nuevos: `web/tests` 20 tests, 14 en rojo (los 13 nuevos de combinador y métricas y el de LITE del ZIP); `dev/tests` 12, 2 en rojo (`#/combinador|Mozilla/5.0 (iPhone…)` entraba con `201`, y faltaba la columna `ia`). H5 llegó después: rojo propio con `falta sdd/changelog.md merge=union`.
+- Verde: `node --test "web/tests/*.test.mjs"` 21/21; `node --test "dev/tests/*.test.mjs"` 12/12.
+- Smoke en Chrome headless por CDP contra `node dev/dev.mjs`, a 360 px (táctil) y 1280 px: ticketera + `py-react` + IA + FastAPI, Anthropic API y «Celery» sumada fuera del catálogo, con `R01=OFF` en el configurador. El prompt trae N4, R12, la reserva, el stack, la lección de FastAPI, el bloque de fuera del catálogo y `R01=OFF`, sin «R01 es desactivable» ni «commit (R01)»; `ia-en-el-producto.md` en la lista y en el árbol. Las visitas llegaron a la base como `#/combinador|movil` y `|escritorio`. El panel muestra las cuatro tarjetas. Sin scroll horizontal en ninguno de los dos anchos y cero errores de consola.
+
+### Review R30, vuelta 1 (sobre `bb6f168`, cambios pedidos)
+- **M3 · Prompt y ZIP del mismo estado.** Destildar «IA en el producto» después de generar dejaba un prompt que pedía un playbook que el ZIP ya no traía. Ahora el ZIP arma el prompt con el estado actual (nunca con el textarea), y si ya se generó, cualquier cambio (tipo, stack, nivel, perfil, IA, playbooks, tecnologías o «Mis reglas») regenera prompt, lista y árbol juntos.
+- **M4 · La base hace cumplir lo que dice la doc.** `eventos_detalle_formato_check` cierra el `detalle` por tipo (rutas, nombres de archivo e ids de `[A-Za-z0-9._/-]` con largo acotado: sin espacios, `@` ni saltos de línea), `NOT VALID` para no tocar filas viejas. La política de alta exige `dia = hoy` y la vista de 30 días además acota `dia <= hoy`. ADR-013 y contracts dicen exactamente eso, y lo que no garantiza (un slug corto puede ser un nombre). La sonda del reviewer (`revs-sonda-db.mjs`) pasó de 201 a 400/401 en los ocho casos.
+- **M6 · Tecnologías de afuera** (link, guardadas, base): `Prompt.limpiarTecnologia` las deja en una línea, sin control y con 60 caracteres como máximo, al cargar y al armar el prompt.
+- **Link compartido roto desde antes de 0.33:** `writeURL` (`catalogo.js`) borraba el hash `#/combinador?c=…` antes de que `inicio.js` lo leyera. Ahora lo conserva.
+- **N3:** README «101 tecnologías» → 128 y la card de escenarios «23 situaciones» → 37, con un test que mira los dos conteos en el README y la web.
+- **N4:** el perfil tiene una sola fuente, el configurador (`ReglasUI.fijarPerfil` / `alCambiar`). El prompt y el `custom.md` ya no pueden decir dos perfiles distintos.
+- **N5:** aviso en el combinador cuando un tipo (calc, guía, proceso) sale LITE con el configurador en FULL.
+- **N6:** `Metricas.visita` corta el lugar antes de pegar la clase.
+- **H24 (ticketera):** la lección de Pydantic sobre `@field_validator` con el mismo nombre que el campo, en FastAPI, en Pydantic y en `tecnologias.md` (0.8.1).
+- Un chip de tecnología muy larga desbordaba a 360 px; ahora corta la palabra.
+- Rojo medido sobre `8cfac06`: `web/tests` 34 tests, 10 en rojo (M3 ×2, W15/N4, N5, M6 ×2, link, N3, H24, N6); W10, W11 y W16 quedaron en verde porque cubren código que ya estaba bien, y se verificaron con sus mutantes. `dev/tests` 13, 2 en rojo (`{"tipo":"visita","detalle":"juan.perez@gmail.com DNI 30123456"} → 201` y `la vista mira fuera de los últimos 30 días`). Verde: 34/34 y 13/13. Mutantes W10, W11, W15, W16 (×2), M3, M6, N4, N6 y el del link: todos mueren.
+
+---
+
+## [0.32.0] — 2026-10-05
+
+### Agregado
+- **Entorno local sin nube** (`dev/`, ADR-012, F21). `node dev/dev.mjs` levanta un Postgres propio en `127.0.0.1:54329`, corre `supabase/schema.sql` y `metricas.sql` tal cual sobre un `auth` mínimo, y sirve la web en `http://127.0.0.1:4321/web/` con un emulador del subconjunto de GoTrue y PostgREST que usa `sesion.js`. La web no cambia para correr en local: el servidor reemplaza `supabase-config.js` al servirlo. Sin `node_modules`: habla con la base por `psql`, con los valores en base64 por stdin. Trae tres cuentas de ejemplo (`dev/README.md`) y comandos para crear cuentas y cambiar claves, porque en local no hay mails.
+- **`dev/tests/local.test.mjs`**, 10 tests con `node --test` sobre un clúster temporal: la prueba de dos cuentas de F5 (leer, editar, borrar y crear a nombre de otra cuenta), sin sesión, token falso, métricas solo para el admin, upsert sin duplicar, el ciclo de auth completo y que el servidor no salga del repo.
+- `.claude/launch.json` suma `sdd-local`.
+
+### Corregido
+- **Guardar una combinación con cuenta fallaba siempre** (42P10). Causa raíz: el upsert de PostgREST manda `on_conflict=usuario_id,nombre`, y la unicidad era un índice sobre `lower(nombre)`; Postgres no encaja columnas contra un índice de expresión. Corrección: columna generada `nombre_clave = lower(nombre)` con índice único `(usuario_id, nombre_clave)`, y `sesion.js` usa ese `on_conflict`. Se mantiene que «Landing» y «landing» son la misma combinación, como sin cuenta.
+- **Cualquier cuenta podía hacerse admin** con un `PATCH {admin:true}` a su propio perfil, y con eso leer las métricas. Causa raíz: RLS decide qué filas se tocan, no qué columnas, y la política «perfil propio: editar» deja editar la fila entera. Corrección en `metricas.sql`: sin `insert` ni `update` de tabla para `anon` y `authenticated`, y `update` solo sobre las siete columnas que manda la web. El perfil lo sigue creando el trigger.
+- Los dos arreglos están en el repo, **no en la nube**: el proyecto Supabase sigue pausado, y al reactivarlo hay que volver a correr los dos `.sql` (`status.md`).
+
+### Modificado
+- `?v=32` en las páginas de `web/`, porque cambió `sesion.js` (corolario de ADR-011).
+- `.gitignore` suma `dev/.data/`.
+- `sdd/`: ADR-012; `design.md` §8; `testing.md` (la suite nueva, V3 ✅ y RLS pasa a testearse); `security.md` §3b; `status.md` (F5 y F21 completas, bloqueos).
+
+### Verificado
+- `node --test "dev/tests/*.test.mjs"`: 9/9. `node --test "web/tests/*.test.mjs"`: 6/6.
+- Rojo medido contra la base `1055eef` (su `schema.sql`, `metricas.sql` y `sesion.js`): fallan los tres tests de los dos bugs y pasan los otros seis.
+- Rojo forzado: con la política de lectura de `combinaciones` en `using (true)`, fallan «una cuenta no ve…» (`B ve combinaciones de A`) y «sin sesión no se lee nada».
+- Smoke en Chrome headless por CDP contra `node dev/dev.mjs`: portón sin sesión, clave mala con el mensaje traducido, login de ana, guardar dos veces la misma combinación (pisa), tema al perfil, sesión que sobrevive a recargar, salir, facundo sin ver lo de ana y con métricas de admin, `admin.html`, `guia.html` y `demo.html`. Cero excepciones y cero errores de consola. V3: dos combinaciones de `localStorage` quedan en la cuenta de beto al entrar.
+- **Reviewer independiente (R30), vuelta 1** sobre `5fa58a2`: re-ejecutó 9/9 y 6/6 y pidió cambios. Dos bloqueantes: (B1) en Windows el alias 8.3 `/dev/DATA~1/jwt-secreto` esquivaba el filtro de punto y entregaba el secreto de los JWT (y `/GIT~1/config`); (B2) el test de «crear a nombre de otro» pasaba por la política de lectura y seguía verde con el `with check` roto. Dos menores: (M1) cambiar la clave por la CLI sacaba el admin; (M2) una columna nueva de perfil fuera del `grant` rompería `guardarPerfil` en silencio. Más nits: 500 en vez de 400 con cuerpos raros, JWT con más de tres partes, 404 por accidente. Todo resuelto, más un control de `Host` contra DNS rebinding. Rojos de cada arreglo: con `with check (true)` falla «no se puede crear…»; con el `servidor.mjs` de `5fa58a2` falla por `/dev/DATA~1/jwt-secreto`; con el `auth.mjs` de `5fa58a2` falla el admin tras cambiar la clave (`false !== true`); sin `interes` en el `grant` falla `guardarPerfil` (42501). Suites: 10/10 y 6/6.
+- **Vuelta 2** sobre `1a1ec83`: **APROBADO**. Re-ejecutó las suites, repitió los rojos de B1 y B2 y probó alias 8.3, ADS, dispositivos, junctions y `Host` vacío o ajeno sin encontrar agujeros. De sus nits se resolvieron dos: `/%2Fweb` redirigía a `//web/` (redirección abierta, venía de `5fa58a2`) y el `Host` distinguía mayúsculas.
+
+---
+
 ## [0.31.0] — 2026-10-03
 
 ### Agregado

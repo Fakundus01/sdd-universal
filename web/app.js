@@ -1,8 +1,10 @@
 /* Shell de la aplicación: ruteo por vistas, cajón lateral y preferencias.
  *
- * El ruteo va por hash (#/catalogo) y no por rutas reales: sin servidor que
- * las resuelva, una URL como /web/catalogo daría 404 al recargar. Con hash,
- * el link se puede compartir y el botón "atrás" funciona.
+ * Ruteo con rutas reales (ADR-015, 0.34): /web/catalogo, /web/combinador…
+ * con pushState y popstate. Antes era hash (#/catalogo) porque no había
+ * servidor que resolviera /web/catalogo al recargar; desde ADR-012 lo hay
+ * (dev/servidor.mjs) y Vercel lo hace con rewrites. Las URLs las arma y las
+ * lee rutas.js, que además convierte los links viejos con #/.
  */
 const App = (() => {
   const $ = id => document.getElementById(id);
@@ -76,9 +78,11 @@ const App = (() => {
   /* ---------------- ruteo ---------------- */
   const TITULOS = {inicio: "Inicio", catalogo: "Catálogo", combinador: "Combinador",
                    tecnologias: "Tecnologías", reglas: "Mis reglas", manuales: "Manuales",
-                   perfil: "Mi perfil", comunidad: "Feedback", configuracion: "Configuración"};
+                   perfil: "Mi perfil", comunidad: "Feedback", configuracion: "Configuración",
+                   preferencias: "Preferencias", login: "Entrar"};
 
-  function ir(vista, empujar = true){
+  /* search: la query de la vista nueva (p. ej. «?volver=…» para entrar). */
+  function ir(vista, empujar = true, search = ""){
     if (!TITULOS[vista]) vista = "inicio";
     document.querySelectorAll(".vista").forEach(s => s.hidden = s.dataset.vista !== vista);
     document.querySelectorAll(".side-nav a[data-vista]").forEach(a =>
@@ -87,13 +91,14 @@ const App = (() => {
     if (vista === "perfil" && typeof PerfilVista !== "undefined") PerfilVista.refrescar();
     if (vista === "configuracion" && typeof ConfigVista !== "undefined") ConfigVista.abrir();
     if (typeof VISTA_HOOKS !== "undefined") VISTA_HOOKS[vista]?.();
-    if (empujar && location.hash !== "#/" + vista) history.pushState(null, "", "#/" + vista);
+    const destino = Rutas.url(vista, search, location.pathname);
+    if (empujar && location.pathname + location.search !== destino) history.pushState(null, "", destino);
     cerrarCajon();
     scrollTo({top: 0, behavior: prefs.animaciones ? "smooth" : "auto"});
-    if (typeof Sesion !== "undefined") Sesion.contar("visita", "#/" + vista);
+    if (typeof Sesion !== "undefined") Sesion.contarVisita("#/" + vista);
   }
 
-  const vistaDeHash = () => (location.hash.replace("#/", "") || "inicio").split("?")[0];
+  const vistaActual = () => Rutas.vistaDe(location.pathname) || "inicio";
 
   /* ---------------- cajón lateral ---------------- */
   function abrirCajon(){
@@ -153,8 +158,12 @@ const App = (() => {
     aplicar();
 
     // navegación
-    document.querySelectorAll(".side-nav a[data-vista]").forEach(a => {
-      a.onclick = e => { e.preventDefault(); sonar(); ir(a.dataset.vista); };
+    // Cualquier link con data-vista navega sin recargar; con Ctrl/⌘/Shift o la
+    // rueda abre su ruta real en otra pestaña, como cualquier link.
+    document.addEventListener("click", e => {
+      const a = e.target.closest("a[data-vista]");
+      if (!a || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+      e.preventDefault(); sonar(); ir(a.dataset.vista);
     });
     document.querySelectorAll(".side-nav a[data-abre]").forEach(a => {
       a.onclick = e => {
@@ -165,15 +174,11 @@ const App = (() => {
       };
     });
     $("btnConfig").onclick = () => { sonar(); ir("configuracion"); };
-    $("barraNav").addEventListener("click", e => {
-      const a = e.target.closest("a[data-vista]");
-      if (a){ e.preventDefault(); sonar(); ir(a.dataset.vista); }
-    });
     $("avatar").onclick = () => { sonar(); ir("perfil"); };
     $("hamb").onclick = () => $("side").classList.contains("abierta") ? cerrarCajon() : abrirCajon();
     $("sideCerrar").onclick = cerrarCajon;
     $("sideFondo").onclick = cerrarCajon;
-    addEventListener("popstate", () => ir(vistaDeHash(), false));
+    addEventListener("popstate", () => ir(vistaActual(), false));
     addEventListener("keydown", e => { if (e.key === "Escape") cerrarCajon(); });
 
     // preferencias
@@ -212,14 +217,16 @@ const App = (() => {
       const cb = e.target.closest("[data-vista-visible]"); if (!cb) return;
       prefs.vistas[cb.dataset.vistaVisible] = !cb.checked;
       guardar(); aplicar();
-      if (!cb.checked && vistaDeHash() === cb.dataset.vistaVisible) ir("inicio");
+      if (!cb.checked && vistaActual() === cb.dataset.vistaVisible) ir("inicio");
     });
     $("cfgReset").onclick = () => {
       if (!confirm("¿Volver todas las preferencias a como venían?")) return;
       prefs = base(); guardar(); aplicar(); pintarConfig();
     };
-    ir(vistaDeHash(), false);
+    // Una ruta que no es ninguna vista muestra Inicio y deja la URL en /web/.
+    if (!Rutas.vistaDe(location.pathname)) history.replaceState(null, "", Rutas.url("inicio", location.search, location.pathname));
+    ir(vistaActual(), false);
   }
 
-  return {iniciar, ir, sonar, pintarConfig, prefs: () => prefs, TEMAS};
+  return {iniciar, ir, vistaActual, sonar, pintarConfig, prefs: () => prefs, TEMAS};
 })();

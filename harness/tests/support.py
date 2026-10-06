@@ -10,6 +10,8 @@ from pathlib import Path
 HARNESS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(HARNESS))
 
+from repo import run_captured  # noqa: E402
+
 PY = f'"{sys.executable}"'
 PASS_CMD = f'{PY} -c "print(\'3 passed\')"'
 FAIL_CMD = f'{PY} -c "import sys; print(\'1 failed: test_x\'); sys.exit(1)"'
@@ -20,7 +22,7 @@ titulo: Tarjeta de prueba
 estado: {estado}
 feature: {feature}
 rama: {rama}
----
+{extra}---
 
 # Tarjeta {id}
 
@@ -52,8 +54,10 @@ class Project:
         return path
 
     def git(self, *args: str) -> str:
-        proc = subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", *args], cwd=self.root,
-                              capture_output=True, text=True, check=True)
+        # run_captured: bajo carga, en Windows la salida se puede perder (stdout=None) y el setUp reventaba.
+        proc = run_captured(["git", "-c", "user.email=t@t", "-c", "user.name=t", *args], cwd=self.root, text=True)
+        if proc.returncode:
+            raise subprocess.CalledProcessError(proc.returncode, proc.args, proc.stdout, proc.stderr)
         return proc.stdout.strip()
 
     def commit(self, msg: str) -> str:
@@ -62,9 +66,10 @@ class Project:
         return self.git("rev-parse", "--short", "HEAD")
 
     def card(self, id: str = "H-1", estado: str = "pending", feature: str = "Login", rama: str = "",
-             criterios: str = "1. Con datos válidos entra") -> Path:
+             criterios: str = "1. Con datos válidos entra", depende_de: str | None = None) -> Path:
+        extra = "" if depende_de is None else f"depende_de: {depende_de}\n"
         return self.write(f"sdd/cards/{id}.md", CARD.format(id=id, estado=estado, feature=feature, rama=rama,
-                                                            criterios=criterios))
+                                                            criterios=criterios, extra=extra))
 
     def review(self, id: str = "H-1", rama: str = "main", verdict: str = "APPROVED",
                title_hash: str = "a942c177") -> Path:

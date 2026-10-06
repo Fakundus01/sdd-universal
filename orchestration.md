@@ -1,6 +1,6 @@
 # orchestration.md · Orquestación con roles: quién hace qué, y cómo vuelve
 
-**Versión:** 0.30 · 2026-10-02 · **Para agentes:** leer solo si R31 está activa (la herramienta tiene subagentes, o la feature necesita más de una tarjeta). Cada subagente lee **solo su fila** de §2 + su tarjeta. **Para humanos:** cómo se reparte el trabajo entre agentes sin que se autoaprueben ni se pisen.
+**Versión:** 0.35 · 2026-10-06 · **Para agentes:** leer solo si R31 está activa (la herramienta tiene subagentes, o la feature necesita más de una tarjeta). Cada subagente lee **solo su fila** de §2 + su tarjeta. **Para humanos:** cómo se reparte el trabajo entre agentes sin que se autoaprueben ni se pisen.
 
 > Se apoya en `harness.md` (evidencia, tarjetas, memoria en disco). Nace de Relay (chat-commerce-ai). Escenarios S28–S31.
 > Los roles de `teams.md` son de **personas**; los de acá son de **agentes**. Conviven: el `leader` dirige cada OK humano al rol de persona que corresponde (R21).
@@ -123,8 +123,30 @@ El leader los elige por tarjeta y los escribe en ella, con la tabla de `models.m
 
 ---
 
+## 10 · Grafo de tarjetas
+
+Las tarjetas de una feature no son una lista: son un grafo. Cada tarjeta declara en su frontmatter de qué otras depende (`depende_de: [H-1, H-2]`, vacío si ninguna). Con eso el leader:
+
+- **Despacha por niveles:** está lista la tarjeta `pending` con todas sus dependencias en `done`. Las listas del mismo nivel van en paralelo (tope de §7) si sus zonas de archivos no se pisan, **cada una en su rama y su worktree**: el arnés admite una sola tarjeta `in_progress` por rama. El leader mergea cada una a la rama de la feature después de su `APPROVED`.
+- **Propaga el bloqueo:** si una tarjeta queda `blocked`, las que dependen de ella no se despachan; las de otras ramas del grafo siguen.
+- **Lo dibuja** en `current.md`, en mermaid, cuando hay más de tres tarjetas:
+
+```mermaid
+graph LR
+  H-1[H-1 esquema] --> H-2[H-2 API]
+  H-1 --> H-3[H-3 migración]
+  H-2 --> H-4[H-4 UI]
+```
+
+- **Sin ciclos:** una dependencia circular es una tarjeta mal partida; se re-parte antes de despachar. El arnés lo revisa junto con que cada `depende_de` exista (`harness.md` §7).
+
+Un loop con contrato (R33, `loops.md` §4) recorre este mismo grafo.
+
+---
+
 ## Historial
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.35 | 2026-10-06 | §10 Grafo de tarjetas (S40): `depende_de` en la tarjeta, despacho por niveles, bloqueo que se propaga, mermaid en `current.md`, sin ciclos. |
 | 0.30 | 2026-10-02 | Primera versión, destilada de Relay: siete roles (`leader`, `implementer`, `reviewer`, `analytic`, `infra-implementer`, `looper`, `prompter`), con el `spec-keeper` absorbido por el leader; flujo con escalado por complejidad, respuestas de una línea, límites del looper, worktrees y zonas, ramas `dev`/`main` y permisos aparte para infra. |

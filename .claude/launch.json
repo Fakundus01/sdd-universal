@@ -2,9 +2,21 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "sdd-local",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "dev/dev.mjs"
+      ],
+      "port": 4321
+    },
+    {
       "name": "sdd-static",
       "runtimeExecutable": "py",
-      "runtimeArgs": ["-m", "http.server", "4321"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4321"
+      ],
       "port": 4321
     }
   ]

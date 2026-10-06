@@ -25,9 +25,9 @@ sys.dont_write_bytecode = True  # un __pycache__ del arnés aparecería como «c
 sys.path.insert(0, str(HARNESS))
 
 from checks import Card  # noqa: E402
-from config import ConfigError, HarnessConfig  # noqa: E402
+from config import DEFAULT_MASTER, ConfigError, HarnessConfig, sdd_mode  # noqa: E402
 from report import force_utf8  # noqa: E402
-from repo import Repo  # noqa: E402
+from repo import LOST, OutputLost, Repo, run_captured  # noqa: E402
 from verify import decode  # noqa: E402
 
 STEP_TOKENS = 50_000
@@ -50,18 +50,27 @@ class Hooks:
         self.root = root
         self.payload = payload
         self.repo = Repo(root)
+        config = load_config(root)
+        self.master = config.master if config else DEFAULT_MASTER
+        self.lite = sdd_mode(root, self.master) == "LITE"
+
+    def _memory(self) -> Path:
+        """Dónde vive el estado del trabajo: current.md de la rama, o sdd-lite.md en modo LITE (harness.md §10)."""
+        return self.root / "sdd" / "sdd-lite.md" if self.lite else self.repo.progress_dir / "current.md"
 
     # ── SessionStart ─────────────────────────────────────────────────────────
     def session_start(self) -> int:
         branch = self.repo.branch
-        current = self.repo.progress_dir / "current.md"
+        current = self._memory()
         rel = current.relative_to(self.root).as_posix()
-        print(f"[arnés] Rama `{branch}`. Leé sdd/SDD-MASTER.md y seguí desde el próximo paso de {rel}.")
+        print(f"[arnés] Rama `{branch}`. Leé {self.master} y seguí desde el próximo paso de {rel}.")
         if current.is_file():
             text = current.read_text(encoding="utf-8", errors="replace")
             if len(text) > MAX_CURRENT_CHARS:
                 text = text[:MAX_CURRENT_CHARS] + "\n…(truncado; leé el archivo completo)"
             print(f"Estado que dejó la sesión anterior ({rel}):\n\n{text}")
+        elif self.lite:
+            print(f"Modo LITE: todavía no hay {rel}. Crealo con la plantilla prompts/sdd-lite.md.")
         else:
             print(f"Todavía no hay {rel}: `python harness/verify.py --quick` lo crea.")
         cards = self.root / "sdd" / "cards"
@@ -112,7 +121,7 @@ class Hooks:
                 pass  # sin estado se repite el aviso, pero no se pierde
         if warn:
             how = "" if exact else " (estimado por el tamaño del transcript)"
-            rel = (self.repo.progress_dir / "current.md").relative_to(self.root).as_posix()
+            rel = self._memory().relative_to(self.root).as_posix()
             print(f"[arnés] El trabajo de esta sesión ya ocupa ~{work // 1000}k tokens{how}, sin contar la base de "
                   f"~{base // 1000}k. El límite es {limit // 1000}k. Antes de seguir: hacé el relevo (skill /relevo "
                   f"o prompts/relevo.md) en {rel} y pedile a la persona que haga /clear. "
@@ -144,7 +153,14 @@ class Hooks:
                   file=sys.stderr)
             return 1
         # Sin shell: la ruta entra como un argumento y ningún nombre de archivo se interpreta.
-        proc = subprocess.run(cmd, cwd=self.root, capture_output=True, timeout=55, stdin=subprocess.DEVNULL)
+        try:
+            proc = run_captured(cmd, cwd=self.root, timeout=55, stdin=subprocess.DEVNULL)
+        except OutputLost as exc:
+            if exc.returncode == 0:
+                return 0
+            print(f"[arnés] lint salió con {exc.returncode} en {rel}, pero {LOST} (se perdió dos veces). "
+                  "Volvé a correr el lint de ese archivo a mano.", file=sys.stderr)
+            return 2
         if proc.returncode == 0:
             return 0
         out = "\n".join((decode(proc.stdout) + decode(proc.stderr)).strip().splitlines()[-20:])
@@ -157,13 +173,21 @@ class Hooks:
     def stop(self) -> int:
         if self.payload.get("stop_hook_active"):
             return 0  # ya estamos continuando por este hook: no entrar en bucle
-        proc = subprocess.run([sys.executable, str(HARNESS / "verify.py"), "--quick", "--root", str(self.root)],
-                              cwd=self.root, capture_output=True, text=True, encoding="utf-8",
-                              errors="replace", timeout=110, stdin=subprocess.DEVNULL)
+        rel = self._memory().relative_to(self.root).as_posix()
+        try:
+            proc = run_captured([sys.executable, str(HARNESS / "verify.py"), "--quick", "--root", str(self.root)],
+                                cwd=self.root, text=True, encoding="utf-8", errors="replace", timeout=110,
+                                stdin=subprocess.DEVNULL)
+        except OutputLost as exc:
+            if exc.returncode == 0:
+                return 0  # en verde la salida no hace falta
+            print(f"[arnés] verify.py --quick salió con {exc.returncode}, pero {LOST} (se perdió dos veces). "
+                  f"Corrélo a mano y arreglá lo que diga antes de cerrar; si no es parte de tu tarea, anotalo en {rel}.",
+                  file=sys.stderr)
+            return 2
         if proc.returncode == 0:
             return 0
         tail = "\n".join((proc.stdout + proc.stderr).strip().splitlines()[-25:])
-        rel = (self.repo.progress_dir / "current.md").relative_to(self.root).as_posix()
         print(f"[arnés] verify.py --quick falló:\n{tail}\n\nNo cierres todavía: arreglalo. Si no es parte de tu "
               f"tarea, anotalo en {rel} y explicáselo a la persona.", file=sys.stderr)
         return 2

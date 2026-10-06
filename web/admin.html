@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#0b0f1f" id="themecolor">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="base.css?v=31">
+<link rel="stylesheet" href="base.css?v=35">
 <style>
   main{padding-top:34px}
   h1{font-size:1.7rem;letter-spacing:-.03em}
@@ -32,6 +32,7 @@
      padding:11px 14px;border-bottom:1px solid var(--line-strong);background:var(--bg-soft)}
   td{padding:10px 14px;border-bottom:1px solid var(--line);color:var(--ink-soft)}
   tr:last-child td{border-bottom:0}
+  td:first-child{overflow-wrap:anywhere}
   td.num{text-align:right;font-family:var(--mono);color:var(--ink);font-weight:600}
   td.barra{width:34%;padding-right:18px}
   .b{height:7px;border-radius:99px;background:var(--accent);min-width:3px}
@@ -43,6 +44,24 @@
   .pager button[aria-current="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
   .pager button:disabled{opacity:.4;cursor:not-allowed}
   .pager .info{font-size:.8rem;color:var(--muted);margin:0 4px}
+  .outs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px;margin-bottom:10px}
+  .out{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 17px;min-width:0}
+  .out .cab{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .out .id{font-size:.74rem;font-weight:700;padding:2px 8px;border-radius:99px;
+       background:var(--bg-soft);border:1px solid var(--line-strong);color:var(--ink)}
+  .out .est{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid var(--line-strong);color:var(--muted)}
+  .out .est.si{color:var(--green);border-color:currentColor}
+  .out .est.no{color:var(--red);border-color:currentColor}
+  .out h3{font-size:.92rem;letter-spacing:-.01em;margin-bottom:2px}
+  .out .v{font-size:1.85rem;font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-top:6px}
+  .out .m{font-size:.78rem;color:var(--muted)}
+  .out .b{margin-top:8px;background:var(--line)}
+  .out .b > i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+  .o3 label{display:flex;align-items:center;gap:7px;font-size:.84rem;color:var(--ink-soft);margin-top:6px}
+  .o3 textarea{width:100%;margin-top:8px;min-height:54px;font:inherit;font-size:.82rem;padding:8px 10px;border-radius:9px;
+       border:1px solid var(--line-strong);background:var(--bg-soft);color:var(--ink);resize:vertical}
+  .o3 button{margin-top:8px;font:inherit;font-size:.8rem;font-weight:600;padding:6px 12px;border-radius:9px;cursor:pointer;
+       border:1px solid var(--line-strong);background:var(--card);color:var(--ink)}
   .nota{margin-top:30px;padding:16px 18px;border-radius:12px;background:var(--bg-soft);
        border:1px solid var(--line);font-size:.83rem;color:var(--muted);max-width:80ch}
 </style>
@@ -79,10 +98,10 @@
 
 </div>
 
-<script src="tema.js?v=31"></script>
-<script src="supabase-config.js?v=31"></script>
-<script src="sesion.js?v=31"></script>
-<script src="porton.js?v=31"></script>
+<script src="tema.js?v=35"></script>
+<script src="supabase-config.js?v=35"></script>
+<script src="metricas.js?v=35"></script>
+<script src="sesion.js?v=35"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
@@ -127,8 +146,68 @@ function tabla(id, titulo, desc, filas, etiqueta){
 
 let datos = null;
 
+/* ---------- outcomes (D3): O1, O2 y O4 contra su meta, O3 a mano ---------- */
+const pct = v => v === null ? "—" : Math.round(v * 100) + "%";
+const O3_CLAVE = "sdd-admin-o3";
+function leerO3(){ try { return JSON.parse(localStorage.getItem(O3_CLAVE)) || {}; } catch { return {}; } }
+function guardarO3(o){ try { localStorage.setItem(O3_CLAVE, JSON.stringify(o)); } catch { /* sin storage */ } }
+
+function tarjeta(id, x){
+  const est = x.cumple === null ? ["", "sin datos"] : x.cumple ? ["si", "cumple"] : ["no", "no llega"];
+  return `<article class="out" data-o="${id}">
+    <div class="cab"><span class="id">${id}</span><span class="est ${est[0]}">${est[1]}</span></div>
+    <h3>${esc(x.nombre)}</h3>
+    <div class="m">${esc(x.mide)}</div>
+    <div class="v">${pct(x.valor)}</div>
+    <div class="m">Meta: más de ${pct(x.meta)} · ${x.num} de ${x.den}</div>
+    <div class="b"><i style="width:${x.valor === null ? 0 : Math.min(100, Math.round(x.valor * 100))}%"></i></div>
+  </article>`;
+}
+
+function tarjetaO3(x){
+  const o3 = leerO3();
+  return `<article class="out o3" data-o="O3">
+    <div class="cab"><span class="id">O3</span><span class="est">manual</span></div>
+    <h3>${esc(x.nombre)}</h3>
+    <div class="m">${esc(x.mide)}. No sale de ningún contador: le mostrás la página
+      a alguien ajeno, a los 2 minutos le pedís que explique qué es, y anotás.</div>
+    ${[1, 2, 3].map(i => `<label><input type="checkbox" data-o3="p${i}"${o3["p" + i] ? " checked" : ""}>
+      Persona ${i}: lo explicó bien</label>`).join("")}
+    <label class="sr" for="o3nota">Notas de O3</label>
+    <textarea id="o3nota" placeholder="Quién, cuándo y qué no se entendió">${esc(o3.nota || "")}</textarea>
+    <button type="button" id="o3copiar">Copiar la línea para status.md</button>
+    <div class="m" style="margin-top:6px">Lo anotado queda solo en este navegador. El registro que vale es la línea en <code>sdd/status.md</code> (D3).</div>
+  </article>`;
+}
+
+function reporte(treinta){
+  if (!treinta) return `<section class="bloque"><h2>Outcomes de la spec</h2>
+    <div class="vacia">La base todavía no tiene la vista <code>metricas_30_dias</code>: volvé a correr <code>supabase/metricas.sql</code> (0.33).</div></section>`;
+  const o = Metricas.outcomes(treinta);
+  return `<section class="bloque" id="b-outcomes"><h2>Outcomes de la spec · últimos 30 días</h2>
+    <p class="d">Contra las metas de <code>sdd/spec.md</code> §2. «Sin datos» quiere decir que no hubo eventos que medir, no que dé cero.
+      O4 cuenta solo las llegadas que traen la clase del dispositivo (desde 0.33).</p>
+    <div class="outs">${tarjeta("O1", o.O1)}${tarjeta("O2", o.O2)}${tarjetaO3(o.O3)}${tarjeta("O4", o.O4)}</div>
+  </section>`;
+}
+
+document.addEventListener("change", e => {
+  const c = e.target.closest("[data-o3]");
+  if (c){ const o3 = leerO3(); o3[c.dataset.o3] = c.checked; guardarO3(o3); }
+});
+document.addEventListener("input", e => {
+  if (e.target.id === "o3nota"){ const o3 = leerO3(); o3.nota = e.target.value; guardarO3(o3); }
+});
+document.addEventListener("click", async e => {
+  if (e.target.id !== "o3copiar") return;
+  const o3 = leerO3(), si = [1, 2, 3].filter(i => o3["p" + i]).length;
+  const linea = `O3 (${new Date().toISOString().slice(0, 10)}): ${si} de 3 lo explicaron bien${o3.nota ? ` — ${o3.nota.trim()}` : ""}`;
+  try { await navigator.clipboard.writeText(linea); e.target.textContent = "¡Copiada!"; }
+  catch { e.target.textContent = linea; }
+});
+
 function pintar(){
-  const {resumen, porDia} = datos;
+  const {resumen, porDia, treinta} = datos;
   const de = t => resumen.filter(r => r.tipo === t).sort((a, b) => b.total - a.total);
   const suma = t => de(t).reduce((n, r) => n + Number(r.total), 0);
   const hoy = new Date().toISOString().slice(0, 10);
@@ -143,6 +222,7 @@ function pintar(){
       <div class="tile"><div class="n">${suma("paquete")}</div><div class="l">Paquetes .zip</div></div>
       <div class="tile"><div class="n">${suma("combinacion")}</div><div class="l">Combinaciones</div></div>
     </div>
+    ${reporte(treinta)}
     ${tabla("descargas", "Lo más descargado", "Qué archivo del catálogo se lleva la gente.", de("descarga"), "Archivo")}
     ${tabla("combinaciones", "Combinaciones más armadas", "tipo / stack / nivel. Sirve para saber qué tipos de proyecto faltan.", de("combinacion"), "Combinación")}
     ${tabla("paquetes", "Paquetes descargados", "Carpeta completa vs. archivos sueltos.", de("paquete"), "Tipo de paquete")}
@@ -166,7 +246,8 @@ document.addEventListener("click", e => {
   }
   const r = await Sesion.iniciar();
   if (!r.usuario){
-    $("estado").innerHTML = `Necesitás <b>entrar con tu cuenta</b> para ver el panel. <a href="./">Ir al catálogo</a> y usar el botón «Entrar».`;
+    // Entrar vive en /web/login (ADR-014) y vuelve acá: volver solo acepta rutas internas.
+    $("estado").innerHTML = `Necesitás <b>entrar con tu cuenta</b> para ver el panel. <a href="login?volver=%2Fweb%2Fadmin" id="adminEntrar">Entrar</a>`;
     return;
   }
   if (!await Sesion.esAdmin()){

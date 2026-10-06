@@ -1,6 +1,6 @@
 # harness.md · El arnés: que lo que el agente dice que hizo sea cierto
 
-**Versión:** 0.30.1 · 2026-10-02 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
+**Versión:** 0.35 · 2026-10-06 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
 
 > Nace de **Relay**, el sistema que se usó en producción en `chat-commerce-ai` (features H-1 a H-11). Escenarios S28–S31.
 > El SDD gobierna *qué* se construye; el arnés hace cumplir *que esté construido*.
@@ -30,8 +30,8 @@ Se activa con **R29/R30** (ON por default). Funciona con un solo agente: no hace
   "test": "npm test",
   "test_quick": "npm test -- --changed",
   "lint": "npm run lint",
-  "lint_file": "npx eslint {file}",
-  "lint_ext": [".js", ".ts", ".tsx"],
+  "lint_file": "npx oxlint {files}",
+  "lint_ext": [".js", ".jsx", ".ts", ".tsx"],
   "e2e": "npx playwright test",
   "prod_readonly_query": "psql \"$PROD_RO_URL\" -c \"{sql}\"",
   "deploy": "git push origin dev:main",
@@ -46,14 +46,15 @@ Se activa con **R29/R30** (ON por default). Funciona con un solo agente: no hace
 | `test` | sí | La suite que define «verde». Sin esto no hay R30. |
 | `test_quick` | no | Subconjunto rápido para `--changed`. Si falta, se usa `test`. |
 | `lint` | no | Lint completo (nivel completo). |
-| `lint_file` | no | Lint de lo cambiado: `{file}` corre una vez por archivo, `{files}` una sola vez con todos. **No pasa por un shell** (S32): ver abajo. Lo usan `--quick`, el pre-commit y el hook post-edición. |
+| `lint_file` | no | Lint de lo cambiado con el linter que trae la plantilla del proyecto (`create-vite` trae `oxlint`, no eslint): `{file}` corre una vez por archivo, `{files}` una sola vez con todos. **No pasa por un shell** (S32): ver abajo. Lo usan `--quick`, el pre-commit y el hook post-edición. |
 | `lint_ext` | no | Extensiones a las que se les pasa `lint_file` (ej. `[".ts", ".tsx"]`). Si falta: todo menos `.md` y `.json`. |
-| `e2e` | no | End to end a demanda (`verify.py --e2e`). Cada corrida verde se anota con su hash en `sdd/progress/e2e.md`; si `e2e` existe y ese registro está vacío, `--quick` avisa (S29). |
+| `e2e` | no | End to end a demanda (`verify.py --e2e`). Cada corrida verde se anota con su hash en `sdd/progress/e2e.md` (en modo LITE, en `sdd/e2e.md`: ahí no hay `progress/`); si `e2e` existe y ese registro está vacío, `--quick` avisa (S29). |
 | `prod_readonly_query` | no | Consulta de **solo lectura** a producción para R32. Las credenciales van en `.env` con un usuario sin permisos de escritura (R17). |
 | `deploy` | no | **Documental: el agente jamás lo ejecuta** (R32). Está para que el humano y el `infra-implementer` sepan cuál es el comando. |
 | `base_branch` / `prod_branch` | no | Ramas de integración y de producción (default: `main` / `main`). |
 | `context_threshold` | no | Tokens de *trabajo* de la sesión antes de pedir relevo (§6). Default 400000. |
-| `cited_paths_docs` | no | Docs cuyas rutas citadas tienen que existir (§7). Default `AGENTS.md`, `CLAUDE.md`, `sdd/testing.md`. |
+| `master` | no | Ruta del `SDD-MASTER.md`, relativa a la raíz. Default `sdd/SDD-MASTER.md`. Para repos donde el núcleo no vive en `sdd/` (el propio paquete, que lo tiene en la raíz). Tiene que quedar **dentro** del repo: una ruta absoluta o con `..` que salga de la raíz se rechaza al cargar la config. La usan el chequeo de que el master existe y la lectura del modo (LITE/FULL). |
+| `cited_paths_docs` | no | Docs cuyas rutas citadas tienen que existir (§7). Default `AGENTS.md`, `CLAUDE.md`, `sdd/testing.md`, `sdd/spec.md` y `sdd/sdd-lite.md` (los que existan). El master y `orchestration.md` no van por default: citan archivos opcionales (`GEMINI.md`, `metrics.md`) y darían falsos positivos. |
 
 JSON y no YAML/TOML: lo leen la stdlib de Python y de Node sin dependencias (R28). Los comentarios van en `sdd/design.md`, no en el JSON. Tipos inválidos o claves desconocidas dan error o aviso, nunca un traceback.
 
@@ -75,6 +76,8 @@ Un solo comando, tres niveles. Lo corre el agente al arrancar, mientras trabaja,
 La primera línea de la salida es el comando, el hash y la rama (`verify.py --changed @ 3f1c9a2e (rama feat/stock)`): pegada entera, ya es evidencia (§4). En CI, con HEAD detached, la rama sale de `GITHUB_HEAD_REF` o `CI_COMMIT_REF_NAME`. En un monorepo, la raíz es la carpeta que contiene `harness/` y los cambios se cuentan relativos a ella. Sin git, `--changed` corre los tests igual y avisa que no puede saber qué cambió.
 
 Exit distinto de 0 si algo falla. Pensado para Windows (Git Bash, PowerShell, cmd), macOS y Linux; probado en Windows, y el workflow `harness.yml` del repo del SDD Universal (no del proyecto) corre la suite en los tres.
+
+**Salida perdida.** En Windows, bajo carga, el hilo que lee la salida de un subproceso puede morir (`OSError: [WinError 1]`) y la salida llega vacía aunque el comando haya andado. El arnés reintenta una vez; si se pierde de nuevo, es un `FAIL` que dice «salida no disponible» (sin salida no hay evidencia, aunque el exit sea 0), nunca un traceback. Los hooks dejan cerrar si el exit fue 0, y si no, bloquean con ese mismo aviso.
 
 **Línea base medida.** `sdd/testing.md` anota la última corrida completa con su hash: `2026-10-01 @ a942c177 — 2245 passed, 9 skipped`. Toda cuenta de tests de un handback se explica contra esa base. Si la cuenta bajó, hay que decir qué test se fue y por qué.
 
@@ -111,6 +114,10 @@ $ python harness/verify.py --changed      # @ 3f1c9a2e
 
 **Rojo forzado:** todo **check, guard, hook o test de infraestructura nuevo** —y todo cambio en cómo se reporta un error— se prueba rompiéndolo a propósito una vez (temporal, sin commitear) y pegando la cola de la salida donde se ve el `FAIL`. Un check que nunca vio un rojo no se sabe si funciona: puede estar no corriendo. Fue la práctica que más bugs de los propios checks atrapó.
 
+**Módulo nuevo:** si el test importa algo que todavía no existe, el «rojo» es un error de import y no prueba nada. Se mide contra un **stub vacío que importa** (la clase o función con el cuerpo mínimo), así cada test falla por su aserción. Y si un test que debería dar rojo pasa contra la base, se endurece hasta que falle: en los ejemplos, un test de productos «sin repetir» pasaba también con el código que los reemplazaba (`scenarios.md` S35).
+
+**Mutantes de carrera:** un test de concurrencia tiene que dar rojo con el lock sacado. Si no, la demora está fuera de la ventana entre mirar y anotar, o los hilos no arrancan juntos (`threading.Barrier`). Uno de los ejemplos tuvo un test así que no dio rojo en ninguna de 50 corridas.
+
 **Variantes de dominio:** DATA → el «test» es una validación de datos (esquema, rangos, nulos) y el rojo forzado es un dataset roto a propósito. GAME → `playtest.md` documenta el caso y su resultado; el rojo forzado es el estado de juego que el check debe rechazar.
 
 ### Checks de drift fuente ↔ realidad
@@ -143,18 +150,19 @@ sdd/
 
 - **Una carpeta por rama:** varias sesiones en paralelo no se pisan ni chocan al mergear. Se commitea con la rama: es la traza auditable.
 - **Tarjetas como cola:** un archivo por tarjeta en `sdd/cards/`, con frontmatter `estado: pending | in_progress | review | done | blocked`, `rama`, `feature` (la de `status.md`). `status.md` sigue siendo la vista humana y enlaza las tarjetas; el check §7 verifica que coincidan. Plantilla: `prompts/task-card.md`.
-- **Relevo:** cuando la sesión pasa `context_threshold` tokens de **trabajo** (el uso actual menos el de la primera respuesta: la base ya ocupa decenas de miles), el agente reescribe `current.md` completo —feature y rol, plan con lo hecho, decisiones con su porqué, qué se probó y no anduvo, próximo paso accionable, tarjetas en vuelo— commitea lo que esté a medias como `wip:` y le pide al humano que limpie el contexto. La sesión nueva arranca leyendo `current.md`. Plantilla: `prompts/relevo.md`.
+- **Relevo:** cuando la sesión pasa `context_threshold` tokens de **trabajo** (el uso actual menos el de la primera respuesta: la base ya ocupa decenas de miles), el agente reescribe `current.md` completo —feature y rol, plan con lo hecho, decisiones con su porqué, qué se probó y no anduvo, próximo paso accionable, tarjetas en vuelo— commitea lo que esté a medias como `wip:` y le pide al humano que limpie el contexto. La sesión nueva arranca leyendo `current.md`. Plantilla: `prompts/relevo.md`. En modo LITE no hay `current.md`: el relevo va en una sección `## Relevo` al final de `sdd/sdd-lite.md` (§10).
 
 ---
 
 ## 7 · Qué revisa el arnés (`verify.py --quick`)
 
-1. Existen los archivos base (`harness.config.json`, `sdd/SDD-MASTER.md`, `sdd/progress/<rama>/current.md` — lo crea si falta).
-2. Toda ruta citada en los docs de `cited_paths_docs` y en las tarjetas `done` existe (`src/x.ts:120` y `#L3` se aceptan). Las tarjetas pendientes y `design.md` pueden citar archivos que todavía no existen: R08 los escribe antes que el código.
-3. Tarjetas: frontmatter válido, una sola `in_progress` por rama, toda `done` con criterios de aceptación y un `review_<ID>.md` en `APPROVED` con hash.
-4. Handbacks de la rama: commiteados, con hash real, sin TAB literal.
-5. `status.md` coherente con las tarjetas (una feature al 100% tiene todas sus tarjetas `done`).
-6. Lint de los archivos cambiados (`lint_file`).
+1. Existen los archivos base (`harness.config.json`, `sdd/SDD-MASTER.md`, `sdd/progress/<rama>/current.md` — lo crea si falta; en modo LITE no, ver §10).
+2. Toda ruta citada en los docs de `cited_paths_docs` y en las tarjetas `done` existe (`src/x.ts:120` y `#L3` se aceptan). En las **celdas de tabla** también se revisa el nombre suelto entre backticks (`consultas.py`, sin carpeta): tiene que existir algún archivo con ese nombre en el proyecto. Solo con extensiones de archivo conocidas, así `os.path` o `Node.js` no cuentan. Las tarjetas pendientes y `design.md` pueden citar archivos que todavía no existen: R08 los escribe antes que el código.
+3. Tarjetas: frontmatter válido, una sola `in_progress` por rama, toda `done` con `rama`, criterios de aceptación y un `review_<ID>.md` en `APPROVED` con hash. La plantilla trae `rama: main` desde el principio; una `review` sin `rama` ya avisa, y el `FAIL` dice qué `rama:` agregar (la carpeta de su review, si la encuentra).
+4. Grafo de tarjetas (`orchestration.md` §10): cada `depende_de` nombra una tarjeta que existe, sin ciclos, y una `in_progress`/`review`/`done` no depende de una que no esté `done`.
+5. Handbacks de la rama: commiteados, con hash real, sin TAB literal.
+6. `status.md` coherente con las tarjetas (una feature al 100% tiene todas sus tarjetas `done`).
+7. Lint de los archivos cambiados (`lint_file`).
 
 Cada uno de estos checks tiene su test **con rojo forzado** (`harness/tests/`, en el repo del SDD Universal: no viaja en el ZIP del proyecto). El arnés se prueba con las mismas reglas que exige.
 
@@ -209,7 +217,7 @@ El scaffold trae los tres: `harness/hooks/` (Claude), `harness/git-hooks/pre-com
 | R31 ORQUESTACIÓN-CON-ROLES | AUTO | OFF — demasiadas piezas para supervisar | Un solo agente + reviewer en sesión nueva |
 | R32 PRODUCCIÓN-CON-OK | ON (fija) | ON | — |
 
-Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia en el HANDBACK; sin `cards/` ni `progress/`.
+Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia en el HANDBACK; sin `cards/` ni `progress/`. `verify.py` lee el modo de `MODO=` en `sdd/custom.md` (manda la última línea), si no del `**Modo:**` de `sdd/sdd-lite.md` (plantilla `prompts/sdd-lite.md`), si no del §3 de `sdd/SDD-MASTER.md`; en LITE no crea ni pide `current.md`, y el hook de inicio muestra `sdd/sdd-lite.md`. Lo que en FULL va a `progress/` en LITE va a `sdd-lite.md` o al lado: el relevo, a una sección `## Relevo` al final de `sdd/sdd-lite.md` (`prompts/relevo.md`); el registro de `verify.py --e2e`, a `sdd/e2e.md`. `MODO=` cuenta solo al principio de la línea: un `# MODO=LITE` comentado o en prosa no cambia el modo.
 
 ---
 
@@ -217,5 +225,9 @@ Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.35 | 2026-10-06 | §2: clave `master` para un núcleo fuera de `sdd/` (DRIFT de la tarjeta L-6, opción A elegida por el owner: el paquete no podía usar su propio arnés sin una copia del master). §7: el arnés revisa `depende_de` de las tarjetas (existe, sin ciclos, sin despacho fuera de orden), por `orchestration.md` §10 (tarjeta L-2). |
+| 0.33.2 | 2026-10-05 | Review R30 de v0.33.1 (R3): la salida perdida de un subproceso (`stdout=None` en Windows bajo carga) se reintenta una vez y, si se repite, es un `FAIL` «salida no disponible» en `verify.py` y un aviso en los hooks, en vez de un traceback (§3). También en `git` (`repo.py`) y en los tests (`support.py`), donde era el flaky de la suite. |
+| 0.33 | 2026-10-05 | Review R30 de v0.33: `sdd/spec.md` y `sdd/sdd-lite.md` entran a los `cited_paths_docs` por default, así H13 se dispara en el caso que lo originó (B1); en LITE, el relevo va a `sdd/sdd-lite.md` y el registro del e2e a `sdd/e2e.md`, sin crear `progress/` (M1). |
+| 0.32 | 2026-10-05 | Hallazgos de usar el paquete en 4 proyectos reales: en LITE, `verify.py` ya no crea `sdd/progress/<rama>/current.md` en cada pre-commit (§10, H7); las rutas citadas se revisan también como nombre suelto en celdas de tabla (§7.2, H13); la plantilla de tarjeta trae `rama: main` y el `FAIL` de una `done` sin `rama` dice cómo arreglarlo (§7.3, H23); el ejemplo de `lint_file` pasa a `oxlint`, el que trae `create-vite` (§2, H9). |
 | 0.30.1 | 2026-10-02 | DRIFT resuelto al implementar `harness/` (opción A): §2 suma `lint_ext`, `cited_paths_docs`, `{files}` y la regla de `lint_file` sin shell (S32); §3 suma `--e2e` con registro, la primera línea como evidencia, CI con HEAD detached, monorepo y proyecto sin git; §7.2 acota las rutas citadas a los docs declarados y las tarjetas `done`. Lo de macOS/Linux pasa a «pensado para», hasta que corra el CI. |
 | 0.30 | 2026-10-02 | Primera versión, destilada de Relay (chat-commerce-ai, rama `dev`): config por proyecto, verificación por niveles, evidencia con hash, TDD con rojo medido, rojo forzado de checks, drift fuente↔realidad, memoria en disco por rama, checkpoints del reviewer, auto-mejora por nivel mecánico, degradación por herramienta. |

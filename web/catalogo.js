@@ -19,7 +19,7 @@ Tema.alCambiar(t => Sesion.guardarTema(t));
 
 /* ---------- datos ---------- */
 const CARDS = [
- {c:"Base",n:"pro",  s:"ok",t:"SDD Universal (master)",d:"El núcleo completo: 32 reglas con toggle, protocolo de lectura anti-gasto de tokens, prompts de arranque y loop HANDBACK.",f:"../SDD-MASTER.md"},
+ {c:"Base",n:"pro",  s:"ok",t:"SDD Universal (master)",d:"El núcleo completo: 33 reglas con toggle, protocolo de lectura anti-gasto de tokens, prompts de arranque y loop HANDBACK.",f:"../SDD-MASTER.md"},
  {c:"Base",n:"pro",  s:"ok",t:"SDD Compact (cuadro de sintaxis)",d:"Todo el sistema en 45 líneas de palabras clave. Para agentes solo-chat, subagentes baratos o gente que odia leer.",f:"../SDD-COMPACT.md"},
  {c:"Base",n:"novato",s:"ok",t:"Guía de uso (para humanos)",d:"Quick start en tres caminos, la respuesta honesta a «¿es fácil?», cómo se actualiza cada proyecto y los 7 errores más comunes con su antídoto. Se lee en la web, sin descargar nada.",f:"guia.html",dl:false,cta:"Leer la guía →"},
  {c:"Base",n:"novato",s:"ok",t:"Demo: con SDD vs sin SDD",d:"El mismo formulario de reservas construido dos veces. Los dos andan y se ven igual — hasta que probás los tres casos borde. Con el código real de los dos al lado.",f:"demo.html",dl:false,cta:"Probar el demo →"},
@@ -29,10 +29,10 @@ const CARDS = [
  {c:"Base",n:"pro",  s:"ok",t:"Capa Enterprise (equipos)",d:"11 roles (PO, AF, SM, QA, devs, pasantes, RPA, infra): quién aprueba qué, ceremonias Scrum mapeadas y subagentes por rol.",f:"../teams.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Multi-agente & ahorro de tokens",d:"Espejos para Claude, Codex/ChatGPT, Cursor, Copilot y Gemini + técnicas de ahorro por tier de modelo.",f:"../models.md"},
  {c:"Base",n:"pro",  s:"ok",t:"Bloques componibles",d:"Cómo se arma un SDD a medida combinando BASE + TYPE + STACK + PLAYBOOKS, con reglas de precedencia. Es el motor detrás del combinador.",f:"../blocks.md"},
- {c:"Base",n:"pro",  s:"ok",t:"Cómo crece el SDD (escenarios)",d:"La matriz de 23 situaciones reales: dónde funciona, dónde falla y qué adaptación resolvió cada caso. Nada entra al núcleo «porque suena bien».",f:"../scenarios.md"},
- {c:"Base",n:"novato",s:"ok",t:"Mis reglas: armá tu custom.md",d:"Prendé y apagá las 32 reglas, elegí perfil y modo, sumá las tuyas, y bajate el custom.md ya escrito. El núcleo no se toca nunca: por eso tu configuración sobrevive a cada actualización.",f:"#reglas",dl:false,cta:"Configurar mis reglas →"},
+ {c:"Base",n:"pro",  s:"ok",t:"Cómo crece el SDD (escenarios)",d:"La matriz de 40 situaciones reales: dónde funciona, dónde falla y qué adaptación resolvió cada caso. Nada entra al núcleo «porque suena bien».",f:"../scenarios.md"},
+ {c:"Base",n:"novato",s:"ok",t:"Mis reglas: armá tu custom.md",d:"Prendé y apagá las 33 reglas, elegí perfil y modo, sumá las tuyas, y bajate el custom.md ya escrito. El núcleo no se toca nunca: por eso tu configuración sobrevive a cada actualización.",f:"#reglas",dl:false,cta:"Configurar mis reglas →"},
  {c:"Base",n:"pro",  s:"ok",t:"Seguridad por superficie",d:"Los controles que hacen falta según lo que tu proyecto realmente hace: login, datos de personas, plata, IA, archivos o API pública. Seis preguntas, y solo aparecen los niveles que aplican — no un checklist de 200 ítems que nadie termina.",f:"../seguridad.md"},
- {c:"Base",n:"novato",s:"ok",t:"Catálogo de tecnologías",d:"120 tecnologías (lenguajes, frameworks, bibliotecas, bases, cloud, IA, testing…) con su ecosistema y para qué sirve cada una. Elegilas desde el combinador y entran solas al prompt.",f:"../tecnologias.md"},
+ {c:"Base",n:"novato",s:"ok",t:"Catálogo de tecnologías",d:"130 tecnologías (lenguajes, frameworks, bibliotecas, bases, cloud, IA, testing…) con su ecosistema y para qué sirve cada una. Elegilas desde el combinador y entran solas al prompt.",f:"../tecnologias.md"},
 
  {c:"Proyectos",n:"pro",  s:"comb",t:"Web app full-stack",d:"Front + back + DB con contratos entre capas. El clásico. Combinalo con tu stack en el combinador.",k:"webapp"},
  {c:"Proyectos",n:"pro",  s:"comb",t:"Chatbot con IA",d:"Historial, límite de gasto de API, personalidad configurable y evaluación de respuestas.",k:"chatbot"},
@@ -47,6 +47,7 @@ const CARDS = [
  {c:"Proyectos",n:"pro",  s:"comb",t:"Dashboard / panel de reportes",d:"Una pregunta por gráfico. Si no podés nombrar la pregunta, ese gráfico sobra.",k:"dashboard"},
  {c:"Proyectos",n:"pro",  s:"comb",t:"App para celular",d:"PWA o nativa: es LA decisión del proyecto, con el costo de las tiendas puesto sobre la mesa antes de empezar.",k:"movil"},
  {c:"Proyectos",n:"novato",s:"comb",t:"Bot de Telegram / Discord / WhatsApp",d:"Comandos, token seguro y respuesta ante lo inesperado. Con la advertencia de por qué WhatsApp es el más difícil de los tres.",k:"bot"},
+ {c:"Proyectos",n:"pro",  s:"comb",t:"Mesa de ayuda / ticketera",d:"Tickets con estados, prioridades, asignación y plazos (SLA), con historial que no se reescribe. Si lleva IA para clasificar o responder, el nivel N4 de seguridad entra desde el día 1.",k:"ticketera"},
  {c:"Proyectos",n:"pro",  s:"comb",t:"Sistema de gestión (stock, clientes, turnos)",d:"Acá el modelo de datos ES el proyecto. Permisos desde el arranque y nada se borra de verdad: el histórico es el activo.",k:"gestion"},
  {c:"Proyectos",n:"pro",  s:"comb",t:"Videojuego en Godot",d:"Escenas como texto que se revisan igual que código, la lógica en scripts testeables, y el .gitignore de Godot desde el paso 0.",k:"godot"},
  {c:"Proyectos",n:"pro",  s:"comb",t:"Videojuego en Unity",d:"Force Text + .meta versionados o las referencias se rompen al clonar, Library/ afuera del repo, y prefabs chicos para poder mergear.",k:"unity"},
@@ -59,6 +60,8 @@ const CARDS = [
  {c:"Infraestructura",n:"novato",s:"ok",t:"Playbook: Inicio de sesión con Supabase",d:"Cuentas de usuario con mail y contraseña en un sitio estático. Incluye el SQL con las políticas RLS — el paso que si se saltea deja la base abierta a internet.",f:"../playbooks/supabase-auth.md"},
  {c:"Infraestructura",n:"novato",s:"ok",t:"Playbook: Que los mails lleguen",d:"El mailer incluido de Supabase manda poquísimo y cae en spam, y el síntoma es mudo: nadie se registra y no hay error. Tres caminos comparados — Gmail gratis sin dominio, o Resend — con la parte del DNS explicada.",f:"../playbooks/resend-smtp.md"},
 
+ {c:"Infraestructura",n:"novato",s:"ok",t:"Playbook: Antes de desplegar (go-live)",d:"Una consulta de solo lectura a producción para saber a quién afecta el cambio, la capacidad contratada, el monitoreo y quién aprieta el botón (R32). El deploy lo ejecuta o lo aprueba el humano.",f:"../playbooks/go-live.md"},
+ {c:"Herramientas",n:"pro",  s:"ok",t:"Playbook: IA en el producto",d:"Un modelo adentro de tu app sin sorpresas: tope de gasto como reserva antes de llamar, la salida tratada como dato, RAG con permisos antes de buscar, agentes donde el que lee no es el que actúa, y evals en dos capas con tests que no gastan. Nace de cuatro proyectos reales donde el tope se rompió siete veces.",f:"../playbooks/ia-en-el-producto.md"},
  {c:"Herramientas",n:"novato",s:"ok",t:"Playbook: .env y credenciales seguras",d:"env local/development/production, entornos virtuales y la regla de oro: los secretos no se commitean.",f:"../playbooks/env-setup.md"},
  {c:"Herramientas",n:"novato",s:"ok",t:"Playbook: React + Vite desde cero",d:"node -v, npm create vite, npm run dev — explicado para que salga a la primera.",f:"../playbooks/create-react-vite.md"},
  {c:"Herramientas",n:"novato",s:"ok",t:"Playbook: Git desde cero, sin miedo",d:"Qué es git en criollo, las 4 palabras que hay que entender, el ciclo de todos los días y —lo más importante— cómo deshacer cosas sin romper nada.",f:"../playbooks/git-basico.md"},
@@ -94,6 +97,7 @@ const TYPES = {
  dashboard:{name:"Dashboard / panel de reportes",extra:"Decisiones base: de dónde salen los datos y cada cuánto se actualizan, decidido antes que cualquier gráfico; una sola pregunta por gráfico, y si no se puede nombrar la pregunta, ese gráfico sobra. Riesgos: el clásico es un panel hermoso que nadie mira — definí en la spec quién lo va a abrir y qué decisión va a tomar con él. Si nadie decide nada, es un informe, no un dashboard."},
  movil:{name:"App para celular",extra:"Decisiones base: elegir entre app web instalable (PWA: sin tiendas, sin revisión, se actualiza sola) o app nativa/multiplataforma. Es LA decisión del proyecto y va a decisions.md con su motivo. Riesgos: publicar en las tiendas tiene costo (Google USD 25 una vez, Apple USD 99 por año), demora de revisión y requisitos propios — va todo a costs.md antes de escribir una línea. Probar en un celular real, no solo en el emulador."},
  bot:{name:"Bot de Telegram / Discord / WhatsApp",extra:"Decisiones base: el token del bot va a .env desde el minuto cero (R17); los comandos declarados en un solo lugar; qué pasa si el usuario escribe cualquier cosa, definido antes de programar. Riesgos: WhatsApp es el caso difícil — la API oficial exige verificación del negocio y cobra por conversación, y las librerías no oficiales te pueden hacer banear el número. Telegram y Discord son gratis y directos: si da lo mismo, empezá por ahí."},
+ ticketera:{name:"Mesa de ayuda / ticketera",extra:"Decisiones base: el ticket es una máquina de estados (abierto → asignado → en espera → resuelto → cerrado) con las transiciones permitidas escritas en contracts.md, y cada cambio de estado, asignación o respuesta queda en un historial que no se edita ni se borra; roles separados desde el arranque (quien pide, quien atiende, quien administra) y cada uno ve solo lo suyo; prioridad y plazo (SLA) calculados por el sistema, no tipeados. Riesgos: los adjuntos activan N5 de seguridad.md y los datos de quien pide, N2; las notificaciones por mail se pierden en spam si no se resuelven temprano (playbook resend-smtp). Si hay IA que clasifica, resume o sugiere respuestas: tildá «IA en el producto» — el texto del ticket es dato, no instrucción (R26), la sugerencia la aprueba una persona antes de mandarse, y el tope de gasto se reserva antes de llamar al modelo."},
  gestion:{name:"Sistema de gestión (stock, clientes, turnos)",extra:"Decisiones base: el modelo de datos primero, la pantalla después — acá el diseño de la base ES el proyecto. Quién puede ver y modificar qué, definido desde el arranque, no agregado al final. Nada se borra de verdad: se marca como inactivo, porque el histórico es el activo del negocio. Riesgos: crecimiento sin control ('ya que estamos, facturación'). Datos personales de clientes → security.md obligatorio."},
  videojuego:{name:"Videojuego (Godot / Unity)",extra:"Variante GAME automática: playtest.md con checklist de pruebas manuales por build complementa a R07, porque testear gameplay automáticamente es carísimo. Decisiones base: el loop principal jugable antes que cualquier arte; los contratos son las interfaces entre sistemas (input, combate, UI). Riesgos: los assets binarios no se diffean — definí desde el día 1 qué entra al repo y qué no, o el repositorio se vuelve inmanejable en un mes."},
  godot:{name:"Videojuego en Godot",extra:"Variante GAME automática: playtest.md con checklist de pruebas manuales por build complementa a R07. Decisiones base: escenas chicas y componibles — una escena, una responsabilidad (es R05 aplicado al editor); GDScript salvo que ya vengas de C#; y una ventaja enorme de Godot: las escenas .tscn y los recursos .tres son TEXTO, así que se diffean y se revisan como código — jamás pasarlos a binario. El .gitignore de Godot desde el paso 0 (.godot/ afuera, y export_presets.cfg revisado antes de commitear porque puede traer claves de firma). Riesgos: la lógica desparramada en el árbol de nodos — la regla es lógica en scripts testeables, nodos para lo visual y lo físico."},
@@ -105,6 +109,7 @@ const STACKS = {
  reco:"Que el agente lo recomiende según el proyecto (R12), justificando la elección.",
  python:"Python — POO, venv (playbook env-setup), requirements.txt, tests con pytest.",
  ts:"TypeScript full-stack — un solo lenguaje para front y back, tipos compartidos en contracts.",
+ "py-react":"Python back + React/TS front — FastAPI con Pydantic en el back (venv, requirements.txt, tests con pytest) y React + Vite + TypeScript en el front (tests con Vitest). Dos carpetas (backend/ y frontend/), una sola fuente de verdad para la API: contracts.md, y los tipos del front se derivan del OpenAPI que genera FastAPI en vez de escribirse a mano. En desarrollo el proxy de Vite apunta a la API para evitar CORS; en producción, CORS solo para el dominio del front.",
  react:"React (solo front) — con Vite (playbook create-react-vite), componentes chicos (R05).",
  node:"Node (solo back) — API/procesos, dotenv, tests automatizados."
 };
@@ -117,7 +122,9 @@ const PB_META = {
  "supabase-auth":{f:"../playbooks/supabase-auth.md",d:"cuentas de usuario"},
  "resend-smtp":{f:"../playbooks/resend-smtp.md",d:"que los mails lleguen"},
  "git-basico":{f:"../playbooks/git-basico.md",d:"git desde cero"},
- "consumir-api-externa":{f:"../playbooks/consumir-api-externa.md",d:"datos ajenos con copia propia"}
+ "consumir-api-externa":{f:"../playbooks/consumir-api-externa.md",d:"datos ajenos con copia propia"},
+ "ia-en-el-producto":{f:"../playbooks/ia-en-el-producto.md",d:"IA: tope, RAG, agentes y evals"},
+ "go-live":{f:"../playbooks/go-live.md",d:"antes de desplegar (R32)"}
 };
 
 /* ---------- estado y URL ---------- */
@@ -139,7 +146,11 @@ function writeURL(){
   if ($("q").value.trim()) p.set("q", $("q").value.trim());
   if ($("lvl").value) p.set("lvl", $("lvl").value);
   const qs = p.toString();
-  history.replaceState(null, "", qs ? "?" + qs : location.pathname);
+  // Los filtros viven en la URL solo en /web/catalogo (ADR-015). En otra ruta
+  // no se toca nada: así no se borra el ?c= de un combinador compartido.
+  if (Rutas.vistaDe(location.pathname) !== "catalogo") return;
+  const destino = location.pathname + (qs ? "?" + qs : "");
+  if (destino !== location.pathname + location.search) history.replaceState(null, "", destino);
 }
 
 /* ---------- render ---------- */

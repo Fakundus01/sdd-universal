@@ -1,35 +1,86 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
-    { "source": "/", "destination": "/web/", "permanent": false }
+    {
+      "source": "/",
+      "destination": "/web/",
+      "permanent": false
+    },
+    {
+      "source": "/web/:ruta([a-z][a-z0-9-]*)/",
+      "destination": "/web/:ruta",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/web/admin",
+      "destination": "/web/admin.html"
+    },
+    {
+      "source": "/web/guia",
+      "destination": "/web/guia.html"
+    },
+    {
+      "source": "/web/demo",
+      "destination": "/web/demo.html"
+    },
+    {
+      "source": "/web/:vista([a-z][a-z0-9-]*)",
+      "destination": "/web/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
       ]
     },
     {
       "source": "/(.*).md",
       "headers": [
-        { "key": "Content-Type", "value": "text/markdown; charset=utf-8" },
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
       ]
     },
     {
       "source": "/skill/(.*).skill",
       "headers": [
-        { "key": "Content-Type", "value": "application/zip" },
-        { "key": "Content-Disposition", "value": "attachment" }
+        {
+          "key": "Content-Type",
+          "value": "application/zip"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment"
+        }
       ]
     },
     {
       "source": "/web/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
       ]
     }
   ]

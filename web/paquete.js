@@ -43,7 +43,10 @@ const Paquete = (() => {
 
   /* Plantillas del loop de R30/R31 (tarjeta, handback, relevo): harness.md,
      orchestration.md, agents/ y el hook de contexto las citan como prompts/. */
-  const PLANTILLAS = ["task-card", "handback", "relevo"];
+  /* sdd-lite es la plantilla del modo LITE (R18, scenarios.md S36). Va
+     siempre y no solo cuando la web eligió LITE: el modo lo clasifica el
+     agente al arrancar, y el master y harness.md la citan igual. */
+  const PLANTILLAS = ["task-card", "handback", "relevo", "sdd-lite"];
 
   /* Prompts de rol de R31. Solo con nivel PRO: con NOVATO R31 va OFF. */
   const AGENTES = ["README", "leader", "implementer", "reviewer", "analytic",
@@ -73,7 +76,9 @@ const Paquete = (() => {
 # Los archivos de historial se escriben en cada ciclo: con trabajo en
 # paralelo chocan siempre. merge=union junta las dos versiones.
 sdd/changelog/*.md merge=union
+sdd/changelog.md merge=union
 sdd/status.md merge=union
+sdd/sdd-lite.md merge=union
 CHANGELOG.md merge=union
 
 # Los git hooks corren con sh: un CRLF en el shebang los rompe en Linux/macOS.
@@ -138,7 +143,7 @@ ${brownfield
 | \`sdd/seguridad.md\` | Los controles según lo que tu proyecto hace (R27). El agente lo usa solo, no hace falta que lo leas |
 | \`sdd/harness.md\` | Cómo se demuestra que algo está terminado: test primero, evidencia literal y un reviewer que la re-ejecuta (R29, R30) |
 | \`sdd/orchestration.md\` | Cómo se reparte el trabajo entre agentes con roles, cuando hace falta (R31) |
-| \`sdd/prompts/\` | Plantillas de tarjeta, handback y relevo: las usa el agente al trabajar |${playbooks.length ? `\n| \`sdd/playbooks/\` | ${playbooks.length} receta(s) paso a paso: ${playbooks.join(", ")} |` : ""}
+| \`sdd/prompts/\` | Plantillas de tarjeta, handback y relevo, y la de \`sdd-lite.md\` (modo LITE: todo el SDD en un solo archivo): las usa el agente al trabajar |${playbooks.length ? `\n| \`sdd/playbooks/\` | ${playbooks.length} receta(s) paso a paso: ${playbooks.join(", ")} |` : ""}
 | \`PROMPT-DE-ARRANQUE.txt\` | Tu prompt, ya armado con las opciones que elegiste |
 | \`.gitignore\` | Con \`.env\` adentro desde el minuto cero (R17) |
 | \`AGENTS.md\` / \`CLAUDE.md\` | Una línea para que cualquier agente encuentre el SDD solo |${conSkills ? `

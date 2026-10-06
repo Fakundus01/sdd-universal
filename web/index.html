@@ -24,13 +24,13 @@
 <meta property="og:image:alt" content="SDD Universal · Spec-Driven Development para construir con IA">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SDD Hub · Spec-Driven Development para construir con IA">
-<meta name="twitter:description" content="Catálogo de paquetes de gobernanza para construir con agentes de IA. 32 reglas, playbooks y un combinador que te arma el prompt de arranque.">
+<meta name="twitter:description" content="Catálogo de paquetes de gobernanza para construir con agentes de IA. 33 reglas, playbooks y un combinador que te arma el prompt de arranque.">
 <meta name="twitter:image" content="https://sdd-universal.vercel.app/web/og.png">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Cpath d='M18 22h28M18 32h28M18 42h17' stroke='%23fff' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
 
-<link rel="stylesheet" href="base.css?v=31">
-<link rel="stylesheet" href="app.css?v=31">
+<link rel="stylesheet" href="base.css?v=35">
+<link rel="stylesheet" href="app.css?v=35">
 <style>
   /* ---------- hero ---------- */
   .hero{padding:52px 0 8px;text-align:center}
@@ -164,7 +164,8 @@
        padding:9px 13px;font-size:.84rem}
   .files a:hover{border-color:var(--accent)}
   .files a code{font-family:var(--mono);font-size:.78rem;color:var(--accent-ink)}
-  .files a span{font-size:.74rem;color:var(--muted);flex:none}
+  .files a span{font-size:.74rem;color:var(--muted);flex:0 1 auto;min-width:0;text-align:right}
+  .files a code{flex:none}
   .zipbtns{display:flex;gap:9px;flex-wrap:wrap}
   .b-zip{background:var(--green-soft);color:var(--green);border:1px solid var(--green);border-radius:10px;padding:11px 18px;
        font-weight:700;font-size:.87rem;cursor:pointer;font-family:inherit}
@@ -192,11 +193,26 @@
   .selchips:empty{display:none}
   .selchip{display:inline-flex;align-items:center;gap:7px;background:var(--card);
        border:1px solid var(--line);border-radius:999px;padding:5px 6px 5px 12px;font-size:.79rem}
-  .selchip b{font-weight:600}
+  .selchip{max-width:100%}
+  .selchip b{font-weight:600;min-width:0;overflow-wrap:anywhere}
   .selchip small{color:var(--muted)}
   .selchip button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.9rem;
        line-height:1;padding:2px 5px;border-radius:50%;font-family:inherit}
   .selchip button:hover{color:var(--ink);background:var(--line)}
+  .selchip.fuera{border-style:dashed;border-color:var(--amber)}
+  .selchip.fuera small{color:var(--amber)}
+  .techaviso{font-size:.79rem;color:var(--ink-soft);margin-top:10px;padding:8px 11px;border-radius:9px;
+       background:var(--amber-soft);border:1px solid var(--amber)}
+  .techaviso:empty{display:none}
+  .tsumar{display:block;width:100%;text-align:left;margin:0 0 10px;padding:9px 12px;border-radius:10px;
+       border:1px dashed var(--amber);background:var(--amber-soft);color:var(--ink);font:inherit;font-size:.83rem;cursor:pointer}
+  .tsumar small{display:block;color:var(--muted);font-size:.75rem;margin-top:2px}
+  .iachk{margin-bottom:14px;align-items:flex-start}
+  .clitehint{font-size:.8rem;color:var(--ink-soft);margin:-4px 0 14px;padding:8px 11px;border-radius:9px;
+       background:var(--bg-soft);border:1px solid var(--line)}
+  .iachk input{margin-top:2px}
+  .iachk{flex-wrap:wrap}
+  .iachk small{flex-basis:100%}
 
   /* margin:auto es lo que centra un <dialog> modal — el reset global de arriba lo pisaba
      y por eso quedaba clavado arriba a la izquierda. */
@@ -365,7 +381,7 @@
   .man-grupo h3{font-size:1.05rem;letter-spacing:-.015em}
   .man-sub{color:var(--muted);font-size:.85rem;margin:5px 0 14px;max-width:90ch}
   .man-sub code{font-family:var(--mono);font-size:.78rem;color:var(--accent-ink)}
-  .man-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:8px}
+  .man-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:8px}
   .man-fila{display:flex;align-items:center;gap:9px;background:var(--bg-soft);
        border:1px solid var(--line);border-radius:12px;padding:10px 12px}
   .man-fila .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
@@ -487,19 +503,36 @@
   .guardadas li button:hover{color:var(--ink);border-color:var(--accent)}
 
   /* ---------- onboarding ---------- */
-  dialog.ob{width:min(540px,94vw)}
   .ob-progreso{height:3px;background:var(--line);flex:none}
   .ob-barra{height:100%;background:var(--accent);width:0;transition:width .25s ease}
   .ob-paso{font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink)}
-  dialog.ob h2{margin-top:6px;font-size:1.15rem}
-  .ob-opciones{padding:16px 22px 4px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1;min-height:0}
+  .ob-pagina{padding:0;overflow:hidden;max-width:640px}
+  .ob-cab{padding:18px 20px 4px}
+  .ob-cab h3{margin-top:6px;font-size:1.15rem;letter-spacing:-.01em}
+  .ob-cab p{color:var(--muted);font-size:.86rem;margin-top:4px}
+  .ob-pie{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 20px 16px;border-top:1px solid var(--line)}
+  .ob-pie .clear{background:none;border:1px solid var(--line-strong);color:var(--ink-soft);border-radius:9px;
+       padding:7px 12px;font:inherit;font-size:.8rem;cursor:pointer}
+  .ob-pie .clear:hover{color:var(--ink);border-color:var(--accent)}
+  .ob-pie .der{margin-left:auto}
+  .ob-hecho{padding:14px 20px;font-size:.86rem;color:var(--ink-soft)}
+  .pref-nombre{max-width:640px;margin-top:14px}
+  .pref-nombre input{width:100%;padding:10px 12px;border:1px solid var(--line-strong);border-radius:10px;
+       background:var(--bg-soft);color:var(--ink);font:inherit;font-size:.9rem;margin-top:6px}
+  .login-caja{max-width:440px;margin:30px auto 0;padding:0}
+  .login-caja .cab{padding:20px 22px 0}
+  .login-caja .cab h2{font-size:1.3rem;letter-spacing:-.02em}
+  .login-caja .cab p{color:var(--muted);font-size:.86rem;margin-top:6px;line-height:1.55}
+  .login-caja .dentro{padding:16px 22px 22px;font-size:.88rem;color:var(--ink-soft)}
+  .login-caja .dentro .btn{margin-top:12px}
+  .login-sin{display:block;text-align:center;margin-top:8px;font-size:.82rem;color:var(--accent-ink)}
+  .ob-opciones{padding:16px 20px 12px;display:flex;flex-direction:column;gap:8px}
   .ob-op{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--bg-soft);
        border:1px solid var(--line);border-radius:12px;padding:13px 15px;cursor:pointer;font-family:inherit}
   .ob-op:hover{border-color:var(--accent)}
   .ob-op.sel{border-color:var(--accent);background:var(--accent-soft)}
   .ob-op b{color:var(--ink);font-size:.92rem}
   .ob-op small{color:var(--muted);font-size:.81rem;line-height:1.45}
-  @media (max-width:640px){dialog.ob{height:auto;max-height:92dvh;border-radius:18px;border:1px solid var(--line);width:94vw}}
 
   /* ---------- configurador de reglas ---------- */
   dialog.reglas{width:min(820px,95vw)}
@@ -586,7 +619,7 @@
   <div class="path primary">
     <span class="num">CAMINO 1</span>
     <h2>Sé programar</h2>
-    <p>Descargá el master, pegalo en el primer mensaje de tu agente y arrancá. 32 reglas con toggle, protocolo de lectura y loop HANDBACK.</p>
+    <p>Descargá el master, pegalo en el primer mensaje de tu agente y arrancá. 33 reglas con toggle, protocolo de lectura y loop HANDBACK.</p>
     <a class="go" href="../SDD-MASTER.md" download>Descargar SDD-MASTER.md</a>
   </div>
   <div class="path">
@@ -630,7 +663,7 @@
       <div class="faqgrid">
         <div>
           <h4>Los que descargás vos (1, a veces 2 o 3)</h4>
-          <p><b><code>SDD-MASTER.md</code> es el único imprescindible.</b> Es el conductor: adentro tiene las 32 reglas y una tabla que le dice al agente qué leer para cada tarea. Con ese archivo solo, ya funciona todo.</p>
+          <p><b><code>SDD-MASTER.md</code> es el único imprescindible.</b> Es el conductor: adentro tiene las 33 reglas y una tabla que le dice al agente qué leer para cada tarea. Con ese archivo solo, ya funciona todo.</p>
           <p>Los demás del catálogo son <b>opcionales y se suman según el caso</b>: un playbook si vas a deployar, <code>tecnologias.md</code> si elegiste tecnologías, <code>GUIDE.md</code> si sos novato. El combinador de acá abajo te dice exactamente cuáles necesitás para <i>tu</i> combinación — no hace falta que adivines.</p>
         </div>
         <div>
@@ -680,6 +713,7 @@
     <div><label class="lbl" for="cstack">Stack</label><select id="cstack">
       <option value="reco">Que el agente recomiende</option>
       <option value="python">Python (procesos, bots, datos)</option>
+      <option value="py-react">Python back + React/TS front</option>
       <option value="ts">TypeScript full-stack</option>
       <option value="react">React (solo front)</option>
       <option value="node">Node (solo back)</option>
@@ -697,12 +731,16 @@
       <option value="brownfield">Sí, ya tengo código andando</option>
     </select></div>
   </div>
+  <p class="clitehint" id="clitehint" role="status" hidden></p>
+  <label class="oschk iachk"><input type="checkbox" id="cia"> IA en el producto
+    <small>— un modelo que lee lo que escribe la gente o contenido externo (chat, tickets, resúmenes). Suma el nivel N4 de seguridad, la recomendación de modelo (R12) y el playbook ia-en-el-producto</small></label>
   <div class="techpick">
     <div class="hd">
       <button class="open" id="opentech" type="button">＋ Elegir tecnologías</button>
       <span class="hint" id="techhint"></span>
     </div>
     <div class="selchips" id="selchips"></div>
+    <p class="techaviso" id="techaviso" role="status"></p>
   </div>
 
   <span class="lbl">Playbooks para sumar</span>
@@ -715,6 +753,8 @@
     <label><input type="checkbox" value="resend-smtp"> resend-smtp (mails)</label>
     <label><input type="checkbox" value="git-basico"> git-basico</label>
     <label><input type="checkbox" value="consumir-api-externa"> consumir-api-externa (datos ajenos)</label>
+    <label><input type="checkbox" value="ia-en-el-producto"> ia-en-el-producto (IA con tope)</label>
+    <label><input type="checkbox" value="go-live"> go-live (antes de desplegar)</label>
   </div>
   <button class="gen" id="go" type="button">Generar mi paquete de arranque</button>
 
@@ -765,7 +805,7 @@
 <section class="vista" data-vista="tecnologias" hidden>
   <div class="cfg-cab">
     <h2>Tecnologías</h2>
-    <p>Las 120 del catálogo, con búsqueda y filtros. Lo que marques acá queda elegido y entra al prompt cuando armes tu paquete en el Combinador.</p>
+    <p>Las 130 del catálogo, con búsqueda y filtros. Lo que marques acá queda elegido y entra al prompt cuando armes tu paquete en el Combinador.</p>
   </div>
   <div class="pcard sin-pad" id="slotTech"></div>
 </section>
@@ -773,7 +813,7 @@
 <section class="vista" data-vista="reglas" hidden>
   <div class="cfg-cab">
     <h2>Mis reglas</h2>
-    <p>Prendé y apagá las 32 reglas, elegí perfil y modo, sumá las tuyas, y bajate el <code>custom.md</code> ya escrito. El núcleo nunca se edita: tu configuración sobrevive a cada actualización.</p>
+    <p>Prendé y apagá las 33 reglas, elegí perfil y modo, sumá las tuyas, y bajate el <code>custom.md</code> ya escrito. El núcleo nunca se edita: tu configuración sobrevive a cada actualización.</p>
   </div>
   <div class="pcard sin-pad" id="slotReglas"></div>
 </section>
@@ -829,6 +869,52 @@
       <h3>Tu cuenta</h3>
       <div id="perfilCuenta"></div>
     </div>
+  </div>
+</section>
+
+<section class="vista" data-vista="preferencias" hidden>
+  <div class="cfg-cab">
+    <h2>Preferencias</h2>
+    <p>Cuatro preguntas para que tu agente te hable a tu medida y el combinador arranque precargado. Son opcionales: la app anda igual sin contestarlas, y las cambiás cuando quieras. La apariencia (tema, texto, animaciones) está en <a href="configuracion" data-vista="configuracion">Configuración</a>.</p>
+  </div>
+  <div class="pcard ob-pagina" id="obPagina">
+    <div class="ob-progreso"><div class="ob-barra" id="obBarra"></div></div>
+    <div class="ob-cab">
+      <span class="ob-paso" id="obPaso"></span>
+      <h3 id="obTitulo"></h3>
+      <p id="obAyuda"></p>
+    </div>
+    <div class="ob-opciones" id="obOpciones"></div>
+    <div class="ob-pie">
+      <button class="clear" id="obAtras" type="button">← Atrás</button>
+      <button class="clear" id="obSaltar" type="button">Prefiero no decir</button>
+      <button class="clear der" id="obCerrar" type="button">Saltar todo y seguir →</button>
+    </div>
+  </div>
+  <div class="pcard pref-nombre">
+    <label class="plbl" for="prefNombre">¿Cómo te llamás? <small>(opcional, solo arma tu avatar)</small></label>
+    <input id="prefNombre" type="text" maxlength="60" placeholder="Facundo Moreno" autocomplete="name">
+  </div>
+</section>
+
+<section class="vista" data-vista="login" hidden>
+  <div class="pcard login-caja">
+    <div class="cab">
+      <h2>Entrar</h2>
+      <p>Es opcional: la app anda entera sin cuenta. Con cuenta, tus combinaciones no tienen tope y te siguen a cualquier dispositivo; si sos admin, ves el panel.</p>
+    </div>
+    <div class="dentro" id="loginDentro" hidden></div>
+    <form class="authform" id="loginform">
+      <label for="loginmail">Tu email</label>
+      <input id="loginmail" type="email" required autocomplete="email" placeholder="vos@ejemplo.com">
+      <label for="loginpass">Contraseña</label>
+      <input id="loginpass" type="password" required autocomplete="current-password" placeholder="tu contraseña">
+      <p class="authmsg" id="loginmsg" role="status"></p>
+      <button class="done" type="submit" id="loginsend">Entrar</button>
+      <div class="authalt"><button type="button" id="loginolvide">Olvidé mi contraseña</button></div>
+      <p class="authnote">Los registros están cerrados: las cuentas las crea el administrador.</p>
+      <a class="login-sin" href="./" id="loginsin">Seguir sin cuenta →</a>
+    </form>
   </div>
 </section>
 
@@ -953,7 +1039,7 @@
 </main>
 
 <footer>
-  <div>SDD Universal <b>v0.31</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
+  <div>SDD Universal <b>v0.34</b> · núcleo abierto + <code>custom.md</code> para tu sabor personal · licencia MIT</div>
   <nav>
     <a href="../SDD-MASTER.md">Master</a>
     <a href="../GUIDE.md">Guía</a>
@@ -990,22 +1076,6 @@
     <kbd>esc</kbd>
   </div>
   <div class="k-res" id="kres"></div>
-</dialog>
-
-<dialog class="tech ob" id="obdlg" aria-labelledby="obTitulo">
-  <div class="ob-progreso"><div class="ob-barra" id="obBarra"></div></div>
-  <div class="dlg-head" style="cursor:default">
-    <span class="ob-paso" id="obPaso"></span>
-    <h2 id="obTitulo"></h2>
-    <p id="obAyuda"></p>
-    <button class="dlg-x" id="obCerrar" type="button" aria-label="Saltar la configuración">✕</button>
-  </div>
-  <div class="ob-opciones" id="obOpciones"></div>
-  <div class="dlg-foot">
-    <button class="clear" id="obAtras" type="button">← Atrás</button>
-    <span class="n"></span>
-    <button class="clear" id="obSaltar" type="button">Prefiero no decir</button>
-  </div>
 </dialog>
 
 <dialog class="tech reglas" id="reglasdlg" aria-labelledby="reglastitle">
@@ -1164,28 +1234,30 @@
   </div>
 </dialog>
 
-<script src="shell.js?v=31"></script>
-<script src="tema.js?v=31"></script>
-<script src="buscador.js?v=31"></script>
-<script src="md.js?v=31"></script>
-<script src="feedback.js?v=31"></script>
-<script src="zip.js?v=31"></script>
-<script src="paquete.js?v=31"></script>
-<script src="tecnologias.js?v=31"></script>
-<script src="reglas.js?v=31"></script>
-<script src="reglas-ui.js?v=31"></script>
-<script src="supabase-config.js?v=31"></script>
-<script src="sesion.js?v=31"></script>
-<script src="porton.js?v=31"></script>
-<script src="perfil.js?v=31"></script>
-<script src="perfil-vista.js?v=31"></script>
-<script src="app.js?v=31"></script>
-<script src="config-vista.js?v=31"></script>
-<script src="catalogo.js?v=31"></script>
-<script src="tecnologias-vista.js?v=31"></script>
-<script src="combinador.js?v=31"></script>
-<script src="manuales.js?v=31"></script>
-<script src="cuenta.js?v=31"></script>
-<script src="inicio.js?v=31"></script>
+<script src="rutas.js?v=35"></script>
+<script src="shell.js?v=35"></script>
+<script src="tema.js?v=35"></script>
+<script src="buscador.js?v=35"></script>
+<script src="md.js?v=35"></script>
+<script src="feedback.js?v=35"></script>
+<script src="zip.js?v=35"></script>
+<script src="paquete.js?v=35"></script>
+<script src="tecnologias.js?v=35"></script>
+<script src="reglas.js?v=35"></script>
+<script src="reglas-ui.js?v=35"></script>
+<script src="metricas.js?v=35"></script>
+<script src="supabase-config.js?v=35"></script>
+<script src="sesion.js?v=35"></script>
+<script src="perfil.js?v=35"></script>
+<script src="perfil-vista.js?v=35"></script>
+<script src="app.js?v=35"></script>
+<script src="config-vista.js?v=35"></script>
+<script src="catalogo.js?v=35"></script>
+<script src="tecnologias-vista.js?v=35"></script>
+<script src="prompt.js?v=35"></script>
+<script src="combinador.js?v=35"></script>
+<script src="manuales.js?v=35"></script>
+<script src="cuenta.js?v=35"></script>
+<script src="inicio.js?v=35"></script>
 </body>
 </html>

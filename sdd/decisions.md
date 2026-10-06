@@ -139,3 +139,73 @@
 **Decisión:** `margin:auto` explícito en la regla del diálogo, y comentario en el CSS explicando por qué está ahí — sin eso, el próximo que "limpie" esa línea reintroduce el bug.
 
 **Por qué queda como ADR:** el síntoma (una ventana descentrada) no sugiere en nada la causa (un reset de tres palabras escrito 400 líneas más arriba). Es exactamente el tipo de cosa que se vuelve a debuggear desde cero en seis meses.
+
+---
+
+## ADR-012 · Entorno local sin nube: Postgres propio y un emulador chico de Supabase — 2026-10-05 · Vigente
+
+**Contexto:** el proyecto Supabase está pausado y el plan gratis no deja reactivarlo (ver `status.md`). Desde 0.26 el portón exige sesión, así que sin backend no se puede probar nada que pase por login. El owner decidió dejar Supabase inactivo, trabajar todo en local por ahora y dejar Vercel para cuando la web se abra a otros programadores.
+
+**Decisión:** `dev/` levanta un entorno completo en la máquina, con un solo comando (`node dev/dev.mjs`):
+- **Un clúster de Postgres propio**, con los binarios que ya estén en el PATH, en `dev/.data/` y en el puerto 54329, escuchando solo en `127.0.0.1`. No se usa el Postgres que ya pueda estar corriendo en el 5432: `anon` y `authenticated` son roles del clúster entero y no tienen por qué ensuciar otras bases.
+- **Las mismas políticas que en la nube.** Se corren `supabase/schema.sql` y `supabase/metricas.sql` sin tocarlos, sobre un `auth` mínimo (`auth.users`, `auth.uid()`, roles y permisos como los deja Supabase). Cada pedido corre en una transacción con `set local role` y los claims del JWT, así que **RLS la aplica Postgres de verdad**, no el emulador.
+- **Un servidor Node** que sirve el repo como Vercel (redirect `/` → `/web/` y los mismos headers) y responde el subconjunto de GoTrue y PostgREST que usa `sesion.js`. Reemplaza `web/supabase-config.js` al servirlo, así que **la web no cambia ni una línea** para correr en local.
+
+**Por qué no la CLI de Supabase:** necesita Docker, que no está instalado y en Windows es pesado (WSL2, varios GB). El emulador cubre los nueve pedidos que hace la web, y lo que importa probar, RLS, lo resuelve Postgres igual que en la nube.
+
+**R28, sin dependencias nuevas:** el servidor no usa `node_modules` (ADR-001). Habla con la base a través de `psql`, que viene con los mismos binarios, y pasa los valores en base64 por stdin. Así ningún dato del usuario entra al SQL como texto, y las tildes no dependen de la página de códigos de la consola de Windows. Cuesta un proceso por pedido, unos 50 ms, que en local no importa.
+
+**Lo que no cubre:** mails (recupero de contraseña y magic link, que responden con un aviso), registro público (cerrado igual que en la nube desde 0.26) y lo que PostgREST tiene y la web no usa. Si la web empieza a usar algo nuevo de Supabase, el emulador lo tiene que aprender en el mismo cambio, y el test de `dev/tests/` lo va a marcar en rojo si no.
+
+---
+
+## ADR-013 · Los outcomes se miden con los contadores propios, y O4 con una clase gruesa de dispositivo — 2026-10-05 · Vigente
+
+**Contexto:** D3 venció el 2026-09-30. La spec decía «se miden con lo que da Vercel», pero Vercel Analytics es un servicio de terceros y el sitio está en local (ADR-012). Ya existía `eventos` (`metricas.sql`): contadores sin usuario, IP, user-agent ni cookie, con fecha por día. Alcanzaba para O1 y O2. O4 («entra desde el celular») no: ningún evento decía de qué dispositivo venía la visita.
+
+**Decisión:**
+- **O1, O2 y O4 se calculan sobre `eventos`**, en una vista `metricas_30_dias` (misma RLS: solo el admin lee), y el panel los muestra contra la meta. La lógica es pura (`web/metricas.js`) y tiene tests. Sin datos dice «sin datos», no 0%.
+- **O2:** «visitas» son cargas de la página (detalle que empieza con `/`), no cada cambio de vista ni cada vista previa: si no, el denominador crece con la navegación y el outcome se hunde solo.
+- **O4:** de las llegadas al combinador, la parte que vino de un celular. Para eso la visita lleva `|movil` o `|escritorio` pegado al detalle. **La clase la calcula el navegador con `matchMedia("(pointer: coarse)")`; el user-agent no se lee nunca.** Dos valores posibles no distinguen a nadie; un user-agent, con poco tráfico, casi sí. Una tablet cuenta como celular, y está bien: lo que mide O4 es si la página anda con el dedo.
+- **O3 queda manual.** No hay contador que diga si alguien entendió. El panel explica el procedimiento y deja anotarlo (en ese navegador), pero el registro que vale es una línea en `status.md`.
+
+- **Lo que hace cumplir la base, y lo que no** (revisado tras la review R30 de 0.33, M4). La primera versión decía «la base rechaza cualquier otra cosa después de la barra», y era cierto solo para eso: con la clave pública se podía guardar `juan.perez@gmail.com DNI 30123456` como visita sin barra, o una visita con `dia = 2099` que la vista contaba para siempre. Hoy:
+  - **`eventos_detalle_formato_check`**: el `detalle` tiene un formato cerrado por tipo. Visita: `/ruta|movil`, `#/vista|escritorio` o `md:archivo.md`; descarga: un nombre de archivo; combinación: `tipo/stack/NOVATO|PRO/nuevo|brownfield`; paquete y perfil: sus ids. Solo `[A-Za-z0-9._/-]`, con largo acotado (30 a 80): **no entran espacios, `@`, saltos de línea ni texto libre**. Lo que no garantiza: un slug corto podría ser un nombre (`juanperez`). Para eso no hay check posible, y con 30 letras sin espacios el abuso es caro y poco útil.
+  - **El día y el id los pone la base** (el id desde 0.33.2, R1 de la segunda vuelta): `anon` y `authenticated` solo tienen `INSERT (tipo, detalle)`. Antes, con el INSERT sobre todas las columnas que Supabase da por defecto, un anónimo podía ocupar ids por delante de la secuencia y el contador legítimo que caía ahí daba 409 y se perdía en silencio. La política de alta (`dia = hoy`) queda como segunda capa, y la vista de 30 días además acota `dia <= hoy`.
+  - **`NOT VALID`**: las filas viejas no se revisan (las visitas de antes de 0.33 quedan, sin clase); todo INSERT nuevo sí.
+  - Lo controla `dev/tests/local.test.mjs` con la sonda del reviewer: cada caso que daba `201` ahora es `4xx`, y lo que manda la web sigue entrando. Desde 0.33.2 hay además un barrido de **todo** lo que la web puede generar (tipos × stacks × niveles, paquetes, vistas, archivos, onboarding): si un tipo o una vista nueva no encaja en el formato, el test lo nombra.
+
+**Descartado:** un evento aparte de tipo `dispositivo` (duplicaba cada visita y no se podía cruzar con el lugar sin guardar algo que las vincule), y el ancho de pantalla en píxeles (es más identificante y no dice si hay dedo o mouse).
+
+**Lo que cuesta:** las visitas anteriores a 0.33 no tienen clase y no cuentan para O4. En la nube hay que volver a correr `metricas.sql` (crea el check, la política nueva y la vista) cuando se reactive; hasta entonces el panel lo avisa en vez de romperse.
+
+---
+
+## ADR-014 · Sin portón: la app abre sin cuenta y entrar es opcional, en `/web/login` — 2026-10-05 · Vigente · **Reemplaza la decisión de 0.26 (sitio privado con `porton.js`)**
+
+**Contexto — un bug real.** Al entrar, el owner veía el onboarding («¿Tenés experiencia programando?…») **encima** del login y no podía tocar ninguno de los dos. El portón (`porton.js`) era una tapa opaca con `z-index: 99999` que ponía `inert` a todo el `body`; el onboarding era un `<dialog>` modal, que vive en el top layer, por encima de cualquier `z-index`. Los dos se abrían solos al cargar `index.html` y ninguno sabía del otro: el diálogo tapaba el formulario de entrar, y el diálogo estaba `inert`. Reproducido en Chrome con clics reales (`Input.dispatchMouseEvent`): ni la opción del onboarding ni el campo de mail responden.
+
+**Decisión del owner:** el login deja de ser obligatorio.
+- **Sin portón.** `porton.js` se borra y sale de todas las páginas (app, admin, guía, demo y tablero). La app abre directo, sin cuenta, como decía C4 antes de 0.26.
+- **Entrar vive en `/web/login`**, una vista de la app con su URL, para quien quiera guardar combinaciones sin tope o entrar al panel. Al terminar vuelve a `?volver=`, solo a rutas internas (V13). Es la lección de 0.32 (`/%2Fweb` redirigía a `//web/`): un `volver` sin validar es una redirección abierta.
+- **El onboarding es una página** (`/web/preferencias`), no un diálogo modal. No compite con nada por el top layer.
+- **El código de cuentas queda** (`sesion.js`, Supabase o el emulador local): se usa cuando la web salga de local.
+
+**ADR-010 sigue vigente y vuelve a ser cierto sin asterisco:** el límite sin cuenta es de persistencia (3 combinaciones en ese navegador), no de acceso.
+
+**Lo que se pierde:** la web publicada ya no esconde la interfaz a quien llega de pasada. Nunca escondió los archivos (el portón lo decía: «esto esconde la INTERFAZ, no los archivos»), así que la protección real no cambia. Si hiciera falta privacidad de verdad, va un servidor delante, no una tapa.
+
+---
+
+## ADR-015 · Rutas reales con la History API, resueltas por el servidor — 2026-10-05 · Vigente · **Reemplaza el ruteo por hash** (comentario de `app.js` desde 0.19)
+
+**Contexto:** la app ruteaba por hash (`#/catalogo`) porque «sin servidor que las resuelva, `/web/catalogo` daría 404 al recargar». Desde 0.32 hay servidor propio (ADR-012), y Vercel resuelve rewrites. El hash además se llevó puesto un bug: `writeURL` del catálogo borraba el `#/combinador?c=…` de los links compartidos (0.33).
+
+**Decisión:**
+- Una ruta por vista bajo `/web/` (`contracts.md` §7). `pushState` al navegar, `popstate` al ir atrás/adelante; se recargan y se comparten.
+- **El servidor resuelve:** `/web/<nombre>` sin extensión sirve `web/<nombre>.html` solo para las páginas de una lista explícita (`admin`, `guia`, `demo`: `PAGINAS` en `dev/servidor.mjs`, la misma que los rewrites de `vercel.json`, y un test las compara), y si no `web/index.html`; con barra final, 308 sin barra. En `dev/servidor.mjs` y en `vercel.json` (rewrites), con el mismo patrón cerrado (`[a-z][a-z0-9-]*`, una sola parte), así que no se abre nada nuevo: ni otro archivo, ni path traversal.
+- **Compatibilidad:** `rutas.js` convierte `#/x?…` en `/web/x?…` al cargar. Las páginas aparte (guía, demo, tablero) linkean a las rutas nuevas.
+- **Métricas sin migración:** el detalle de cambio de vista se queda en `#/<vista>|clase`, como etiqueta. No cambia el check de `eventos`, ni los outcomes, ni el barrido del test.
+
+**Lo que cuesta:** abrir `web/index.html` como archivo (`file://`) ya no navega entre vistas por URL: hace falta `node dev/dev.mjs` o Vercel. Desde ADR-012 es como se trabaja, así que se acepta.
+

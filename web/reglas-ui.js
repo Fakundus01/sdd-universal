@@ -136,7 +136,24 @@ const ReglasUI = (() => {
     $("rnotas").value = cfg.notas;
   }
 
-  const guardar = () => localStorage.setItem(CLAVE, JSON.stringify(cfg));
+  /* Quien depende de la configuración (el combinador) se entera de cada
+     cambio: así el prompt generado no queda viejo (M3 de la review de 0.33). */
+  const oyentes = [];
+  const avisar = () => oyentes.forEach(f => { try { f(); } catch (e) { console.error(e); } });
+  const guardar = () => {
+    try { localStorage.setItem(CLAVE, JSON.stringify(cfg)); } catch { /* sin storage */ }
+    avisar();
+  };
+
+  /* El perfil tiene una sola fuente: esta. El select del combinador escribe
+     acá, y el custom.md y el prompt leen lo mismo. */
+  function fijarPerfil(p){
+    if (!["ESTRICTO", "CONFIANZA"].includes(p) || p === cfg.perfil) return;
+    cfg.perfil = p;
+    if ($("rperfil")) $("rperfil").value = p;
+    guardar();
+    if ($("rout")) render();
+  }
 
   function cargar(){
     try { cfg = {...base(), ...JSON.parse(localStorage.getItem(CLAVE))}; }
@@ -152,6 +169,7 @@ const ReglasUI = (() => {
 
   function iniciar(){
     cargar();
+    avisar();
 
     $("rlist").addEventListener("change", e => {
       const cb = e.target.closest("[data-regla]");
@@ -168,7 +186,7 @@ const ReglasUI = (() => {
 
     $("rreset").onclick = () => {
       if (!confirm("¿Volver todo a la configuración por defecto?")) return;
-      cfg = base(); guardar(); pintarFormulario(); render();
+      cfg = base(); pintarFormulario(); guardar(); render();
     };
 
     $("rdl").onclick = () => {
@@ -192,6 +210,11 @@ const ReglasUI = (() => {
 
   function irPagina(p){ pag = p; render(); $("rlist").scrollTop = 0; }
 
-  return {iniciar, abrir, generar, irPagina, hayCambios: () => cfg.apagadas.length > 0 ||
+  /* Lo que el combinador lee para el prompt: con R01 apagada (o perfil
+     CONFIANZA) el prompt no puede prometer esperar el OK del commit. */
+  return {iniciar, abrir, generar, irPagina,
+          apagadas: () => [...cfg.apagadas], perfil: () => cfg.perfil, modo: () => cfg.modo,
+          fijarPerfil, alCambiar: f => oyentes.push(f),
+          hayCambios: () => cfg.apagadas.length > 0 ||
           cfg.perfil !== "ESTRICTO" || cfg.modo !== "FULL" || Boolean(cfg.maxLineas || cfg.stack || cfg.propias.trim())};
 })();

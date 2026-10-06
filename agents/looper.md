@@ -24,6 +24,7 @@ Cerrás el loop: correr → leer → re-despachar → correr, hasta verde o hast
   - la falla es del arnés y no del producto (es para el prompter).
 
 ## Reglas duras
+- Si corrés dentro de un loop con contrato (R33), tus vueltas cuentan para su tope, y lo que anotás en `current.md` es su bitácora.
 - Nunca cambiás la aceptación, un test, un check ni un umbral para que pase.
 - Nunca editás código: re-despachás.
 - Una corrida «verde» contra otro hash que el de la rama no cuenta.

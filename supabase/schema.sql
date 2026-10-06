@@ -19,6 +19,8 @@ create table if not exists public.perfiles (
 
 -- Perfil de onboarding. Se agrega con "if not exists" para que este archivo
 -- se pueda volver a correr sobre un proyecto que ya tenía las tablas.
+-- Una columna nueva que edite la web va también al «grant update (...)» de
+-- metricas.sql: sin eso el PATCH entero falla con 42501, y sesion.js lo calla.
 alter table public.perfiles add column if not exists perfil_sdd text not null default 'ESTRICTO'
   check (perfil_sdd in ('ESTRICTO','CONFIANZA'));
 alter table public.perfiles add column if not exists agente text not null default '';
@@ -58,8 +60,22 @@ create index if not exists combinaciones_usuario_idx
 
 -- No dos combinaciones con el mismo nombre para la misma persona: al guardar
 -- de nuevo se pisa la anterior (upsert) en vez de acumular duplicados.
-create unique index if not exists combinaciones_usuario_nombre_idx
-  on public.combinaciones (usuario_id, lower(nombre));
+--
+-- v0.32: la unicidad va sobre una columna y no sobre la expresión lower(nombre).
+-- El upsert de PostgREST (on_conflict=...) solo nombra columnas, y Postgres no
+-- encaja columnas contra un índice de expresión: con el índice viejo, guardar
+-- una combinación con cuenta fallaba siempre con 42P10. Lo encontró el test del
+-- entorno local (dev/tests/), que corre este archivo tal cual.
+alter table public.combinaciones add column if not exists nombre_clave text
+  generated always as (lower(nombre)) stored;
+drop index if exists public.combinaciones_usuario_nombre_idx;
+create unique index if not exists combinaciones_usuario_clave_idx
+  on public.combinaciones (usuario_id, nombre_clave);
+
+-- v0.33: si el proyecto lleva IA en el producto. Decide el nivel N4 de
+-- seguridad.md y la recomendación de modelo (R12) en el prompt, así que una
+-- combinación guardada sin este dato vuelve a salir sin ellos.
+alter table public.combinaciones add column if not exists ia boolean not null default false;
 
 -- ---------------------------------------------------------------------------
 -- RLS: sin esto, la clave pública deja leer los datos de todo el mundo.

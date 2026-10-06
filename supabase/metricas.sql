@@ -32,6 +32,15 @@ create index if not exists eventos_tipo_idx on public.eventos (tipo, detalle);
 -- ---------------------------------------------------------------------------
 alter table public.perfiles add column if not exists admin boolean not null default false;
 
+-- v0.32: «no hay ninguna ruta para volverse admin» no era cierto. La política
+-- «perfil propio: editar» deja a cada uno editar SU fila entera, admin incluida,
+-- y Supabase da UPDATE sobre toda la tabla: un PATCH {admin:true} a tu propio
+-- perfil alcanzaba. RLS decide qué filas; qué columnas lo deciden los permisos.
+-- Por eso se edita solo lo que la web manda, y el perfil lo crea el trigger.
+revoke insert, update on public.perfiles from anon, authenticated;
+grant update (nombre, tema, nivel, perfil_sdd, agente, interes, onboarding)
+  on public.perfiles to authenticated;
+
 -- ---------------------------------------------------------------------------
 -- RLS: cualquiera puede SUMAR un evento, nadie puede LEERLOS salvo un admin.
 -- Es la asimetría que hace que esto sea seguro: la clave pública sirve para
@@ -42,8 +51,19 @@ alter table public.eventos enable row level security;
 drop policy if exists "eventos: cualquiera suma"   on public.eventos;
 drop policy if exists "eventos: solo admin lee"    on public.eventos;
 
+-- v0.33.2 (R1 de la review): Supabase da INSERT sobre TODAS las columnas, así
+-- que un anónimo podía elegir el `id` y ocupar números por delante de la
+-- secuencia: el contador legítimo que caía ahí daba 409 y se perdía en
+-- silencio. Ahora solo se insertan `tipo` y `detalle`; `id` y `dia` los pone
+-- la base. La política de abajo queda como segunda capa para `dia`.
+revoke insert on public.eventos from anon, authenticated;
+grant insert (tipo, detalle) on public.eventos to anon, authenticated;
+
+-- El día lo pone la base (v0.33, M4): con `with check (true)` se podía
+-- mandar dia = 2099 y la vista de 30 días lo contaba para siempre.
 create policy "eventos: cualquiera suma" on public.eventos
-  for insert to anon, authenticated with check (true);
+  for insert to anon, authenticated
+  with check (dia = (now() at time zone 'utc')::date);
 
 create policy "eventos: solo admin lee" on public.eventos
   for select using (
@@ -90,3 +110,48 @@ $$;
 alter table public.eventos drop constraint if exists eventos_tipo_check;
 alter table public.eventos add constraint eventos_tipo_check
   check (tipo in ('visita','descarga','combinacion','paquete','perfil'));
+
+-- ---------------------------------------------------------------------------
+-- v0.33 (D3): el reporte de outcomes del panel. O4 («entra desde el celular»)
+-- necesita saber si la visita vino de un celular, y eso se guarda como una
+-- CLASE GRUESA pegada al detalle de la visita: «#/combinador|movil» o
+-- «/web/|escritorio». Nunca el user-agent, ni el modelo, ni el tamaño exacto
+-- de pantalla: dos valores posibles no distinguen a nadie, un user-agent sí.
+-- La web la calcula con matchMedia("(pointer: coarse)"), sin leer el agente.
+--
+-- v0.33, review R30 (M4): el primer check solo miraba lo que iba DESPUÉS de
+-- una barra, y la política de alta era `with check (true)`: con la clave
+-- pública se podía guardar «juan.perez@gmail.com DNI 30123456» como visita, o
+-- una visita con dia = 2099 que la vista contaba para siempre. Ahora:
+--   · el detalle tiene un formato cerrado POR TIPO (abajo): rutas, nombres de
+--     archivo e ids cortos de [A-Za-z0-9._/-]. Sin espacios, sin «@», sin
+--     saltos de línea y con largo acotado. Un slug corto igual podría ser un
+--     nombre («juanperez»): lo que se garantiza es que no entra texto libre,
+--     no que sea imposible abusar de un campo de 30 letras;
+--   · el día lo pone la base: la política de alta (arriba) exige dia = hoy (UTC);
+--   · la vista de 30 días además acota dia <= hoy.
+-- NOT VALID: las filas viejas no se revisan (las visitas de antes de 0.33 no
+-- tienen clase y no se pierden); todo INSERT nuevo sí.
+-- ---------------------------------------------------------------------------
+alter table public.eventos drop constraint if exists eventos_detalle_visita_check;
+alter table public.eventos drop constraint if exists eventos_detalle_formato_check;
+alter table public.eventos add constraint eventos_detalle_formato_check check (
+  case tipo
+    when 'visita'      then detalle ~ '^((/[A-Za-z0-9._/-]{0,80}|#/[a-z]{1,20})\|(movil|escritorio)|md:[A-Za-z0-9._-]{1,80})$'
+    when 'descarga'    then detalle ~ '^[A-Za-z0-9._-]{1,60}$'
+    when 'combinacion' then detalle ~ '^[a-z0-9-]{1,30}/[a-z0-9-]{1,20}/(NOVATO|PRO)/(nuevo|brownfield)$'
+    when 'paquete'     then detalle ~ '^(sueltos|skills|(proyecto|rapido):[a-z0-9-]{1,30})$'
+    when 'perfil'      then detalle ~ '^(nivel|interes|agente):[A-Za-z0-9-]{1,30}$'
+    else false
+  end) not valid;
+
+
+-- Los últimos 30 días (hoy incluido), por tipo y detalle: lo que lee el
+-- reporte de O1, O2 y O4. Misma RLS que el resto: un no-admin ve vacío.
+create or replace view public.metricas_30_dias
+with (security_invoker = true) as
+  select tipo, detalle, count(*)::bigint as total
+  from public.eventos
+  where dia >  (now() at time zone 'utc')::date - 30
+    and dia <= (now() at time zone 'utc')::date
+  group by tipo, detalle;

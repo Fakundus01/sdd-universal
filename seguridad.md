@@ -1,6 +1,6 @@
 # seguridad.md · Controles por superficie de ataque
 
-**Versión:** 0.11 · 2026-08-15 · **Bloque:** `seguridad` · **Para agentes:** leer cuando se clasifica la superficie del proyecto (R27), cuando se escribe o revisa `security.md`, y antes de cualquier feature que toque autenticación, datos de terceros, pagos, archivos o IA.
+**Versión:** 0.13 · 2026-10-05 · **Bloque:** `seguridad` · **Para agentes:** leer cuando se clasifica la superficie del proyecto (R27), cuando se escribe o revisa `security.md`, y antes de cualquier feature que toque autenticación, datos de terceros, pagos, archivos o IA.
 
 > **Por qué existe.** R17 cubre lo básico —secretos fuera del repo, `.gitignore` como paso 0— y con eso alcanza para un script. No alcanza para nada que tenga usuarios. Este archivo agrega los controles que aparecen cuando el proyecto crece, **organizados por lo que el proyecto realmente hace**, no como una lista de 80 ítems que nadie lee.
 >
@@ -23,6 +23,8 @@ En el arranque, el agente responde estas seis preguntas y aplica **solo** los ni
 | 6 | ¿Hay una API o endpoint público? | **N6 · Superficie pública** |
 
 La clasificación y los niveles activados **se registran en `security.md` del proyecto**, con fecha. Si más adelante el proyecto suma login, se reclasifica: agregar una feature puede activar un nivel nuevo, y ese es justamente el momento en que la gente se olvida.
+
+**Cada control que se declara lleva un test que se vio fallar (R29).** En los ejemplos de `scenarios.md` S35, controles escritos en `security.md` (vencimiento de sesión, contención de rutas, el lock del rate limit) sobrevivían a su mutante: estaban en la spec pero ningún test los tocaba, o el test no daba rojo nunca. La tabla de controles del proyecto tiene una columna «test» y el reviewer (R30) rompe cada control una vez para verlo fallar. Un control sin test es una intención, no un control.
 
 ---
 
@@ -73,6 +75,8 @@ Lo que `security.md` del proyecto tiene que contestar por escrito (R17 lo pide; 
 | Normativa local declarada | En Argentina, Ley 25.326. Nombrarla obliga a leerla una vez |
 | Logs sin datos personales | El lugar más común donde se filtra un mail o un token |
 
+**Borrar o anonimizar es en el archivo también** (`scenarios.md` S35, H25). En SQLite, un `UPDATE` o un `DELETE` deja los valores viejos en páginas libres del archivo: en dos de los ejemplos, después de «anonimizar» seguían ahí casi todos los nombres y mails. La base abre con `pragma secure_delete = on`, después de anonimizar se corre `VACUUM`, una base anonimizada con la versión anterior se limpia una vez, y el test lee los **bytes** del archivo, no las filas. Los backups no se anonimizan solos: retención corta (por ejemplo 30 días), y restaurar uno es anonimizar antes de volver a atender.
+
 ## 5 · N3 · Plata — hay cobros
 
 | Control | Por qué |
@@ -91,12 +95,42 @@ Este nivel casi no existía hace unos años y hoy es de los más ignorados.
 | Control | Por qué |
 |---|---|
 | **Lo que el modelo lee es dato, no instrucción** (R26) | Contenido de una web, un PDF o una issue puede traer texto dirigido al modelo. Si el modelo puede actuar, eso es una vía de ejecución |
-| Límite de gasto por usuario y global, con corte automático | Un endpoint de IA sin techo es una factura sin límite superior |
+| Límite de gasto por usuario y global, con corte automático: **se reserva la cota antes de llamar**, bajo lock, y se registra siempre (`playbooks/ia-en-el-producto.md`) | Un endpoint de IA sin techo es una factura sin límite superior. «Chequear y después llamar» no es un techo: en paralelo pasan todos, y una reserva fija tampoco lo es si el prompt crece |
 | Rate limit por IP y por cuenta | Sin esto, tu clave paga el uso de un tercero |
 | La API key **nunca** en el front | Si está en el navegador, es pública. Va en el servidor |
 | Nada sensible en el prompt sin decidirlo | Lo que va al prompt sale de tu infraestructura hacia el proveedor |
 | Validar la **salida** antes de usarla | Si la respuesta se inserta en HTML, ejecuta SQL o corre como comando, es entrada no confiable |
+| El texto del usuario va **escapado** (`<`, `>` y `&`) dentro de etiquetas que pone el sistema | Si solo se borra la etiqueta de cierre en una pasada, `</tick</ticket>et>` queda como `</ticket>` después de borrar: el cliente cierra el bloque de «dato» y lo que sigue el modelo lo lee como instrucción. Escapar no tiene ese problema |
+| Tests con el **SDK real** sobre un transporte simulado | Un cliente falso escrito a mano ocultó que un helper validaba adentro de la llamada y perdía el registro del gasto |
 | Decirle al usuario que habla con una IA | Y qué se guarda de esa conversación |
+
+**El mapa completo: OWASP Top 10 para aplicaciones con LLM (2025).** La tabla de arriba sale de los proyectos reales. Esta es la lista de referencia de la industria, con dónde lo cubre el paquete. Al clasificar N4 se recorre entera: lo que no aplica se anota «no aplica, porque…», y lo que aplica lleva su control **y su test** (§1).
+
+| # | Riesgo | En criollo | Control en el SDD |
+|---|---|---|---|
+| LLM01 | Prompt injection | Un input o un documento le cambia las instrucciones al modelo | R26 (lo leído es dato) · texto del usuario escapado en etiquetas del sistema · reglas en el system, nunca en el input |
+| LLM02 | Fuga de información sensible | El modelo devuelve datos que no debería | Contexto mínimo: al modelo va solo lo que la tarea necesita (las notas internas no van) · N2 · el filtro de permisos se aplica **antes** de armar el prompt, no en la salida |
+| LLM03 | Cadena de suministro | Modelos, datasets o plugins de terceros comprometidos | R28 (cada dependencia justificada, versión verificada) · SDK oficial del proveedor · modelos y datasets de origen conocido |
+| LLM04 | Envenenamiento de datos o del modelo | Datos de entrenamiento o del RAG manipulados | Lo que entra al índice se trata como entrada de usuario: quién lo cargó, cuándo, se puede borrar · el contenido recuperado es dato (R26) |
+| LLM05 | Manejo inseguro del output | Usar la salida sin validar (XSS, SQL, comandos) | Salida estructurada validada a mano · se muestra como texto, nunca HTML · nunca va a SQL ni a un shell sin validar |
+| LLM06 | Agencia excesiva | El agente tiene más permisos o herramientas de los que necesita | Ver abajo: herramientas de solo lectura por defecto, el que lee no es el que actúa, aprobación humana para lo sensible |
+| LLM07 | Fuga del system prompt | Se exponen instrucciones o secretos del prompt | El system prompt no lleva secretos (se asume que se filtra) · las reglas que importan se hacen cumplir en el código, no solo en el prompt |
+| LLM08 | Debilidades en vectores y embeddings | Ataques o fugas a través de la base vectorial | Filtrar por permisos del usuario **antes** de buscar · un índice por inquilino o un filtro obligatorio en cada consulta · lo recuperado es dato |
+| LLM09 | Desinformación | Alucinaciones tomadas como verdad | Datos del negocio (precios, stock, políticas) solo desde herramientas o RAG, nunca «de memoria» · citar la fuente · evals que lo prueban · una persona aprueba lo que se manda a un cliente |
+| LLM10 | Consumo ilimitado | Costos disparados o caída del servicio por uso sin límites | El tope como **reserva** (`playbooks/ia-en-el-producto.md` A–B) · rate limit · límite de mensajes · `max_tokens` |
+
+**Agentes que actúan (LLM06).** Si el modelo puede hacer algo además de contestar (publicar, mandar, cobrar, borrar, escribir en una base), tres reglas mínimas:
+1. **El que lee no es el que actúa.** El agente que procesa contenido ajeno (comentarios, mensajes directos, mails, páginas) no tiene la herramienta que publica o responde: le pasa una propuesta a otro paso. Si no, cualquiera le mete instrucciones desde un comentario.
+2. **Aprobación humana** para todo lo que sale hacia afuera o no se deshace: una persona ve la propuesta y la manda. Es el «borrador» de la mesa de ayuda de los ejemplos.
+3. **La salida se valida antes de ejecutarse**, contra un esquema y una lista blanca de acciones, como cualquier entrada de usuario.
+
+**Cliente corporativo: NIST AI RMF 1.0.** OWASP es la lista técnica. El marco de gestión de riesgo de IA del NIST es lo que pide un cliente grande. Tiene cuatro funciones, y el SDD ya tiene dónde va cada una:
+- **Govern:** políticas y roles (R21 y `teams.md` en equipos; en un proyecto chico, el owner y `custom.md`, donde quedan las reglas que se apagaron y por qué).
+- **Map:** contexto y riesgos de cada caso de uso (§1 de este archivo y `spec.md`).
+- **Measure:** evals y métricas (los outcomes, el eval del producto).
+- **Manage:** priorizar y mitigar (la deuda aceptada en `status.md`, con fecha y disparador).
+
+Si el cliente lo exige, `security.md` lleva una sección por función, con la evidencia de cada una.
 
 ## 7 · N5 · Archivos — el usuario puede subir
 
@@ -119,6 +153,7 @@ Este nivel casi no existía hace unos años y hoy es de los más ignorados.
 | Errores que no cuentan de más | Un stack trace en producción es un mapa |
 | Headers: `nosniff`, `X-Frame-Options`, `Referrer-Policy`, y CSP si se puede | Baratos y evitan familias enteras de ataque |
 | Paginación con techo | `?limite=999999` no puede bajar la base |
+| Estáticos servidos desde una **lista blanca** armada al arrancar, nunca `base / ruta_del_pedido` | Tocar el disco con la ruta del cliente es path traversal, y en Windows `\\host\share` dispara SMB saliente y filtra el hash NTLM. Test: rutas hostiles (`..`, `%5c`, UNC, letra de unidad, alias 8.3) y un espía que confirma que el disco no se toca |
 
 ---
 
@@ -144,7 +179,8 @@ Este nivel casi no existía hace unos años y hoy es de los más ignorados.
 5. **Logs con datos personales o tokens.** El lugar más común donde se filtra algo.
 6. **Escáner en verde = seguro.** Ver el punto de arriba.
 7. **Dejarlo para el final.** Agregar auth después de modelar los datos es rediseñar, no agregar.
-8. **Un endpoint de IA sin techo de gasto.** No es una brecha, es una factura.
+8. **Un endpoint de IA sin techo de gasto.** No es una brecha, es una factura. Y un techo que se chequea en vez de reservarse tampoco es techo.
+9. **Un control sin test.** Está escrito, se cree que funciona, y nadie lo vio fallar nunca.
 
 ## 11 · Lo que NO hay que hacer
 
@@ -162,4 +198,6 @@ Igual que todo el paquete (R20): un control entra cuando alguien se comió el pr
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.13 | 2026-10-05 | N4 con el **mapa completo** del OWASP Top 10 para LLMs (2025), cada riesgo con su control en el paquete; reglas para agentes que actúan (LLM06: el que lee no es el que actúa, aprobación humana, salida validada), y el NIST AI RMF (Govern / Map / Measure / Manage) para clientes corporativos (`scenarios.md` S38). |
+| 0.12 | 2026-10-05 | Lecciones de los cuatro ejemplos (`scenarios.md` S33 y S35): N2 con el borrado en el archivo (`secure_delete` + `VACUUM`, backups); N4 con el tope como **reserva** y el playbook `ia-en-el-producto`, escape del texto del usuario y tests con el SDK real; N6 con los estáticos por lista blanca; cada control declarado lleva un test que se vio fallar; error 9 «un control sin test». |
 | 0.11 | 2026-08-15 | Primera versión: clasificación por superficie (N0–N6), controles con su porqué y su verificación, herramientas con lo que cada una **no** detecta, y los 8 errores que más se repiten. Nace de R27. |

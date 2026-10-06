@@ -44,7 +44,7 @@ const PerfilVista = (() => {
       $("perfilPass").onclick = () => { if (window.abrirCambioPassword) abrirCambioPassword(); };
       $("perfilSalir").onclick = async () => {
         if (!confirm("¿Cerrar sesión? Lo que tengas guardado sigue en tu cuenta.")) return;
-        await Sesion.salir();   // el portón se pone solo al perder la sesión
+        await Sesion.salir();   // sin portón (ADR-014): la app sigue, sin cuenta
         refrescar(); if (window.renderGuardadas) renderGuardadas();
       };
     } else if (Sesion.activo()){
@@ -57,7 +57,7 @@ const PerfilVista = (() => {
           <li>✓ Tu tema y tus respuestas viajan con vos</li>
         </ul>
         <button class="btn b-go" id="perfilEntrar2" type="button">Crear cuenta o entrar</button>`;
-      $("perfilEntrar2").onclick = () => $("authdlg").showModal();
+      $("perfilEntrar2").onclick = () => irALogin();
     } else {
       caja.innerHTML = `<p class="d">Las cuentas no están configuradas en esta instalación. Todo se guarda en este navegador. Ver <code>playbooks/supabase-auth.md</code>.</p>`;
       $("pcardCuenta").hidden = false;
@@ -81,8 +81,8 @@ const PerfilVista = (() => {
   }
 
   function iniciar(){
-    $("perfilAccion").onclick = () => $("authdlg").showModal();
-    $("perfilRehacer").onclick = () => Perfil.abrir(p => { window.aplicarPerfil(p); refrescar(); });
+    $("perfilAccion").onclick = () => irALogin();
+    $("perfilRehacer").onclick = () => Perfil.abrir(p => { window.aplicarPerfil(p); refrescar(); }, "perfil");
 
     $("perfilForm").addEventListener("change", async e => {
       const sel = e.target.closest("[data-campo]"); if (!sel) return;

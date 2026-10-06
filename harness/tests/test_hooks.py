@@ -55,10 +55,38 @@ class TestSessionStart(HooksCase):
         self.assertIn("Correr la migración 0042", out)
         self.assertIn("Tarjeta en curso en esta rama: H-1", out)
 
+    def test_nombra_el_master_configurado(self):
+        self.p.write("harness.config.json", json.dumps({"test": PASS_CMD, "master": "SDD-MASTER.md"}))
+        _, out, _ = call("session-start", {}, self.p.root)
+        self.assertIn("Leé SDD-MASTER.md y", out)
+        self.assertNotIn("sdd/SDD-MASTER.md", out)
+
+    def test_modo_lite_se_lee_del_master_configurado(self):
+        self.p.write("harness.config.json", json.dumps({"test": PASS_CMD, "master": "SDD-MASTER.md"}))
+        (self.p.root / "sdd/SDD-MASTER.md").unlink()
+        self.p.write("SDD-MASTER.md", "# master\n\n- **Modo por tamaño (R18):** LITE — chico\n")
+        self.p.write("sdd/sdd-lite.md", "estado lite\n")
+        _, out, _ = call("session-start", {}, self.p.root)
+        self.assertIn("sdd/sdd-lite.md", out)
+        self.assertNotIn("progress/main/current.md", out)
+
+    def test_sin_master_configurado_nombra_el_de_siempre(self):
+        _, out, _ = call("session-start", {}, self.p.root)
+        self.assertIn("Leé sdd/SDD-MASTER.md y", out)
+
     def test_sin_current_dice_como_crearlo(self):
         code, out, _ = call("session-start", {}, self.p.root)
         self.assertEqual(code, 0)
         self.assertIn("verify.py --quick` lo crea", out)
+
+    def test_en_lite_muestra_sdd_lite_y_no_promete_current(self):
+        # H7: en LITE no hay progress/; el estado vive en sdd/sdd-lite.md.
+        self.p.write("sdd/custom.md", "MODO=LITE\n")
+        self.p.write("sdd/sdd-lite.md", "## Próximo paso\nSumar el export a CSV\n")
+        code, out, _ = call("session-start", {}, self.p.root)
+        self.assertEqual(code, 0)
+        self.assertIn("Sumar el export a CSV", out)
+        self.assertNotIn("current.md", out)
 
 
 class TestContextGuard(HooksCase):

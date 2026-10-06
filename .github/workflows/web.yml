@@ -1,10 +1,11 @@
 name: web
 
-# Tests de la web sin navegador (D2 en sdd/status.md): el ZIP del proyecto
-# y que la web muestre las mismas reglas que el master.
+# Tests de la web (D2 en sdd/status.md): sin navegador, el ZIP del proyecto
+# y que la web muestre las mismas reglas que el master; con navegador, el
+# smoke de la interfaz en Chrome headless por CDP (web/tests/smoke/).
 on:
   push:
-    paths: ["web/**", "SDD-MASTER.md", "sdd-universal-tablero.html", "harness/**", "agents/**", "prompts/**", "skills/**", "*.md", ".github/workflows/web.yml"]
+    paths: ["web/**", "SDD-MASTER.md", "sdd-universal-tablero.html", "harness/**", "agents/**", "prompts/**", "playbooks/**", "skills/**", "*.md", ".github/workflows/web.yml"]
   pull_request:
 
 jobs:
@@ -16,3 +17,16 @@ jobs:
         with:
           node-version: 24
       - run: node --test "web/tests/*.test.mjs"
+
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      # El Chrome que trae la imagen de ubuntu-latest; el script lo busca solo
+      # (o toma CHROME_PATH) y corta a los 120 s por su cuenta.
+      - run: google-chrome --version
+      - run: node web/tests/smoke/smoke.mjs

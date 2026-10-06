@@ -5,6 +5,7 @@
   python harness/verify.py --changed   --quick + test_quick si hay cambios de código
   python harness/verify.py             todo, igual que CI: lint + test
   python harness/verify.py --e2e       además corre e2e y, si da verde, lo registra en sdd/progress/e2e.md
+                                       (en modo LITE, en sdd/e2e.md)
 
 La primera línea dice el hash: la salida entera sirve como evidencia (R30). Exit 1 si algo falla.
 """
@@ -24,9 +25,9 @@ sys.dont_write_bytecode = True  # un __pycache__ del arnés aparecería como «c
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from checks import HarnessChecks  # noqa: E402
-from config import ConfigError, HarnessConfig  # noqa: E402
+from config import ConfigError, HarnessConfig, e2e_record  # noqa: E402
 from report import Report, force_utf8  # noqa: E402
-from repo import Repo  # noqa: E402
+from repo import LOST, OutputLost, Repo, run_captured  # noqa: E402
 
 TAIL_OK = 3
 TAIL_FAIL = 25
@@ -101,7 +102,7 @@ class Verifier:
             self.report.fail("--e2e pedido pero no hay 'e2e' en harness.config.json")
             return
         if self._command("e2e", config.e2e):
-            record = self.root / "sdd" / "progress" / "e2e.md"
+            record = e2e_record(self.root, config.master)
             record.parent.mkdir(parents=True, exist_ok=True)
             with record.open("a", encoding="utf-8") as fh:
                 fh.write(f"- {date.today().isoformat()} @ {self.repo.head()} — e2e verde\n")
@@ -113,8 +114,13 @@ class Verifier:
         start = time.monotonic()
         try:
             # stdin cerrado: un comando que pide input falla en vez de colgar el pre-commit.
-            proc = subprocess.run(command, shell=isinstance(command, str), cwd=self.root, capture_output=True,
-                                  stdin=subprocess.DEVNULL, timeout=COMMAND_TIMEOUT_S)
+            proc = run_captured(command, shell=isinstance(command, str), cwd=self.root, stdin=subprocess.DEVNULL,
+                                timeout=COMMAND_TIMEOUT_S)
+        except OutputLost as exc:
+            # Sin la salida no hay evidencia (R30), aunque el exit haya sido 0.
+            self.report.fail(f"{label} — `{cmd}` salió con {exc.returncode}, pero {LOST}: se perdió dos veces "
+                             "(Windows bajo carga). Volvé a correrlo; si se repite, corré una sola suite por vez")
+            return False
         except subprocess.TimeoutExpired:
             self.report.fail(f"{label}: `{cmd}` no terminó en {COMMAND_TIMEOUT_S}s")
             return False
@@ -132,6 +138,8 @@ class Verifier:
         return False
 
     def _finish(self) -> int:
+        for msg in self.repo.errors:
+            self.report.fail(msg)
         print(self.report.render())
         fails, warns = len(self.report.messages("FAIL")), len(self.report.messages("WARN"))
         print(f"\n{'ROJO' if fails else 'VERDE'} — {fails} FAIL, {warns} WARN")
