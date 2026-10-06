@@ -1,6 +1,6 @@
 # status.md · SDD Hub
 
-**Versión:** 0.33 · **Última actualización:** 2026-10-05 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
+**Versión:** 0.34 · **Última actualización:** 2026-10-05 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
 
 ## Features
 
@@ -24,12 +24,16 @@
 | F16 | Feedback de carga (loaders, descargando, recargando) | Complete | 100% | Un solo módulo; el zip con progreso real |
 | F17 | Manuales: playbooks y skills desde la web | Complete | 100% | 0.25 y 0.28: skills del SDD + 11 sueltas, paginadas de a 6 |
 | F18 | Descarga rápida por card | Complete | 100% | 0.25: popup con nuevo/existente, nivel, skills y (0.30.1) arnés |
-| F19 | Sitio privado (portón de sesión) | Complete | 100% | 0.26 y 0.28. Depende de que el proyecto Supabase esté activo: ver Bloqueos |
+| ~~F19~~ | ~~Sitio privado (portón de sesión)~~ — **retirada en 0.34 (ADR-014)**: el portón tapaba el onboarding y viceversa; la app abre sin cuenta | — | — | Reemplazada por F24 |
 | F21 | Entorno local sin nube (ADR-012) | Complete | 100% | 0.32: `node dev/dev.mjs` levanta Postgres propio y un emulador de Supabase; la web corre entera con login. 9 tests + smoke en Chrome |
 | F22 | Reporte de outcomes en el panel (D3, ADR-013) | Complete | 100% | 0.33: O1, O2 y O4 de los últimos 30 días contra su meta; O3 manual. Clase de dispositivo gruesa en la visita, nunca el user-agent. Desde la review R30 la base cierra el formato de `detalle` por tipo y pone el día |
 | F20 | El ZIP trae la capa de ejecución (R29–R32) | Complete | 100% | 0.31: `harness.md`, `orchestration.md` y `prompts/` siempre; `agents/` con PRO; `harness/` opcional, con el pre-commit en 755. Cubierto por `web/tests/` (en CI) y por un smoke en Chrome headless: checkboxes, árbol, cambio de nivel y popup |
 
-**Avance total: 22 / 22 features = 100%**
+| F23 | Rutas reales por vista (ADR-015) | Complete | 100% | 0.34: `/web/<vista>` con History API; el servidor (dev y Vercel) resuelve; `#/` viejo redirige |
+| F24 | Entrar opcional en `/web/login` (ADR-014) | Complete | 100% | 0.34: `volver` solo a rutas internas; admin sin sesión manda acá |
+| F25 | Onboarding como página (`/web/preferencias`) | Complete | 100% | 0.34: la primera visita entra ahí sin bloquear; «Rehacer» lleva ahí |
+
+**Avance total: 24 / 24 features vigentes = 100%** (F19 retirada)
 
 ## Bloqueos
 

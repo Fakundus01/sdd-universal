@@ -179,3 +179,33 @@
 
 **Lo que cuesta:** las visitas anteriores a 0.33 no tienen clase y no cuentan para O4. En la nube hay que volver a correr `metricas.sql` (crea el check, la política nueva y la vista) cuando se reactive; hasta entonces el panel lo avisa en vez de romperse.
 
+---
+
+## ADR-014 · Sin portón: la app abre sin cuenta y entrar es opcional, en `/web/login` — 2026-10-05 · Vigente · **Reemplaza la decisión de 0.26 (sitio privado con `porton.js`)**
+
+**Contexto — un bug real.** Al entrar, el owner veía el onboarding («¿Tenés experiencia programando?…») **encima** del login y no podía tocar ninguno de los dos. El portón (`porton.js`) era una tapa opaca con `z-index: 99999` que ponía `inert` a todo el `body`; el onboarding era un `<dialog>` modal, que vive en el top layer, por encima de cualquier `z-index`. Los dos se abrían solos al cargar `index.html` y ninguno sabía del otro: el diálogo tapaba el formulario de entrar, y el diálogo estaba `inert`. Reproducido en Chrome con clics reales (`Input.dispatchMouseEvent`): ni la opción del onboarding ni el campo de mail responden.
+
+**Decisión del owner:** el login deja de ser obligatorio.
+- **Sin portón.** `porton.js` se borra y sale de todas las páginas (app, admin, guía, demo y tablero). La app abre directo, sin cuenta, como decía C4 antes de 0.26.
+- **Entrar vive en `/web/login`**, una vista de la app con su URL, para quien quiera guardar combinaciones sin tope o entrar al panel. Al terminar vuelve a `?volver=`, solo a rutas internas (V13). Es la lección de 0.32 (`/%2Fweb` redirigía a `//web/`): un `volver` sin validar es una redirección abierta.
+- **El onboarding es una página** (`/web/preferencias`), no un diálogo modal. No compite con nada por el top layer.
+- **El código de cuentas queda** (`sesion.js`, Supabase o el emulador local): se usa cuando la web salga de local.
+
+**ADR-010 sigue vigente y vuelve a ser cierto sin asterisco:** el límite sin cuenta es de persistencia (3 combinaciones en ese navegador), no de acceso.
+
+**Lo que se pierde:** la web publicada ya no esconde la interfaz a quien llega de pasada. Nunca escondió los archivos (el portón lo decía: «esto esconde la INTERFAZ, no los archivos»), así que la protección real no cambia. Si hiciera falta privacidad de verdad, va un servidor delante, no una tapa.
+
+---
+
+## ADR-015 · Rutas reales con la History API, resueltas por el servidor — 2026-10-05 · Vigente · **Reemplaza el ruteo por hash** (comentario de `app.js` desde 0.19)
+
+**Contexto:** la app ruteaba por hash (`#/catalogo`) porque «sin servidor que las resuelva, `/web/catalogo` daría 404 al recargar». Desde 0.32 hay servidor propio (ADR-012), y Vercel resuelve rewrites. El hash además se llevó puesto un bug: `writeURL` del catálogo borraba el `#/combinador?c=…` de los links compartidos (0.33).
+
+**Decisión:**
+- Una ruta por vista bajo `/web/` (`contracts.md` §7). `pushState` al navegar, `popstate` al ir atrás/adelante; se recargan y se comparten.
+- **El servidor resuelve:** `/web/<nombre>` sin extensión sirve `web/<nombre>.html` si existe, si no `web/index.html`; con barra final, 308 sin barra. En `dev/servidor.mjs` y en `vercel.json` (rewrites), con el mismo patrón cerrado (`[a-z][a-z0-9-]*`, una sola parte), así que no se abre nada nuevo: ni otro archivo, ni path traversal.
+- **Compatibilidad:** `rutas.js` convierte `#/x?…` en `/web/x?…` al cargar. Las páginas aparte (guía, demo, tablero) linkean a las rutas nuevas.
+- **Métricas sin migración:** el detalle de cambio de vista se queda en `#/<vista>|clase`, como etiqueta. No cambia el check de `eventos`, ni los outcomes, ni el barrido del test.
+
+**Lo que cuesta:** abrir `web/index.html` como archivo (`file://`) ya no navega entre vistas por URL: hace falta `node dev/dev.mjs` o Vercel. Desde ADR-012 es como se trabaja, así que se acepta.
+

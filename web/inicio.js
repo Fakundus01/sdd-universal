@@ -63,17 +63,19 @@ $("share").onclick = async () => {
              l: $("clvl").value, p: $("cperf").value, e: $("cexiste").value,
              pb: [...document.querySelectorAll("#pbs input:checked")].map(x => x.value),
              tec: [...sel], ia: $("cia").checked};
-  const url = location.origin + location.pathname + "#/combinador?c=" + b64url.cod(o);
+  // Ruta real (ADR-015): /web/combinador?c=…; los links viejos con #/ los convierte rutas.js.
+  const url = location.origin + Rutas.url("combinador", "?c=" + b64url.cod(o), location.pathname);
   try { await navigator.clipboard.writeText(url); } catch { /* sin portapapeles */ }
   $("share").textContent = "¡Link copiado!";
   setTimeout(() => $("share").textContent = "🔗 Compartir link", 2200);
 };
 
 function cargarComboDelLink(){
-  const m = location.hash.match(/[?&]c=([A-Za-z0-9_-]+)/);
-  if (!m) return;
+  if (App.vistaActual() !== "combinador") return;
+  const c = new URLSearchParams(location.search).get("c");
+  if (!c || !/^[A-Za-z0-9_-]+$/.test(c)) return;
   try {
-    const o = b64url.dec(m[1]);
+    const o = b64url.dec(c);
     if (o.e) $("cexiste").value = o.e;
     aplicarCombinacion({nombre: o.n, tipo: o.t, stack: o.s, nivel: o.l,
                         perfil: o.p, playbooks: o.pb, tecnologias: o.tec, ia: o.ia});
@@ -157,7 +159,9 @@ function reglasMontar(modo){
 }
 const VISTA_HOOKS = {
   tecnologias(){ if ($("techdlg").open) $("techdlg").close(); techMontar("vista"); renderTech(); },
-  reglas(){ if ($("reglasdlg").open) $("reglasdlg").close(); reglasMontar("vista"); ReglasUI.abrir(false); }
+  reglas(){ if ($("reglasdlg").open) $("reglasdlg").close(); reglasMontar("vista"); ReglasUI.abrir(false); },
+  preferencias(){ Perfil.mostrar(); },
+  login(){ pintarLogin(); }
 };
 // si venís desde el link de la guía, abrimos el configurador directo
 if (sessionStorage.getItem("sdd-abrir-reglas")){
@@ -199,9 +203,8 @@ window.aplicarPerfil = function aplicarPerfil(p){
 (async () => {
   Sesion.contarVisita(location.pathname);
   if (Sesion.activo()) Feedback.empezar();
-  // El portón es quien arranca la sesión (y tapa la página si no hay);
-  // acá solo se espera su resultado para no llamar a Sesion.iniciar() dos veces.
-  const r = await (typeof Porton !== "undefined" ? Porton.arranque : Sesion.iniciar());
+  // Sin portón (ADR-014): la app ya está usable; la sesión, si hay, se suma.
+  const r = await Sesion.iniciar();
 
   // El link del mail vuelve acá con la sesión ya hecha: no se pide acceso de nuevo.
   if (r.error) avisar(r.error, true);
@@ -219,6 +222,7 @@ window.aplicarPerfil = function aplicarPerfil(p){
     if (migradas) avisar(`Subimos a tu cuenta ${migradas} combinación(es) que tenías guardadas en este navegador.`);
   }
   await renderGuardadas();
+  if (App.vistaActual() === "login") pintarLogin();
   await Perfil.iniciar(aplicarPerfil);
   cargarComboDelLink();
   Feedback.terminar();

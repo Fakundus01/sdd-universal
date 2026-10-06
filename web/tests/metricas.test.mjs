@@ -67,7 +67,7 @@ test("la clase de dispositivo es gruesa y nunca sale del user-agent", () => {
 
 test("el panel carga el reporte y usa la vista de 30 días", () => {
   const admin = leer("web/admin.html");
-  assert.match(admin, /metricas\.js\?v=33/);
+  assert.match(admin, /metricas\.js\?v=[\d.]+"/);
   assert.match(admin, /Metricas\.outcomes/);
   assert.match(admin, /O3/);
   assert.match(leer("web/sesion.js"), /metricas_30_dias/);

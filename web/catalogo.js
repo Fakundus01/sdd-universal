@@ -146,9 +146,11 @@ function writeURL(){
   if ($("q").value.trim()) p.set("q", $("q").value.trim());
   if ($("lvl").value) p.set("lvl", $("lvl").value);
   const qs = p.toString();
-  // El hash se conserva: es la vista y, en un link compartido, la combinación
-  // (#/combinador?c=…). Borrarlo acá rompía el link antes de que lo leyera inicio.js.
-  history.replaceState(null, "", (qs ? "?" + qs : location.pathname) + location.hash);
+  // Los filtros viven en la URL solo en /web/catalogo (ADR-015). En otra ruta
+  // no se toca nada: así no se borra el ?c= de un combinador compartido.
+  if (Rutas.vistaDe(location.pathname) !== "catalogo") return;
+  const destino = location.pathname + (qs ? "?" + qs : "");
+  if (destino !== location.pathname + location.search) history.replaceState(null, "", destino);
 }
 
 /* ---------- render ---------- */

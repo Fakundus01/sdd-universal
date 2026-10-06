@@ -4,6 +4,30 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ---
 
+## [0.34.0] — 2026-10-05 · web
+
+El bug que reportó el owner y las tres decisiones que tomó para que no vuelva: sin portón, rutas reales y el onboarding como página.
+
+### Corregido
+- **El onboarding aparecía encima del login y no se podía tocar ninguno.** `porton.js` tapaba la página con una capa opaca (`z-index: 99999`) y ponía `inert` a todo el `body`; el onboarding era un `<dialog>` modal, que vive en el top layer, por encima de cualquier `z-index`, y también quedaba `inert`. Los dos se abrían solos al cargar y ninguno sabía del otro. Reproducido en Chrome con clics reales antes de arreglarlo: ni la opción del onboarding ni el campo de mail respondían.
+
+### Modificado
+- **Sin portón (ADR-014).** `porton.js` se borró y salió de la app, el panel, la guía, el demo y el tablero. La app abre directo, sin cuenta. Entrar es opcional y vive en **`/web/login`**, que vuelve a `?volver=` solo si es una ruta interna bajo `/web/` (`Rutas.volverSeguro`: `//evil.com`, `https:`, `/\evil`, `javascript:`, `/web/../` y `%2e%2e` caen en `/web/`). El panel sin sesión manda a `login?volver=/web/admin`. El diálogo de cuenta quedó solo para cambiar la contraseña. El código de cuentas (`sesion.js`, Supabase y el emulador local) no cambia.
+- **Rutas reales (ADR-015).** Cada vista tiene su URL: `/web/catalogo`, `/web/combinador`, `/web/reglas`, `/web/preferencias`, `/web/login`… con `pushState` y `popstate`; se recargan y se comparten. `rutas.js` (nuevo, puro, corre primero) las arma y las lee, y convierte los links viejos `#/x?…` en `/web/x?…` sin recargar. `dev/servidor.mjs` y `vercel.json` resuelven `/web/<nombre>`: su `.html` si existe (`/web/admin`, `/web/guia`, `/web/demo`), si no `index.html`; con barra final, 308 sin barra. El patrón es cerrado y el resto sigue por la lista blanca de siempre. El link de «Compartir» es `/web/combinador?c=…`, y `writeURL` del catálogo solo toca la URL en `/web/catalogo` (antes borraba el `?c=`).
+- **El onboarding es una página: `/web/preferencias`.** Las cuatro preguntas y el nombre, con «Atrás», «Prefiero no decir» y «Saltar todo». La primera visita sin onboarding que entra por Inicio va ahí (con `replaceState`); un link profundo se respeta. «Rehacer» del perfil lleva ahí y vuelve al perfil. La apariencia se queda en `/web/configuracion`, a propósito (`design.md` §4b).
+- **Métricas sin migración:** el cambio de vista se sigue contando como `#/<vista>|clase` (una etiqueta) y la carga como `<pathname>|clase` (`/web/combinador|movil`), que ya entraba en el check. El barrido de `dev/tests` suma las rutas nuevas.
+- Los links de guía, demo y tablero a la app pasaron a rutas (`perfil`, `catalogo`, `configuracion`). El tablero ganó su favicon (pedía `/favicon.ico` y daba 404).
+- A 360 px, las filas de Manuales se salían 15 px de la tarjeta (`minmax(330px, …)`); ahora `minmax(min(100%, 330px), …)`.
+- `?v=34` en las cuatro páginas y en el tablero (que seguía en `?v=29`); el pie dice v0.34 (decía v0.31).
+- `sdd/`: spec 0.10 (C4 sin portón, C5, V10–V14), design §4b, contracts 0.10 §7 (rutas, `volver`, métricas), ADR-014 y ADR-015, status (F19 retirada, F23–F25), testing. `dev/README.md`.
+
+### Verificado
+- **Rojo** sobre `fbdf462`: el repro en Chrome (clics reales: el paso del onboarding y el mail del portón no cambian) y los tests nuevos: `web/tests` 45 tests, 9 en rojo (rutas ×3 sin `rutas.js`, portón, onboarding/login como vistas, links `#/`, `?v=34`, `vercel.json` y el `writeURL` que borraba el `?c=`); `dev/tests` 16, 1 en rojo (`/web/catalogo` daba 404).
+- **Verde:** `web/tests` 45/45, `dev/tests` 16/16.
+- **Smoke en Chrome headless** contra `:4321` reiniciado, a 360 (táctil) y 1280, con perfil limpio: `/web/` sin cuenta entra a `/web/preferencias` sin portón ni diálogos; el onboarding se completa con clics reales y termina en `/web/combinador` con el tipo elegido; se usa el catálogo y se genera un prompt sin cuenta; las once rutas recargan en su vista sin scroll horizontal; `/web/catalogo?cat=Base` marca el chip; atrás/adelante recorren `combinador → catalogo → combinador`; el link compartido carga igual en `/web/combinador?c=…`, `/web/#/combinador?c=…` y `/web/index.html#/combinador?c=…`; `/web/admin` sin sesión → «Entrar» → `/web/login?volver=%2Fweb%2Fadmin` → facundo@sdd.local → vuelve a `/web/admin` con las cuatro tarjetas; con sesión, `login?volver=//evil.com` ofrece `/web/`; «Rehacer» lleva a `/web/preferencias`. Guía, demo, tablero y panel sin portón y con los links del lateral a rutas que dan 200. Cero errores de consola.
+
+---
+
 ## [0.33.2] — 2026-10-05 · web
 
 Lo que pidió la segunda vuelta del reviewer (0.33.1 aprobada, con un menor y nits), más material nuevo del owner sobre IA en el producto (OWASP Top 10 para LLMs 2025, RAG, agentes, evals).

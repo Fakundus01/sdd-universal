@@ -6,7 +6,7 @@ La web completa en tu máquina, con login y base de datos, sin Supabase ni Verce
 node dev/dev.mjs
 ```
 
-Abrí **http://127.0.0.1:4321/web/** y entrá con una de estas cuentas:
+Abrí **http://127.0.0.1:4321/web/**: la app anda sin cuenta (ADR-014). Para guardar combinaciones sin tope o ver el panel, entrá en **/web/login** con una de estas cuentas:
 
 | Mail | Contraseña | Rol |
 |---|---|---|
@@ -34,4 +34,4 @@ Solo existen en `dev/.data/`, que no se commitea. Ctrl+C corta el servidor y el 
 
 ## Cómo funciona
 
-Postgres corre `supabase/schema.sql` y `metricas.sql` **tal cual** en cada arranque, así que lo que pasa acá pasa en la nube. El servidor sirve el repo como Vercel y responde las llamadas de `web/sesion.js` a `/auth/v1` y `/rest/v1`. RLS la aplica Postgres, no el emulador. Detalle en `sdd/design.md` §8.
+Postgres corre `supabase/schema.sql` y `metricas.sql` **tal cual** en cada arranque, así que lo que pasa acá pasa en la nube. El servidor sirve el repo como Vercel y responde las llamadas de `web/sesion.js` a `/auth/v1` y `/rest/v1`. RLS la aplica Postgres, no el emulador. Las rutas de la app (`/web/catalogo`, `/web/login`…) las resuelve el servidor igual que `vercel.json` (ADR-015): `/web/<nombre>` sirve `web/<nombre>.html` si existe, si no `web/index.html`. Detalle en `sdd/design.md` §8.

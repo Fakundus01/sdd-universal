@@ -63,6 +63,17 @@ function estatico(ruta, res){
   if (ruta === "/web/supabase-config.js")
     return enviar(res, 200, CONFIG_LOCAL, {"Content-Type": TIPOS[".js"]});
 
+  // ADR-015: rutas reales. /web/<nombre> (una parte, patrón cerrado) sirve
+  // web/<nombre>.html si existe (admin, guia, demo) y si no la app. Con barra
+  // final, 308 sin barra, para que los recursos relativos resuelvan contra
+  // /web/. El Location se arma con lo validado, nunca con lo pedido.
+  const vista = ruta.match(/^\/web\/([a-z][a-z0-9-]*)(\/)?$/);
+  if (vista){
+    if (vista[2]) return enviar(res, 308, null, {Location: `/web/${vista[1]}`});
+    const pagina = archivoDe(`/web/${vista[1]}.html`) || join(RAIZ, "web", "index.html");
+    return enviar(res, 200, readFileSync(pagina), {"Content-Type": TIPOS[".html"]});
+  }
+
   let archivo = archivoDe(ruta);
   try {
     if (!archivo) throw new Error("fuera del sitio");

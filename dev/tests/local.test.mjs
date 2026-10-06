@@ -232,7 +232,8 @@ test("los valores que genera la web pasan todos el formato de eventos", async ()
   const filas = [];
   for (const cls of ["movil", "escritorio"]){
     for (const v of vistas) filas.push({tipo: "visita", detalle: `#/${v}|${cls}`});
-    for (const ruta of ["/web/", "/web/index.html"]) filas.push({tipo: "visita", detalle: `${ruta}|${cls}`});
+    // Al cargar se cuenta el pathname: desde 0.34 también /web/<vista> (ADR-015).
+    for (const ruta of ["/web/", "/web/index.html", ...vistas.map(v => `/web/${v}`)]) filas.push({tipo: "visita", detalle: `${ruta}|${cls}`});
   }
   for (const a of archivos) filas.push({tipo: "visita", detalle: "md:" + a}, {tipo: "descarga", detalle: a});
   for (const t of Object.keys(TYPES)){
@@ -318,4 +319,39 @@ test("sirve la config local y no sale del repo", async () => {
 
   const barras = await fetch(entorno.url + "/%2Fweb", {redirect: "manual"});
   assert.equal(barras.headers.get("location"), "/web/", "redirección abierta a //web/");
+});
+
+/* ADR-015: rutas reales. El servidor resuelve /web/<vista> sin abrir nada
+   nuevo: el patrón es cerrado y el resto sigue por la lista blanca. */
+test("rutas reales: /web/<vista> recarga con la app, y nada más se abre", async () => {
+  const get = (ruta, opts) => fetch(entorno.url + ruta, {redirect: "manual", ...opts});
+  for (const v of ["catalogo", "combinador", "preferencias", "login", "inicio", "inexistente", "tests"]){
+    const r = await get(`/web/${v}`);
+    assert.equal(r.status, 200, v);
+    const html = await r.text();
+    assert.match(html, /data-vista="catalogo"/, `${v} no sirvió la app`);
+  }
+  const conQuery = await get("/web/combinador?c=eyJ0IjoiY2FsYyJ9");
+  assert.equal(conQuery.status, 200);
+  // Las páginas aparte se sirven con su nombre sin extensión.
+  for (const [ruta, marca] of [["/web/admin", /<title>Panel/], ["/web/guia", /class="toc"/], ["/web/demo", /demo-con-sdd/]]){
+    const r = await get(ruta);
+    assert.equal(r.status, 200, ruta);
+    assert.match(await r.text(), marca, ruta);
+  }
+  // Barra final: a la ruta sin barra, así los recursos relativos resuelven contra /web/.
+  const barra = await get("/web/catalogo/");
+  assert.equal(barra.status, 308);
+  assert.equal(barra.headers.get("location"), "/web/catalogo");
+  // Lo que no es una vista sigue siendo 404.
+  for (const ruta of ["/web/inexistente.js", "/web/Catalogo", "/web/catalogo/otra", "/web/..%2f..%2fREADME.md",
+                      "/web/.env", "/web/catalogo.", "/web/a/b"])
+    assert.equal((await get(ruta)).status, 404, ruta);
+  // %2e%2e lo normaliza la URL a «/» antes de llegar al servidor: termina en /web/, no afuera.
+  const puntos = await get("/web/%2e%2e");
+  assert.notEqual(puntos.status, 200);
+  assert.equal(puntos.headers.get("location"), "/web/");
+  // Y los archivos de verdad se siguen sirviendo como antes.
+  assert.equal((await get("/web/app.js")).status, 200);
+  assert.equal((await get("/web/index.html")).status, 200);
 });

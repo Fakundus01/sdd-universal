@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.33 · **Fecha:** 2026-10-05 · **Owner:** Facundo Moreno
+**Versión:** 0.34 · **Fecha:** 2026-10-05 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -371,6 +371,7 @@ Las versiones de la línea actual (0.32 en adelante). Las anteriores (0.31 hacia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.34 | 2026-10-05 | Web sin portón y con rutas reales, a pedido del owner: la app abre sin cuenta; el login es opcional y vive en `/web/login` (vuelve solo a rutas internas); el onboarding deja de ser un diálogo encima de todo y pasa a `/web/preferencias`. Cada vista tiene su URL (`/web/catalogo`, `/web/combinador`…), recargable y compartible, con rewrite en el servidor local y en `vercel.json`. Los links viejos con `#/` redirigen. Arregla el bug de 0.33: el onboarding quedaba arriba del portón y ninguno de los dos se podía tocar (ADR-014, ADR-015 de la web). |
 | 0.33.2 | 2026-10-05 | **S38 · el producto con IA más allá del gasto**, con material aportado por el owner (OWASP Top 10 para LLMs 2025, NIST AI RMF, RAG, Huyen): `seguridad.md` 0.13 con el mapa LLM01–LLM10 y su control en el paquete, reglas para agentes que actúan y NIST para clientes corporativos. El playbook `ia-en-el-producto` suma arquitectura de referencia, RAG, agentes y evals de dos capas (deterministas de alta precisión + un juez, H26). El prompt con IA recorre el OWASP; catálogo con pgvector y embeddings. Menores de la review de 0.33.1: en `eventos` solo se inserta `tipo` y `detalle`, la lección de Pydantic bien descripta, y el arnés reintenta cuando Windows pierde la salida de un proceso. |
 | 0.33.1 | 2026-10-05 | Review R30 de 0.33: el check de rutas en tablas mira `spec.md` y `sdd-lite.md` por defecto; LITE sin `progress/` también en el relevo y en `--e2e`; la tabla de eventos rechaza texto identificante y días que no son hoy; el prompt, la lista y el ZIP salen siempre del mismo estado; el link `#/combinador?c=` vuelve a cargar. N2 de `seguridad.md`: borrar es en el archivo también (`secure_delete` + `VACUUM`, backups). Trampa de Pydantic en `tecnologias.md` (un validador que se llama como su campo lo pisa). El historial viejo pasa a `historial-master.md`. |
 | 0.33 | 2026-10-05 | Lecciones de cuatro proyectos reales hechos con el paquete (landing, tienda, mesa de ayuda con IA y chatbot, en local) vía S33–S37. Playbook nuevo **`ia-en-el-producto`**: el tope de gasto se rompió siete veces, de siete formas. R12 apunta a él, R28 verifica versiones contra el registro, R29 mide el rojo de un módulo nuevo con un stub. `seguridad.md` 0.12: estáticos por lista blanca y un test por control. Combinador con stack Python + React, tipo «mesa de ayuda» y casilla «IA en el producto»; el prompt respeta R01 apagado; catálogo con Vite, Vitest, pytest, Tailwind, React Router, Mercado Pago, Stripe y Anthropic API. Arnés: modo LITE sin memoria en disco, rutas citadas en tablas, tarjeta con `rama`. Web: reporte de O1–O4 en el panel. |

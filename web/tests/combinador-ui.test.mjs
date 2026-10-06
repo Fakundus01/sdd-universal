@@ -172,19 +172,26 @@ test("W16: «Sumar igual» y el chip escapan lo que escribió la persona", () =>
   assert.ok(!ctx.$("selchips").innerHTML.includes("<img"), ctx.$("selchips").innerHTML);
 });
 
-test("link compartido: writeURL no borra el hash #/combinador?c=…", () => {
+/* Con rutas reales (ADR-015) los filtros del catálogo viven en la URL solo en
+   /web/catalogo: en otra ruta, writeURL no toca nada (antes borraba el ?c=). */
+test("link compartido: writeURL no borra el ?c= de /web/combinador", () => {
   const src = leer("web/catalogo.js");
   const m = src.match(/function writeURL\(\)\{[\s\S]*?\n\}/);
-  let url = null;
-  const ctx = {
-    cat: "Todos", URLSearchParams,
-    $: id => ({q: {value: ""}, lvl: {value: ""}})[id],
-    location: {pathname: "/web/", search: "", hash: "#/combinador?c=eyJ0IjoiY2FsYyJ9"},
-    history: {replaceState: (_a, _b, u) => { url = u; }}
+  const correr = (loc, cat = "Todos", q = "") => {
+    let url = null;
+    const ctx = {
+      cat, URLSearchParams, Rutas: vm.runInNewContext(leer("web/rutas.js") + ";Rutas", {URL}),
+      $: id => ({q: {value: q}, lvl: {value: ""}})[id],
+      location: loc, history: {replaceState: (_a, _b, u) => { url = u; }}
+    };
+    vm.createContext(ctx);
+    vm.runInContext(m[0] + "\nwriteURL();", ctx);
+    return url;
   };
-  vm.createContext(ctx);
-  vm.runInContext(m[0] + "\nwriteURL();", ctx);
-  assert.equal(url, "/web/#/combinador?c=eyJ0IjoiY2FsYyJ9");
+  assert.equal(correr({pathname: "/web/combinador", search: "?c=eyJ0IjoiY2FsYyJ9", hash: ""}), null);
+  assert.equal(correr({pathname: "/web/", search: "", hash: ""}), null);
+  assert.equal(correr({pathname: "/web/catalogo", search: "", hash: ""}, "Base", "py"), "/web/catalogo?cat=Base&q=py");
+  assert.equal(correr({pathname: "/web/catalogo", search: "?cat=Base", hash: ""}), "/web/catalogo");
 });
 
 test("N3: los conteos del README y de la web coinciden con los archivos", () => {

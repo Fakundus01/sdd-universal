@@ -83,7 +83,9 @@ const Shell = (() => {
   }
 
   /* ---------------- montaje ---------------- */
-  const hrefVista = v => pagina === "app" ? `#/${v}` : `${base}index.html#/${v}`;
+  // Rutas reales (ADR-015): relativas a /web/, así sirven desde la app, desde
+  // guia.html y (con base «web/») desde el tablero de la raíz.
+  const hrefVista = v => base + (v === "inicio" ? "./" : v);
   const ruta = h => h.startsWith("http") ? h
     : base && h.startsWith("../") ? h.slice(3)
     : base + h;
@@ -113,7 +115,7 @@ const Shell = (() => {
 
     $("side").innerHTML = `
       <div class="side-marca">
-        <a class="brand" href="${pagina === "app" ? "#/inicio" : base + "index.html"}">
+        <a class="brand" href="${hrefVista("inicio")}"${pagina === "app" ? ' data-vista="inicio"' : ""}>
           <span class="lg">${logoHTML(prefs.logo || "trazos")}</span><span class="btxt">SDD Hub</span></a>
         <button class="side-colapsar" id="sideColapsar" type="button" aria-label="Comprimir el menú" title="Comprimir el menú">⟨</button>
         <button class="side-cerrar" id="sideCerrar" type="button" aria-label="Cerrar el menú">✕</button>
@@ -124,7 +126,7 @@ const Shell = (() => {
           if (x.v) return `<a data-vista="${x.v}" href="${hrefVista(x.v)}"><span class="i">${x.i}</span>${esc(x.t)}</a>`;
           if (x.a) return pagina === "app"
             ? `<a data-abre="${x.a}" href="#"><span class="i">${x.i}</span>${esc(x.t)}</a>`
-            : `<a href="${base}index.html#/catalogo"><span class="i">${x.i}</span>${esc(x.t)}</a>`;
+            : `<a href="${hrefVista("catalogo")}"><span class="i">${x.i}</span>${esc(x.t)}</a>`;
           const fuera = x.h.startsWith("http");
           const act = x.h === actual ? ' aria-current="page" class="act"' : "";
           // lo externo (GitHub) abre en pestaña nueva: que el sitio no se pierda

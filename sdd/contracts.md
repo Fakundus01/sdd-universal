@@ -1,6 +1,6 @@
 # contracts.md · SDD Hub
 
-**Versión:** 0.9 · La web no expone API propia. Sus contratos son dos: la **forma de los archivos de datos** que consume, y las **llamadas a Supabase** que hace.
+**Versión:** 0.10 · La web no expone API propia. Sus contratos son dos: la **forma de los archivos de datos** que consume, y las **llamadas a Supabase** que hace.
 
 ---
 
@@ -134,3 +134,26 @@ La clase la calcula `Metricas.clase` con `matchMedia("(pointer: coarse)")`. **Nu
 | `perfil` | `^(nivel\|interes\|agente):[A-Za-z0-9-]{1,30}$` |
 
 Ninguno admite espacios, `@` ni saltos de línea. **Lo que no garantiza:** un slug corto puede ser un nombre de persona. Permisos: `anon` y `authenticated` solo tienen `INSERT (tipo, detalle)`, así que `id` y `dia` no se eligen (0.33.2); la política de alta exige además `dia = hoy (UTC)`, y la vista `metricas_30_dias` acota `dia <= hoy`.
+
+## 7 · Rutas de la web (0.34, ADR-015)
+
+| Ruta | Qué sirve | Vista |
+|---|---|---|
+| `/web/` · `/web/inicio` | `index.html` | inicio |
+| `/web/catalogo` (`?cat=`, `?q=`, `?lvl=`) | `index.html` | catalogo |
+| `/web/combinador` (`?c=<combinación en base64url>`) | `index.html` | combinador |
+| `/web/tecnologias` · `/web/reglas` · `/web/manuales` · `/web/comunidad` | `index.html` | la del nombre |
+| `/web/perfil` · `/web/preferencias` · `/web/configuracion` | `index.html` | la del nombre |
+| `/web/login` (`?volver=<ruta interna>`) | `index.html` | login |
+| `/web/admin` · `/web/guia` · `/web/demo` | `admin.html` · `guia.html` · `demo.html` | (páginas aparte) |
+| `/web/<nombre>/` | 308 a `/web/<nombre>` | — |
+| `/web/<algo>.<ext>` que no existe | 404 | — |
+
+**Regla del servidor** (`dev/servidor.mjs` y `vercel.json`): `^/web/[a-z][a-z0-9-]*$` → `web/<nombre>.html` si existe, si no `web/index.html`. Todo lo demás, como antes.
+
+**Links viejos:** `…/web/#/<vista>?<query>` y `…/web/index.html#/<vista>?<query>` → `/web/<vista>?<query>` con `history.replaceState`, del lado del navegador (el servidor no ve el hash). Una vista desconocida va a Inicio.
+
+**`volver`** (`Rutas.volverSeguro`): se acepta solo un string que empiece con `/web/`, sin `//` al principio, sin `\` ni caracteres de control, que resuelto contra el origen siga en el mismo origen y bajo `/web/`, y que no sea `/web/login`. Cualquier otra cosa → `/web/`.
+
+**Métricas:** el detalle de una visita sigue siendo `#/<vista>|clase` al cambiar de vista (es una etiqueta, no una URL: así no cambia el formato de `eventos` ni los outcomes) y `<pathname>|clase` al cargar una página (`/web/combinador|movil`), que ya entraba en el patrón de §6.
+

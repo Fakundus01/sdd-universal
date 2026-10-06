@@ -77,7 +77,7 @@ const ConfigVista = (() => {
              corré el <code>supabase/metricas.sql</code> actualizado (agrega el tipo «perfil» a los eventos).</p>`}
         <p class="d" style="margin-top:16px">
           Números anónimos: sin usuario, sin IP, sin cookies. El detalle por día está en el
-          <a href="admin.html">panel completo</a>.</p>`;
+          <a href="admin">panel completo</a>.</p>`;
     } catch (e) {
       admin_error(zona, e);
     } finally {

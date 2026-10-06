@@ -1,4 +1,8 @@
-/* Onboarding en 4 pasos y panel de configuración.
+/* Onboarding en 4 pasos, como página (/web/preferencias, 0.34).
+ *
+ * Hasta 0.33 era un <dialog> modal que se abría solo al cargar. Con el
+ * portón puesto, los dos se tapaban entre sí y no se podía tocar ninguno
+ * (ADR-014). Ahora es una vista más: no bloquea nada y se puede saltar.
  *
  * Cuatro preguntas, no diez: cada pantalla que se agrega antes de dejar a
  * alguien usar la herramienta pierde gente. Todas tienen una opción "no sé",
@@ -14,6 +18,7 @@ const Perfil = (() => {
   let p = base();
   let paso = 0;
   let alTerminar = null;
+  let volverA = null;   // vista a la que se vuelve al terminar (p. ej. el perfil)
 
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
@@ -105,16 +110,27 @@ const Perfil = (() => {
       Sesion.contar("perfil", "interes:" + (p.interes || "nc"));
       Sesion.contar("perfil", "agente:" + (p.agente || "nc"));
     }
-    $("obdlg").close();
     if (alTerminar) alTerminar(p);
+    const destino = volverA || (p.interes ? "combinador" : "inicio");
+    volverA = null;
+    if (typeof App !== "undefined") App.ir(destino);
   }
 
   /* ---------------- API ---------------- */
 
-  function abrir(cuandoTermine){
-    alTerminar = cuandoTermine;
-    paso = 0; pintar();
-    $("obdlg").showModal();
+  /* Lleva a /web/preferencias desde el primer paso. */
+  function abrir(cuandoTermine, volver = null){
+    alTerminar = cuandoTermine || alTerminar;
+    volverA = volver;
+    paso = 0;
+    if (typeof App !== "undefined") App.ir("preferencias");
+    else mostrar();
+  }
+
+  /* Lo que se pinta al entrar a la vista (también recargando la ruta). */
+  function mostrar(){
+    pintar();
+    if ($("prefNombre")) $("prefNombre").value = p.nombre || "";
   }
 
   async function iniciar(cuandoTermine){
@@ -125,9 +141,22 @@ const Perfil = (() => {
       if (remoto?.onboarding) p = {...p, ...remoto, onboarding: true};
       else if (p.onboarding) await guardar();   // lo tenía local y ahora tiene cuenta
     }
-    if (!p.onboarding) abrir(cuandoTermine);
-    else if (cuandoTermine) cuandoTermine(p);
+    alTerminar = cuandoTermine;
+    if (p.onboarding){ if (cuandoTermine) cuandoTermine(p); }
+    // Primera visita sin onboarding que entra por Inicio: va a preferencias,
+    // reemplazando la URL (sin sumar un paso al «atrás»). Un link profundo,
+    // como un combinador compartido, se respeta: nada se bloquea.
+    else if (typeof App !== "undefined" && App.vistaActual() === "inicio" && !location.search){
+      history.replaceState(null, "", Rutas.url("preferencias", "", location.pathname));
+      App.ir("preferencias", false);
+    }
+    if ($("obOpciones") && App.vistaActual?.() === "preferencias") mostrar();
+  }
 
+  /* Los listeners van al cargar: la vista puede abrirse antes de que
+     iniciar() termine de traer el perfil de la cuenta. */
+  function enganchar(){
+    if (!$("obOpciones")) return;
     $("obOpciones").addEventListener("click", e => {
       const b = e.target.closest("[data-v]");
       if (b) elegir(b.dataset.v);
@@ -135,7 +164,18 @@ const Perfil = (() => {
     $("obAtras").onclick = () => { if (paso > 0){ paso--; pintar(); } };
     $("obSaltar").onclick = () => { if (paso < PASOS.length - 1){ paso++; pintar(); } else terminar(); };
     $("obCerrar").onclick = () => terminar();
+    let t = null;
+    $("prefNombre").addEventListener("input", e => {
+      p.nombre = e.target.value.slice(0, 60);
+      clearTimeout(t);
+      t = setTimeout(async () => {
+        await guardar();
+        if (typeof Shell !== "undefined") Shell.pintarCuenta(Sesion.usuario(), p);
+      }, 350);
+    });
   }
+  p = local();
+  enganchar();
 
-  return {iniciar, abrir, datos: () => p, guardar, PASOS};
+  return {iniciar, abrir, mostrar, datos: () => p, guardar, PASOS};
 })();

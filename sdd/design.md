@@ -17,7 +17,8 @@ web/
 ├── base.css            tokens de color, reset, barra superior y pie (compartido)
 ├── tema.js             claro/oscuro; oscuro por default; avisa a quien se enganche
 ├── index.html          el catálogo, el combinador y los diálogos (solo HTML desde 0.31)
-├── catalogo.js         shell, datos de las cards, estado en la URL, render       ┐
+├── rutas.js            URL ↔ vista, links viejos #/ → ruta, `volver` seguro, puro (0.34) ┐
+├── catalogo.js         shell, datos de las cards, estado en la URL, render       │
 ├── tecnologias-vista.js vista/popup de tecnologías, paginación, mover ventanas   │ el JS de
 ├── prompt.js           el texto del prompt de arranque, puro (0.33)            │
 ├── combinador.js       junta el estado, lista de archivos, ZIP, descarga rápida  │ index.html,
@@ -63,9 +64,23 @@ Habla con las APIs HTTP de Supabase directo, sin el SDK: son cuatro endpoints y 
 
 Al entrar por primera vez, `migrarLocales()` sube lo que había en el navegador. Sin eso, registrarse te haría perder lo que venías armando — el peor momento posible para perder algo.
 
+## 4b · Rutas, entrada y preferencias (0.34, ADR-014 y ADR-015)
+
+**Una vista, una ruta.** `rutas.js` traduce `/web/<vista>` ↔ vista y es lo único que sabe armar URLs de la app. `App.ir` hace `pushState` y `popstate` vuelve a leer el `pathname`. Inicio es `/web/` (también acepta `/web/inicio`). Una ruta que no existe muestra Inicio y deja la URL en `/web/`.
+
+**El servidor resuelve.** Un pedido a `/web/<nombre>` sin extensión (una sola parte, `[a-z][a-z0-9-]*`) sirve `web/<nombre>.html` si existe (así `/web/admin`, `/web/guia` y `/web/demo` son sus páginas), y si no, `web/index.html`. Con barra final, 308 a la ruta sin barra: así los recursos relativos (`base.css`, `app.js`) siempre resuelven contra `/web/`. Lo mismo hacen `vercel.json` (rewrites) y `dev/servidor.mjs`; nada de esto abre archivos nuevos: el resto sigue pasando por la lista blanca del estático.
+
+**Links viejos.** `rutas.js` corre primero entre los scripts de la app: si la URL trae `#/x?…`, la reemplaza (sin recargar) por `/web/x?…`. Cubre marcadores, links compartidos y los MD que todavía digan `index.html#/…`.
+
+**Los filtros del catálogo** (`?cat=`, `?q=`, `?lvl=`) viven en la URL solo en `/web/catalogo`: en otra ruta `writeURL` no toca la URL, que es lo que borraba el `?c=` de un link compartido.
+
+**Entrar es una vista, no un portón.** `/web/login` es la vista `login` de la app: comparte la sesión, el tema y el shell sin duplicar la cabecera. Al entrar vuelve a `?volver=` solo si `Rutas.volverSeguro` lo acepta (misma origen, empieza con `/web/`, sin `//`, `\`, control ni esquema). `/web/admin` es `admin.html` (una página aparte: el panel no carga la app), y sin sesión manda a `login?volver=/web/admin`. El diálogo de cuenta queda solo para cambiar la contraseña.
+
+**Preferencias: dos lugares, a propósito.** `/web/preferencias` es «qué sos» (nivel, qué querés construir, perfil SDD, agente y nombre): el onboarding como página, con su barra de pasos, «Saltar» y «Atrás», sin tapar nada. Viaja con la cuenta. La apariencia (tema, texto, animaciones, logo, secciones) se queda en `/web/configuracion`: es por dispositivo, la leen todas las páginas al cargar desde `sdd-prefs`, y mezclarla con las preguntas haría del onboarding una página de veinte controles. La primera visita sin onboarding que entra por Inicio va a `/web/preferencias` (con `replaceState`, sin sumar un paso al atrás); un link profundo, como un combinador compartido, se respeta. «Rehacer» del perfil lleva ahí.
+
 ## 5 · Diálogos
 
-Tres: tecnologías, reglas y login. Todos `<dialog>` nativo con `showModal()`, que ya trae foco atrapado, cierre con Escape y `::backdrop`.
+Tres: tecnologías, reglas y cambiar la contraseña (el login pasó a `/web/login` en 0.34). Todos `<dialog>` nativo con `showModal()`, que ya trae foco atrapado, cierre con Escape y `::backdrop`.
 
 **Una trampa que nos comimos:** el reset `*{margin:0}` pisa el `margin:auto` del user-agent, que es lo que centra un `<dialog>` modal. Con `inset:0` y sin margin, queda clavado arriba a la izquierda. Está documentado en ADR-007 porque el síntoma no sugiere para nada la causa.
 
