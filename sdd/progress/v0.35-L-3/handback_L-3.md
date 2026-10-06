@@ -1,7 +1,7 @@
 # Handback L-3 — Espejos en inglés al día con el canónico 0.35
 
 - **Estado:** done
-- **Rama / commit:** `v0.35-L-3` @ `__HASH__` (base `4e09c8d`; el hash del commit final figura en `git log -1` de la rama)
+- **Rama / commit:** `v0.35-L-3` @ `83d0d01` (cambios de los espejos; base `4e09c8d`; un commit posterior fija solo este hash en el handback)
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
