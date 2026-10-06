@@ -201,10 +201,6 @@ class TestRepoSinCommits(unittest.TestCase):
             p.cleanup()
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class TestGrafoDeTarjetas(ChecksCase):
     """orchestration.md §10: `depende_de` existe, sin ciclos, y no se despacha antes de tiempo."""
 
@@ -231,6 +227,7 @@ class TestGrafoDeTarjetas(ChecksCase):
         report = self.run_checks()
         self.assertFails(report, "H-2")
         self.assertFails(report, "fuera de orden")
+        self.assertEqual([m for m in report.messages("OK") if "Tarjetas válidas" in m], [])
 
     def test_review_con_dependencia_sin_done_falla(self):
         self.p.card(id="H-1", estado="in_progress", rama="feat/a")
@@ -247,7 +244,7 @@ class TestGrafoDeTarjetas(ChecksCase):
         self.p.card(id="H-1", estado="done", rama="main")
         self.p.review("H-1")
         self.p.card(id="H-2")
-        for forma in ("[H-1, H-2]", "[H-1,H-2]", '["H-1", \'H-2\']', "H-1"):
+        for forma in ("[H-1, H-2]", "[H-1,H-2]", '["H-1", \'H-2\']', "[H-1, H-1]", "[H-1]  # comentario"):
             self.p.card(id="H-3", depende_de=forma)
             fails = [f for f in self.run_checks().messages("FAIL") if "H-3" in f]
             self.assertEqual(fails, [], f"forma {forma!r}")
@@ -256,3 +253,63 @@ class TestGrafoDeTarjetas(ChecksCase):
         self.p.card(id="H-1")
         self.p.card(id="H-2", depende_de="[H-1]")
         self.assertEqual(self.run_checks().messages("FAIL"), [])
+
+    def test_done_con_dependencia_sin_done_falla(self):
+        self.p.card(id="H-1", estado="pending")
+        self.p.card(id="H-2", estado="done", rama="main", depende_de="[H-1]")
+        self.p.review("H-2")
+        report = self.run_checks()
+        self.assertFails(report, "fuera de orden")
+        self.assertFails(report, "H-2")
+
+    def test_fallo_del_grafo_apaga_el_ok_de_tarjetas(self):
+        self.p.card(id="H-1", depende_de="[H-2]")
+        self.p.card(id="H-2", depende_de="[H-1]")
+        self.assertEqual(self.run_checks().messages("OK").count("Tarjetas válidas (2)"), 0)
+        self.p.card(id="H-2", depende_de="[X-9]")
+        self.assertEqual([m for m in self.run_checks().messages("OK") if "Tarjetas válidas" in m], [])
+
+    def test_diamante_no_es_ciclo(self):
+        self.p.card(id="H-1", depende_de="[H-2, H-3]")
+        self.p.card(id="H-2", depende_de="[H-4]")
+        self.p.card(id="H-3", depende_de="[H-4]")
+        self.p.card(id="H-4")
+        self.assertEqual(self.run_checks().messages("FAIL"), [])
+
+    def test_cadena_larga_sin_traceback(self):
+        for n in range(1, 1501):
+            self.p.card(id=f"C-{n}", depende_de=f"[C-{n + 1}]" if n < 1200 else None)
+        self.assertEqual(self.run_checks().messages("FAIL"), [])
+
+    def test_ciclo_en_cadena_larga_se_encuentra(self):
+        for n in range(1, 1501):
+            self.p.card(id=f"C-{n}", depende_de=f"[C-{n % 1200 + 1}]")
+        self.assertFails(self.run_checks(), "ciclo en depende_de")
+
+    def test_lista_yaml_en_varias_lineas_falla(self):
+        self.p.card(id="H-1", depende_de="\n  - H-2")
+        self.p.card(id="H-2")
+        self.assertFails(self.run_checks(), "formato no reconocido")
+
+    def test_valores_sin_corchetes_fallan(self):
+        for forma in ('"H-2", "H-3"', "H-2, H-3", "H-2"):
+            self.p.card(id="H-1", depende_de=forma)
+            report = self.run_checks()
+            self.assertFails(report, "formato no reconocido")
+            self.assertEqual([m for m in report.messages("OK") if "Tarjetas válidas" in m], [])
+
+    def test_dependencia_repetida_falla_una_sola_vez(self):
+        self.p.card(id="H-1", estado="pending")
+        self.p.card(id="H-2", estado="in_progress", rama="feat/x", depende_de="[H-1, H-1]")
+        fails = [f for f in self.run_checks().messages("FAIL") if "fuera de orden" in f]
+        self.assertEqual(len(fails), 1)
+
+    def test_id_vacio_no_inventa_dependencia_inexistente(self):
+        self.p.write("sdd/cards/H-1.md", "---\nid:\nestado: pending\ndepende_de: [H-1]\n---\n# x\n")
+        fails = self.run_checks().messages("FAIL")
+        self.assertTrue(any("id del frontmatter" in f for f in fails), fails)
+        self.assertFalse(any("no existe" in f for f in fails), fails)
+
+
+if __name__ == "__main__":
+    unittest.main()
