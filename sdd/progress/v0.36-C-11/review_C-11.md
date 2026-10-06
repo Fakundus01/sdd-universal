@@ -1,5 +1,7 @@
-# Review C-11 @ 959670f
+# Review C-11 @ fd5325c
 **Veredicto:** CHANGES_REQUESTED
+
+> Vuelta 1 (@ `959670f`) abajo; la vuelta 2 está al final, en «Vuelta 2 @ fd5325c».
 
 Reviewer independiente (ALTO), worktree `sdd-universal-C-11-rev` @ `aaeccf2` (= `959670f` + MD de C-10 vuelta 2). Scripts propios fuera del repo (`scratchpad/c11rev/sim.mjs`, `bordes.mjs`, `mut.py`).
 
@@ -136,3 +138,135 @@ Probados con `Paquete.reescribirLinks` desde `agents/leader.md` (→ `p/agents/l
 
 ## Mejoras al arnés detectadas
 - Para R29: cuando un test se apoya en un conteo «0 malos», pedir siempre también el conteo de «buenos preservados»; si no, la salida trivial (borrar todo) pasa.
+
+---
+
+## Vuelta 2 @ fd5325c
+**Veredicto:** CHANGES_REQUESTED
+
+Rama en `9962df0`: código `fd5325c`, tests `463f355`/`7bc663e`, base de la vuelta `8629fee`. Los tres cambios de la vuelta 1 quedaron bien resueltos y con tests. Pero la vuelta 2 trae una **regresión que borra texto**: la lógica nueva de definiciones de referencia toma por definición líneas de prosa y las saca enteras, incluidas las notas que el usuario escribe en `custom.md` desde la web.
+
+### Verificación re-ejecutada
+```text
+$ node --test "web/tests/*.test.mjs"
+# proyecto completo (PRO): 0 rotos de 80
+# proyecto mínimo (NOVATO): 0 rotos de 30
+# sdd-archivos.zip (soloMd): 0 rotos de 64
+ℹ tests 67
+ℹ pass 67
+ℹ fail 0
+$ node web/tests/smoke/smoke.mjs
+PASS smoke: 22 pasos, 0 errores de consola
+$ python harness/verify.py --quick      @ 9962df0
+[OK]    Creado sdd/progress/v0.36-C-11-rev/current.md desde la plantilla   (borrado después)
+[FAIL]  sdd/cards/C-11.md: in_progress pero depende de C-10, que está in_progress (despacho fuera de orden: esperá a que sea done)
+[OK]    Rutas citadas existen (184 revisadas)
+ROJO — 1 FAIL, 0 WARN
+```
+El FAIL es el esperado (orden de despacho por C-10).
+
+### Diff `8629fee..9962df0`
+- Archivos tocados: `web/paquete.js`, `web/tests/{paquete-links,paquete-reescritura,rutas}.test.mjs`, `?v=38` en `web/{index,admin,guia,demo}.html` (todas las `?v=` quedan en 38) y el handback. Zona respetada; ningún `.md` del paquete tocado.
+- Ningún test debilitado. En «externos… no se tocan», `[d](harness/verify.py)` pasó a `[d](/abs/x.md)` porque ahora los no-`.md` sí se reescriben (el contrato cambió a pedido), y el caso no-md tiene su propio test. `paquete-links` suma `conservados()`: cada `origen` existe, y cada link que viaja se conserva y apunta al mismo archivo lógico.
+
+### Pedidos de la vuelta 1
+| # | Pedido | Estado |
+|---|---|---|
+| 1 | test que exija conservar los links que viajan | Hecho con `conservados()`: R12, R13 y R14 mueren (67/66/1 cada uno) |
+| 2 | fences `~~~` y por largo | Hecho (`paquete.js:209-222`); `prompts/handback.md:5-64` ya no cuenta como prosa; N1–N3 mueren |
+| 3 | `%20` re-codificado | Hecho (`paquete.js:205`, `encodeURI`); R6 y N4 mueren |
+
+### Simulación independiente (408 combinaciones, MD actuales con C-10 vuelta 2)
+`sim.mjs` está actualizado al contrato nuevo: cualquier archivo relativo con extensión, imágenes y escapados sin tocar, destino re-codificado. Misma grilla que en la vuelta 1: 384 de `proyecto` + 24 de `soloMd`.
+
+| | Resultado |
+|---|---|
+| Diferencias contra la reimplementación | **0** |
+| Links que viajan, al mismo archivo lógico | 20 228 |
+| Excluidos como texto idéntico | 21 840 (136 más que en la vuelta 1: `../supabase/schema.sql` ahora pasa a texto) |
+| Links rotos (cualquier extensión, y carpetas) | **0** en las 408 |
+| Por ZIP con todo | completo 80, NOVATO 30, soloMd 64 |
+| Casos reales | `playbooks/supabase-auth.md:36` → `` `supabase/schema.sql` `` (texto); `agents/looper.md:18` → `../sdd/orchestration.md`; `SDD-MASTER.md:28` → `**LOOP-PROMPT**` |
+
+### Bordes (vuelta 2), desde `agents/leader.md` → `p/agents/leader.md`
+| Borde | Entrada → salida | Veredicto |
+|---|---|---|
+| Título, incluido / excluido | `[h](../harness.md "t")` → `[h](../sdd/harness.md "t")`; `[s](../scenarios.md "t")` → `s` | Correcto |
+| Título entre paréntesis | `[h](../harness.md (t))` → sin tocar: **roto en el ZIP** | Incorrecto (latente; sintaxis rara) |
+| `<…>` incluido / excluido | `[h](<../sdd/harness.md>)`; `s` | Correcto |
+| `.MD` excluido | `s` | Correcto |
+| `%20` incluido | `[d](../sdd/mi%20doc.md)` | Correcto |
+| UTF-8 incluido | `[g](../guía.md)` → `[g](../sdd/gu%C3%ADa.md)` | Correcto (link válido, cambia la forma) |
+| ``` / `~~~` / ```` con ``` / fence sin cerrar | intactos | Correcto |
+| Inline `` `](x.md)` `` | intacto | Correcto |
+| `![a](x.png)`, `![a](../scenarios.md)` | intactos | Correcto según el contrato |
+| `\[a](../scenarios.md)` | intacto | Correcto |
+| `/x.md`, `http(s)`, `mailto:` | intactos | Correcto |
+| No-md que no viaja / que viaja | `[i](x.png)` → `i`; `[v](../harness/verify.py)` → igual (viaja a la misma ruta relativa) | Correcto |
+| Carpeta / sin extensión | `[d](../prompts/)`, `[m](../Makefile)` intactos | Según el contrato (pueden quedar rotos; hoy 0 en los MD reales) |
+| Referencia incluida | `[h]: ../harness.md` → `[h]: ../sdd/harness.md` | Correcto |
+| Referencia excluida, usos `[a][s]` y `[s][]` | → `a y s`, definición sacada | Correcto |
+| Uso shortcut `[s]` de una ref excluida | queda `[s]` literal | Aceptable (GitHub muestra lo mismo sin definición) |
+| Def excluida con el título en la línea siguiente | queda suelta la línea `  "T"` | Incorrecto (latente) |
+| Uso `[a][S]` con la def en minúsculas | → `a` | Correcto, pero sin test (N9 sobrevive) |
+| **Prosa que parece definición** | `[Nota]: config.json es el archivo que hay que editar.` → **desaparece la línea entera** | **Incorrecto: borra texto** (cambio requerido 1) |
+| Def con CRLF | `[s]: ../scenarios.md\r` no se reconoce (`(.*)$` no consume el `\r`): la def y su uso quedan rotos | Incorrecto (latente: los MD reales no usan referencias; en disco, en Windows, sí hay CRLF) |
+| Encabezado (`agents/looper.md:18`), negrita (`SDD-MASTER.md:28`) | reescrito / `**LOOP-PROMPT**` | Correcto |
+
+### Mutantes (uno por vez, suite completa, `subprocess.run(timeout=300)`; base 67/67/0; revertidos, árbol limpio)
+| # | Mutante | Suite | Resultado |
+|---|---|---|---|
+| R1 | fences no se reconocen (apertura) | 67/65/2 | muerto |
+| R2 | code spans no se esconden | 67/66/1 | muerto |
+| R3 | `relativa` sin `..` | 67/57/10 | muerto |
+| R4 | excluido deja el link | 67/55/12 | muerto |
+| R5 | se pierde el ancla | 67/66/1 | muerto |
+| R6 | sin `decodeURI` | 67/66/1 | **muerto** (antes sobrevivía) |
+| R7 | extensión sensible a mayúsculas | 67/66/1 | **muerto** (antes sobrevivía) |
+| R8 | `..` fuera de la raíz no corta | 67/67/0 | sobrevive (casi equivalente) |
+| R9 | sin chequeo de esquema | 67/66/1 | muerto |
+| R10 | `proyecto` no enlaza | 67/65/2 | muerto |
+| R11 | `soloMd` no enlaza | 67/66/1 | muerto |
+| R12 | `origen` de agents equivocado | 67/66/1 | **muerto** (antes sobrevivía) |
+| R13 | `origen` de playbooks equivocado | 67/66/1 | **muerto** (antes sobrevivía) |
+| R14 | `origen` de `harness.md` (soloMd) equivocado | 67/66/1 | **muerto** (antes sobrevivía) |
+| R15 | `relativa` compara el último segmento | 67/67/0 | sobrevive (equivalente) |
+| R16 | el visor vuelve a admitir `[` | 67/66/1 | muerto |
+| R17 | excluido pierde el texto | 67/57/10 | muerto |
+| N1 | el cierre de fence ignora el carácter | 67/66/1 | muerto |
+| N2 | el cierre de fence ignora el largo | 67/66/1 | muerto |
+| N3 | apertura sin `~~~` | 67/66/1 | muerto |
+| N4 | sin `encodeURI` | 67/65/2 | muerto |
+| N5 | se pierde el título | 67/66/1 | muerto |
+| N6 | se pierden los `<>` en línea | 67/66/1 | muerto |
+| N7 | la def excluida no se saca | 67/65/2 | muerto |
+| N8 | los usos de una ref excluida no pasan a texto | 67/66/1 | muerto |
+| N9 | id de ref sensible a mayúsculas en el uso (`paquete.js:255`) | 67/67/0 | **sobrevive** |
+| N10 | solo `.md` (los no-md no se tocan) | 67/64/3 | muerto |
+| N11 | no se respeta el prefijo `!`/`\` en línea | 67/66/1 | muerto |
+| N12 | la def incluida no se reescribe | 67/66/1 | muerto |
+| N13 | la def pierde los `<>` (`paquete.js:233`) | 67/67/0 | **sobrevive** |
+| N14 | usos de ref: no se respeta el prefijo | 67/66/1 | muerto |
+| N15 | `[id][]` sin fallback al texto | 67/66/1 | muerto |
+
+32 mutantes, 28 muertos. Sobreviven R8 y R15 (equivalentes en la práctica) y N9 y N13 (sin test).
+
+### Checkpoints
+- C1: [ ] ← `verify --quick` está en rojo solo por el orden de despacho (C-10); no es del código.
+- C2: [x] zona respetada; los tres pedidos con evidencia.
+- C3: [x]
+- C4: [ ] ← `paquete.js:228` borra prosa válida y ningún test lo cubre; N9 y N13 sobreviven.
+- C5: [x] handback de la vuelta 2 commiteado.
+
+### Cambios requeridos
+1. **`web/paquete.js:228` (con `:232` y `:242`) — media: borra texto, regresión de la vuelta 2.** La regex de definición `^( {0,3}\[([^\]]+)\]:\s*)(<[^>\n]*>|\S+)(.*)$` acepta cualquier resto (`(.*)`). Entonces una línea de prosa que empieza con `[algo]: archivo.ext …` se toma como definición y, si ese «destino» no viaja, **se borra la línea entera**. En CommonMark eso no es una definición: después del destino solo puede venir un título (`"…"`, `'…'`, `(…)`) y espacios.
+   - **Pasa desde la web:** las «Notas personales» se copian tal cual a `custom.md` (`web/reglas-ui.js:76`), y `custom.md` pasa por `enlazar`.
+   - **Medido con el flujo real** (`scratchpad/c11rev/notas.mjs`): con las notas `[Importante]: config.json no se commitea nunca, tiene la clave del cliente.` y `[Ojo]: README.md lo escribo yo`, tanto `proyecto` como `soloMd` devuelven `custom.md` **sin esas dos líneas**. En la vuelta 1 quedaban intactas.
+   - **Esperado:** aceptar como definición solo si `m[4]` está vacío o es un título válido (`^\s*("[^"]*"|'[^']*'|\([^)]*\))?\s*$`); si no, la línea es prosa y no se toca. Unitarios: la línea de prosa queda igual, y una def con título se saca.
+2. **`web/tests/paquete-reescritura.test.mjs` — baja.** Faltan tests que maten N9 (uso `[a][S]` con la definición `[s]:` excluida → `a`) y N13 (una definición incluida con `<…>` conserva los `<>`).
+
+### Sin cambio requerido (latentes; ningún MD real los usa)
+- `paquete.js:228`: `(.*)$` no consume el `\r`, así que con CRLF (los MD en disco en Windows) las definiciones no se reconocen. Probablemente quede resuelto con el punto 1 si el patrón del resto admite `\s*$`.
+- Una def excluida con el título en la línea siguiente deja suelta la línea `"T"`.
+- `[h](x.md (t))` (título entre paréntesis) no se reescribe.
+- Las carpetas y los archivos sin extensión no se tocan aunque no viajen (hoy, 0 rotos en los MD reales).
