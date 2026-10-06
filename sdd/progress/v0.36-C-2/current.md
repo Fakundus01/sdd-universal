@@ -11,3 +11,4 @@
 
 ## Estado
 - done: CLI completo, 62 tests OK en 3.14 y 3.11, 17 mutantes muertos. Handback en `handback_C-2.md`.
+- vuelta 2 (review CHANGES_REQUESTED @ e710850): arreglada en 8965144, 73 tests OK en 3.14 y 3.11.
