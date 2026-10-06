@@ -19,7 +19,7 @@ Node 22.2+ (por `zlib.crc32`) y nada más: sin `node_modules` (ADR-001). Corre e
 | El LEEME brownfield nombra lo que hay que llevarse | Instrucciones que dejan afuera `harness/` o `agents/` |
 | La web tiene las mismas reglas que el master | Lo que pasó con R27 y R29–R32: `reglas.js`, el tablero, el README y todo «N reglas» de `web/*.html` y `web/*.js`, contra los encabezados de la §4 |
 | La plantilla `sdd-lite.md` viaja en `prompts/` (0.33, H4) | Que el master y `harness.md` citen una plantilla que el ZIP no trae |
-| `.gitattributes` junta `sdd/changelog.md` y `sdd/sdd-lite.md` (0.33, H5) | Historiales que chocan en cada merge con trabajo en paralelo |
+| `.gitattributes` junta `sdd/changelog.md` y `<proyecto>/sdd/sdd-lite.md` (0.33, H5) | Historiales que chocan en cada merge con trabajo en paralelo |
 
 **`combinador.test.mjs` (0.33)** carga `prompt.js` y `tecnologias.js` como el navegador, y las constantes de datos de `catalogo.js` (que toca el DOM al cargar, por eso se evalúan aparte). Atrapa: un stack o un tipo que falte (H1, H14); `tecnologias.js` y `tecnologias.md` desparejos, o un «120 tecnologías» viejo en la web; una tecnología fuera del catálogo que no llegue al prompt (H2); la lección de FastAPI (H17) o de Anthropic que no viaje; el prompt que con `R01=OFF` siga pidiendo esperar el OK (H3); «IA en el producto» sin N4, R12 o el playbook; playbooks del mapa que no existan en disco; y el modo LITE sin su plantilla.
 
@@ -29,7 +29,7 @@ Node 22.2+ (por `zlib.crc32`) y nada más: sin `node_modules` (ADR-001). Corre e
 
 **`metricas.test.mjs` (0.33, ADR-013)**: O1, O2 y O4 contra sus metas con filas armadas a mano, «sin datos» en vez de 0%, la clase de dispositivo que solo puede ser `movil`/`escritorio`, y que ningún archivo que cuenta visitas lea el user-agent.
 
-Cada uno se vio fallar a propósito antes de darlo por bueno (R29): sin la marca de ejecutable, con el `reglas.js` de 0.29, con R30 marcada como desactivable, con «28 reglas» en `catalogo.js`, con una cita a `prompts/nuevo.md` y con el LEEME de NOVATO anunciando `/harness-fix`.
+Cada uno se vio fallar a propósito antes de darlo por bueno (R29): sin la marca de ejecutable, con el `reglas.js` de 0.29, con R30 marcada como desactivable, con «28 reglas» en `catalogo.js`, con una cita a un `prompts/<inexistente>.md` y con el LEEME de NOVATO anunciando `/harness-fix`.
 
 **Smoke en navegador real (sin dependencias):** Chrome headless con `--remote-debugging-port` y un script de Node que habla CDP con el `WebSocket` nativo. Carga `index.html`, junta excepciones y errores de consola, y ejercita el combinador (generar, lista de archivos, árbol, cambio de nivel, checkbox del arnés, vistas). Para el popup de descarga rápida hay que elegir antes la categoría «Proyectos»: con la categoría por defecto no hay cards con «📦 Descargar ZIP». Desde ahí se intercepta `Zip.descargar` para ver qué baja de verdad. Se usó para D1. Todavía no está en el repo: es el próximo paso de D2 si la suite crece.
 
@@ -57,7 +57,7 @@ Necesita los binarios de Postgres en el PATH (`initdb`, `pg_ctl`, `psql`). Levan
 | La visita lleva solo la clase de dispositivo, y la vista de 30 días es del admin (0.33) | Un detalle con user-agent u otra cosa después de la barra (`400`), una vista que mire más de 30 días o que vea alguien que no es admin |
 | La combinación guarda si hay IA en el producto (0.33) | La columna `ia` que falte o que no arranque en `false` |
 | Rutas reales (0.34, ADR-015) | `/web/<vista>` (también una inventada) recarga con la app; `/web/admin`, `/web/guia`, `/web/demo` sirven su página; `/web/catalogo/` da 308 sin barra; `/web/inexistente.js`, `/web/Catalogo`, `/web/catalogo/otra`, `/web/.env`, `/web/a/b` y el traversal de siempre dan 404; `%2e%2e` termina en `/web/` |
-| El servidor sirve la config local y no sale del repo | Path traversal, `dev/.data/` expuesto (también por su alias 8.3 `DATA~1`) y un `Host` ajeno |
+| El servidor sirve la config local y no sale del repo | Path traversal, la carpeta `.data` de `dev/` expuesta (también por su alias 8.3 `DATA~1`) y un `Host` ajeno |
 
 ## Por qué la suite es chica
 
