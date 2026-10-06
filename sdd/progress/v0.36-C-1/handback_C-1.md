@@ -1,7 +1,7 @@
 # Handback C-1 — La web cuenta 42 escenarios y conoce el playbook obsidian-cerebro
 
 - **Estado:** done
-- **Rama / commit:** `v0.36-C-1` @ `HASH_FINAL` (base `d61f084`)
+- **Rama / commit:** `v0.36-C-1` @ `5bd8ed2 (el hash del commit que contiene este handback es el tip de la rama)` (base `d61f084`)
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
