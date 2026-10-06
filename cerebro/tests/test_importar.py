@@ -13,7 +13,7 @@ from test_notas import crear_enlace  # noqa: E402
 
 ESCENARIOS = """# scenarios.md
 
-**Versión:** 0.19 · 2026-10-06 · motor de crecimiento
+**Versión:** 0.19 · 2026-03-15 · motor de crecimiento
 
 ## 1 · Matriz de situaciones
 
@@ -108,7 +108,7 @@ class TestContenido(Base):
         self.assertIn("Problema", n.cuerpo)
         self.assertIn("es el caso base", n.cuerpo)
         self.assertIn("Adaptación", n.cuerpo)
-        self.assertEqual(n.fecha, "2026-10-06")
+        self.assertEqual(n.fecha, "2026-03-15")
 
     def test_celdas_con_pipe_escapado_backticks_y_links(self):
         armar(self.repo)
