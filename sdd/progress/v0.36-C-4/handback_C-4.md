@@ -1,7 +1,7 @@
 # Handback C-4 — Servidor MCP: buscar y nota
 
 - **Estado:** done
-- **Rama / commit:** `v0.36-C-4` @ `HASHREAL`
+- **Rama / commit:** `v0.36-C-4` @ `7c0fa15`
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
