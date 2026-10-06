@@ -1,4 +1,86 @@
-# Review C-4 @ 7c0fa15
+# Review C-4 @ 12b1bd1
+**Veredicto:** APPROVED (vuelta 2; la vuelta 1 @ 7c0fa15 fue CHANGES_REQUESTED, abajo)
+
+## Vuelta 2 @ 12b1bd1
+
+Diff revisado: `git diff 7c0fa15..12b1bd1` (el handback entra en `975413d`). Desde mi review (`7120097`) cambian solo `cerebro/README.md` (sigue siendo solo `## MCP`), `cerebro/mcp_server.py`, `cerebro/tests/test_mcp_server.py` y el handback. El núcleo no se tocó y no hay `requirements.txt`.
+
+### Verificación re-ejecutada
+```text
+$ cerebro/.venv/Scripts/python -m unittest discover -s cerebro/tests -v   (3.14.0, mcp 2.3.0; extracto)
+test_oserror_al_leer_es_error_herramienta ... ok
+test_separadores_unicode_en_titulo_y_fuente_no_cierran_el_bloque ... ok
+test_initialize_tools_list_y_buscar (TestHumoStdio) ... ok
+test_oserror_al_escribir_es_error_herramienta ... ok
+test_oserror_al_indexar_deja_la_nota_y_avisa ... ok
+Ran 92 tests in 3.951s
+OK
+$ python -m unittest discover -s cerebro/tests        (sistema, sin mcp)
+Ran 92 tests in 2.343s
+OK (skipped=1)      ← el humo, con su motivo
+$ py -3.11 -m unittest discover -s cerebro/tests
+Ran 92 tests in 2.284s
+OK (skipped=1)
+$ python harness/verify.py --changed
+[FAIL]  Ruta citada que no existe: sdd/cards/C-2.md → `cerebro/requirements.txt`
+ROJO — 1 FAIL, 0 WARN      ← el mismo FAIL previo de la base 6c1a023 (ver vuelta 1), no es de C-4
+```
+
+### `isError=true` contra el SDK instalado
+- `mcp/server/mcpserver/exceptions.py:43` `ToolError` es «a tool failure you anticipated». El call devuelve `is_error=True` con el mensaje en `content` y lo loguea en INFO, sin traceback. Cualquier otra excepción la trata como una caída: el modelo solo ve `Error executing tool <name>` (`tools/base.py:208-213`). El envoltorio `_como_herramienta` (`cerebro/mcp_server.py:88-97`) es la forma correcta de usarlo. Mantiene planas las funciones testeables, y `functools.wraps` conserva la firma y el docstring: lo comprobé, `tools/list` devuelve las mismas descripciones y los mismos `required`.
+- **Stdio real** (sonda propia, JSON-RPC crudo):
+  - `buscar` sin índice, `k=0`, `k=10¹²`, `tipo=x`, índice con basura y la sintaxis de `k='abc'` vuelven con `isError=true` y el mensaje en español (con el prefijo `Error executing tool buscar:` que agrega el SDK).
+  - En `nota`, la duplicada, `tipo=x` y `proyecto=..` vuelven igual, con `isError=true` y el mensaje.
+  - La `nota` válida y la búsqueda OK vuelven con `isError=false`. La `nota` con índice roto vuelve con `isError=false`, «nota creada … aviso: no pude indexarla», y la nota queda en disco (es correcto que no sea error).
+  - El servidor sigue vivo tras cada error y sale con código 0 en el EOF.
+  - stdout: cero líneas que no sean JSON-RPC. Los fallos van a stderr, una línea cada uno.
+  - Archivos: solo `proyectos/alfa/*.md` y `.cerebro/indice.sqlite`.
+- Una excepción no prevista (mutante V3: `RuntimeError` en vez de `ToolError`) tampoco tumba el servidor. Devuelve `isError=true` con «Error executing tool buscar» sin detalle, el traceback va a stderr y un `ping` posterior responde.
+
+### Criterios (vuelta 2)
+1. R26: [x] `test_separadores_unicode_en_titulo_y_fuente_no_cierran_el_bloque` cubre `    \x85 \x0b \x0c \x1c` en el título y la `fuente`, escritos vía `nota`. **M1 muere ahora** (`failures=1, errors=5`).
+2. `nota`: [x] las ramas `OSError` tienen test (`test_oserror_al_leer…`, `…_al_escribir…`, `…_al_indexar_deja_la_nota_y_avisa`): M5, M6 y M7 mueren.
+3. API: [x] (arriba). 4. Humo: [x] ahora también exige `isError=true` en dos errores y `nota` + `buscar` por stdio. 5. venv: [x].
+
+### Mutantes (vuelta 2: los 15 míos más 4 nuevos, uno por vez con `subprocess.run(..., timeout=120)`, restaurando el archivo en `finally`; árbol limpio al final; sin matar procesos por nombre, no quedaron huérfanos)
+| # | Mutante | Resultado |
+|---|---|---|
+| M1 | `_linea` no aplana | **muerto** (`Ran 19` → FAILED failures=1, errors=5) |
+| M2 | `k` acepta 0 | muerto (`Ran 19`, failures=2) |
+| M3 | sin `isinstance(k, bool)` | vive (irrelevante por MCP: pydantic convierte) |
+| M4 | sin tope de 600 caracteres | vive (no es criterio) |
+| M5 | `buscar` sin `except OSError` | **muerto** (`Ran 19`, errors=1) |
+| M6 | el indexado de `nota` sin `OSError` | **muerto** (`Ran 19`, errors=1) |
+| M7 | la escritura de `nota` sin `except OSError` | **muerto** (`Ran 19`, errors=1) |
+| M8 | `FIN` dentro del bucle | muerto (failures=1) |
+| M9 | `nota` sin registrar | muerto (failures=1) |
+| M10b | `print` a stdout antes de `run` | muerto por TIMEOUT 120 s (ver H3) |
+| M10c | `print` dentro de `buscar` | vive; equivalente (el SDK desvía el fd 1) |
+| M11 | `fuente:` muestra la `ruta` | muerto (failures=2) |
+| M12 | `indexar(todo=True)` | vive; equivalente |
+| M13 | `buscar` no valida `tipo` | muerto (failures=1) |
+| M14 | sin numeración | vive (cosmético) |
+| V1 | `_como_herramienta` devuelve `"error: …"` en vez de `ToolError` | muerto (failures=1) |
+| V2 | `buscar` registrado sin envoltorio | muerto (failures=1) |
+| V3 | `RuntimeError` en vez de `ToolError` | muerto por TIMEOUT 120 s; corrido aparte con 400 s: `KeyError: 4` en 131 s (ver H3) |
+| V4 | sin `functools.wraps` | muerto (failures=1) |
+
+13 muertos, 2 equivalentes y 4 vivos. Ninguno de los vivos toca un criterio.
+
+### Checkpoints (vuelta 2)
+- C1: [x] suite verde en 3.14 (venv y sistema) y 3.11; el FAIL de `verify.py` es previo.
+- C2: [x] los 5 criterios con evidencia; zona respetada.
+- C3: [x] `ToolError` del SDK, importado solo en `crear_servidor`; las funciones siguen sin depender del SDK.
+- C4: [x] M1, M5, M6 y M7 muertos; los vivos son equivalentes o no tocan criterios.
+- C5: [x] handback commiteado; README con el Python del venv (Windows y Linux/macOS).
+
+### Observaciones menores (no bloquean)
+- H3 BAJA — `cerebro/tests/test_mcp_server.py:208-233`: el humo lee stderr del servidor recién al final y espera hasta 30 s por mensaje (`:224`), con 7 mensajes. Si el servidor escribe mucho en stderr (tracebacks de V3), el pipe se llena y el servidor se bloquea, así que el test tarda más de 2 minutos en fallar en vez de fallar enseguida. Hoy los errores previstos loguean una línea y no pasa. Se arregla drenando stderr en un hilo, como stdout, o bajando la espera.
+- Siguen en pie, para el leader, las observaciones de la vuelta 1 sobre el núcleo: el frontmatter guarda el `proyecto` crudo pero la carpeta usa el slug, y `_una_linea` deja pasar NUL y ` `. Para el merge: `requirements.txt` tiene que fijar `mcp>=2,<3`, y el playbook §C paso 5 tiene que usar el Python del venv.
+
+---
+
+# Vuelta 1 @ 7c0fa15
 **Veredicto:** CHANGES_REQUESTED
 
 Base `6c1a023`, diff revisado `git diff 6c1a023..7c0fa15` (5 archivos; el handback entra en `0452da4`).
