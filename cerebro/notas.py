@@ -18,6 +18,8 @@ _CLAVE = re.compile(r"^([A-Za-z_][\w-]*)\s*:\s*(.*)$")
 _COMENTARIO = re.compile(r"\s+#.*$")
 _FECHA = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _TITULO = re.compile(r"^#\s+(\S.*)$")
+# Lo que `str.splitlines` toma por salto de línea (y NUL): no entra en un campo de una sola línea.
+_PROHIBIDOS_EN_LINEA = re.compile("[\x00\n\r\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029]")
 
 LEEME = """# Cerebro
 
@@ -214,8 +216,8 @@ def _una_linea(campo: str, valor: str) -> str:
     valor = (valor or "").strip()
     if not valor:
         raise ErrorNota(f"{campo}: falta o está vacío")
-    if "\n" in valor or "\r" in valor:
-        raise ErrorNota(f"{campo}: tiene que ser una sola línea")
+    if _PROHIBIDOS_EN_LINEA.search(valor):
+        raise ErrorNota(f"{campo}: tiene que ser una sola línea (sin saltos de línea, NUL ni separadores Unicode)")
     return valor
 
 
@@ -230,7 +232,8 @@ def escribir_nota(base: Path, proyecto: str, tipo: str, titulo: str, cuerpo: str
     if not _slug_crudo(proyecto):
         raise ErrorNota(f"proyecto: «{proyecto}» no deja un nombre de carpeta válido")
     fecha = fecha or datetime.date.today().isoformat()
-    lineas = ["---", f"proyecto: {proyecto}", f"tipo: {tipo}", f"fecha: {fecha}", f"fuente: {fuente}"]
+    carpeta_proyecto = slug(proyecto)  # el frontmatter y la carpeta son el mismo valor: buscar --proyecto lo encuentra
+    lineas = ["---", f"proyecto: {carpeta_proyecto}", f"tipo: {tipo}", f"fecha: {fecha}", f"fuente: {fuente}"]
     if tags:
         lineas.append(f"tags: [{', '.join(tags)}]")
     texto = "\n".join([*lineas, "---", f"# {titulo}", "", (cuerpo or "").strip(), ""])
@@ -238,7 +241,7 @@ def escribir_nota(base: Path, proyecto: str, tipo: str, titulo: str, cuerpo: str
     if errores:
         raise ErrorNota("; ".join(errores))
     if (nota.proyecto, nota.tipo, nota.fecha, nota.fuente, nota.tags, nota.titulo) != (
-            proyecto, tipo, fecha, fuente, tags, titulo):
+            carpeta_proyecto, tipo, fecha, fuente, tags, titulo):
         raise ErrorNota("algún campo no se puede guardar tal cual (comillas al borde o ` #` en el valor)")
 
     base = Path(base)
@@ -247,7 +250,7 @@ def escribir_nota(base: Path, proyecto: str, tipo: str, titulo: str, cuerpo: str
     raiz = base / "proyectos"
     raiz.mkdir(exist_ok=True)
     raiz_real = raiz.resolve()
-    carpeta = raiz / slug(proyecto)
+    carpeta = raiz / carpeta_proyecto
     destino = carpeta / f"{fecha}-{slug(titulo)}.md"
     if raiz_real.parent != base.resolve() or carpeta.resolve().parent != raiz_real:
         raise ErrorNota(f"{destino}: queda fuera de CEREBRO_DIR/proyectos (¿un enlace?)")

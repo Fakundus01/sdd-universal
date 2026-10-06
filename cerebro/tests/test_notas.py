@@ -211,6 +211,34 @@ class TestEscribir(ConCerebro):
         proyectos = self.base / "proyectos"
         self.assertEqual(list(proyectos.rglob("*.md")) if proyectos.exists() else [], [])
 
+    def test_campos_de_una_linea_rechazan_nul_y_separadores_unicode(self):
+        for sep in ("\x00", " ", " ", "\x85"):
+            for campo in ("proyecto", "titulo", "fuente"):
+                with self.subTest(campo=campo, sep=repr(sep)):
+                    with self.assertRaises(ErrorNota) as ctx:
+                        self.escribir(**{campo: f"a{sep}b"})
+                    self.assertIn("una sola línea", str(ctx.exception))
+            with self.subTest(campo="tags", sep=repr(sep)):
+                with self.assertRaises(ErrorNota):
+                    self.escribir(tags=[f"a{sep}b"])
+        proyectos = self.base / "proyectos"
+        self.assertEqual(list(proyectos.rglob("*.md")) if proyectos.exists() else [], [])
+
+    def test_el_proyecto_del_frontmatter_es_el_slug_de_la_carpeta(self):
+        ruta = self.escribir(proyecto="Mi Proyecto Ñandú")
+        self.assertEqual(ruta.parent.name, "mi-proyecto-nandu")
+        nota, errores = parsear(ruta.read_text(encoding="utf-8"), str(ruta))
+        self.assertEqual(errores, [])
+        self.assertEqual(nota.proyecto, ruta.parent.name)
+
+    def test_buscar_por_proyecto_encuentra_lo_que_nota_escribio(self):
+        self.escribir(proyecto="Mi Proyecto", titulo="Hallazgo raro", cuerpo="palabra zarzaparrilla")
+        code, out, err = self.cli("indexar")
+        self.assertEqual(code, 0, err)
+        code, out, err = self.cli("buscar", "zarzaparrilla", "--proyecto", "mi-proyecto")
+        self.assertEqual(code, 0, err)
+        self.assertIn("Hallazgo raro", out)
+
 
 class TestInicializar(ConCerebro):
     def test_crea_proyectos_y_leeme_y_no_pisa(self):
