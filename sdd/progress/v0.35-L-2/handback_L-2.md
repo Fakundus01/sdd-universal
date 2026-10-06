@@ -1,7 +1,7 @@
 # Handback L-2 — verify.py revisa depende_de: que exista y que no haya ciclos
 
 - **Estado:** done
-- **Rama / commit:** `v0.35-L-2` @ `HASH_NUEVO` (vuelta 1; base de la vuelta `abcb57c`)
+- **Rama / commit:** `v0.35-L-2` @ `f1f39f0` (vuelta 1; base de la vuelta `abcb57c`)
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
@@ -91,4 +91,4 @@ OK (skipped=1)
 - Re-review de L-2.
 
 ## Apéndice: vueltas
-- Vuelta 1 (HASH_NUEVO): review R30 CHANGES_REQUESTED sobre `f7673be`. Req. 1 (test de `done` fuera de orden) y 2 (el FAIL del grafo apaga el OK) resueltos; mejoras: DFS iterativo, FAIL por formato no reconocido, dedupe, id vacío, clase de tests antes de `__main__`, tabla de mutantes (que además encontró dos huecos más: aserto del OK en formato y fuera de orden, y el diamante).
+- Vuelta 1 (f1f39f0): review R30 CHANGES_REQUESTED sobre `f7673be`. Req. 1 (test de `done` fuera de orden) y 2 (el FAIL del grafo apaga el OK) resueltos; mejoras: DFS iterativo, FAIL por formato no reconocido, dedupe, id vacío, clase de tests antes de `__main__`, tabla de mutantes (que además encontró dos huecos más: aserto del OK en formato y fuera de orden, y el diamante).
