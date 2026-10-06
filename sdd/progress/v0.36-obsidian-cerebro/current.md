@@ -18,6 +18,7 @@
 - OK del owner («OK instalar, OK MCP», 2026-10-06): en C-8, instalar el Cerebro en su máquina (`Documents\Cerebro`, venv de `cerebro/`, modelo local) y registrar el MCP con `claude mcp add`. OpenAI sigue pendiente (clave en `.env` la pone el owner + OK de la primera llamada)
 - v7 · C-7 done (3 vueltas; review en worktree propio; APPROVED @ 7d95dbf); default sin OneDrive, `mcp add -s user`, índice con slug de proyecto y versión de esquema 2; suite 219
 - C-8 (leader): instalado con `instalar.ps1` en `%USERPROFILE%\Documents\Cerebro` (71 notas, local). Objetivo 3: S39 1.º ✓; S42 10.º ✗ (FTS 1.º, coseno de MiniLM fuera del top 15; párrafos no lo arreglan; con mpnet queda 3.º por coseno). DRIFT (R25) → owner eligió «Cambiar a mpnet» (2026-10-06) → tarjeta C-9
+- C-8: MCP registrado (`claude mcp add -s user cerebro …` con el Python del venv; `claude mcp list` → `cerebro … Connected`). Playbook §C al día (instalar.ps1, venv, importar-sdd, `-s user`, mpnet, esquema/slug); web/tests 49/49
 
 ## Próximo paso
 C-8 (leader): instalar con `cerebro/instalar.ps1` en `%USERPROFILE%\Documents\Cerebro` (OK dado), objetivo 3 con embeddings locales, registrar el MCP con `-s user` (OK dado), playbook §C al día (venv, `-s user`, instalar.ps1), texto de `mcp_server.py:84`. OpenAI: espera la clave del owner en `.env` y su OK.

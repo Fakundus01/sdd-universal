@@ -64,22 +64,25 @@ tags: [loops, arnés]
 
 La herramienta vive en `cerebro/` del paquete (como `harness/`) y se copia al proyecto o se usa desde el paquete.
 
-1. `pip install -r cerebro/requirements.txt` (`fastembed`, `mcp`; ver `decisions` en `cerebro/README.md`).
-   [NOVATO] Instala dos librerías de Python. La primera búsqueda baja un modelo de ~220 MB una sola vez.
+En Windows, todo de una vez: `powershell -ExecutionPolicy Bypass -File cerebro\instalar.ps1` (venv + dependencias + `init` + `importar-sdd` + `indexar`; no registra el MCP). Se niega a instalar el Cerebro dentro de OneDrive. A mano, los mismos pasos:
+
+1. `python -m venv cerebro/.venv` y `cerebro/.venv/Scripts/pip install -r cerebro/requirements.txt` (`fastembed`, `mcp`, `openai`; decisiones en `cerebro/README.md`). **Siempre en el venv**, nunca en el Python del sistema; los pasos que siguen usan el Python del venv.
+   [NOVATO] Instala las librerías en una carpeta aparte. La primera búsqueda baja un modelo de ~1 GB una sola vez.
 2. `python cerebro/cerebro.py init` → crea la carpeta y el `LEEME.md`.
-3. `python cerebro/cerebro.py indexar` → indexa las notas (incremental: solo lo que cambió).
-4. `python cerebro/cerebro.py buscar "el agente copió un archivo para pasar un check"` → las 5 notas más cercanas, con proyecto, tipo, ruta y fragmento.
-5. **Para el agente (Claude Code):** registrar el MCP, una vez:
-   `claude mcp add cerebro -- python <ruta-al-paquete>/cerebro/mcp_server.py`
+3. `python cerebro/cerebro.py importar-sdd <repo>` → siembra el Cerebro con los escenarios, hallazgos y lecciones del paquete (idempotente).
+4. `python cerebro/cerebro.py indexar` → indexa las notas (incremental: solo lo que cambió; `--todo` al cambiar de modelo).
+5. `python cerebro/cerebro.py buscar "el agente copió un archivo para pasar un check"` → las 5 notas más cercanas, con proyecto, tipo, ruta y fragmento.
+6. **Para el agente (Claude Code):** registrar el MCP, una vez, con alcance de usuario (si no, solo existe en la carpeta donde se corrió) y con el Python del venv:
+   `claude mcp add -s user cerebro -e CEREBRO_DIR=<carpeta> -e CEREBRO_EMBEDDINGS=local -- <ruta-al-paquete>/cerebro/.venv/Scripts/python <ruta-al-paquete>/cerebro/mcp_server.py`
    Herramientas: `buscar(consulta, proyecto?, tipo?, k?)` y `nota(proyecto, tipo, titulo, cuerpo, fuente, tags?)`.
 
 ### Contrato de la herramienta
 | Pieza | Qué hace |
 |---|---|
 | Búsqueda | **Híbrida**: palabras (SQLite FTS5, BM25) + vectores (coseno), fusionadas por rango recíproco (RRF). Lo exacto («R30», «UnboundLocalError») lo encuentra la primera; lo parecido dicho con otras palabras, la segunda |
-| Embeddings locales | `fastembed`, modelo multilingüe (las notas están en español), en CPU, sin servidor |
+| Embeddings locales | `fastembed`, modelo multilingüe (las notas están en español), en CPU, sin servidor. Hoy `paraphrase-multilingual-mpnet-base-v2`: el MiniLM chico no alcanzaba el objetivo de búsqueda del loop (DRIFT del 2026-10-06) |
 | Fragmentos | Por encabezado, ~1500 caracteres; el frontmatter va como filtro, no como texto |
-| Índice | `.cerebro/indice.sqlite`: guarda **modelo y dimensión**. Si cambian, se niega a mezclar y pide `indexar --todo` |
+| Índice | `.cerebro/indice.sqlite`: guarda **modelo, dimensión y versión de esquema**. Si cambian, se niega a mezclar y pide `indexar --todo`. El `proyecto` se indexa como slug: `--proyecto "Mi Proyecto"` y `mi-proyecto` filtran igual |
 | Escritura (`nota`) | Solo dentro de `CEREBRO_DIR/proyectos/`; el nombre sale de un slug saneado; nunca pisa una nota existente |
 | Salida | Cada resultado lleva `fuente` y va marcado como dato recuperado (R26) |
 | Tests | `cerebro/tests/` con un embedder falso determinista: corren en CI sin bajar modelos ni red |
