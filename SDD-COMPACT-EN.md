@@ -1,4 +1,4 @@
-# SDD-COMPACT v0.30 · universal cheat-sheet (syntax card) · English mirror of the canonical Spanish
+# SDD-COMPACT v0.35 · universal cheat-sheet (syntax card) · English mirror of the canonical Spanish
 # Use: paste as the first message in chat-only agents, or as the sole context for cheap subagents.
 # Toggle: "Rxx=OFF" turns a rule off. Personal overrides → custom.md.
 
@@ -45,7 +45,7 @@ R33 loop-contract: agent iterating alone ⇒ FIRST sdd/loops/<name>.md{trigger, 
 spec | design | diagram | testing | costs | security | decisions | status | glossary
 contracts/contracts-<u> | features/features-<u> | changelog/changelog-<u>
 extra layer: GUIDE(humans) | teams(roles/OKs) | models(mirrors+tiers) | harness(evidence+TDD+memory, R29/R30) | orchestration(agent roles + card graph, R31) | loops(loops with a contract, R33) | scenarios(adapt the SDD) | tecnologias(catalog for R12) | seguridad(levels for R27)
-harness: harness.config.json | sdd/cards/<ID>.md(cards=queue) | sdd/progress/<branch>/{current,handback_<ID>,review_<ID>}
+harness: harness.config.json | sdd/cards/<ID>.md(cards=queue, depende_de=graph) | sdd/loops/<name>.md | sdd/progress/<branch>/{current,handback_<ID>,review_<ID>}
 Routing: planning⇒spec+features+status · implement⇒design+contracts+testing · commit⇒changelog · infra⇒costs+security
 
 ## LOOP

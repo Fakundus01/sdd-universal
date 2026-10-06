@@ -1,6 +1,6 @@
 # SDD-MASTER · Universal Governance for AI-Agent Development
 
-**Version:** 0.30 · **Date:** 2026-10-02 · **Owner:** Facundo Moreno
+**Version:** 0.35 · **Date:** 2026-10-06 · **Owner:** Facundo Moreno
 **English mirror.** The canonical source of this package is the Spanish `SDD-MASTER.md`; this mirror tracks it release by release. File names and references are identical in both languages, so everything below works unchanged.
 
 > **If you are an AI agent (Claude, Cursor, Copilot, Gemini or other):**
@@ -124,7 +124,7 @@ If there is no folder/repository: propose creating `Desktop\repositorios\<projec
 Repo analysis and mass-reading tasks are delegated to subagents with the minimum context slice (§2). Budget: the subagent gets the task + its protocol row, nothing else.
 
 **R12 · RECOMMENDED-MODEL — [ON] — can be turned off**
-At kickoff, and for AI-powered features, recommend a model per task without overprovisioning: simple text generation → cheap model; big refactors / architecture / critical code → high-tier model. Record the recommendation in §3.
+At kickoff, and for AI-powered features, recommend a model per task without overprovisioning: simple text generation → cheap model; big refactors / architecture / critical code → high-tier model. Record the recommendation in §3. If the **product** has AI inside: level N4 of `seguridad.md` and `playbooks/ia-en-el-producto.md` (the spend cap is a reserve, not a check).
 
 **R13 · CHANGELOG-SEMVER — [ON] — fixed**
 `MAJOR.MINOR.PATCH` versioning. Every implemented change produces an entry in `changelog/changelog-<user>.md`: what was added/changed/fixed, files touched, impact. The changelog is never deleted.
@@ -140,10 +140,10 @@ A task closes only if: code implemented + tests green (R07) + MDs up to date (R0
 
 **R17 · BASIC-SECURITY — [ON] — fixed**
 **Step 0 of every repo, before the first commit:** create the `.gitignore` with `.env`, `.env.*` (except `.env.example`), dependency folders and build artifacts. This is not cleanup for later: a `.gitignore` added *after* the first secret arrives too late, because the key is already in git history and removing it means rewriting the repo's history. The agent proposes it at kickoff even if the project has no secrets yet — the day one appears, the habit must already be there.
-Secrets and keys always in `.env`, never in code or the repo. Commit a `.env.example` with the variable names and no values. Mind the inverse case too: some keys **are public on purpose** (e.g. Supabase's `anon`) and hiding them protects nothing — the service's configuration is what protects. If a key is public, the MD says why. Review the diff before every commit looking for secrets.
+Secrets and keys always in `.env`, never in code or the repo. Commit a `.env.example` with the variable names and no values. Mind the inverse case too: some keys **are public on purpose** (e.g. Supabase's `anon`) and hiding them protects nothing — the service's configuration is what protects. If a key is public, the MD says why. Review the diff before every commit looking for secrets. If the product stores third-party data (e.g. leads), `security.md` must say what is stored, where it comes from and how long it is kept. Detail: `security.md`.
 
 **R18 · MODE-BY-SIZE — [ON] — can be turned off**
-At kickoff, classify the project and pick a mode: small script (≤~300 estimated lines or ≤1 day) → **LITE** (a single `sdd-lite.md` with spec + changelog embedded); standard project → **FULL**; monorepo/multi-service → **FEDERATED**. Record the choice in §3; the human can force another mode.
+At kickoff, classify the project and pick a mode: small script (≤~300 estimated lines or ≤1 day) → **LITE** (a single `sdd-lite.md` with spec + changelog embedded; template: `prompts/sdd-lite.md`); standard project → **FULL**; monorepo/multi-service → **FEDERATED**. Record the choice in §3; the human can force another mode.
 
 **R19 · SCHEDULED-MAINTENANCE — [ON] — can be turned off**
 If the `git log` (R02) shows more than ~30 days of inactivity, or when the human asks, propose an **audit**: compare the versions of languages, frameworks and libraries against the web; look for deprecations and vulnerabilities; review repo health (dead branches, `.env` exposure, size). Present an update plan → OK → update code **and** MDs → changelog. Never update dependencies without OK.
@@ -183,10 +183,10 @@ R17 is enough for a script; it is not enough for anything with users. At kickoff
 A 200-item checklist doesn't get read; six controls that do apply get done. That's why levels are exclusive by default: what doesn't apply doesn't show up. **Reclassifying is not optional:** adding login to a project that didn't have it activates a whole level, and that is exactly the moment it gets forgotten.
 
 **R28 · JUSTIFIED-DEPENDENCY — [ON] — toggleable**
-Before adding a new dependency (library, framework, service, CI action): one line in `decisions.md` with what problem it solves, why what's already there (or a reasonable own module) isn't enough, and how alive it is (latest release, maintenance). Two dependencies for the same job: pick one and record why. R19 audits on top of that record — the dependency nobody remembers the reason for is exactly the one nobody dares remove, and the one that shows up abandoned or vulnerable one day.
+Before adding a new dependency (library, framework, service, CI action): one line in `decisions.md` with what problem it solves, why what's already there (or a reasonable own module) isn't enough, and how alive it is (latest release, maintenance). If the line names a version, it is checked against the registry (npm, PyPI…) before writing it: from memory it comes out wrong. Two dependencies for the same job: pick one and record why. R19 audits on top of that record — the dependency nobody remembers the reason for is exactly the one nobody dares remove, and the one that shows up abandoned or vulnerable one day.
 
 **R29 · RED-FIRST-TDD — [ON] — toggleable**
-Red → green → refactor: the test is written first and seen failing for the right reason. The red is **measured** against the base (with its hash), never inferred. Every new check, guard or hook is proven by breaking it on purpose once and pasting the output: a check that never saw a red may not be running at all. DATA/GAME variants and detail: `harness.md` §5.
+Red → green → refactor: the test is written first and seen failing for the right reason. The red is **measured** against the base (with its hash), never inferred; with a new module, against an empty stub that imports (an import error is not a red). Every new check, guard or hook is proven by breaking it on purpose once and pasting the output: a check that never saw a red may not be running at all. DATA/GAME variants and detail: `harness.md` §5.
 
 **R30 · CLOSED-LOOP — [ON] — fixed**
 Nothing is `done` without **executable evidence** —command + literal output + commit hash— and without an **independent reviewer** who re-runs the verification (a `reviewer` subagent, a fresh session or the human; never whoever implemented it), even if the change looks trivial. Project-specific commands (test, lint, e2e) are declared in `harness.config.json`, never in the core. In-flight work lives in `sdd/progress/<branch>/`, not in the chat. Detail: `harness.md`.
@@ -207,6 +207,7 @@ Before letting the agent iterate on its own, write `sdd/loops/<name>.md` with **
 ```
 repo/
 ├── AGENTS.md                      # 1-line mirror → points here
+├── .gitattributes                 # merge=union for changelogs: N agents without conflicts (S27)
 ├── CLAUDE.md                      # 1-line mirror → points here
 ├── harness.config.json            # project commands: test, lint, e2e, read-only prod (R30)
 ├── harness/                       # verify.py by levels + hooks + pre-commit (from the scaffold)
@@ -215,14 +216,16 @@ repo/
 └── sdd/
     ├── SDD-MASTER.md              # THIS file (conductor, always read)
     ├── SDD-COMPACT.md             # keyword cheat-sheet (chat-only / subagents)
-    ├── GUIDE.md                   # usage guide for humans
+    ├── GUIDE.md                   # usage guide for humans (quick start, cadences)
     ├── custom.md                  # personal overrides (overrides rules without touching the core)
     ├── scenarios.md               # matrix: where it works, where it doesn't, adaptations (R20)
     ├── teams.md                   # enterprise layer: roles, OKs, ceremonies, subagents (R21)
     ├── models.md                  # multi-agent mirrors + tiers + token savings (R22)
     ├── harness.md                 # harness: evidence, TDD, forced red, on-disk memory (R29, R30)
-    ├── orchestration.md           # agent roles and the closed loop (R31)
-    ├── cards/<ID>.md              # cards: the work queue with acceptance and state
+    ├── orchestration.md           # agent roles, the closed loop and the card graph (R31)
+    ├── loops.md                   # contract for autonomous loops (R33)
+    ├── loops/<name>.md            # each loop: trigger, goal, verification, stop rule, memory
+    ├── cards/<ID>.md              # cards: the work queue with acceptance, state and depends_on
     ├── progress/<branch>/         # current.md + handbacks + reviews: in-flight work
     ├── spec.md                    # what the project is, problem, scope, features + status
     ├── design.md                  # technical design, layers, decisions with their why
@@ -247,7 +250,8 @@ repo/
 ```
 
 **LITE mode:** everything above collapses into a single `sdd-lite.md`. **FEDERATED mode:** this tree repeats per module and the root `sdd/` only routes (optional: `api-catalog.md` with the inter-module API index).
-**Package-level, not per project:** `blocks.md`, `tecnologias.md`, `seguridad.md`, `playbooks/`, `examples/`, `web/` and `README.md` live in the SDD Universal repo; a project copies only the playbooks it uses. In `examples/` there is a real, complete `sdd/` to see what the result looks like before generating your own.
+**Package-level, not per project:** `blocks.md`, `tecnologias.md`, `seguridad.md`, `playbooks/`, `skills/`, `examples/`, `web/` and `README.md` live in the SDD Universal repo; a project copies only the playbooks it uses (and `.claude/skills/` if the agent is Claude — optional shortcuts, the SDD works the same without them). In `examples/` there is a real, complete `sdd/` to see what the result looks like before generating your own.
+**Enterprise optionals (teams.md §8):** `team.md` · `environments.md` · `onboarding.md` · `incidents.md` (postmortems) · `metrics.md` (velocity + token spend per cycle).
 
 **`spec.md` quality contract — the 6 elements.** A spec doesn't pass OK if any is missing: (1) concrete, measurable outcomes, not feature names; (2) explicit scope limits (what does NOT get in); (3) technical constraints and assumptions; (4) decisions already made (DB, libraries, patterns) so they aren't re-litigated; (5) breakdown into parallelizable subtasks; (6) testable verification criteria. The spec is an executable contract constraining what the agent may generate — not a passive doc.
 
@@ -302,7 +306,7 @@ then do we continue with new features.
 
 ## §7 · LOOP-PROMPT and HANDBACK
 
-The loop saves the human from writing a new prompt at every step: the agent closes each cycle with a HANDBACK block and the human answers with the bare minimum.
+The loop saves the human from writing a new prompt at every step: the agent closes each cycle with a HANDBACK block and the human answers with the bare minimum. This is the loop **with** the human inside; for the agent to iterate alone toward a goal, see R33 and `loops.md`.
 
 **Standing instruction (paste once):**
 
@@ -371,4 +375,13 @@ Changelog entry: `## [X.Y.Z] — YYYY-MM-DD` with **Added / Changed / Fixed / Re
 
 ## §11 · History of this document
 
-This mirror tracks the canonical Spanish master. For the full release-by-release changelog (v0.1 → today), see `SDD-MASTER.md` §11. Mirror created at v0.19.
+The versions of the current line (0.32 onward). The earlier ones (0.31 and back) are in `historial-master.md`, so this file stays under ~400 lines (R20) without losing anything. This mirror was created at v0.19 and tracks the canonical Spanish master.
+
+| Version | Date | Change |
+|---|---|---|
+| 0.35 | 2026-10-06 | **R33 · LOOP-WITH-A-CONTRACT** and the card graph, via S39 and S40: an autonomous loop is written first in `sdd/loops/<name>.md` (trigger, measurable goal, verification, stop rule, memory) and approving it authorizes commits only on its branch. Cards declare `depende_de` and the leader dispatches by levels of the graph. New `loops.md`; `orchestration.md` §10. Takes in what 2026 calls *loop engineering* and *graph engineering* (of execution), without adding layers the package already had. |
+| 0.34 | 2026-10-05 | Web without a gate and with real routes, at the owner's request: the app opens without an account; login is optional and lives at `/web/login` (it only returns to internal routes); onboarding stops being a dialog over everything and becomes `/web/preferencias`. Every view has its own URL (`/web/catalogo`, `/web/combinador`…), reloadable and shareable, with a rewrite on the local server and in `vercel.json`. Old `#/` links redirect. Fixes the 0.33 bug: onboarding sat above the gate and neither of the two could be touched (ADR-014, ADR-015 of the web). |
+| 0.33.2 | 2026-10-05 | **S38 · the AI product beyond spend**, with material contributed by the owner (OWASP Top 10 for LLMs 2025, NIST AI RMF, RAG, Huyen): `seguridad.md` 0.13 with the LLM01–LLM10 map and its control in the package, rules for agents that act, and NIST for corporate clients. The `ia-en-el-producto` playbook adds a reference architecture, RAG, agents and two-layer evals (high-precision deterministic ones + a judge, H26). The AI prompt walks through the OWASP list; catalog with pgvector and embeddings. Minor items from the 0.33.1 review: in `eventos` only `tipo` and `detalle` are inserted, the Pydantic lesson is described properly, and the harness retries when Windows loses a process's output. |
+| 0.33.1 | 2026-10-05 | R30 review of 0.33: the check for paths in tables looks at `spec.md` and `sdd-lite.md` by default; LITE without `progress/` also in the handoff and in `--e2e`; the events table rejects identifying text and days that are not today; the prompt, the list and the ZIP always come from the same state; the `#/combinador?c=` link loads again. N2 of `seguridad.md`: deleting applies to the file too (`secure_delete` + `VACUUM`, backups). Pydantic trap in `tecnologias.md` (a validator named like its field overrides it). The old history moves to `historial-master.md`. |
+| 0.33 | 2026-10-05 | Lessons from four real projects built with the package (landing, store, help desk with AI and chatbot, all local) via S33–S37. New playbook **`ia-en-el-producto`**: the spend cap broke seven times, in seven ways. R12 points to it, R28 checks versions against the registry, R29 measures the red of a new module with a stub. `seguridad.md` 0.12: statics by allowlist and one test per control. Combiner with a Python + React stack, a «help desk» type and an «AI in the product» checkbox; the prompt respects R01 turned off; catalog with Vite, Vitest, pytest, Tailwind, React Router, Mercado Pago, Stripe and Anthropic API. Harness: LITE mode without on-disk memory, paths cited in tables, card with `rama`. Web: O1–O4 report in the panel. |
+| 0.32 | 2026-10-04 | **100% local** development environment (`dev/`): local Postgres with the same schema and the same RLS policies as Supabase, auth and REST compatible with the web client, and test users. Supabase and Vercel stay inactive until leaving local. |
