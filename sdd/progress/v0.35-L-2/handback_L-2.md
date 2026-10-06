@@ -1,7 +1,7 @@
 # Handback L-2 — verify.py revisa depende_de: que exista y que no haya ciclos
 
 - **Estado:** done
-- **Rama / commit:** `v0.35-L-2` @ `HASH_PLACEHOLDER` (base `23b9298`; el hash final está en `git log -1`, el commit incluye este handback)
+- **Rama / commit:** `v0.35-L-2` @ `1031642` (implementación + handback; base `23b9298`)
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
