@@ -22,6 +22,7 @@ graph LR
 - v3 · L-3 CHANGES_REQUESTED (review @ 1975704): texto del EN viejo en §6.1 y `depende_de` traducido a `depends_on` en §5 → re-despachado al implementer (iteración 2/3)
 - v4 · L-3 done (2.ª vuelta de review APPROVED, merge); espejos EN en 0.35
 - v5 · L-2 CHANGES_REQUESTED: falta el test de `done` con dependencia no done (mutante vivo) y que un FAIL del grafo apague el OK de tarjetas; más formatos de `depende_de` que se pierden en silencio → re-despachado (iteración 2/3)
+- v6 · L-4 done (review APPROVED @ addc1f6, merge); smoke en la rama del loop: PASS, 22 pasos, 0 errores de consola
 
 ## Próximo paso
 Despachar L-1, L-2 y L-6 en paralelo (worktrees `../sdd-universal-L-<n>`); L-3 cuando se libere un lugar.
