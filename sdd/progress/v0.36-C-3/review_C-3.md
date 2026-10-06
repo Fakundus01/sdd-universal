@@ -1,5 +1,74 @@
-# Review C-3 @ 3ca371f
-**Veredicto:** CHANGES_REQUESTED (vuelta 2; la vuelta 1 @ 1d11328 también fue CHANGES_REQUESTED, abajo)
+# Review C-3 @ 7c5d48c
+**Veredicto:** CHANGES_REQUESTED (vuelta 3; las vueltas 1 @ 1d11328 y 2 @ 3ca371f también fueron CHANGES_REQUESTED, abajo)
+
+## Vuelta 3 @ 7c5d48c
+
+Diff revisado: `git diff 3ca371f..7c5d48c` (código) más `5e607a1` (handback). Archivos tocados: `cerebro/embedders.py`, `cerebro/README.md`, `cerebro/tests/test_local.py` y el handback. `review_C-3.md` no se tocó (`git diff 1ea8fec..5e607a1`). Zona OK.
+
+### Verificación re-ejecutada
+```text
+$ cerebro/.venv/Scripts/python -m unittest discover -s cerebro/tests -v
+test_huggingface_hub_ve_la_variable_tras_importar_fastembed (test_local.TestSymlinksHF...) ... ok
+test_mismo_sentido_con_otras_palabras_queda_mas_cerca_que_una_frase_ajena (test_local.TestLocalIntegracion...) ... ok
+Ran 95 tests in 4.274s
+OK
+$ python -m unittest discover -s cerebro/tests -v   (sistema, sin fastembed)
+... skipped 'fastembed no está instalado: `python -m venv cerebro/.venv` y ...'
+... skipped 'fastembed no está instalado: la constante de huggingface_hub solo se mide con él'
+Ran 95 tests in 1.840s
+OK (skipped=2)
+$ python harness/verify.py --changed
+VERDE — 0 FAIL, 0 WARN
+```
+
+### H7: resuelto (medido con la carga y la descarga reales)
+- Carga real con el cache existente, sin la variable en el entorno: `huggingface_hub.constants.HF_HUB_DISABLE_SYMLINKS_WARNING` vale `True`.
+- Con `HF_HUB_DISABLE_SYMLINKS_WARNING=0` puesto por el usuario, la constante vale `False` y el entorno sigue en `0`. Se respeta el valor del usuario.
+- Descarga real fresca (`CEREBRO_MODELOS` temporal, sin la variable): `indexar` da rc 0. stderr trae el aviso «cerebro: bajando …» y **0** `UserWarning` (en la vuelta 2 eran 2). Después, `buscar --json` deja stdout con JSON válido.
+- `cerebro/README.md:15` describe ahora lo que pasa de verdad (`setdefault` antes del import; la variable queda fijada en el proceso).
+
+### Tests que desaparecieron (96 → 95)
+`git diff 3ca371f..7c5d48c -- cerebro/tests/test_local.py`:
+- `test_el_entorno_del_proceso_no_queda_cambiado` → **reemplazado** con motivo. Probaba la restauración del entorno, que ya no existe. Lo cubren `test_la_variable_de_symlinks_se_fija_antes_del_import_y_respeta_la_del_usuario` y `TestSymlinksHF`.
+- `test_el_cargador_real_le_pasa_modelo_y_cache_a_fastembed` (3ca371f:225) → **borrado** sin reemplazo ni motivo. El handback de la vuelta 3 no lo menciona, y era el test que mataba el mutante `cache_dir=None` de la vuelta 1.
+- `test_cache_por_defecto_y_variable_de_entorno` (3ca371f:239) → **borrado** sin reemplazo ni motivo. Era el único test de `dir_modelos()`.
+
+Ninguno de los dos se fusionó ni cambió de nombre. `grep dir_modelos|CEREBRO_MODELOS|cache_dir|gettempdir cerebro/tests/` solo encuentra un docstring.
+
+### Mutantes (uno por vez sobre `cerebro/embedders.py`; venv; `subprocess.run(..., timeout=120)`; suite COMPLETA; script en `scratchpad/c3rev/`; revertidos)
+| # | Mutante | Resultado | Salida |
+|---|---|---|---|
+| M1 | aviso a stdout | muerto | Ran 95, failures=1 |
+| M2 | `import fastembed` ansioso | muerto | Ran 95, failures=2 |
+| M3 | aviso después de cargar | muerto | Ran 95, failures=2 |
+| M4 | sin `except ErrorEmbedder: raise` | muerto | Ran 95, failures=1 |
+| M5 | huella sin `.lower()` | muerto | Ran 95, failures=1 |
+| M6 | `OSError` → `True` | muerto | Ran 95, failures=4 |
+| M7 | `any` → `all` en dim | muerto | Ran 95, failures=1 |
+| M8 | sin chequeo de cantidad | muerto | Ran 95, failures=1 |
+| M9 | `CEREBRO_MODELOS` ignorado (`dir_modelos` siempre devuelve el default) | **SOBREVIVE** | Ran 95, OK. En la vuelta 2 lo mataba `test_cache_por_defecto_y_variable_de_entorno` |
+| M10 | `obtener("local")` → `Falso()` | muerto | Ran 95, failures=1 |
+| M11 | `glob("*/*.onnx")` → `glob("*/*")` | muerto | Ran 95, failures=1 (`[otros archivos sin onnx]`) |
+| M13 | sin `setdefault` | muerto | Ran 95, failures=2 |
+| M14 | `setdefault` → asignación (pisa la del usuario) | muerto | Ran 95, failures=1 |
+| M15 | `cache_dir=None` a fastembed | **SOBREVIVE** | Ran 95, OK. Con esto el modelo vuelve al temp del sistema y se baja de nuevo; lo mataba `test_el_cargador_real_...` |
+| M16 | `model_name` fijo a `all-MiniLM-L6-v2` en `_cargar_fastembed` | muerto, **pero solo** por la integración | Ran 95, failures=1, 16 s. El unitario que lo mataba sin red se borró. En el sistema sin fastembed sobreviviría |
+| M17 | cache por defecto en `tempfile.gettempdir()` | **SOBREVIVE** | Ran 95, OK (32 s: la integración bajó el modelo al temp) |
+| M18 | `Local` ignora la cache inyectada | muerto | Ran 95, failures=9 |
+
+Efectos de M16 y M17 que limpié: M16 bajó `models--qdrant--all-MiniLM-L6-v2-onnx` en `~/.cache/cerebro/modelos` y M17 creó `%TEMP%\cerebro\modelos`. Los dos se crearon en esta corrida (10:07), así que los borré; quedó solo el modelo multilingüe original. `git status` limpio.
+
+### Checkpoints vuelta 3
+- C1: [x] suite 95/95 en el venv y 95 (2 skips con motivo) en el sistema; `verify.py --changed` VERDE.
+- C2: [x] los cinco criterios se cumplen; zona respetada.
+- C3: [x] H7 resuelto en el código y en el README.
+- C4: [ ] se perdió cobertura sin motivo. M9, M15 y M17 vuelven a sobrevivir, y M16 solo muere con red y modelo. El handback (tabla vuelta 3) corrió los mutantes contra `test_local.py` solo (Ran 22) y no corrió los que atacan lo borrado.
+- C5: [x] handback commiteado. Pero no declara el borrado de los dos tests.
+
+### Cambios requeridos (vuelta 3)
+1. **MEDIA**: restaurar `test_el_cargador_real_le_pasa_modelo_y_cache_a_fastembed` (en `3ca371f:cerebro/tests/test_local.py:225`), adaptado a `_importar_fastembed`. Tiene que exigir `model_name=MODELO_LOCAL` y `cache_dir=str(cache)`, y que `embed([])` no cargue nada. Cubre `cerebro/embedders.py:93-94`. Debe matar M15 y M16 sin red.
+2. **MEDIA**: restaurar `test_cache_por_defecto_y_variable_de_entorno` (en `3ca371f:cerebro/tests/test_local.py:239`). Cubre `cerebro/embedders.py:67-71`. Debe matar M9 y M17.
+3. **BAJA**: en el handback, declarar los tests borrados o restaurados y correr los mutantes con la suite completa, no solo con `test_local.py`.
 
 ## Vuelta 2 @ 3ca371f
 
