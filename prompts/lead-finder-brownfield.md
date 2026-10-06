@@ -1,6 +1,6 @@
 # lead-finder-brownfield.md · Prompt a medida para tu buscador de prospectos
 
-Para pegar en Claude Code (u otro agente) parado en el repo del proyecto, junto con el SDD-MASTER.
+Para pegar en Claude Code (u otro agente) parado en el repo del proyecto, junto con el [SDD-MASTER](../SDD-MASTER.md).
 
 ```
 Adjunto el SDD-MASTER. Este repo existente NO tiene SDD. Aplicá R15
