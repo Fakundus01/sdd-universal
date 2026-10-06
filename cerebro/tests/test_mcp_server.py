@@ -95,6 +95,16 @@ class TestBuscar(Base):
             with self.subTest(nombre=nombre):
                 self.assertIn("Hallazgo raro", mcp_server.buscar("zarzaparrilla", proyecto=nombre))
 
+    def test_nota_a_mano_con_proyecto_natural_se_alcanza_por_mcp(self):
+        ruta = self.base / "proyectos" / "sdd-universal" / "a.md"
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        ruta.write_text("---\nproyecto: SDD Universal\ntipo: leccion\nfecha: 2026-10-06\nfuente: x\n---\n"
+                        "# A mano\n\npalabra membrillo\n", encoding="utf-8")
+        self.cli("indexar")
+        for filtro in ("SDD Universal", "sdd-universal"):
+            with self.subTest(filtro=filtro):
+                self.assertIn("A mano", mcp_server.buscar("membrillo", proyecto=filtro))
+
     def test_errores_levantan_error_herramienta(self):
         for kwargs, texto in (({"tipo": "inventado"}, "tipo"), ({"k": 0}, "k tiene"), ({"k": 10_000}, "k tiene")):
             with self.assertRaises(mcp_server.ErrorHerramienta, msg=str(kwargs)) as cm:

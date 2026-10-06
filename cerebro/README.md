@@ -33,6 +33,7 @@ A mano (Windows; en Linux/macOS `cerebro/.venv/bin/python` en lugar de `cerebro/
    cerebro/.venv/Scripts/python cerebro/cerebro.py importar-sdd .
    ```
 5. **`indexar`**: incremental, solo lo que cambió. La primera vez con `local` baja el modelo (ver abajo).
+   El índice guarda una versión de esquema junto con el modelo: si lo armó una versión anterior de esta herramienta (el `proyecto` se guarda ahora como el slug de su nombre), `buscar` e `indexar` piden `indexar --todo` en vez de dar resultados filtrados incorrectos.
    ```bash
    cerebro/.venv/Scripts/python cerebro/cerebro.py indexar
    ```

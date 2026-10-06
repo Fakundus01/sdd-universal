@@ -14,7 +14,7 @@
 .PARAMETER Python
   Python >= 3.10 con el que se crea el venv (default: python).
 .PARAMETER Reindexar
-  Pasa --todo a indexar: hace falta al cambiar de modo (falso, local u openai) sobre un Cerebro ya indexado.
+  Pasa --todo a indexar: hace falta al cambiar de modo (falso, local u openai) o con un indice de una version anterior.
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File cerebro\instalar.ps1 -CerebroDir D:\Notas\Cerebro
 #>
@@ -95,7 +95,7 @@ $argsIndexar = @($cerebroPy, 'indexar')
 if ($Reindexar) { $argsIndexar += '--todo' }
 try { Ejecutar $pyVenv $argsIndexar }
 catch {
-    Write-Host "Si cambiaste de modo (falso, local u openai) sobre un Cerebro ya indexado, volve a correr este script con -Reindexar." -ForegroundColor Yellow
+    Write-Host "Si cambiaste de modo (falso, local u openai) o el indice lo armo una version anterior de esta herramienta, volve a correr este script con -Reindexar." -ForegroundColor Yellow
     throw
 }
 

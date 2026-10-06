@@ -261,7 +261,7 @@ class TestMetaConLocal(ConCerebro):
         con = sqlite3.connect(self.base / ".cerebro" / "indice.sqlite")
         self.addCleanup(con.close)
         self.assertEqual(dict(con.execute("SELECT clave, valor FROM meta")),
-                         {"modelo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "dim": "384"})
+                         {"modelo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "dim": "384", "esquema": "2"})
 
 
 def coseno(a, b) -> float:

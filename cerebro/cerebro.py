@@ -120,10 +120,15 @@ def _cmd_revisar(base: Path, args, emb) -> int:
         errores.extend(problemas)
         carpeta = a.relative_to(base / "proyectos").parts[0] if len(a.relative_to(base / "proyectos").parts) > 1 else ""
         if nota is not None and carpeta and nota.proyecto != carpeta:
-            desparejas += 1  # no es un error (a mano se escribe como uno quiere), pero buscar --proyecto no la encuentra
-            print(f"aviso: {ruta}: proyecto «{nota.proyecto}» no es el nombre de su carpeta; "
-                  f"`buscar --proyecto` la encuentra como «{nota.proyecto}», no como «{carpeta}» "
-                  f"(corregí el frontmatter a `proyecto: {carpeta}`)", file=sys.stderr)
+            desparejas += 1  # no es un error (a mano se escribe como uno quiere): el índice guarda el slug
+            indexada = notas.slug(nota.proyecto)
+            if indexada == carpeta:
+                consecuencia = "el filtro `--proyecto` la alcanza igual"
+            else:
+                consecuencia = f"`buscar --proyecto {carpeta}` no la encuentra"
+            print(f"aviso: {ruta}: proyecto «{nota.proyecto}» no es el nombre de su carpeta; se indexa como "
+                  f"«{indexada}» y {consecuencia} (para unificarlo: `proyecto: {carpeta}` en el frontmatter)",
+                  file=sys.stderr)
     for e in errores:
         print(e)
     print(f"{len(archivos)} nota(s) revisadas, {len(errores)} error(es)" + (f", {desparejas} aviso(s) de proyecto." if desparejas else "."))
