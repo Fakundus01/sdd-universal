@@ -139,4 +139,4 @@ Nota: este handback ya traía el comentario del leader antes de la tabla, no ent
 ### Costo (vuelta 2)
 | Rol | Modelo | Vuelta | Tokens | Costo USD | Duración |
 |---|---|---|---|---|---|
-| implementer | <modelo> | 2 | <tokens> | <USD> | <duración> |
+| implementer | sonnet (MEDIO) | 2 | 133 287 (total) | n/d | 9 min 37 s |
