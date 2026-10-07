@@ -48,6 +48,17 @@ CUSTOM_NAME = "custom.md"
 CUSTOM_WARN_BYTES = 2048
 RULE_DEF_RE = re.compile(r"^\*{0,2}R(\d\d)[ \t]+(?:·[ \t]+)?[^\s:]+[ \t]*[:·—*]", re.M)
 MASTER_RULE_RE = re.compile(r"^\*\*R(\d\d)\b", re.M)
+# Costo por rol y vuelta (P-2): el handback de una tarjeta `done` trae la sección «Costo» con al menos una fila y sin
+# ningún `<…>` sin completar (`n/d` es una decisión explícita del leader). Dos casos:
+#  - rama con versión (`v0.37-P-2`): desde COSTO_DESDE avisa si la sección falta o está vacía/sin completar; una rama
+#    anterior es previa a la regla y calla (no se inventan datos en handbacks viejos);
+#  - rama sin versión (`main`, `card/E-10`, un proyecto normal): avisa solo si el handback YA tiene la sección «Costo»
+#    y está vacía o sin completar; si no la tiene, calla (por la misma razón).
+COSTO_DESDE = (0, 37)
+BRANCH_VERSION_RE = re.compile(r"^v(\d+)\.(\d+)")
+COSTO_HEADING_RE = re.compile(r"^#{1,6}\s*Costo\b", re.I)
+PLACEHOLDER_ANY_RE = re.compile(r"<[^>]*>")
+HEADING_RE = re.compile(r"^#{1,6}\s")
 WALK_SKIP = {".git", "node_modules", "__pycache__", ".venv", "venv", ".next", ".nuxt", "dist", "build"}
 
 
@@ -172,6 +183,7 @@ class HarnessChecks:
         self.check_cited_paths()
         self.check_startup()
         self.check_handbacks()
+        self.check_costo_handbacks()
         self.check_e2e_registered()
 
     # ── archivos base ────────────────────────────────────────────────────────
@@ -500,6 +512,49 @@ class HarnessChecks:
             tabs = [n for n, ln in enumerate(text.splitlines(), 1) if MID_TOKEN_TAB.search(ln)]
             if tabs:
                 self.report.warn(f"{rel}: TAB literal en la(s) línea(s) {', '.join(map(str, tabs[:5]))} (¿una ruta `tests\\t…` pegada?)")
+
+    # ── costo por rol y vuelta en el handback (P-2) ───────────────────────────
+    def check_costo_handbacks(self) -> None:
+        for card in self.cards:
+            branch = card.meta.get("rama", "")
+            if card.state != "done" or not branch:
+                continue
+            version = BRANCH_VERSION_RE.match(branch)
+            if version and (int(version[1]), int(version[2])) < COSTO_DESDE:
+                continue
+            path = self.root / "sdd" / "progress" / Repo.slug(branch) / f"handback_{card.id}.md"
+            if not path.is_file():
+                continue
+            has_section, complete = self._costo(path.read_text(encoding="utf-8-sig", errors="replace"))
+            if complete or (not has_section and not version):
+                continue
+            self.report.warn(f"{self._rel(path)}: sin sección Costo con al menos una fila completa (rol, modelo, vuelta, "
+                             "tokens, USD, duración; `n/d` si no se sabe, ningún `<…>` sin completar): la completa el "
+                             "leader (prompts/handback.md)")
+
+    @staticmethod
+    def _costo(text: str) -> tuple[bool, bool]:
+        """(hay sección «## Costo», está completa). Completa = al menos una fila de datos y ninguna con una celda
+        vacía o con `<…>`; la primera fila de la tabla es el encabezado y la de guiones el separador."""
+        inside, has_section, header_seen = False, False, False
+        rows: list[list[str]] = []
+        for line in text.splitlines():
+            if HEADING_RE.match(line):
+                inside = bool(COSTO_HEADING_RE.match(line))
+                has_section = has_section or inside
+                header_seen = False
+                continue
+            if not inside or not line.lstrip().startswith("|"):
+                continue
+            cells = [x.strip() for x in line.strip().strip("|").split("|")]
+            if not header_seen:
+                header_seen = True
+                continue
+            if set("".join(cells)) <= set("-: "):
+                continue
+            rows.append(cells)
+        complete = bool(rows) and all(all(x and not PLACEHOLDER_ANY_RE.search(x) for x in r) for r in rows)
+        return has_section, complete
 
     # ── drift: un E2E declarado que nunca corrió (S29) ───────────────────────
     def check_e2e_registered(self) -> None:

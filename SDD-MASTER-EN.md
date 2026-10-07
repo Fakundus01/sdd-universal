@@ -321,6 +321,7 @@ Done: [what was implemented, key files]
 Tests: [command + literal result @ hash (R30) — or "pending"]
 MDs: [which were updated]
 Git: [commit made with your OK / awaiting OK / R01=OFF: committed]
+Cost: [role · model · round: tokens (in/out, or total as `(total)`) · USD · duration — `n/d` for what the tool does not give; the leader fills it in]
 Proposed next step: [1–3 concrete lines]
 Risks/questions: [if any]
 Answer: OK / edit the next step / STOP

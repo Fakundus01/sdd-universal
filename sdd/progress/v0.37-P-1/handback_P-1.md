@@ -253,7 +253,7 @@ $ python harness/verify.py --quick               -> VERDE — 0 FAIL, 0 WARN
 
 ## Costo
 <!-- Completado por el leader (2026-10-07) con los avisos de fin de corrida de Claude Code. Tokens = `subagent_tokens` que informa la herramienta, sin desglose entrada/salida; el costo en USD no lo informa. -->
-| Rol | Modelo | Vuelta | Tokens (entrada/salida) | Costo USD | Duración |
+| Rol | Modelo | Vuelta | Tokens | Costo USD | Duración |
 |---|---|---|---|---|---|
 | implementer | sonnet (MEDIO) | 1 | 137 900 (total, sin desglose) | n/d | 12 min |
 | reviewer | opus (ALTO) | 1 | 136 357 (total, sin desglose) | n/d | 9 min 28 s |
