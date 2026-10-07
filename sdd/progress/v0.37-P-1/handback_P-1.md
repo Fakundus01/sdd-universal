@@ -186,3 +186,67 @@ $ python harness/verify.py --quick               -> [OK] Arranque liviano: 9895 
 - `custom.md` (usuario) y `web/prompt.js` / `skills/sdd-arranque` (primera sesión, necesita el master) no se tocaron.
 - `skill/sdd-universal.skill` sigue viejo (v0.3), ya señalado por la review.
 - Un incidente mío durante la vuelta: un `git reset --soft` mal pensado sacó un commit; lo recuperé con el reflog antes de seguir y no se perdió trabajo.
+
+
+---
+
+# Vuelta 3 (review de la vuelta 2 @ 0743fb4; decisión del owner 2026-10-07)
+
+- **Estado:** done
+- **Rama / commit:** `v0.37-P-1`, código en 068751e (base de la vuelta: a5f296b)
+
+## Bytes, misma base (LF, `git cat-file -s`)
+```text
+antes (ab90d19):  AGENTS.md 616 + SDD-MASTER.md 36300                 = 36916
+ahora (068751e):  paquete = AGENTS.md 432 + SDD-COMPACT.md 8520       =  8952   (tope FAIL 10240, margen 1288)
+                  custom.md                                           =   990   (aparte; aviso WARN > 2048)
+```
+`verify.py --quick`: `[OK] Arranque liviano: paquete 8952 bytes de 10240 (AGENTS.md + SDD-COMPACT.md); custom.md 990 bytes (aparte; aviso > 2048); 33 reglas definidas`.
+
+## Qué se hizo
+- **11 (burla del «bajo demanda»):** el master queda exento solo si la línea dice «bajo demanda / solo si / only if / on demand» **y no tiene verbo de lectura** (`found == master and (reads or not on_demand)` cuenta). Un test por cada una de las 4 sondas de la review. Las líneas reales del arranque (AGENTS/CLAUDE, índice ES/EN, espejo del ZIP) no tienen verbo: verde.
+- **12:** recuadro del master ES y EN: «Si lo abriste, leé solo la sección que la tarea pide (§4 una regla, §6 el start-prompt…)» / «read only the section the task needs».
+- **13:** R23 recupera «lenguaje llano, cero jerga sin explicar» (ES) y «plain language, zero unexplained jargon» (EN).
+- **14:** tests para N8 (otro archivo con verbo y «solo si» cuenta) y H3 (el hook encuentra `custom.md` en la raíz con el master en `sdd/`).
+- **Decisión del owner (custom.md):** el FAIL de 10 KB es solo del paquete (espejo + compacto + lo que manden a leer). `custom.md` se lee siempre (se suma solo, aunque nadie lo cite) y tiene tope propio: WARN si pasa de 2048 bytes, nunca FAIL. El mensaje (OK y FAIL) muestra las dos cifras por separado. Sigue siendo hoja (lo que nombra no es arranque) y ya no cuenta como «regla definida».
+- **`web/reglas-ui.js`:** el `custom.md` que genera la web dice «El agente lee el compacto al arrancar y después este archivo»; test web que lo fija.
+
+## Rojo antes (R29), contra la base a5f296b (más la constante `CUSTOM_WARN_BYTES` como stub para poder importar)
+```text
+$ python -m unittest test_arranque test_hooks
+Ran 65 tests in 46.083s    FAILED (failures=10)
+ 4 x test_bajo_demanda_con_verbo_de_lectura_no_exime_al_master (subTests de las 4 sondas)
+ test_custom_grande_avisa_y_no_falla, test_custom_de_la_raiz_tambien_avisa, test_el_aviso_es_inclusivo_a_2_kb,
+ test_el_paquete_no_cuenta_el_custom_en_su_tope, test_el_mensaje_muestra_las_dos_cifras_por_separado, test_el_fail_tambien_separa_las_cifras
+$ node --test "web/tests/*.test.mjs"
+ℹ tests 79  ℹ pass 77  ℹ fail 2
+✖ P-1: el custom.md que genera la web dice que el agente lee el compacto al arrancar, no el master
+✖ P-1: el recuadro del master no manda a leerlo entero y R23 conserva «lenguaje llano»
+```
+(El `custom.md` realista de 15 overrides + 8 notas, los tests de N8 y de H3 pasaban antes del cambio: son tests que matan mutantes, no que fallan en la base.)
+
+## Rojo forzado sobre el repo real (`verify.py --quick`, revertido con `git checkout`, árbol commiteado)
+```text
+# A custom.md +1500 bytes
+[WARN]  custom.md pesa 2490 bytes (> 2048): se lee en cada sesión y se paga en cada llamada; …
+[OK]    Arranque liviano: paquete 8952 bytes de 10240 (…); custom.md 2490 bytes (aparte; aviso > 2048); 33 reglas definidas
+VERDE — 0 FAIL, 1 WARN                       # warn, nunca fail
+# B compacto +1400 bytes
+[FAIL]  Arranque de AGENTS.md: paquete 10352 bytes > tope 10240 (P-1); custom.md 990 bytes (aparte; aviso > 2048); carga AGENTS.md, SDD-COMPACT.md. …   ROJO — 2 FAIL
+# C burla «Leé SDD-MASTER.md completo (solo si sos un agente de IA).» en AGENTS.md
+[FAIL]  Arranque de AGENTS.md: paquete 199114 bytes > tope 10240 (P-1); …   ROJO — 1 FAIL
+```
+
+## Mutantes (`subprocess.run(..., timeout=180)`; commit antes de mutar; revertidos; `scratchpad/p1-impl/mutantes3.py`)
+40 mutantes (los de la vuelta 2 actualizados + nuevos), **40 muertos, 0 vivos, 0 timeouts**. Nuevos: el «bajo demanda» exime aun con verbo; aviso a 4 KB; custom grande es FAIL; custom cuenta en el tope del paquete; sin aviso; aviso exclusivo (`>=`); mensaje sin la cifra de custom; custom cuenta como regla definida; hook con `custom.md` solo junto al master. (M7 se corrió aparte porque cambió su patrón: muerto.)
+
+## Verde después (068751e)
+```text
+$ python -m unittest discover -s harness/tests   -> Ran 225 tests in 115.862s  OK (skipped=1)
+$ node --test "web/tests/*.test.mjs"             -> ℹ tests 79  ℹ pass 79  ℹ fail 0
+$ python harness/verify.py --quick               -> VERDE — 0 FAIL, 0 WARN
+```
+
+## Pendiente / notas
+- Sin cambios fuera de zona. `skill/sdd-universal.skill` (v0.3) y `loops.md` fuera del ZIP siguen como en la review.
+- El check sigue sin validar el contenido de las reglas (solo que cada `R<nn>` esté definida).
