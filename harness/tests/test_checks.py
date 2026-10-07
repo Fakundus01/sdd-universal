@@ -187,7 +187,7 @@ class TestHandbacks(ChecksCase):
 class TestCostoHandback(ChecksCase):
     """P-2: el handback de una tarjeta done (v0.37 en adelante) trae la sección Costo con al menos una fila."""
 
-    TABLA = ("| Rol | Modelo | Vuelta | Tokens entrada/salida | Costo USD | Duración |\n"
+    TABLA = ("| Rol | Modelo | Vuelta | Tokens | Costo USD | Duración |\n"
              "|---|---|---|---|---|---|\n")
 
     def hecha(self, rama: str, handback: str | None, estado: str = "done") -> None:
@@ -248,6 +248,60 @@ class TestCostoHandback(ChecksCase):
     def test_done_sin_archivo_de_handback_no_avisa(self):
         self.hecha("v0.37-H-1", None)
         self.assertEqual(self.costo_warns(), [])
+    PLANTILLA = "| implementer | <modelo> | 1 | <tokens> | <USD> | <duración> |\n"
+
+    def test_fila_de_la_plantilla_sin_completar_avisa(self):
+        self.hecha("v0.37-H-1", "## Costo\n" + self.TABLA + self.PLANTILLA)
+        self.assertWarns(self.run_checks(), "sección Costo")
+
+    def test_un_placeholder_en_cualquier_celda_avisa(self):
+        self.hecha("v0.37-H-1", "## Costo\n" + self.TABLA + "| implementer | sonnet | 1 | n/d | <USD> | n/d |\n")
+        self.assertWarns(self.run_checks(), "sección Costo")
+
+    def test_fila_de_plantilla_junto_a_filas_completas_avisa(self):
+        self.hecha("v0.37-H-1", "## Costo\n" + self.TABLA + "| implementer | sonnet | 1 | 10 | n/d | 1 min |\n" + self.PLANTILLA)
+        self.assertWarns(self.run_checks(), "sección Costo")
+
+    def test_n_d_del_leader_cuenta_como_completa(self):
+        self.hecha("v0.37-H-1", "## Costo\n" + self.TABLA + "| implementer | sonnet (MEDIO) | 1 | 102 526 (total) | n/d | 11 min |\n")
+        self.assertEqual(self.costo_warns(), [])
+
+    def test_rama_sin_version_con_seccion_sin_completar_avisa(self):
+        for rama in ("main", "card/E-10"):
+            with self.subTest(rama=rama):
+                self.setUp()
+                self.hecha(rama, "## Costo\n" + self.TABLA + self.PLANTILLA)
+                self.assertWarns(self.run_checks(), "sección Costo")
+                self.tearDown()
+
+    def test_rama_sin_version_con_tabla_vacia_avisa(self):
+        for rama in ("main", "card/E-10"):
+            with self.subTest(rama=rama):
+                self.setUp()
+                self.hecha(rama, "## Costo\n" + self.TABLA)
+                self.assertWarns(self.run_checks(), "sección Costo")
+                self.tearDown()
+
+    def test_rama_sin_version_sin_seccion_no_avisa(self):
+        for rama in ("main", "card/E-10"):
+            with self.subTest(rama=rama):
+                self.setUp()
+                self.hecha(rama, "## Hecho\n- algo\n")
+                self.assertEqual(self.costo_warns(), [])
+                self.tearDown()
+
+    def test_rama_sin_version_con_seccion_completa_no_avisa(self):
+        for rama in ("main", "card/E-10"):
+            with self.subTest(rama=rama):
+                self.setUp()
+                self.hecha(rama, "## Costo\n" + self.TABLA + "| implementer | sonnet | 1 | 10 | n/d | 1 min |\n")
+                self.assertEqual(self.costo_warns(), [])
+                self.tearDown()
+
+    def test_rama_anterior_a_v037_con_seccion_sin_completar_no_avisa(self):
+        self.hecha("v0.36-H-1", "## Costo\n" + self.TABLA + self.PLANTILLA)
+        self.assertEqual(self.costo_warns(), [])
+
 
 class TestE2E(ChecksCase):
     def test_e2e_declarado_sin_corrida_avisa(self):
