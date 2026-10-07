@@ -45,6 +45,7 @@ BARE_PATH_RE = re.compile(r"(?<![\w./-])[\w./-]+\.(?:md|txt)(?:#[\w-]*)?(?![\w])
 # El master se puede nombrar en el arranque solo si la línea dice que se abre bajo demanda; si no, cuenta entero.
 ON_DEMAND_RE = re.compile(r"solo si|bajo demanda|only if|on demand", re.I)
 CUSTOM_NAME = "custom.md"
+CUSTOM_WARN_BYTES = 2048
 RULE_DEF_RE = re.compile(r"^\*{0,2}R(\d\d)[ \t]+(?:·[ \t]+)?[^\s:]+[ \t]*[:·—*]", re.M)
 MASTER_RULE_RE = re.compile(r"^\*\*R(\d\d)\b", re.M)
 WALK_SKIP = {".git", "node_modules", "__pycache__", ".venv", "venv", ".next", ".nuxt", "dist", "build"}
@@ -212,15 +213,21 @@ class HarnessChecks:
             rules = set(MASTER_RULE_RE.findall(master.read_text(encoding="utf-8-sig", errors="replace")))
         worst = (0, "", [])
         problems = False
+        customs: dict[Path, int] = {}
         for entry in entries:
-            files = self._startup_files(entry)
-            size = sum(len(f.read_bytes().replace(b"\r\n", b"\n")) for f in files)  # LF: un clon con autocrlf no pesa más
+            everything = self._startup_files(entry)
+            # custom.md se lee siempre, pero tiene tope propio (WARN): el FAIL de 10 KB es del paquete.
+            files = [f for f in everything if f.name != CUSTOM_NAME]
+            size = sum(self._lf_size(f) for f in files)
+            custom = {f: self._lf_size(f) for f in everything if f.name == CUSTOM_NAME}
+            customs.update(custom)
             if size > worst[0]:
                 worst = (size, entry.name, files)
             if size > STARTUP_MAX_BYTES:
                 names = ", ".join(self._rel(f) for f in files)
-                self.report.fail(f"Arranque de {entry.name}: {size} bytes > tope {STARTUP_MAX_BYTES} (P-1); "
-                                 f"carga {names}. Lo largo va bajo demanda: índice del compacto, sin verbo de lectura y sin nombrar el master")
+                self.report.fail(f"Arranque de {entry.name}: paquete {size} bytes > tope {STARTUP_MAX_BYTES} (P-1)"
+                                 f"{self._custom_note(custom)}; carga {names}. Lo largo va bajo demanda: índice del "
+                                 "compacto, sin verbo de lectura y sin nombrar el master")
                 problems = True
             if rules:
                 defined: set[str] = set()
@@ -231,10 +238,23 @@ class HarnessChecks:
                     self.report.fail(f"Arranque de {entry.name}: no define {', '.join('R' + m for m in missing)} del "
                                      f"{self.config.master} (ninguna regla puede quedar fuera del compacto ni del índice)")
                     problems = True
+        for f, size in customs.items():
+            if size > CUSTOM_WARN_BYTES:
+                self.report.warn(f"{self._rel(f)} pesa {size} bytes (> {CUSTOM_WARN_BYTES}): se lee en cada sesión y se "
+                                 "paga en cada llamada; las notas largas van a un doc que se abra bajo demanda")
         if not problems:
-            self.report.ok(f"Arranque liviano: {worst[0]} bytes de {STARTUP_MAX_BYTES} ({worst[1]} + "
+            self.report.ok(f"Arranque liviano: paquete {worst[0]} bytes de {STARTUP_MAX_BYTES} ({worst[1]} + "
                            f"{', '.join(self._rel(f) for f in worst[2][1:]) or 'nada más'})"
-                           + (f"; {len(rules)} reglas definidas" if rules else ""))
+                           f"{self._custom_note(customs)}" + (f"; {len(rules)} reglas definidas" if rules else ""))
+
+    @staticmethod
+    def _lf_size(path: Path) -> int:
+        return len(path.read_bytes().replace(b"\r\n", b"\n"))  # LF: un clon con autocrlf no pesa más
+
+    def _custom_note(self, customs: dict[Path, int]) -> str:
+        if not customs:
+            return ""
+        return "; " + ", ".join(f"{f.name} {n} bytes (aparte; aviso > {CUSTOM_WARN_BYTES})" for f, n in customs.items())
 
     def _startup_files(self, entry: Path) -> list[Path]:
         """`entry`, los archivos a los que manda a leer (en orden, sin repetir) y el `custom.md` del proyecto, que
@@ -259,7 +279,7 @@ class HarnessChecks:
                         found = (base / target)
                         if found.is_file():
                             found = found.resolve()
-                            if (found == master and not on_demand) or (reads and found != master):
+                            if (found == master and (reads or not on_demand)) or (reads and found != master):
                                 queue.append(found)
                             break
         for folder in {self.root, self.root / "sdd", master.parent}:

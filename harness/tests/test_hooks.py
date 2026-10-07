@@ -96,6 +96,12 @@ class TestSessionStart(HooksCase):
         _, con, _ = call("session-start", {}, self.p.root)
         self.assertIn("sdd/custom.md", con)
 
+    def test_nombra_el_custom_md_de_la_raiz_si_el_master_esta_en_sdd(self):
+        self.p.write("sdd/SDD-COMPACT.md", "# compacto\n")
+        self.p.write("custom.md", "R01=OFF\n")
+        _, out, _ = call("session-start", {}, self.p.root)
+        self.assertIn("custom.md, que pisa", out)
+
     def test_sin_current_dice_como_crearlo(self):
         code, out, _ = call("session-start", {}, self.p.root)
         self.assertEqual(code, 0)

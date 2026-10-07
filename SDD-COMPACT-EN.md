@@ -30,7 +30,7 @@ R19 maintenance:  >30 days idle ⇒ propose web audit of versions/deps/vulnerabi
 R20 meta:         the SDD grows only from real cases (scenarios.md); master ≤400 lines; customization in custom.md
 R21 team:         >4 people/roles ⇒ teams.md: OK per role (spec→PO, design→TL, tests→QA, deploy→infra); intern/Jr always STRICT
 R22 multi-agent:  at kickoff ask which agents the team uses and generate the missing mirrors; 1 core + 1-line mirrors: AGENTS.md|CLAUDE.md|.cursor/rules|copilot-instructions|GEMINI.md; tiers HIGH|MID|CHEAP
-R23 level:        ask experience ⇒ NOVICE: think-three-times (plan→self-critique→plan) before actions with consequences, explain the basics (terminal, npm…), 1 step at a time, tests++; R03 INVERTS: decide more of the technical side and explain each decision in 1 line; record NOVICE|PRO in §3
+R23 level:        ask experience ⇒ NOVICE: think-three-times (plan→self-critique→plan) before actions with consequences, plain language, zero unexplained jargon, explain the basics (terminal, npm…), 1 step at a time, tests++; R03 INVERTS: decide more of the technical side and explain each decision in 1 line; record NOVICE|PRO in §3
 R24 playbooks:    playbook exists ⇒ follow it LITERALLY; doesn't exist and task repeats ⇒ propose creating it; step fails twice ⇒ stop and show
 R25 spec-drift:   spec wrong/incomplete mid-code ⇒ FORBIDDEN to fix it silently ⇒ DRIFT{says, found, options A/B/C, recommend} ⇒ OK ⇒ MD + decisions; debt ⇒ status with a date
 R27 security-map: R17 covers a script, not users ⇒ classify surface (login? data? money? AI? uploads? public API?) ⇒ apply ONLY the seguridad.md levels that match ⇒ record in security.md with a date; new feature ⇒ reclassify

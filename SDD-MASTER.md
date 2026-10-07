@@ -4,7 +4,7 @@
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
-> 1. Tu arranque diario es `SDD-COMPACT.md` (reglas + índice, ≤ 10 KB) y `custom.md` si existe; este archivo se abre bajo demanda. Si lo abriste, leelo completo.
+> 1. Tu arranque diario es `SDD-COMPACT.md` (reglas + índice, ≤ 10 KB) y `custom.md` si existe; este archivo se abre bajo demanda. Si lo abriste, leé solo la sección que la tarea pide (§4 una regla, §6 el start-prompt…).
 > 2. Después leé **solo** los archivos que indique el Protocolo de Lectura (§2) para tu tarea.
 > 3. Nunca leas todo `sdd/` de una: el objetivo es gastar la menor cantidad de tokens posible.
 > 4. Al iniciar sesión, avisá que la regla R01 (commits con OK humano) está activa y es desactivable.

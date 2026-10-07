@@ -6,7 +6,7 @@ from pathlib import Path
 
 from support import Project
 
-from checks import HarnessChecks, STARTUP_MAX_BYTES
+from checks import CUSTOM_WARN_BYTES, HarnessChecks, STARTUP_MAX_BYTES
 from config import HarnessConfig
 from report import Report
 
@@ -34,6 +34,11 @@ class ArranqueCase(unittest.TestCase):
         report = Report()
         HarnessChecks(self.p.root, HarnessConfig.load(self.p.root), report).check_startup()
         return report.messages("FAIL")
+
+    def report(self) -> Report:
+        report = Report()
+        HarnessChecks(self.p.root, HarnessConfig.load(self.p.root), report).check_startup()
+        return report
 
     def assertFails(self, fragment: str) -> None:
         fails = self.fails()
@@ -125,6 +130,20 @@ class TestBurlas(ArranqueCase):
                 self.p.write("AGENTS.md", ENTRY + linea + "\n")
                 self.assertEqual(self.fails(), [])
 
+    def test_bajo_demanda_con_verbo_de_lectura_no_exime_al_master(self):
+        self.p.write("sdd/SDD-MASTER.md", MASTER + "x" * STARTUP_MAX_BYTES)
+        for linea in ("Leé `sdd/SDD-MASTER.md` completo antes de trabajar; no es bajo demanda.",
+                      "Leé `sdd/SDD-MASTER.md` entero siempre, no solo si la tarea lo pide.",
+                      "Read `sdd/SDD-MASTER.md` in full at startup (on demand? no: always).",
+                      "Leé `sdd/SDD-MASTER.md` completo (solo si sos un agente de IA)."):
+            with self.subTest(linea=linea):
+                self.p.write("AGENTS.md", ENTRY + linea + "\n")
+                self.assertFails("Arranque")
+
+    def test_solo_si_no_exime_a_otros_archivos(self):
+        self.entry_con("Leé `sdd/extra.md` solo si hace falta.")
+        self.assertFails("Arranque")
+
     def test_ancla_en_la_cita(self):
         self.entry_con("Leé [x](sdd/extra.md#seccion) y `sdd/extra.md#otra`.")
         self.assertFails("Arranque")
@@ -155,20 +174,61 @@ class TestBurlas(ArranqueCase):
 
 
 class TestCustom(ArranqueCase):
-    def test_custom_md_del_proyecto_cuenta_aunque_el_arranque_no_lo_cite(self):
-        self.p.write("sdd/custom.md", "x" * STARTUP_MAX_BYTES)
-        self.assertFails("custom.md")
+    """Decisión del owner (2026-10-07): el tope de 10 KB con FAIL es del paquete (espejo + compacto + lo que mandan a
+    leer). custom.md se lee siempre pero tiene tope propio: WARN si pasa de 2 KB, nunca FAIL."""
 
-    def test_custom_md_de_la_raiz_cuenta(self):
-        self.p.write("custom.md", "x" * STARTUP_MAX_BYTES)
-        self.assertFails("custom.md")
+    def paquete(self) -> int:
+        return lf_size(self.p.root / "AGENTS.md") + lf_size(self.p.root / "sdd/SDD-COMPACT.md")
 
-    def test_custom_chico_en_el_limite(self):
-        base = lf_size(self.p.root / "AGENTS.md") + lf_size(self.p.root / "sdd/SDD-COMPACT.md")
-        self.p.write("sdd/custom.md", "x" * (STARTUP_MAX_BYTES - base))
-        self.assertEqual(self.fails(), [])
-        self.p.write("sdd/custom.md", "x" * (STARTUP_MAX_BYTES - base + 1))
-        self.assertFails("Arranque")
+    def test_el_aviso_es_a_los_2_kb(self):
+        self.assertEqual(CUSTOM_WARN_BYTES, 2048)
+
+    def test_custom_grande_avisa_y_no_falla(self):
+        self.p.write("sdd/custom.md", "x" * (STARTUP_MAX_BYTES * 2))
+        report = self.report()
+        self.assertEqual(report.messages("FAIL"), [])
+        self.assertTrue(any("custom.md" in w for w in report.messages("WARN")), report.messages("WARN"))
+
+    def test_custom_de_la_raiz_tambien_avisa(self):
+        self.p.write("custom.md", "x" * (CUSTOM_WARN_BYTES + 1))
+        report = self.report()
+        self.assertEqual(report.messages("FAIL"), [])
+        self.assertTrue(any("custom.md" in w for w in report.messages("WARN")), report.messages("WARN"))
+
+    def test_el_aviso_es_inclusivo_a_2_kb(self):
+        self.p.write("sdd/custom.md", "x" * CUSTOM_WARN_BYTES)
+        self.assertEqual(self.report().messages("WARN"), [])
+        self.p.write("sdd/custom.md", "x" * (CUSTOM_WARN_BYTES + 1))
+        self.assertEqual(len(self.report().messages("WARN")), 1)
+
+    def test_custom_realista_de_15_overrides_y_8_notas_no_falla_ni_avisa(self):
+        overrides = "".join(f"R{n:02d}.max={n * 100}  # override {n} con su porqué\n" for n in range(1, 16))
+        notas = "".join(f"- nota {n}: una convención del equipo que el agente tiene que saber\n" for n in range(1, 9))
+        self.p.write("sdd/custom.md", "# custom.md\n" + "x" * 300 + "\n" + overrides + notas)
+        self.assertGreater(lf_size(self.p.root / "sdd/custom.md"), 1400)
+        report = self.report()
+        self.assertEqual(report.messages("FAIL"), [])
+        self.assertEqual(report.messages("WARN"), [])
+
+    def test_el_paquete_no_cuenta_el_custom_en_su_tope(self):
+        self.p.write("sdd/custom.md", "x" * 1000)
+        relleno = STARTUP_MAX_BYTES - self.paquete()
+        self.p.write("sdd/SDD-COMPACT.md", COMPACT + "x" * relleno)
+        self.assertEqual(self.report().messages("FAIL"), [])
+        self.p.write("sdd/SDD-COMPACT.md", COMPACT + "x" * (relleno + 1))
+        self.assertFails("paquete")
+
+    def test_el_mensaje_muestra_las_dos_cifras_por_separado(self):
+        self.p.write("sdd/custom.md", "x" * 1000)
+        ok = " ".join(self.report().messages("OK"))
+        self.assertIn(f"paquete {self.paquete()} bytes de {STARTUP_MAX_BYTES}", ok)
+        self.assertIn("custom.md 1000 bytes", ok)
+
+    def test_el_fail_tambien_separa_las_cifras(self):
+        self.p.write("sdd/custom.md", "x" * 1000)
+        self.p.write("sdd/SDD-COMPACT.md", COMPACT + "x" * STARTUP_MAX_BYTES)
+        fails = self.fails()
+        self.assertTrue(any("paquete" in f and "custom.md 1000 bytes" in f for f in fails), fails)
 
     def test_custom_md_es_una_hoja_sus_citas_no_se_siguen(self):
         # el custom.md de la plantilla nombra al master («el agente lee el master primero»): es documentación, no arranque
@@ -178,7 +238,8 @@ class TestCustom(ArranqueCase):
         self.assertEqual(self.fails(), [])
 
     def test_sin_custom_no_pasa_nada(self):
-        self.assertEqual(self.fails(), [])
+        report = self.report()
+        self.assertEqual(report.messages("FAIL") + report.messages("WARN"), [])
 
 
 class TestReglasBorde(ArranqueCase):

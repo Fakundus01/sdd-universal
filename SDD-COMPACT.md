@@ -30,7 +30,7 @@ R19 mantenimiento: >30 días inactivo ⇒ proponer auditoría web de versiones/d
 R20 meta:          el SDD crece solo desde casos reales (scenarios.md); master ≤400 líneas; personalización en custom.md
 R21 equipo:        >4 personas/roles ⇒ teams.md: OK por rol (spec→PO, diseño→TL, tests→QA, deploy→infra); pasante/Jr siempre ESTRICTO
 R22 multi-agente:  al arrancar preguntar qué agentes usa el equipo y generar los espejos que falten; 1 núcleo + espejos 1-línea: AGENTS.md|CLAUDE.md|.cursor/rules|copilot-instructions|GEMINI.md; tiers ALTO|MEDIO|ECONÓMICO
-R23 nivel:         preguntar experiencia ⇒ NOVATO: pensar-por-tres (plan→autocrítica→plan) antes de acciones con consecuencias, explicar lo básico (terminal, npm…), 1 paso por vez, tests++; R03 se INVIERTE: decide más lo técnico y explica cada decisión en 1 línea; registrar NOVATO|PRO en §3
+R23 nivel:         preguntar experiencia ⇒ NOVATO: pensar-por-tres (plan→autocrítica→plan) antes de acciones con consecuencias, lenguaje llano, cero jerga sin explicar, explicar lo básico (terminal, npm…), 1 paso por vez, tests++; R03 se INVIERTE: decide más lo técnico y explica cada decisión en 1 línea; registrar NOVATO|PRO en §3
 R24 playbooks:     existe playbook ⇒ seguirlo LITERAL; no existe y es repetible ⇒ proponer crearlo; paso falla 2 veces ⇒ frenar y mostrar
 R25 spec-drift:    spec mal/incompleta a mitad del código ⇒ PROHIBIDO arreglarla en silencio ⇒ DRIFT{dice, encontré, opciones A/B/C, recomiendo} ⇒ OK ⇒ MD + decisions; deuda ⇒ status con fecha
 R27 seguridad:     R17 alcanza p/ script, no p/ usuarios ⇒ clasificar superficie (login? datos? plata? IA? archivos? API pública?) ⇒ aplicar SOLO los niveles de seguridad.md que apliquen ⇒ registrar en security.md con fecha; feature nueva ⇒ reclasificar

@@ -4,7 +4,7 @@
 **English mirror.** The canonical source of this package is the Spanish `SDD-MASTER.md`; this mirror tracks it release by release. File names and references are identical in both languages, so everything below works unchanged.
 
 > **If you are an AI agent (Claude, Cursor, Copilot, Gemini or other):**
-> 1. Your daily startup is `SDD-COMPACT-EN.md` (rules + index, ≤ 10 KB) and `custom.md` if it exists; this file is opened on demand. If you opened it, read it in full.
+> 1. Your daily startup is `SDD-COMPACT-EN.md` (rules + index, ≤ 10 KB) and `custom.md` if it exists; this file is opened on demand. If you opened it, read only the section the task needs (§4 a rule, §6 the start-prompt…).
 > 2. Then read **only** the files the Reading Protocol (§2) lists for your task.
 > 3. Never read all of `sdd/` at once: the goal is to spend as few tokens as possible.
 > 4. When a session starts, say that rule R01 (commits require human OK) is active and can be turned off.

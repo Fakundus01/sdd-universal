@@ -201,3 +201,18 @@ test("P-1: el LEEME del ZIP lista el compacto y no dice que AGENTS.md apunta al 
   assert.doesNotMatch(leeme, /Una línea para que cualquier agente encuentre el SDD solo \|/, "el LEEME sigue diciendo que AGENTS.md es una línea al master");
   assert.match(leeme, /Apuntan al compacto/);
 });
+
+test("P-1: el custom.md que genera la web dice que el agente lee el compacto al arrancar, no el master", () => {
+  const fuente = leer("web/reglas-ui.js");
+  assert.match(fuente, /El agente lee el compacto al arrancar y después/);
+  assert.doesNotMatch(fuente, /El agente lee el master primero/);
+});
+
+test("P-1: el recuadro del master no manda a leerlo entero y R23 conserva «lenguaje llano»", () => {
+  for (const f of ["SDD-MASTER.md", "SDD-MASTER-EN.md"]){
+    const caja = lf(leer(f)).split("\n").slice(0, 14).join("\n");
+    assert.doesNotMatch(caja, /leelo completo|read it in full/i, `${f}: el recuadro manda a leer el master entero`);
+  }
+  assert.match(leer("SDD-COMPACT.md"), /^R23 .*lenguaje llano.*jerga/m);
+  assert.match(leer("SDD-COMPACT-EN.md"), /^R23 .*plain language.*jargon/m);
+});
