@@ -262,6 +262,10 @@ class TestCostoHandback(ChecksCase):
         self.hecha("v0.37-H-1", "## Costo\n" + self.TABLA + "| implementer | sonnet | 1 | 10 | n/d | 1 min |\n" + self.PLANTILLA)
         self.assertWarns(self.run_checks(), "sección Costo")
 
+    def test_celda_vacia_avisa(self):
+        self.hecha("v0.37-H-1", "## Costo\n" + self.TABLA + "| implementer | sonnet | 1 |  | n/d | n/d |\n")
+        self.assertWarns(self.run_checks(), "sección Costo")
+
     def test_n_d_del_leader_cuenta_como_completa(self):
         self.hecha("v0.37-H-1", "## Costo\n" + self.TABLA + "| implementer | sonnet (MEDIO) | 1 | 102 526 (total) | n/d | 11 min |\n")
         self.assertEqual(self.costo_warns(), [])
