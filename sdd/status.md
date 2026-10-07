@@ -37,7 +37,7 @@
 
 | F27 | Cerebro entre proyectos y grafo del paquete (loop `obsidian-cerebro`) | In Progress | 80% | 0.36: `cerebro/` (búsqueda híbrida local y OpenAI, MCP, instalador, CI), instalado en la máquina del owner; MD del núcleo enlazados y el ZIP reescribe links. Falta: S42 por síntoma y enlazar el resto del repo |
 
-| F28 | Contexto fijo liviano y costo por tarjeta (v0.37) | Tasked | 60% | Tarjetas [P-1](cards/P-1.md) (arranque con el compacto + índice; cambio de contrato, espera OK del owner) y [P-2](cards/P-2.md) (tokens/costo/duración por rol en el handback). Sin loop todavía; independientes entre sí |
+| F28 | Contexto fijo liviano y costo por tarjeta (v0.37) | Tasked | 60% | Tarjetas [P-1](cards/P-1.md) (arranque con el compacto + índice; cambio de contrato, OK del owner 2026-10-07 con tope 10 KB; en curso) y [P-2](cards/P-2.md) (tokens/costo/duración por rol en el handback). Sin loop todavía; independientes entre sí |
 
 **Avance total: 25 / 27 features vigentes completas** (F19 retirada; F27 en curso; F28 en tarjetas)
 
@@ -64,7 +64,7 @@ El 2026-10-03 todas estaban vencidas. Con el OK del owner («hacé las deudas qu
 
 0. **Owner:** OK para el push de `v0.35-loops-grafo` y el merge a `main` (R01, R32). El loop `dev-de-10` está cumplido (`sdd/loops/dev-de-10.md`).
 0b. v0.36 cortada (loop `obsidian-cerebro`, 10/10 vueltas). **Owner:** OK para el merge de `v0.36-obsidian-cerebro` a `main` (el MCP del Cerebro apunta a este checkout). Deudas de F27: S42 por síntoma, enlazar `sdd/`, `skills/`, `imports/`; re-importar el Cerebro sin links relativos; `cerebro/tests` en `verify.py --full`.
-0c. v0.37, pendientes del paquete (F28, rama del plan `v0.37-plan`): [P-1](cards/P-1.md) y [P-2](cards/P-2.md) en `pending`, sin dependencias entre sí. **Owner:** OK para P-1 (cambio de contrato) y el tope de KB del arranque.
+0c. v0.37, pendientes del paquete (F28, rama del plan `v0.37-plan`): [P-1](cards/P-1.md) en curso (OK del owner, tope 10 KB) y [P-2](cards/P-2.md) en `pending`, sin dependencias entre sí.
 1. Ejemplos de punta a punta con el SDD (e-commerce, landing, ticketera con IA, chatbot), cada uno en su repo: lo que falle ahí entra a `scenarios.md` (R20).
 2. **Owner:** hacer O3 (3 personas ajenas, 2 minutos cada una) y anotar el resultado acá; decidir D6 (dominio para el SMTP), que pesa todavía menos en local, donde no hay mails.
 3. Cuando la web salga a otros: reactivar Supabase, correr los dos `.sql` y repetir la prueba de dos cuentas (ver Bloqueos).
