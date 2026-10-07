@@ -47,7 +47,6 @@ ON_DEMAND_RE = re.compile(r"solo si|bajo demanda|only if|on demand", re.I)
 CUSTOM_NAME = "custom.md"
 RULE_DEF_RE = re.compile(r"^\*{0,2}R(\d\d)[ \t]+(?:·[ \t]+)?[^\s:]+[ \t]*[:·—*]", re.M)
 MASTER_RULE_RE = re.compile(r"^\*\*R(\d\d)\b", re.M)
-STARTUP_EXTS = (".md", ".txt")
 WALK_SKIP = {".git", "node_modules", "__pycache__", ".venv", "venv", ".next", ".nuxt", "dist", "build"}
 
 
@@ -256,8 +255,6 @@ class HarnessChecks:
                 cited = [m.group(0) for m in BARE_PATH_RE.finditer(line)]  # cubre links, `backticks` y rutas sueltas
                 for target in cited:
                     target = target.split("#", 1)[0]
-                    if not target.lower().endswith(STARTUP_EXTS) or SKIP_CHARS & set(target):
-                        continue
                     for base in (current.parent, self.root):
                         found = (base / target)
                         if found.is_file():
