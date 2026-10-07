@@ -33,6 +33,21 @@ LIBRARY_NAMES = {f"{n}.js" for n in (
     "pixi", "phaser", "babylon", "matter", "tone", "paper", "fabric", "leaflet", "highcharts", "plotly", "video",
     "howler", "lodash", "jquery", "require", "handlebars", "mustache", "mithril", "polymer", "htmx", "deno",
     "transformers", "pdf", "tensorflow", "highlight", "swiper", "brain", "ml5", "onnxruntime-web", "mermaid")}
+# Arranque liviano (P-1): lo que un agente carga siempre se paga en cada llamada. Tope fijado por el owner (X = 10 KB).
+STARTUP_MAX_BYTES = 10 * 1024
+STARTUP_ENTRIES = ("AGENTS.md", "CLAUDE.md")
+# Una línea del arranque que manda a leer algo: con uno de estos verbos, cada archivo que cite (link o `ruta`) entra
+# al arranque. Los punteros «abrí X cuando la tarea lo pida» no llevan el verbo y quedan bajo demanda.
+READ_VERB_RE = re.compile(r"(?<!\w)(?:leé|lée|lee|leelo|leelos|leer|read|cargá|cargar|load|obedecé|obey|seguí|seguir|"
+                          r"follow|respetá|consultá|aplicá|see)(?!\w)", re.I)
+# Ruta suelta (sin link ni backticks): `Leé sdd/SDD-MASTER.md y obedecé…` es el formato literal del espejo del master.
+BARE_PATH_RE = re.compile(r"(?<![\w./-])[\w./-]+\.(?:md|txt)(?:#[\w-]*)?(?![\w])", re.I)
+# El master se puede nombrar en el arranque solo si la línea dice que se abre bajo demanda; si no, cuenta entero.
+ON_DEMAND_RE = re.compile(r"solo si|bajo demanda|only if|on demand", re.I)
+CUSTOM_NAME = "custom.md"
+CUSTOM_WARN_BYTES = 2048
+RULE_DEF_RE = re.compile(r"^\*{0,2}R(\d\d)[ \t]+(?:·[ \t]+)?[^\s:]+[ \t]*[:·—*]", re.M)
+MASTER_RULE_RE = re.compile(r"^\*\*R(\d\d)\b", re.M)
 WALK_SKIP = {".git", "node_modules", "__pycache__", ".venv", "venv", ".next", ".nuxt", "dist", "build"}
 
 
@@ -155,6 +170,7 @@ class HarnessChecks:
         self.check_cards()
         self.check_status_coherence()
         self.check_cited_paths()
+        self.check_startup()
         self.check_handbacks()
         self.check_e2e_registered()
 
@@ -180,6 +196,97 @@ class HarnessChecks:
     def check_config(self) -> None:
         for key in self.config.unknown_keys:
             self.report.warn(f"harness.config.json: clave desconocida '{key}' (¿un typo?)")
+
+    # ── arranque liviano (P-1) ───────────────────────────────────────────────
+    def check_startup(self) -> None:
+        """El arranque es AGENTS.md / CLAUDE.md más, transitivamente, todo archivo que una línea con verbo de lectura
+        («Leé …») les cite. Mover texto a un archivo que el arranque manda a leer no lo saca del conteo; lo que se
+        abre «solo si la tarea lo pide» (sin verbo) sí queda afuera. Pesa en bytes. Además, cada regla `R<nn>` del
+        master tiene que estar definida (línea `R<nn> nombre:`) en el arranque: citarla en el índice no alcanza."""
+        entries = [self.root / n for n in STARTUP_ENTRIES if (self.root / n).is_file()]
+        if not entries:
+            self.report.ok("Arranque: sin AGENTS.md/CLAUDE.md, nada que medir")
+            return
+        master = self.root / self.config.master
+        rules = set()
+        if master.is_file():
+            rules = set(MASTER_RULE_RE.findall(master.read_text(encoding="utf-8-sig", errors="replace")))
+        worst = (0, "", [])
+        problems = False
+        customs: dict[Path, int] = {}
+        for entry in entries:
+            everything = self._startup_files(entry)
+            # custom.md se lee siempre, pero tiene tope propio (WARN): el FAIL de 10 KB es del paquete.
+            files = [f for f in everything if f.name != CUSTOM_NAME]
+            size = sum(self._lf_size(f) for f in files)
+            custom = {f: self._lf_size(f) for f in everything if f.name == CUSTOM_NAME}
+            customs.update(custom)
+            if size > worst[0]:
+                worst = (size, entry.name, files)
+            if size > STARTUP_MAX_BYTES:
+                names = ", ".join(self._rel(f) for f in files)
+                self.report.fail(f"Arranque de {entry.name}: paquete {size} bytes > tope {STARTUP_MAX_BYTES} (P-1)"
+                                 f"{self._custom_note(custom)}; carga {names}. Lo largo va bajo demanda: índice del "
+                                 "compacto, sin verbo de lectura y sin nombrar el master")
+                problems = True
+            if rules:
+                defined: set[str] = set()
+                for f in files:
+                    defined.update(RULE_DEF_RE.findall(f.read_text(encoding="utf-8-sig", errors="replace")))
+                missing = sorted(rules - defined)
+                if missing:
+                    self.report.fail(f"Arranque de {entry.name}: no define {', '.join('R' + m for m in missing)} del "
+                                     f"{self.config.master} (ninguna regla puede quedar fuera del compacto ni del índice)")
+                    problems = True
+        for f, size in customs.items():
+            if size > CUSTOM_WARN_BYTES:
+                self.report.warn(f"{self._rel(f)} pesa {size} bytes (> {CUSTOM_WARN_BYTES}): se lee en cada sesión y se "
+                                 "paga en cada llamada; las notas largas van a un doc que se abra bajo demanda")
+        if not problems:
+            self.report.ok(f"Arranque liviano: paquete {worst[0]} bytes de {STARTUP_MAX_BYTES} ({worst[1]} + "
+                           f"{', '.join(self._rel(f) for f in worst[2][1:]) or 'nada más'})"
+                           f"{self._custom_note(customs)}" + (f"; {len(rules)} reglas definidas" if rules else ""))
+
+    @staticmethod
+    def _lf_size(path: Path) -> int:
+        return len(path.read_bytes().replace(b"\r\n", b"\n"))  # LF: un clon con autocrlf no pesa más
+
+    def _custom_note(self, customs: dict[Path, int]) -> str:
+        if not customs:
+            return ""
+        return "; " + ", ".join(f"{f.name} {n} bytes (aparte; aviso > {CUSTOM_WARN_BYTES})" for f, n in customs.items())
+
+    def _startup_files(self, entry: Path) -> list[Path]:
+        """`entry`, los archivos a los que manda a leer (en orden, sin repetir) y el `custom.md` del proyecto, que
+        pisa al compacto: cuenta aunque el arranque no lo cite. El master cuenta si el arranque lo nombra en una
+        línea que no dice «solo si la tarea lo pide»; cualquier otro archivo, si lo cita una línea con verbo de lectura."""
+        master = (self.root / self.config.master).resolve()
+        seen, queue = [], [entry.resolve()]
+        while queue:
+            current = queue.pop(0)
+            if current in seen:
+                continue
+            seen.append(current)
+            if current.name == CUSTOM_NAME:
+                continue  # hoja: overrides del usuario; cuenta en bytes, pero lo que nombra no es arranque
+            for line in current.read_text(encoding="utf-8-sig", errors="replace").splitlines():
+                reads = bool(READ_VERB_RE.search(line))
+                on_demand = bool(ON_DEMAND_RE.search(line))
+                cited = [m.group(0) for m in BARE_PATH_RE.finditer(line)]  # cubre links, `backticks` y rutas sueltas
+                for target in cited:
+                    target = target.split("#", 1)[0]
+                    for base in (current.parent, self.root):
+                        found = (base / target)
+                        if found.is_file():
+                            found = found.resolve()
+                            if (found == master and (reads or not on_demand)) or (reads and found != master):
+                                queue.append(found)
+                            break
+        for folder in {self.root, self.root / "sdd", master.parent}:
+            custom = (folder / CUSTOM_NAME).resolve()
+            if custom.is_file() and custom not in seen:
+                seen.append(custom)
+        return seen
 
     # ── tarjetas (la cola) ───────────────────────────────────────────────────
     def load_cards(self) -> None:

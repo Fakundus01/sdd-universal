@@ -156,3 +156,63 @@ test("la web tiene las mismas reglas que el master", () => {
     for (const m of leer(f).matchAll(/(\d+) reglas/g))
       assert.equal(Number(m[1]), n, `${f} dice «${m[0]}» y el master tiene ${n}`);
 });
+
+// P-1: el agente que arranca carga el compacto + un índice (≤ 10 KB, medido en bytes), no el master entero.
+// Si estos dos espejos mandan a leer el master, cada sesión paga ≈36 KB de más y se frena el caching.
+const TOPE_ARRANQUE = 10 * 1024;
+const reglasDelMaster = () => [...leer("SDD-MASTER.md").matchAll(/^\*\*R(\d\d)\b/gm)].map(m => "R" + m[1]);
+
+test("P-1: el AGENTS.md y el CLAUDE.md del ZIP mandan a leer el compacto, no el master", async () => {
+  for (const nivel of ["PRO", "NOVATO"]){
+    const {zip, nombres} = await armar({nivel});
+    assert.ok(nombres.includes("sdd/SDD-COMPACT.md"), `${nivel}: el ZIP no trae sdd/SDD-COMPACT.md`);
+    for (const espejo of ["AGENTS.md", "CLAUDE.md"]){
+      const texto = zip.get("prueba/" + espejo).datos.toString("utf8");
+      const leer_ = texto.split("\n").filter(l => l.startsWith("Leé ")).join("\n");
+      assert.match(leer_, /sdd\/SDD-COMPACT\.md/, `${nivel} ${espejo}: no manda a leer el compacto`);
+      assert.doesNotMatch(leer_, /SDD-MASTER/, `${nivel} ${espejo}: manda a leer el master entero`);
+      assert.match(leer_, /sdd\/custom\.md/, `${nivel} ${espejo}: no manda a leer el custom.md`);
+      assert.match(texto, /SDD-MASTER\.md`: abrilo solo si la tarea lo pide/, `${nivel} ${espejo}: el master no queda bajo demanda`);
+    }
+  }
+});
+
+test("P-1: el arranque del ZIP (espejo + compacto) pesa ≤ 10 KB y define todas las reglas del master", async () => {
+  const custom = "PERFIL=ESTRICTO\nMODO=FULL\nR01=OFF\n";
+  const {zip} = await armar({nivel: "PRO", custom});
+  const compacto = zip.get("prueba/sdd/SDD-COMPACT.md").datos;
+  // en LF, como lo mide el arnés: un clon de Windows con autocrlf no pesa más
+  const bytesLF = b => Buffer.byteLength(lf(b.toString("utf8")));
+  for (const espejo of ["AGENTS.md", "CLAUDE.md"]){
+    const bytes = bytesLF(zip.get("prueba/" + espejo).datos) + bytesLF(compacto) + bytesLF(zip.get("prueba/sdd/custom.md").datos);
+    assert.ok(bytes <= TOPE_ARRANQUE, `${espejo} + compacto + custom.md = ${bytes} bytes > ${TOPE_ARRANQUE}`);
+  }
+  const lineas = compacto.toString("utf8");
+  const reglas = reglasDelMaster();
+  assert.equal(reglas.length, 33, "el master dejó de tener R01–R33");
+  for (const r of reglas)
+    assert.match(lineas, new RegExp("^" + r + "\\s", "m"), `el compacto del ZIP no define ${r}`);
+});
+
+test("P-1: el LEEME del ZIP lista el compacto y no dice que AGENTS.md apunta al master", async () => {
+  const {zip} = await armar({nivel: "PRO"});
+  const leeme = zip.get("prueba/LEEME.md").datos.toString("utf8");
+  assert.match(leeme, /`sdd\/SDD-COMPACT\.md`/);
+  assert.doesNotMatch(leeme, /Una línea para que cualquier agente encuentre el SDD solo \|/, "el LEEME sigue diciendo que AGENTS.md es una línea al master");
+  assert.match(leeme, /Apuntan al compacto/);
+});
+
+test("P-1: el custom.md que genera la web dice que el agente lee el compacto al arrancar, no el master", () => {
+  const fuente = leer("web/reglas-ui.js");
+  assert.match(fuente, /El agente lee el compacto al arrancar y después/);
+  assert.doesNotMatch(fuente, /El agente lee el master primero/);
+});
+
+test("P-1: el recuadro del master no manda a leerlo entero y R23 conserva «lenguaje llano»", () => {
+  for (const f of ["SDD-MASTER.md", "SDD-MASTER-EN.md"]){
+    const caja = lf(leer(f)).split("\n").slice(0, 14).join("\n");
+    assert.doesNotMatch(caja, /leelo completo|read it in full/i, `${f}: el recuadro manda a leer el master entero`);
+  }
+  assert.match(leer("SDD-COMPACT.md"), /^R23 .*lenguaje llano.*jerga/m);
+  assert.match(leer("SDD-COMPACT-EN.md"), /^R23 .*plain language.*jargon/m);
+});

@@ -74,6 +74,34 @@ class TestSessionStart(HooksCase):
         _, out, _ = call("session-start", {}, self.p.root)
         self.assertIn("Leé sdd/SDD-MASTER.md y", out)
 
+    def test_arranca_con_el_compacto_y_no_manda_a_leer_el_master(self):
+        self.p.write("sdd/SDD-COMPACT.md", "# compacto\n")
+        _, out, _ = call("session-start", {}, self.p.root)
+        self.assertIn("Leé sdd/SDD-COMPACT.md y", out)
+        self.assertNotIn("Leé sdd/SDD-MASTER.md", out)
+        self.assertIn("solo si la tarea lo pide", out)
+
+    def test_el_compacto_se_busca_junto_al_master_configurado(self):
+        self.p.write("harness.config.json", json.dumps({"test": PASS_CMD, "master": "SDD-MASTER.md"}))
+        self.p.write("SDD-COMPACT.md", "# compacto\n")
+        _, out, _ = call("session-start", {}, self.p.root)
+        self.assertIn("Leé SDD-COMPACT.md y", out)
+        self.assertNotIn("sdd/SDD-COMPACT.md", out)
+
+    def test_nombra_el_custom_md_si_existe(self):
+        self.p.write("sdd/SDD-COMPACT.md", "# compacto\n")
+        _, sin, _ = call("session-start", {}, self.p.root)
+        self.assertNotIn("custom.md", sin)
+        self.p.write("sdd/custom.md", "R01=OFF\n")
+        _, con, _ = call("session-start", {}, self.p.root)
+        self.assertIn("sdd/custom.md", con)
+
+    def test_nombra_el_custom_md_de_la_raiz_si_el_master_esta_en_sdd(self):
+        self.p.write("sdd/SDD-COMPACT.md", "# compacto\n")
+        self.p.write("custom.md", "R01=OFF\n")
+        _, out, _ = call("session-start", {}, self.p.root)
+        self.assertIn("custom.md, que pisa", out)
+
     def test_sin_current_dice_como_crearlo(self):
         code, out, _ = call("session-start", {}, self.p.root)
         self.assertEqual(code, 0)

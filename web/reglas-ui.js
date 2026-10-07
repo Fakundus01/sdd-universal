@@ -31,7 +31,7 @@ const ReglasUI = (() => {
     L.push("");
     L.push("> Generado desde el catálogo web. El núcleo (`SDD-MASTER.md`, `SDD-COMPACT.md`,");
     L.push("> `scenarios.md`) **no se edita**: así lo actualizás cuando salga una versión");
-    L.push("> nueva sin perder nada de esto. El agente lee el master primero y después");
+    L.push("> nueva sin perder nada de esto. El agente lee el compacto al arrancar y después");
     L.push("> este archivo, que pisa lo que haga falta.");
     L.push("");
     L.push("## Mis overrides");

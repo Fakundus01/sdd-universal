@@ -58,12 +58,28 @@ class Hooks:
         """Dónde vive el estado del trabajo: current.md de la rama, o sdd-lite.md en modo LITE (harness.md §10)."""
         return self.root / "sdd" / "sdd-lite.md" if self.lite else self.repo.progress_dir / "current.md"
 
+    def _startup_reading(self) -> str:
+        """Qué lee el agente al arrancar (P-1): el compacto (reglas + índice), junto al master, y `custom.md` si
+        existe; el master entero (~36 KB por sesión) solo bajo demanda. Sin compacto (arnés viejo), el master."""
+        master = Path(self.master)
+        compact = master.with_name("SDD-COMPACT.md")
+        if not (self.root / compact).is_file():
+            return f"Leé {self.master}"
+        text = f"Leé {compact.as_posix()}"
+        for custom in (master.with_name("custom.md"), Path("custom.md")):
+            if (self.root / custom).is_file():
+                text += f" (y {custom.as_posix()}, que pisa)"
+                break
+        return text
+
     # ── SessionStart ─────────────────────────────────────────────────────────
     def session_start(self) -> int:
         branch = self.repo.branch
         current = self._memory()
         rel = current.relative_to(self.root).as_posix()
-        print(f"[arnés] Rama `{branch}`. Leé {self.master} y seguí desde el próximo paso de {rel}.")
+        reading = self._startup_reading()
+        on_demand = f" El master ({self.master}) se abre solo si la tarea lo pide." if reading != f"Leé {self.master}" else ""
+        print(f"[arnés] Rama `{branch}`. {reading} y seguí desde el próximo paso de {rel}.{on_demand}")
         if current.is_file():
             text = current.read_text(encoding="utf-8", errors="replace")
             if len(text) > MAX_CURRENT_CHARS:

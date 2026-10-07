@@ -4,7 +4,7 @@
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
-> 1. Leé este archivo completo. Es el único que se lee entero, siempre.
+> 1. Tu arranque diario es `SDD-COMPACT.md` (reglas + índice, ≤ 10 KB) y `custom.md` si existe; este archivo se abre bajo demanda. Si lo abriste, leé solo la sección que la tarea pide (§4 una regla, §6 el start-prompt…).
 > 2. Después leé **solo** los archivos que indique el Protocolo de Lectura (§2) para tu tarea.
 > 3. Nunca leas todo `sdd/` de una: el objetivo es gastar la menor cantidad de tokens posible.
 > 4. Al iniciar sesión, avisá que la regla R01 (commits con OK humano) está activa y es desactivable.
@@ -27,9 +27,9 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 2. Pegá el **START-PROMPT** (§6) como primera prompt del chat, completando los huecos.
 3. Trabajá el resto de la sesión con el **[LOOP-PROMPT](prompts/loop-prompt.md)** y su **HANDBACK** (§7).
 4. Creá en la raíz del repo dos espejos de una línea, para que cualquier agente encuentre esto solo:
-   - `AGENTS.md` → `Leé sdd/SDD-MASTER.md y obedecé sus reglas.`
-   - `CLAUDE.md` → `Leé sdd/SDD-MASTER.md y obedecé sus reglas.`
-5. Para adaptarlo a tu gusto **sin editar el núcleo universal**: escribí tus overrides en `sdd/custom.md` (`R01=OFF`, `R05.max=500`, reglas propias `+R21-…`). El agente lee el master y después `custom.md`, que pisa lo que haga falta. Así podés actualizar el núcleo cuando salga una versión nueva sin perder tu personalización.
+   - `AGENTS.md` → `Leé sdd/SDD-COMPACT.md y obedecé sus reglas.` (más: «`sdd/SDD-MASTER.md`: abrilo solo si la tarea lo pide»)
+   - `CLAUDE.md` → ídem
+5. Para adaptarlo a tu gusto **sin editar el núcleo universal**: escribí tus overrides en `sdd/custom.md` (`R01=OFF`, `R05.max=500`, reglas propias `+R21-…`). El agente lee el compacto (o este master, si lo abre) y después `custom.md`, que pisa lo que haga falta. Así podés actualizar el núcleo cuando salga una versión nueva sin perder tu personalización.
 6. Si trabajás con un agente de solo-chat (sin archivos), pegá [`SDD-COMPACT.md`](SDD-COMPACT.md) en el primer mensaje en lugar de este documento.
 
 ---
@@ -38,7 +38,7 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 
 | Si tu tarea es… | Leé solamente… |
 |---|---|
-| Arrancar la sesión | `SDD-MASTER.md` (este archivo) |
+| Arrancar la sesión | [`SDD-COMPACT.md`](SDD-COMPACT.md) + `custom.md` si existe (este master, solo bajo demanda) |
 | Planning de una feature | `spec.md` · `features/features-<usuario>.md` · `status.md` (+ si hay Cerebro: buscar lo parecido antes, [`playbooks/obsidian-cerebro.md`](playbooks/obsidian-cerebro.md) §C) |
 | Implementar código | `design.md` · `contracts/contracts-<usuario>.md` · `testing.md` |
 | Commit / push / versionar | `changelog/changelog-<usuario>.md` (+ R01, R13) |
@@ -155,7 +155,7 @@ El SDD se versiona con semver y crece solo desde casos reales: toda regla nueva 
 Con más de ~4 personas o roles diferenciados (PO, AF, SM, QA, devs por seniority, RPA, infra…): aplicar la capa [`teams.md`](teams.md). Los OK se especializan por rol (spec→PO, diseño→Tech Lead, tests→QA, deploy→Infra) y el agente dirige cada OK a quien corresponde. Autonomía escalonada: pasantes/Jr siempre ESTRICTO y literal; Sr puede CONFIANZA solo en su rama. Subagentes por rol con slice y tier fijos.
 
 **R22 · MULTI-AGENTE — [ON] — desactivable**
-El núcleo es uno solo; cada herramienta de IA (Claude, Codex/ChatGPT, Cursor, Copilot, Gemini, etc.) recibe un espejo de una línea que apunta acá, según la tabla de [`models.md`](models.md). En el arranque, preguntar qué agentes usa el equipo y generar los espejos que falten. Para agentes solo-chat: `SDD-COMPACT.md` pegado. Tiers de modelo unificados marca-agnóstico (ALTO/MEDIO/ECONÓMICO) para que R03 y R12 funcionen con cualquier proveedor.
+El núcleo es uno solo; cada herramienta de IA (Claude, Codex/ChatGPT, Cursor, Copilot, Gemini, etc.) recibe un espejo de una línea que apunta al arranque (`SDD-COMPACT.md` con su índice; el master se abre bajo demanda), según la tabla de [`models.md`](models.md). En el arranque, preguntar qué agentes usa el equipo y generar los espejos que falten. Para agentes solo-chat: `SDD-COMPACT.md` pegado. Tiers de modelo unificados marca-agnóstico (ALTO/MEDIO/ECONÓMICO) para que R03 y R12 funcionen con cualquier proveedor.
 
 **R23 · NIVEL-DE-USUARIO — [ON] — desactivable**
 En el arranque preguntar: "¿Tenés experiencia en código?" y registrar **NOVATO** o **PRO** en §3. Con NOVATO: (a) **pensar-por-tres** antes de toda acción con consecuencias (instalar, borrar, deployar, gastar plata): plan → autocrítica buscando qué puede salir mal → plan corregido, y recién ahí ejecutar, mostrando el resultado en lenguaje llano; (b) cero jerga sin explicar, un paso por vez, esperando confirmación de que el humano ve lo mismo; (c) nunca asumir conocimientos: explicar qué es la terminal, npm, etc., o derivar al playbook con sus notas `[NOVATO]`; (d) testing reforzado (R07), porque el humano no puede revisar el código; (e) R03 se invierte: el agente asume más decisiones técnicas por su cuenta, pero explica cada una en una línea.
@@ -207,16 +207,16 @@ Antes de dejar al agente iterando solo, se escribe `sdd/loops/<nombre>.md` con *
 
 ```
 repo/
-├── AGENTS.md                      # espejo de 1 línea → apunta acá
+├── AGENTS.md                      # espejo de 1 línea → apunta al compacto
 ├── .gitattributes                 # merge=union para changelogs: N agentes sin conflictos (S27)
-├── CLAUDE.md                      # espejo de 1 línea → apunta acá
+├── CLAUDE.md                      # espejo de 1 línea → apunta al compacto
 ├── harness.config.json            # comandos del proyecto: test, lint, e2e, prod de solo lectura (R30)
 ├── harness/                       # verify.py por niveles + hooks + pre-commit (del scaffold)
 ├── README.md                      # instalación y puesta en marcha
 ├── src/ …                         # código
 └── sdd/
-    ├── SDD-MASTER.md              # ESTE archivo (conductor, siempre se lee)
-    ├── SDD-COMPACT.md             # cheat-sheet por palabras clave (solo-chat / subagentes)
+    ├── SDD-MASTER.md              # ESTE archivo (texto completo de las reglas, bajo demanda)
+    ├── SDD-COMPACT.md             # arranque de cada sesión: reglas + índice (también solo-chat / subagentes)
     ├── GUIDE.md                   # guía de uso para humanos (quick start, cadencias)
     ├── custom.md                  # overrides personales (pisa reglas sin tocar el núcleo)
     ├── scenarios.md               # matriz: dónde funciona, dónde no, adaptaciones (R20)
