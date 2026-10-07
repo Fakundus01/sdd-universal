@@ -1,6 +1,6 @@
 # handback.md · Plantilla de handback en archivo (R30)
 
-El HANDBACK del master (§7) es el cierre de ciclo **en el chat**, en ~20 líneas. Este es el handback **en archivo** que deja un agente al terminar una tarjeta: va en `sdd/progress/<rama>/handback_<ID>.md`, se commitea con la rama antes de responder `done`, y es lo que lee el reviewer. Qué cuenta como evidencia: [`harness.md`](../harness.md) §4.
+El HANDBACK del master (§7) es el cierre de ciclo **en el chat**, en ~20 líneas. Este es el handback **en archivo** que deja un agente al terminar una tarjeta: va en `sdd/progress/<rama>/handback_<ID>.md` (con la sección «Costo»: desde la v0.37 `verify.py --quick` avisa si falta en una tarjeta `done`), se commitea con la rama antes de responder `done`, y es lo que lee el reviewer. Qué cuenta como evidencia: [`harness.md`](../harness.md) §4.
 
 ````markdown
 # Handback H-1 — <título>
@@ -46,6 +46,14 @@ $ python harness/verify.py --changed
 ```
 
 <Si tocaste un check, un hook o cómo se reporta un error: la cola del rojo forzado.>
+
+## Costo
+<!-- Una fila por rol y vuelta. El agente completa rol, modelo y vuelta; tokens, USD y duración los ve el LEADER
+     en el aviso de fin de cada corrida (el agente no conoce los suyos) y los completa al recibir este handback.
+     `n/d` si la herramienta no da el dato: no se estima ni se inventa (R22). -->
+| Rol | Modelo | Vuelta | Tokens (entrada/salida) | Costo USD | Duración |
+|---|---|---|---|---|---|
+| implementer | <modelo> | 1 | n/d | n/d | n/d |
 
 ## Fuera de zona / riesgos
 - <lo que viste y no tocaste; riesgos para otras ramas>

@@ -103,6 +103,14 @@ Cada bot es una **feature con contract propio**: sistema que toca (pantallas/API
 
 El agente los genera solo si aplican (no por default): `team.md` (quién es quién) · `environments.md` (ambientes y deploys) · `onboarding.md` (si el equipo rota mucho) · `incidents.md` (postmortems: qué pasó, causa raíz, acción correctiva — muy útil con RPA e infra) · `metrics.md` (velocidad del equipo + gasto de tokens por ciclo, para detectar derroche) · `api-catalog.md` (índice de APIs entre módulos, clave en modo FEDERADO).
 
+**Formato de `metrics.md`.** Una fila por rol y vuelta, la misma que el leader completa en la sección «Costo» del handback ([`prompts/handback.md`](prompts/handback.md)); al cerrar cada tarjeta el leader suma las filas de esa tarjeta, sin tocar las anteriores. Marca-agnóstico: `n/d` donde la herramienta no da el dato.
+
+```markdown
+| Tarjeta | Rol | Modelo | Vuelta | Tokens (entrada/salida) | Costo USD | Duración |
+|---|---|---|---|---|---|---|
+| P-2 | implementer | <modelo> | 1 | n/d | n/d | n/d |
+```
+
 ---
 
 ## Historial

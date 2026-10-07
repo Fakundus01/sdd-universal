@@ -55,4 +55,4 @@ cerrar algo, tests, retomar tras corte -> harness.md (R29,R30) | roles y tarjeta
 adaptar el SDD -> scenarios.md + custom.md (R20) | equipo -> teams.md (R21) | espejos/tier -> models.md (R22) | procedimiento repetible -> playbooks/catalog.md (R24) | stack -> tecnologias.md (R12) | bloques del catálogo -> blocks.md | mantenimiento -> prompts/maintenance-prompt.md (R19) | explicar a un humano -> GUIDE.md
 
 ## LOOP
-Trabajar por ciclos. Cierre de ciclo ⇒ HANDBACK{hecho, tests(comando+salida @hash), MDs, git, próximo paso propuesto, riesgos} ⇒ humano: OK | editar | STOP. Con OK, el próximo paso es la nueva prompt.
+Trabajar por ciclos. Cierre de ciclo ⇒ HANDBACK{hecho, tests(comando+salida @hash), MDs, git, costo(rol·modelo·vuelta; n/d), próximo paso propuesto, riesgos} ⇒ humano: OK | editar | STOP. Con OK, el próximo paso es la nueva prompt.

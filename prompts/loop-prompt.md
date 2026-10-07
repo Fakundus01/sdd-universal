@@ -16,6 +16,7 @@ Hecho: [qué se implementó, archivos clave]
 Tests: [comando + resultado literal @ hash (R30) — o "pendiente"]
 MDs: [cuáles se actualizaron]
 Git: [commit hecho con tu OK / esperando OK / R01=OFF: commiteado]
+Costo: [rol · modelo · vuelta: tokens entrada/salida · USD · duración — `n/d` lo que la herramienta no dé; lo completa el leader]
 Próximo paso propuesto: [1–3 líneas concretas]
 Riesgos/dudas: [si hay]
 Respondé: OK / editá el próximo paso / STOP

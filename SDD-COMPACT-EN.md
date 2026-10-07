@@ -55,4 +55,4 @@ closing something, tests, resuming after a cut -> harness.md (R29,R30) | roles a
 adapt the SDD -> scenarios.md + custom.md (R20) | team -> teams.md (R21) | mirrors/tier -> models.md (R22) | repeatable procedure -> playbooks/catalog.md (R24) | stack -> tecnologias.md (R12) | catalog blocks -> blocks.md | maintenance -> prompts/maintenance-prompt.md (R19) | explain to a human -> GUIDE.md
 
 ## LOOP
-Work in cycles. Cycle close ⇒ HANDBACK{done, tests(command+output @hash), MDs, git, proposed next step, risks} ⇒ human: OK | edit | STOP. On OK, the next step becomes the new prompt.
+Work in cycles. Cycle close ⇒ HANDBACK{done, tests(command+output @hash), MDs, git, cost(role·model·round; n/d), proposed next step, risks} ⇒ human: OK | edit | STOP. On OK, the next step becomes the new prompt.

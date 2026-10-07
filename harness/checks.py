@@ -48,6 +48,13 @@ CUSTOM_NAME = "custom.md"
 CUSTOM_WARN_BYTES = 2048
 RULE_DEF_RE = re.compile(r"^\*{0,2}R(\d\d)[ \t]+(?:·[ \t]+)?[^\s:]+[ \t]*[:·—*]", re.M)
 MASTER_RULE_RE = re.compile(r"^\*\*R(\d\d)\b", re.M)
+# Costo por rol y vuelta (P-2): desde la v0.37 el handback de una tarjeta `done` trae la sección «Costo» con al menos
+# una fila. Corte: la versión sale del prefijo de la rama (`v0.37-P-2`); una rama sin versión o anterior a COSTO_DESDE
+# es previa a la regla y no avisa (no se inventan datos en handbacks viejos).
+COSTO_DESDE = (0, 37)
+BRANCH_VERSION_RE = re.compile(r"^v(\d+)\.(\d+)")
+COSTO_HEADING_RE = re.compile(r"^#{1,6}\s*Costo\b", re.I)
+HEADING_RE = re.compile(r"^#{1,6}\s")
 WALK_SKIP = {".git", "node_modules", "__pycache__", ".venv", "venv", ".next", ".nuxt", "dist", "build"}
 
 
@@ -172,6 +179,7 @@ class HarnessChecks:
         self.check_cited_paths()
         self.check_startup()
         self.check_handbacks()
+        self.check_costo_handbacks()
         self.check_e2e_registered()
 
     # ── archivos base ────────────────────────────────────────────────────────
@@ -500,6 +508,41 @@ class HarnessChecks:
             tabs = [n for n, ln in enumerate(text.splitlines(), 1) if MID_TOKEN_TAB.search(ln)]
             if tabs:
                 self.report.warn(f"{rel}: TAB literal en la(s) línea(s) {', '.join(map(str, tabs[:5]))} (¿una ruta `tests\\t…` pegada?)")
+
+    # ── costo por rol y vuelta en el handback (P-2) ───────────────────────────
+    def check_costo_handbacks(self) -> None:
+        for card in self.cards:
+            branch = card.meta.get("rama", "")
+            version = BRANCH_VERSION_RE.match(branch)
+            if card.state != "done" or not version or (int(version[1]), int(version[2])) < COSTO_DESDE:
+                continue
+            path = self.root / "sdd" / "progress" / Repo.slug(branch) / f"handback_{card.id}.md"
+            if not path.is_file():
+                continue
+            if not self._tiene_costo(path.read_text(encoding="utf-8-sig", errors="replace")):
+                self.report.warn(f"{self._rel(path)}: sin sección Costo con al menos una fila (rol, modelo, vuelta, "
+                                 "tokens, USD, duración; `n/d` si no se sabe): la completa el leader (prompts/handback.md)")
+
+    @staticmethod
+    def _tiene_costo(text: str) -> bool:
+        """Dentro de «## Costo» (hasta el próximo título), una fila de tabla de datos con la primera celda real."""
+        inside, rows, header_seen = False, 0, False
+        for line in text.splitlines():
+            if HEADING_RE.match(line):
+                inside = bool(COSTO_HEADING_RE.match(line))
+                header_seen = False
+                continue
+            if not inside or not line.lstrip().startswith("|"):
+                continue
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if not header_seen:
+                header_seen = True  # la primera fila de la tabla es el encabezado
+                continue
+            if set("".join(cells)) <= set("-: "):
+                continue  # separador
+            if cells[0] and not PLACEHOLDER_RE.match(cells[0]):
+                rows += 1
+        return rows > 0
 
     # ── drift: un E2E declarado que nunca corrió (S29) ───────────────────────
     def check_e2e_registered(self) -> None:

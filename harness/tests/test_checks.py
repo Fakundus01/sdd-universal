@@ -184,6 +184,67 @@ class TestHandbacks(ChecksCase):
         self.assertWarns(self.run_checks(), "TAB literal en la(s) línea(s) 2")
 
 
+class TestCostoHandback(ChecksCase):
+    """P-2: el handback de una tarjeta done (v0.37 en adelante) trae la sección Costo con al menos una fila."""
+
+    TABLA = ("| Rol | Modelo | Vuelta | Tokens entrada/salida | Costo USD | Duración |\n"
+             "|---|---|---|---|---|---|\n")
+
+    def hecha(self, rama: str, handback: str | None, estado: str = "done") -> None:
+        self.p.card(estado=estado, rama=rama)
+        slug = rama.replace("/", "-")
+        self.p.review(rama=rama)
+        if handback is not None:
+            self.p.write(f"sdd/progress/{slug}/handback_H-1.md", "# Handback H-1\n\n" + handback)
+        self.p.commit("tarjeta")
+
+    def costo_warns(self) -> list[str]:
+        return [w for w in self.run_checks().messages("WARN") if "Costo" in w]
+
+    def test_sin_seccion_costo_avisa(self):
+        self.hecha("v0.37-H-1", "## Hecho\n- algo\n")
+        self.assertWarns(self.run_checks(), "sección Costo")
+
+    def test_tabla_vacia_avisa(self):
+        self.hecha("v0.37-H-1", "## Costo\n" + self.TABLA + "\n## Hecho\n- algo\n")
+        self.assertWarns(self.run_checks(), "sección Costo")
+
+    def test_fila_con_placeholders_avisa(self):
+        self.hecha("v0.37-H-1", "## Costo\n" + self.TABLA + "| <rol> | <modelo> | <N> | <in/out> | <USD> | <t> |\n")
+        self.assertWarns(self.run_checks(), "sección Costo")
+
+    def test_tabla_fuera_de_la_seccion_no_cuenta(self):
+        self.hecha("v0.37-H-1", "## Costo\nsin tabla\n\n## Otra\n" + self.TABLA + "| implementer | opus | 1 | n/d | n/d | n/d |\n")
+        self.assertWarns(self.run_checks(), "sección Costo")
+
+    def test_con_fila_no_avisa(self):
+        self.hecha("v0.37-H-1", "## Costo\n" + self.TABLA + "| implementer | opus | 1 | n/d | n/d | n/d |\n")
+        self.assertEqual(self.costo_warns(), [])
+
+    def test_aviso_no_es_fallo(self):
+        self.hecha("v0.37-H-1", "## Hecho\n- algo\n")
+        self.assertEqual(self.run_checks().messages("FAIL"), [])
+
+    def test_tarjeta_anterior_a_v037_no_avisa(self):
+        self.hecha("v0.36-H-1", "## Hecho\n- algo\n")
+        self.assertEqual(self.costo_warns(), [])
+
+    def test_rama_sin_version_no_avisa(self):
+        self.hecha("feature-x", "## Hecho\n- algo\n")
+        self.assertEqual(self.costo_warns(), [])
+
+    def test_version_posterior_si_avisa(self):
+        self.hecha("v0.100-H-1", "## Hecho\n- algo\n")
+        self.assertWarns(self.run_checks(), "sección Costo")
+
+    def test_tarjeta_abierta_no_avisa(self):
+        self.hecha("v0.37-H-1", "## Hecho\n- algo\n", estado="in_progress")
+        self.assertEqual(self.costo_warns(), [])
+
+    def test_done_sin_archivo_de_handback_no_avisa(self):
+        self.hecha("v0.37-H-1", None)
+        self.assertEqual(self.costo_warns(), [])
+
 class TestE2E(ChecksCase):
     def test_e2e_declarado_sin_corrida_avisa(self):
         self.p.write("harness.config.json", json.dumps({"test": "x", "e2e": "y"}))
