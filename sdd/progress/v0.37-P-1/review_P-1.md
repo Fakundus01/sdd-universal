@@ -1,7 +1,7 @@
-# Review P-1 @ 0743fb46956bcc2dee2a08fb0d981f2397046a2c
-**Veredicto:** CHANGES_REQUESTED
+# Review P-1 @ 455e5a56a1b16b39774fd304a13f445ce6069773
+**Veredicto:** APPROVED
 
-> Vuelta 1 @ b7e4cd9 (CHANGES_REQUESTED) abajo; la vuelta 2 está al final.
+> Vuelta 1 @ b7e4cd9 (CHANGES_REQUESTED) abajo; vuelta 2 @ 0743fb4 (CHANGES_REQUESTED) y vuelta 3 @ 455e5a5 (APPROVED) al final.
 
 Reviewer independiente (tier ALTO). Base `ab90d19`, código `62c3af7`, handback en `b7e4cd9`. Trabajé solo en el worktree `sdd-universal-P-1-rev` (rama `v0.37-P-1-rev`). Python 3.14.0, Node v24.11.1. Mis scripts están en `scratchpad/p1-rev/`: `sondas.py`, `sondas2.py`, `mutantes.py`, `mutantes2.py`, `zip.mjs` y `check_zip.py`. Cada mutante corrió con `subprocess.run(..., timeout=120)` y lo revertí con `git checkout -- harness/checks.py`. `verify.py` creó `sdd/progress/v0.37-P-1-rev/current.md` de plantilla en cada corrida. Lo borré cada vez y no lo commiteé.
 
@@ -225,3 +225,70 @@ $ python harness/verify.py --quick               -> [OK] Arranque liviano: 9901 
 - **Decidir el margen con el owner** (recomiendo la opción (a), arriba). Si se elige (a), es un cambio del check y entra en esta misma tarjeta.
 - `web/reglas-ui.js:34` (fuera de la zona): el `custom.md` que genera la web dice «El agente lee el master primero y después este archivo». Hay que alinearlo con la frase de `0743fb4`.
 - Sin cambio desde la vuelta 1: `skill/sdd-universal.skill` está obsoleto (v0.3) y el ZIP no trae `loops.md` (L4).
+
+## Vuelta 3 @ 455e5a5
+**Veredicto:** APPROVED
+
+Base de la vuelta: `a5f296b`, donde quedó anotada la decisión del owner: el FAIL de 10 KB aplica solo al paquete y `custom.md` tiene un aviso propio a partir de 2 KB (WARN), nunca FAIL. El código está en `068751e` y el handback en `455e5a5`.
+
+Re-apliqué todas las sondas de las vueltas anteriores (`sondas.py`, `sondas2.py`, `sondas3.py`) y sumé `sondas4.py`, centrada en `custom.md`. También re-apliqué todos los mutantes (`mutantes_v3.py`, que incluye los de las vueltas 1 y 2 con los patrones actualizados) y sumé los de esta vuelta. Cada corrida tuvo `timeout=180` y la revertí con `git checkout`. `verify.py` volvió a crear `current.md` de plantilla: lo borré.
+
+### Pedidos 11–14
+| # | Estado |
+|---|---|
+| 11 burla del «bajo demanda» | **Cerrada.** Las 4 sondas de la vuelta 2 ahora dan FAIL. La exención legítima («abrilo solo si la tarea lo pide») sigue en OK. Las líneas reales del arranque no dan falsos positivos (verify en verde). |
+| 12 recuadro | Hecho en ES y EN: «leé solo la sección que la tarea pide (§4 una regla, §6 el start-prompt…)». Ahora coincide con el «bajo demanda, nunca entero» del índice. |
+| 13 R23 | Hecho en ES y EN: «lenguaje llano, cero jerga sin explicar» / «plain language, zero unexplained jargon», junto con lo básico, R03 invertido y el registro en §3. **Con esto, R23 queda completa en el arranque.** |
+| 14 N8 y H3 | Muertos los dos (ver mutantes). |
+| `web/reglas-ui.js` | El `custom.md` que genera la web ahora dice «El agente lee el compacto al arrancar». Un test web lo fija. |
+
+Las sondas de las vueltas 1 y 2 dan el mismo resultado que en la vuelta 2. Todas las burlas siguen cerradas: verbos fuera de la lista, ruta suelta, ruta en otra línea, autolink, «bajo demanda» con verbo y el master nombrado sin exención. Las únicas que dan OK son las limitaciones ya declaradas: reglas vaciadas a `Rnn nombre:`, `R100`, espejos que no son `AGENTS.md`/`CLAUDE.md` y archivos citados que no existen.
+
+### Tope de `custom.md` (`sondas4.py` + ZIP)
+```text
+custom_16.md (15 overrides + 8 notas, 1541 B)   -> OK   paquete 8595/8769 de 10240; custom.md 1541 bytes (aparte; aviso > 2048)
+custom 2048 B                                   -> OK   (el límite es inclusivo)
+custom 2049 B / 60 KB / master pegado (37 KB)   -> WARN «sdd/custom.md pesa N bytes (> 2048)…»; nunca FAIL
+ZIP PRO y NOVATO con custom_16.md               -> OK   paquete 8769 de 10240; custom.md 1541 bytes
+ZIP PRO y NOVATO con custom_3k.md (3182 B)      -> OK + WARN sdd/custom.md pesa 3182 bytes (> 2048)
+custom.md que define R33 y el compacto no       -> FAIL no define R33 (custom no cuenta como regla definida)
+```
+
+**¿Se puede burlar el tope del paquete a través de `custom.md`?**
+- Meter contenido adentro de `custom.md` no lo burla: el aviso salta en cuanto pasa de 2 KB. Si lo cita `AGENTS.md`, `custom.md` sigue saliendo del tope de 10 KB y cae en el aviso.
+- **Sí lo burla que `custom.md` mande a leer el master u otro doc** (`Leé \`sdd/SDD-MASTER.md\` entero`, `Leé \`sdd/extra.md\``): da OK sin aviso, porque las citas de `custom.md` no se siguen (es una «hoja»). Es una decisión de diseño declarada. Existe porque los `custom.md` viejos nombran al master en una línea que tiene el verbo «lee». No bloquea: `custom.md` es contenido del usuario, con OK humano, y el owner decidió que nunca da FAIL.
+- **Impacto real, para el changelog (lo maneja el leader):** los proyectos que ya bajaron un `custom.md` de la web tienen la frase vieja «El agente lee el master primero y después este archivo». Ahora ese archivo se lee en cada sesión, así que un agente puede tomarla como orden y cargar el master entero. El check no lo ve, porque en el generador la ruta del master está en otra línea. Propuesta: una nota de migración («cambiá esa frase de tu custom.md») y, opcionalmente, un WARN (nunca FAIL) cuando `custom.md` nombra al master sin «bajo demanda». No hace falta otra vuelta para esto.
+
+### Mutantes (`mutantes_v3.py` + N9 aparte): 33 muertos, 4 vivos, 0 timeouts
+- **Muertos:**
+  - De la vuelta 1: R1, R2, R4–R13 y R15.
+  - De la vuelta 2: N1, N2, N4, N6, N7, **N8**, N9, H1, H2, **H3**, H4 y H5.
+  - De esta vuelta:
+    - V3-a: el «bajo demanda» exime al master aunque la línea tenga verbo.
+    - V3-b: el aviso salta recién a 4 KB.
+    - V3-c: el aviso usa `>=` en vez de `>`.
+    - V3-d: un `custom.md` grande da FAIL en vez de WARN.
+    - V3-e: `custom.md` suma al tope del paquete.
+    - V3-g: no hay aviso.
+    - V3-h: `custom.md` solo se lee si alguien lo cita.
+- **Vivos:**
+  - N3, N5 y N10: equivalentes o casi, como en la vuelta 2.
+  - **V3-f**: `custom.md` cuenta como «regla definida». El handback dice que ese mutante muere, pero en mi versión (`for f in everything` en el chequeo de reglas) queda vivo. El comportamiento es correcto (mi sonda da FAIL), lo que falta es el test. No bloquea: alcanza con un test chico, el de la sonda «custom.md define R33 y el compacto no».
+
+### Hook
+En el ZIP PRO con `sdd/custom.md` imprime `[arnés] Rama … Leé sdd/SDD-COMPACT.md (y sdd/custom.md, que pisa) y seguí desde … El master (sdd/SDD-MASTER.md) se abre solo si la tarea lo pide.` Los casos sin custom y sin compacto se comportan igual que en la vuelta 2.
+
+### Verde re-ejecutado @ 455e5a5
+```text
+$ python -m unittest discover -s harness/tests   -> Ran 225 tests in 117.496s  OK (skipped=1)
+$ node --test "web/tests/*.test.mjs"             -> tests 79  pass 79  fail 0
+$ python harness/verify.py --quick               -> [OK] Arranque liviano: paquete 8952 bytes de 10240 (AGENTS.md + SDD-COMPACT.md); custom.md 990 bytes (aparte; aviso > 2048); 33 reglas definidas · VERDE — 0 FAIL, 0 WARN
+bytes LF (git cat-file -s HEAD): AGENTS.md 432 + SDD-COMPACT.md 8520 = 8952 (antes 36916); custom.md 990 aparte
+```
+
+### Por qué APPROVED
+Se cumplen los cinco criterios de la tarjeta, con la decisión del owner sobre `custom.md` aplicada. El contrato del master está en el arranque regla por regla. Quedan como pendientes menores: los mínimos de R28/R29/R18/R09, que el índice deriva a `harness.md` y `prompts/sdd-lite.md`, y la limitación declarada de que el check no valida el contenido de las reglas. El check resiste todas las sondas que tienen impacto real en un agente. Lo que queda abierto no bloquea:
+
+1. Test para V3-f (`custom.md` no define reglas).
+2. Nota de migración en el changelog para los `custom.md` viejos con «el agente lee el master primero», con un WARN opcional.
+3. Lo que viene de antes: `skill/sdd-universal.skill` obsoleto (v0.3) y el ZIP sin `loops.md` (L4).
