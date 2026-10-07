@@ -140,6 +140,8 @@ class TestBurlas(ArranqueCase):
     def test_el_verbo_va_con_borde_de_palabra(self):
         self.entry_con("Se leerá `sdd/extra.md` si hace falta.")
         self.assertEqual(self.fails(), [])
+        self.entry_con("Nadie puede foresee `sdd/extra.md` ni subleer `sdd/extra.md`.")
+        self.assertEqual(self.fails(), [])
 
     def test_crlf_cuenta_como_lf(self):
         # un clon de Windows con autocrlf no puede pesar mas que el mismo repo en Linux

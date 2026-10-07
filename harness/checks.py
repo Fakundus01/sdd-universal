@@ -253,7 +253,7 @@ class HarnessChecks:
             for line in current.read_text(encoding="utf-8-sig", errors="replace").splitlines():
                 reads = bool(READ_VERB_RE.search(line))
                 on_demand = bool(ON_DEMAND_RE.search(line))
-                cited = [*LINK_RE.findall(line), *TICK_RE.findall(line), *(m.group(0) for m in BARE_PATH_RE.finditer(line))]
+                cited = [m.group(0) for m in BARE_PATH_RE.finditer(line)]  # cubre links, `backticks` y rutas sueltas
                 for target in cited:
                     target = target.split("#", 1)[0]
                     if not target.lower().endswith(STARTUP_EXTS) or SKIP_CHARS & set(target):
