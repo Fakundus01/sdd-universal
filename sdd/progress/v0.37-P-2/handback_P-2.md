@@ -140,3 +140,4 @@ Nota: este handback ya traía el comentario del leader antes de la tabla, no ent
 | Rol | Modelo | Vuelta | Tokens | Costo USD | Duración |
 |---|---|---|---|---|---|
 | implementer | sonnet (MEDIO) | 2 | 133 287 (total) | n/d | 9 min 37 s |
+| reviewer | opus (ALTO) | 2 | 116 953 (total) | n/d | 11 min 48 s |

@@ -50,7 +50,7 @@ $ python harness/verify.py --changed
 ## Costo
 <!-- Una fila por rol y vuelta. El agente completa solo rol y vuelta: el modelo y los tokens, USD y duración los ve el
      LEADER en el aviso de fin de cada corrida (el agente no conoce los suyos ni su modelo con certeza) y los completa
-     al recibir este handback; lo que anotes tú en `<modelo>` no vale como dato. Los `<…>` los reemplaza el leader:
+     al recibir este handback; lo que anotes vos en `<modelo>` no vale como dato. Los `<…>` los reemplaza el leader:
      una fila con algún `<…>` sin completar dispara el WARN de `verify.py --quick`. `n/d` es una decisión explícita
      del leader («la herramienta no lo da»): no se estima ni se inventa (R22).
      Tokens: «entrada/salida» si la herramienta los separa; si da un total, el total con `(total)`. -->

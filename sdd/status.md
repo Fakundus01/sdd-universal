@@ -37,7 +37,7 @@
 
 | F27 | Cerebro entre proyectos y grafo del paquete (loop `obsidian-cerebro`) | In Progress | 80% | 0.36: `cerebro/` (búsqueda híbrida local y OpenAI, MCP, instalador, CI), instalado en la máquina del owner; MD del núcleo enlazados y el ZIP reescribe links. Falta: S42 por síntoma y enlazar el resto del repo |
 
-| F28 | Contexto fijo liviano y costo por tarjeta (v0.37) | Tasked | 60% | Tarjetas [P-1](cards/P-1.md) (arranque con el compacto + índice; done: 3 vueltas, APPROVED @ 455e5a5, merge fccd658; arranque 36916 → 8952 bytes, custom.md aparte con WARN > 2 KB) y [P-2](cards/P-2.md) (tokens/costo/duración por rol en el handback). Sin loop todavía; independientes entre sí |
+| F28 | Contexto fijo liviano y costo por tarjeta (v0.37) | Tasked | 60% | Tarjetas [P-1](cards/P-1.md) (arranque con el compacto + índice; done: 3 vueltas, APPROVED @ 455e5a5, merge fccd658; arranque 36916 → 8952 bytes, custom.md aparte con WARN > 2 KB) y [P-2](cards/P-2.md) (tokens/costo/duración por rol en el handback; done). Sin loop todavía; independientes entre sí |
 
 **Avance total: 25 / 27 features vigentes completas** (F19 retirada; F27 en curso; F28 en tarjetas)
 
@@ -64,7 +64,7 @@ El 2026-10-03 todas estaban vencidas. Con el OK del owner («hacé las deudas qu
 
 0. **Owner:** OK para el push de `v0.35-loops-grafo` y el merge a `main` (R01, R32). El loop `dev-de-10` está cumplido (`sdd/loops/dev-de-10.md`).
 0b. v0.36 cortada (loop `obsidian-cerebro`, 10/10 vueltas). **Owner:** OK para el merge de `v0.36-obsidian-cerebro` a `main` (el MCP del Cerebro apunta a este checkout). Deudas de F27: S42 por síntoma, enlazar `sdd/`, `skills/`, `imports/`; re-importar el Cerebro sin links relativos; `cerebro/tests` en `verify.py --full`.
-0c. v0.37, pendientes del paquete (F28, rama del plan `v0.37-plan`): [P-1](cards/P-1.md) done y [P-2](cards/P-2.md) en curso (OK del owner 2026-10-07). Pendientes de la review de P-1 para el corte de la v0.37: test del mutante V3-f (`custom.md` no define reglas); nota de migración en el changelog (los `custom.md` bajados antes dicen «el agente lee el master primero» y ahora se leen en cada sesión); opcional WARN si `custom.md` nombra el master sin «bajo demanda»; `skill/sdd-universal.skill` obsoleto (v0.3); el ZIP no trae `loops.md`.
+0c. v0.37, pendientes del paquete (F28, rama del plan `v0.37-plan`): [P-1](cards/P-1.md) done y [P-2](cards/P-2.md) done (2 vueltas, APPROVED @ 10a01ec). Pendientes de la review de P-2: tests para los mutantes R7 (título `## Costo` exacto) y V6 (decide la última sección), falso WARN si un handback cita la plantilla en un bloque de código. Pendientes de la review de P-1 para el corte de la v0.37: test del mutante V3-f (`custom.md` no define reglas); nota de migración en el changelog (los `custom.md` bajados antes dicen «el agente lee el master primero» y ahora se leen en cada sesión); opcional WARN si `custom.md` nombra el master sin «bajo demanda»; `skill/sdd-universal.skill` obsoleto (v0.3); el ZIP no trae `loops.md`.
 1. Ejemplos de punta a punta con el SDD (e-commerce, landing, ticketera con IA, chatbot), cada uno en su repo: lo que falle ahí entra a `scenarios.md` (R20).
 2. **Owner:** hacer O3 (3 personas ajenas, 2 minutos cada una) y anotar el resultado acá; decidir D6 (dominio para el SMTP), que pesa todavía menos en local, donde no hay mails.
 3. Cuando la web salga a otros: reactivar Supabase, correr los dos `.sql` y repetir la prueba de dos cuentas (ver Bloqueos).
