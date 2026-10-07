@@ -1,5 +1,7 @@
-# Review P-2 @ ecc50950c2a62bf9843c9de03276557ae03352d6
-**Veredicto:** CHANGES_REQUESTED
+# Review P-2 @ 10a01ec24550da1bec18c622b43b47aa1987d2fc
+**Veredicto:** APPROVED
+
+> Vuelta 1 @ ecc5095 (CHANGES_REQUESTED) abajo; vuelta 2 @ 10a01ec (APPROVED) al final.
 
 Reviewer independiente (tier ALTO). Base `b69f873`, código `e31125d`, handback `ed3639a`, fila de Costo del leader `324d1a4`, merge del plan `ecc5095`. Worktree `sdd-universal-P-2-rev` (rama `v0.37-P-2-rev`). Python 3.14.0, Node v24.11.1. Scripts en `scratchpad/p2-rev/`: `sondas.py` (27 casos contra `HarnessChecks` completo) y `mutantes.py` (24 mutantes, `subprocess.run(..., timeout=300)` y `git checkout -- harness/checks.py` después de cada uno). `verify.py` creó `sdd/progress/v0.37-P-2-rev/current.md` de plantilla. Lo borré y no lo commiteé.
 
@@ -82,3 +84,48 @@ Rojo antes reproducido: con `harness/checks.py` de `b69f873` y los tests de HEAD
 - `## Costos`, `## Cost` (no hay plantilla EN de handback) y `###` vs `##` dan como mucho un falso WARN. Los bloques de código y las mayúsculas/`release/` en la rama son exóticos.
 - La tabla de `metrics.md` vive en `teams.md` (capa enterprise), pero `leader.md` la aplica a todo proyecto. Alcanza porque está enlazada. Si un día hay plantilla de `metrics.md`, que se mude ahí.
 - `tool_uses` no tiene columna. Está bien: la tarjeta no la pide.
+
+## Vuelta 2 @ 10a01ec
+**Veredicto:** APPROVED
+
+Código del implementer en `29ca1ff` y `2329054`, handback en `0f15888`. Después vienen solo los commits del leader `ffc2c5a` y `10a01ec` con filas de Costo. Mismo worktree. Usé `sondas2.py`/`casos2.py` (52 casos) y `mutantes2.py`/`lista2.py` (16 mutantes, `timeout=300`, `git checkout --` después de cada uno) en `scratchpad/p2-rev/`. Borré el `current.md` de plantilla que crea `verify.py`.
+
+### Pedidos de la vuelta 1
+| # | Estado | Cómo lo verifiqué |
+|---|---|---|
+| 1 | Resuelto | Plantilla: `<modelo> \| <tokens> \| <USD> \| <duración>`. `_costo` exige al menos una fila y ninguna celda vacía o con `<…>`. La fila de plantilla, un `<USD>` suelto, la plantilla junto a una fila completa y una celda vacía dan WARN. `n/d` del leader no avisa (sondas y tests). |
+| 2 | Resuelto | `main`, `card/E-10` y `feature-x`: sin sección no avisan; sección vacía, solo encabezado o fila de plantilla dan WARN; completa no avisa. `v0.36`/`v0.9` callan siempre, aunque la sección exista sin completar. `v0.37`, `v0.100` y `v1.0` avisan también si falta la sección. |
+| 3 | Resuelto | `prompts/handback.md`: el agente completa solo rol y vuelta, y su `<modelo>` «no vale como dato». `agents/leader.md` paso 5: «el modelo es el que usaste al despachar… corregí el que anotó el agente». |
+| 4 | Resuelto | `Tokens` con la regla `(total)` en `handback.md`, `teams.md` §8, `loop-prompt.md` y master §7 ES/EN, solo en la línea del bloque HANDBACK. Confirmo que los compactos no hacen falta: traen `costo(rol·modelo·vuelta; n/d)` sin el detalle de tokens. El arranque sigue en 8985 de 10240. |
+
+### Verde @ 10a01ec
+```text
+$ python -m unittest discover -s harness/tests      -> Ran 247 tests in 127.003s  OK (skipped=1)
+$ node --test "web/tests/*.test.mjs"               -> tests 79, pass 79, fail 0
+$ python harness/verify.py --quick                 -> VERDE — 0 FAIL, 0 WARN
+```
+Ninguna de las 52 sondas dio FAIL. Mutante V8 (`warn` → `fail`): muerto con 15 fallos.
+
+### Mutantes
+| Mutante | Resultado |
+|---|---|
+| R3 cualquier celda real cuenta | muerto (6) |
+| R6 sin `Repo.slug` | muerto (2), con `card/E-10` |
+| V1 versionada sin sección calla / V2 sin versión nunca avisa | muertos (3 / 4) |
+| V4 celda vacía vale / V5 sin filas = completa | muertos (1 / 7) |
+| V8 FAIL en vez de WARN / V9 corte `<=` / V10 sin corte / V11 check no se llama | muertos (15 / 8 / 2 / 14) |
+| R2 sin `\b` (`## Costos` cuenta) | sobrevive. **Equivalente en impacto:** solo reconoce un título más, sin falsos silencios sobre la plantilla. |
+| R8 `header_seen` no se resetea | sobrevive. **Equivalente:** el encabezado de una segunda tabla entra como fila, pero no tiene celdas vacías ni `<…>`, así que no cambia el resultado. |
+| V3 placeholder anclado a la celda entera | sobrevive. **Equivalente** con los placeholders de la plantilla, que ocupan la celda entera. |
+| V7 rama vacía no se saltea | sobrevive. **Equivalente** (= N9 del implementer): sin rama no hay ruta de handback, y una `done` sin rama ya es FAIL en otro check. |
+| R7 título solo `## Costo` exacto | sobrevive. Haría ignorar un `### Costo (vuelta 2)` como el que trae este mismo handback, y una plantilla sin completar ahí no avisaría. Hoy el código lo cubre (sonda «dos secciones, 2a plantilla» → WARN), pero ningún test lo fija. |
+| V6 `has_section = inside` (la última sección decide) | sobrevive. Con el orden de la plantilla, «Costo» va seguida de «Fuera de zona / riesgos»: en `main` una fila sin completar no avisaría. El código actual está bien (sonda «main: sección vacía» → WARN), pero los tests de rama sin versión ponen «Costo» al final. |
+
+R7 y V6 son huecos de test, no bugs, así que no piden otra vuelta. Recomiendo agregar dos tests cuando se toque el check otra vez: `main` con la plantilla seguida de `## Fuera de zona` → WARN, y `v0.37` con `### Costo (vuelta 2)` sin completar → WARN.
+
+### Notas (no piden otra vuelta)
+- Zona: además de lo pedido, `29ca1ff` cambió en `handback_P-1.md` solo el encabezado `Tokens (entrada/salida)` → `Tokens`. Los números no se tocaron y no hay datos inventados. Es inocuo, pero estaba fuera de la zona escrita.
+- `prompts/handback.md` línea 53: «lo que anotes **tú**» desentona con el voseo del paquete (debería ser «lo que anotes vos» o «lo que anote el agente»).
+- Un handback que cita la plantilla dentro de un bloque ```` da un falso WARN en una rama sin versión, porque el check no saltea bloques de código. Pasaría en una tarjeta que edite `handback.md`. Es poco común y es solo un WARN.
+- Una fila con menos celdas (`| implementer | sonnet | 1 |`) cuenta como completa, y una fila toda `n/d` también. Lo acepto: `n/d` es una decisión explícita del leader.
+- En `TestCostoHandback`, los `subTest` llaman a `setUp()`/`tearDown()` a mano. El primer `Project` queda sin `cleanup` explícito (lo limpia el finalizador de `TemporaryDirectory`), y si un assert falla dentro del loop, el temporal de esa vuelta queda hasta el GC. Es solo estilo.
