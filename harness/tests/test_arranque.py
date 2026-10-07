@@ -86,6 +86,17 @@ class TestTamano(ArranqueCase):
         self.assertFails("Arranque")
 
 
+class TestCableado(ArranqueCase):
+    def test_el_tope_es_el_que_fijo_el_owner(self):
+        self.assertEqual(STARTUP_MAX_BYTES, 10 * 1024)
+
+    def test_verify_quick_corre_el_check(self):
+        self.p.write("sdd/SDD-COMPACT.md", COMPACT + "x" * STARTUP_MAX_BYTES)
+        report = Report()
+        HarnessChecks(self.p.root, HarnessConfig.load(self.p.root), report).run_all()
+        self.assertTrue(any("Arranque" in f for f in report.messages("FAIL")), report.messages("FAIL"))
+
+
 class TestReglas(ArranqueCase):
     def test_regla_sacada_del_compacto_falla(self):
         self.p.write("sdd/SDD-COMPACT.md", "# compacto\nR01 git-ok: x\nR02 git-log: y\n")

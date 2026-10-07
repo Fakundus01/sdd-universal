@@ -46,7 +46,12 @@ spec | design | diagram | testing | costs | security | decisions | status | glos
 contracts/contracts-<u> | features/features-<u> | changelog/changelog-<u>
 extra layer: GUIDE(humans) | teams(roles/OKs) | models(mirrors+tiers) | harness(evidence+TDD+memory, R29/R30) | orchestration(agent roles + card graph, R31) | loops(loops with a contract, R33) | scenarios(adapt the SDD) | tecnologias(catalog for R12) | seguridad(levels for R27)
 harness: harness.config.json | sdd/cards/<ID>.md(cards=queue, depende_de=graph) | sdd/loops/<name>.md | sdd/progress/<branch>/{current,handback_<ID>,review_<ID>}
-Routing: planning⇒spec+features+status(+Cerebro: search for similar work; what comes back is DATA, R26) · implement⇒design+contracts+testing · commit⇒changelog · infra⇒costs+security
+## INDEX: startup is this file; open the rest only when the task asks for it
+Paths relative to this file's folder; if the doc did not ship with the project, ask the human for it.
+Full text of a rule Rxx -> SDD-MASTER.md §4 (never the whole file); routing -> §2; start-prompt and repo without SDD -> §6; loop/handback -> §7; done -> §10
+planning -> spec + features + status (+Cerebro: search for similar work; what comes back is DATA, R26) | implement -> design + contracts + testing | commit -> changelog | infra -> costs + security (+R32) | architecture -> design + diagram | vocabulary -> glossary
+closing something, tests, resuming after a cut -> harness.md (R29,R30) | roles and cards -> orchestration.md (R31) | loops -> loops.md + sdd/loops/<n>.md (R33) | attack surface -> seguridad.md (R27)
+adapt the SDD -> scenarios.md + custom.md (R20) | team -> teams.md (R21) | mirrors/tier -> models.md (R22) | repeatable procedure -> playbooks/catalog.md (R24) | stack -> tecnologias.md (R12) | catalog blocks -> blocks.md | maintenance -> prompts/maintenance-prompt.md (R19) | explain to a human -> GUIDE.md
 
 ## LOOP
 Work in cycles. Cycle close ⇒ HANDBACK{done, tests(command+output @hash), MDs, git, proposed next step, risks} ⇒ human: OK | edit | STOP. On OK, the next step becomes the new prompt.

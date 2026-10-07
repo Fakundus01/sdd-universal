@@ -156,3 +156,41 @@ test("la web tiene las mismas reglas que el master", () => {
     for (const m of leer(f).matchAll(/(\d+) reglas/g))
       assert.equal(Number(m[1]), n, `${f} dice «${m[0]}» y el master tiene ${n}`);
 });
+
+// P-1: el agente que arranca carga el compacto + un índice (≤ 10 KB, medido en bytes), no el master entero.
+// Si estos dos espejos mandan a leer el master, cada sesión paga ≈36 KB de más y se frena el caching.
+const TOPE_ARRANQUE = 10 * 1024;
+const reglasDelMaster = () => [...leer("SDD-MASTER.md").matchAll(/^\*\*R(\d\d)\b/gm)].map(m => "R" + m[1]);
+
+test("P-1: el AGENTS.md y el CLAUDE.md del ZIP mandan a leer el compacto, no el master", async () => {
+  for (const nivel of ["PRO", "NOVATO"]){
+    const {zip, nombres} = await armar({nivel});
+    assert.ok(nombres.includes("sdd/SDD-COMPACT.md"), `${nivel}: el ZIP no trae sdd/SDD-COMPACT.md`);
+    for (const espejo of ["AGENTS.md", "CLAUDE.md"]){
+      const texto = zip.get("prueba/" + espejo).datos.toString("utf8");
+      const leer_ = texto.split("\n").filter(l => l.startsWith("Leé ")).join("\n");
+      assert.match(leer_, /sdd\/SDD-COMPACT\.md/, `${nivel} ${espejo}: no manda a leer el compacto`);
+      assert.doesNotMatch(leer_, /SDD-MASTER/, `${nivel} ${espejo}: manda a leer el master entero`);
+    }
+  }
+});
+
+test("P-1: el arranque del ZIP (espejo + compacto) pesa ≤ 10 KB y define todas las reglas del master", async () => {
+  const {zip} = await armar({nivel: "PRO"});
+  const compacto = zip.get("prueba/sdd/SDD-COMPACT.md").datos;
+  for (const espejo of ["AGENTS.md", "CLAUDE.md"]){
+    const bytes = zip.get("prueba/" + espejo).datos.length + compacto.length;
+    assert.ok(bytes <= TOPE_ARRANQUE, `${espejo} + compacto = ${bytes} bytes > ${TOPE_ARRANQUE}`);
+  }
+  const lineas = compacto.toString("utf8");
+  const reglas = reglasDelMaster();
+  assert.equal(reglas.length, 33, "el master dejó de tener R01–R33");
+  for (const r of reglas)
+    assert.match(lineas, new RegExp("^" + r + "\\s", "m"), `el compacto del ZIP no define ${r}`);
+});
+
+test("P-1: el LEEME del ZIP lista el compacto y no dice que AGENTS.md apunta al master", async () => {
+  const {zip} = await armar({nivel: "PRO"});
+  const leeme = zip.get("prueba/LEEME.md").datos.toString("utf8");
+  assert.match(leeme, /`sdd\/SDD-COMPACT\.md`/);
+});
