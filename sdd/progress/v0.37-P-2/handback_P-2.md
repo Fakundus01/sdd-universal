@@ -98,3 +98,45 @@ Ninguno terminó por timeout.
 |---|---|---|---|---|---|
 | implementer | sonnet (MEDIO) | 1 | 102 526 (total, sin desglose) | n/d | 11 min 9 s |
 | reviewer | opus (ALTO) | 1 | 85 406 (total, sin desglose) | n/d | 9 min 21 s |
+
+## Vuelta 2
+Review `f7afcda` (CHANGES_REQUESTED @ ecc5095). Base de esta vuelta `ffc2c5a`; código y docs en `29ca1ff`, test extra en `2329054`.
+
+- **Pedido 1:** la plantilla de `prompts/handback.md` trae `<modelo> | <tokens> | <USD> | <duración>`. `_costo` en `harness/checks.py` (reemplaza a `_tiene_costo`) exige al menos una fila y que NINGUNA fila tenga una celda vacía o con `<…>`; `n/d` cuenta como completa (decisión del leader). Tests: fila de plantilla, `<…>` en cualquier celda, plantilla junto a filas completas, celda vacía (avisan) y `n/d` del leader (no avisa).
+- **Pedido 2:** rama sin prefijo de versión (`main`, `card/E-10`): avisa solo si el handback ya trae «Costo» vacía o sin completar; sin la sección, silencio. Rama con versión >= 0.37 sigue avisando también si falta la sección; < 0.37 calla siempre. Documentado en el comentario de las constantes de `checks.py` y en la nota de `prompts/handback.md`. Tests con `main` y `card/E-10` (con `/`: mata R6).
+- **Pedido 3:** `prompts/handback.md` (el agente completa solo rol y vuelta; el modelo que anote no vale) y `agents/leader.md` paso 5 (el modelo es el del despacho; corregir el del agente).
+- **Pedido 4:** encabezado `Tokens` y la regla «entrada/salida si la herramienta los separa; si da un total, el total con `(total)`» en `prompts/handback.md`, `teams.md` §8 (también la fila de ejemplo), `prompts/loop-prompt.md`, `SDD-MASTER.md` y `SDD-MASTER-EN.md` §7. Los compactos no traen el detalle de tokens: sin cambios (arranque 8985 de 10240). Las tablas de P-1 y P-2: solo el encabezado `Tokens (entrada/salida)` -> `Tokens`; números sin tocar.
+
+Rojo antes (R29), base `ffc2c5a`, tests nuevos antes del código:
+```text
+$ git rev-parse --short HEAD
+ffc2c5a
+$ python -m unittest discover -s harness/tests -k TestCostoHandback
+Ran 21 tests in 18.226s
+FAILED (failures=7)   (plantilla sin completar, <...> en una celda, plantilla junto a filas completas, main x2, card/E-10 x2 -> falta el WARN)
+```
+Verde después: `TestCostoHandback` `Ran 22 tests OK`; suite completa y node, ver abajo.
+
+Mutantes de la vuelta 2 sobre `check_costo_handbacks`/`_costo` (`subprocess.run(timeout=240)`, commit antes de mutar, `git checkout --` después):
+| Mutante | Resultado |
+|---|---|
+| N1 placeholder solo en la 1a celda | muerto |
+| N2 celda vacía vale | sobrevivió -> `test_celda_vacia_avisa` -> muerto |
+| N3 basta una fila completa | muerto |
+| N4 sin filas también completa | muerto |
+| N5 sin versión y sin sección avisa | muerto |
+| N6 sin versión nunca avisa | muerto |
+| N7 versión vieja avisa si hay sección | muerto |
+| N8 sin `Repo.slug` (R6; el 1er intento mutó otra ocurrencia, se rehízo sobre la línea de este check) | muerto (2 fallos) |
+| N9 rama vacía no se saltea | equivalente (sin rama no hay ruta de handback) |
+| N10 versión nueva calla sin sección | muerto |
+| N11 `has_section` nunca | muerto |
+| N12 regex `<\w+>` en vez de `<[^>]*>` | equivalente con los placeholders de la plantilla |
+Ninguno terminó por timeout.
+
+Nota: este handback ya traía el comentario del leader antes de la tabla, no entre separador y fila.
+
+### Costo (vuelta 2)
+| Rol | Modelo | Vuelta | Tokens | Costo USD | Duración |
+|---|---|---|---|---|---|
+| implementer | <modelo> | 2 | <tokens> | <USD> | <duración> |
