@@ -95,4 +95,5 @@ Ninguno terminó por timeout.
 ## Costo
 | Rol | Modelo | Vuelta | Tokens (entrada/salida) | Costo USD | Duración |
 |---|---|---|---|---|---|
-| implementer | opus 5.5 | 1 | n/d | n/d | n/d |
+<!-- Leader (2026-10-07): el agente anotó «opus 5.5», pero se despachó con sonnet (MEDIO); el modelo también lo confirma el leader. Tokens = `subagent_tokens`, sin desglose. -->
+| implementer | sonnet (MEDIO) | 1 | 102 526 (total, sin desglose) | n/d | 11 min 9 s |
