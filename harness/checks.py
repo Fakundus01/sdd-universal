@@ -220,7 +220,7 @@ class HarnessChecks:
             if size > STARTUP_MAX_BYTES:
                 names = ", ".join(self._rel(f) for f in files)
                 self.report.fail(f"Arranque de {entry.name}: {size} bytes > tope {STARTUP_MAX_BYTES} (P-1); "
-                                 f"carga {names}. Lo largo va bajo demanda (índice del compacto), sin verbo «leé»")
+                                 f"carga {names}. Lo largo va bajo demanda: índice del compacto, sin verbo de lectura y sin nombrar el master")
                 problems = True
             if rules:
                 defined: set[str] = set()
