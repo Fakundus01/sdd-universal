@@ -238,9 +238,7 @@ class TestCostoHandback(ChecksCase):
         self.assertWarns(self.run_checks(), "sección Costo")
 
     def test_version_mayor_posterior_si_avisa(self):
-        self.hecha("v1.0-H-1", "## Hecho
-- algo
-")
+        self.hecha("v1.0-H-1", "## Hecho\n- algo\n")
         self.assertWarns(self.run_checks(), "sección Costo")
 
     def test_tarjeta_abierta_no_avisa(self):
