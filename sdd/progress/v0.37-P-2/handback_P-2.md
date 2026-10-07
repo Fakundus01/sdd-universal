@@ -93,7 +93,8 @@ Ninguno terminó por timeout.
 - El leader completa «Costo» en los handbacks de P-1 y P-2 con los datos de los avisos de fin de corrida.
 
 ## Costo
+<!-- Leader (2026-10-07): el agente anotó «opus 5.5», pero se despachó con sonnet (MEDIO); el modelo también lo confirma el leader. Tokens = `subagent_tokens`, sin desglose. -->
 | Rol | Modelo | Vuelta | Tokens (entrada/salida) | Costo USD | Duración |
 |---|---|---|---|---|---|
-<!-- Leader (2026-10-07): el agente anotó «opus 5.5», pero se despachó con sonnet (MEDIO); el modelo también lo confirma el leader. Tokens = `subagent_tokens`, sin desglose. -->
 | implementer | sonnet (MEDIO) | 1 | 102 526 (total, sin desglose) | n/d | 11 min 9 s |
+| reviewer | opus (ALTO) | 1 | 85 406 (total, sin desglose) | n/d | 9 min 21 s |
