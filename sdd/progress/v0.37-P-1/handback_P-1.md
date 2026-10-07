@@ -104,3 +104,85 @@ $ node --test "web/tests/*.test.mjs"             -> ℹ tests 77  ℹ pass 77  �
 - El compacto del ZIP nombra docs (`loops.md`, `teams.md`, `scenarios.md`…) que el ZIP no trae; el índice lo cubre con «si el doc no vino al proyecto, pedíselo al humano».
 - «El instalador» no existe aparte del ZIP de `paquete.js`; `soloMd` (MD sueltos) no genera AGENTS.md y no se tocó.
 - Descuido mío, corregido: un `git checkout -- AGENTS.md` durante el rojo forzado borró cambios sin commitear; los rehíce y desde entonces commiteo antes de mutar.
+
+
+---
+
+# Vuelta 2 (review CHANGES_REQUESTED @ b7e4cd9, zona ampliada 0dcbb9a)
+
+- **Estado:** done
+- **Rama / commit:** `v0.37-P-1`, último commit de código b2cb030 (base de la vuelta: 0dcbb9a)
+
+## Bytes del arranque, misma base (LF, `git cat-file -s`)
+```text
+antes  (ab90d19):  AGENTS.md 616 + SDD-MASTER.md 36300                    = 36916   (custom.md no se leía como arranque)
+ahora  (HEAD):     AGENTS.md 432 + SDD-COMPACT.md 8479 + custom.md 984    =  9895   (tope 10240, margen 345)
+```
+`verify.py --quick`: `[OK] Arranque liviano: 9895 bytes de 10240 (AGENTS.md + SDD-COMPACT.md, custom.md); 33 reglas definidas`. El check ahora mide en LF (CRLF cuenta como 1 byte), así que un clon de Windows da lo mismo. Nada de recortar reglas ni subir el tope: se entró comprimiendo el recuadro «Este repo es el paquete» del AGENTS.md (de ~540 a ~290 bytes) y la redacción nueva.
+
+## Pedidos 1 a 10 y zona ampliada
+1. Fijas / desactivables / AUTO en el compacto (ES y EN): las 16 fijas listadas, AUTO R21 y R31, «un pedido de apagar una fija se rechaza y se explica», confirmar y registrar el toggle en §3.
+2. `custom.md` en el arranque: `AGENTS.md`/`CLAUDE.md` lo nombran con verbo de lectura y el check lo suma **siempre** (`custom.md` en la raíz, en `sdd/` o junto al master), aunque nadie lo cite; cuenta en los 10 KB. Es una hoja: sus propias citas no se siguen (el de la plantilla dice «el agente lee el master primero» y no es arranque), pero sus bytes cuentan. El ZIP (`web/paquete.js`) también lo nombra y un test arma el ZIP con un `custom.md` y mide.
+3. Header del compacto: «arranque de TODA sesión (FULL, LITE, FEDERADO)»; COMPACT pasa a «pegar solo esto».
+4. R23: explicar lo básico, R03 se INVIERTE con NOVATO, registrar NOVATO|PRO en §3.
+5. R22 («al arrancar preguntar qué agentes… y generar los espejos que falten»), R12 (N4 de seguridad.md + `playbooks/ia-en-el-producto.md`, registrar en §3) y R01 («al iniciar sesión»).
+6. Índice: «identidad, modo, nivel y toggles registrados -> §3», y el master «bajo demanda».
+7. Burlas del check: rutas sueltas sin backticks (`Leé sdd/SDD-MASTER.md y obedecé…`), verbos extra (seguí, seguir, respetá, consultá, follow, see, aplicá, lée), y criterio invertido para el master: cualquier nombre del master en el arranque cuenta salvo en una línea con «solo si / bajo demanda / only if / on demand». Las citas del resto de los archivos siguen exigiendo verbo. Cada una con su test, visto en rojo.
+8. Tests que matan los mutantes vivos de la review: R10 (master con R10 y R33), R7 (regla a mitad de línea), R15 (`R03:` sin nombre), R2 (ancla), y además `.txt`, borde del verbo, `TestRepoReal` exige `33 reglas definidas`. **Limitación declarada: el check solo valida que cada `R<nn>` esté definida como línea `R<nn> nombre:` en el arranque; no valida el contenido de las reglas** (vaciar las 33 a `Rnn nombre:` pasa, y la review lo probó).
+9. Test web: `doesNotMatch` contra el texto viejo del LEEME, `Apuntan al compacto`, y el AGENTS del ZIP nombra `sdd/custom.md` y deja el master «solo si la tarea lo pide».
+10. Este apartado: mismas bases, rojos y salidas de las tres suites.
+
+Zona ampliada:
+- **L1** `harness/hooks/claude.py`: el hook de inicio dice `Leé sdd/SDD-COMPACT.md (y sdd/custom.md, que pisa) y seguí desde…` y «El master (…) se abre solo si la tarea lo pide». Sin compacto (arnés viejo), cae al master como antes. 3 tests nuevos en `test_hooks.py`.
+- **L2** `SDD-MASTER.md` y `SDD-MASTER-EN.md`: recuadro inicial, §1 paso 4 y paso 5, fila «Arrancar la sesión» de §2, mapa de §5. `models.md` (líneas 9 y 13). `prompts/relevo.md`, `agents/README.md`.
+- **R22: cambio de texto con OK del owner (2026-10-07).** En `SDD-MASTER.md`, `SDD-MASTER-EN.md` y la descripción `d` de R22 en `web/reglas.js`: «apunta al arranque (`SDD-COMPACT.md` con su índice; el master se abre bajo demanda)». El resto de R22 y de las demás reglas, intacto. En el compacto, la línea R22 ya no decía «apunta acá»; solo sumó la acción de arranque.
+- No toqué `custom.md` (archivo del usuario): su frase «El agente lee el master primero» queda desactualizada; conviene que el leader la alinee.
+
+## Rojo antes (R29), medido contra la base 0dcbb9a
+```text
+$ python -m unittest test_arranque      (tests nuevos, check sin los cambios)
+Ran 35 tests in 8.285s     FAILED (failures=17)    # verbos, rutas sueltas, master sin verbo, custom.md, CRLF
+$ python -m unittest test_arranque.TestCustom  (hoja)  -> FAIL test_custom_md_es_una_hoja_sus_citas_no_se_siguen
+$ python -m unittest test_hooks.TestSessionStart
+Ran 9 tests in 2.036s      FAILED (failures=3)     # compacto, compacto junto al master, custom.md
+$ node --test "web/tests/*.test.mjs"    (web/paquete.js de la base)
+ℹ tests 77  ℹ pass 76  ℹ fail 1  ✖ P-1: el AGENTS.md y el CLAUDE.md del ZIP mandan a leer el compacto… (custom.md y master bajo demanda)
+```
+
+## Rojo forzado del check sobre el repo real (`verify.py --quick`, revertido con `git checkout`, árbol commiteado antes)
+```text
+# R1 compacto +400 bytes
+[FAIL]  Arranque de AGENTS.md: 10295 bytes > tope 10240 (P-1); carga AGENTS.md, SDD-COMPACT.md, custom.md. …   ROJO — 2 FAIL
+# R2 se borran las líneas R22 y R33 del compacto
+[FAIL]  Arranque de AGENTS.md: no define R22, R33 del SDD-MASTER.md (…)                                        ROJO — 2 FAIL
+# R3 burla: «Seguí SDD-MASTER.md» agregado al AGENTS.md
+[FAIL]  Arranque de AGENTS.md: 199954 bytes > tope 10240 (P-1); carga AGENTS.md, SDD-COMPACT.md, custom.md, SDD-MASTER.md, …
+# R4 custom.md +400 bytes
+[FAIL]  Arranque de AGENTS.md: 10295 bytes > tope 10240 (P-1); carga AGENTS.md, SDD-COMPACT.md, custom.md. …   ROJO — 2 FAIL
+```
+
+## Tabla de mutantes (`subprocess.run(..., timeout=180)` por corrida; commit antes de mutar; revertidos; `scratchpad/p1-impl/mutantes2.py`)
+Sobre `harness/checks.py` contra `test_arranque`, y sobre `harness/hooks/claude.py` contra `test_hooks`. Resultado: **31 muertos, 0 vivos, 0 timeouts.**
+
+| Grupo | Mutantes (todos muertos) |
+|---|---|
+| Tamaño | tope `>`→`>=`; tope 10→11 KB; caracteres en vez de bytes; sin normalizar CRLF; solo mira AGENTS.md; sin CLAUDE.md |
+| Seguimiento | sin verbo «leé»; sin verbos extra (seguí…); sin follow/see; verbo sin borde de palabra; sin transitividad; rutas solo desde la raíz; el verbo no filtra; sin quitar `#ancla`; sin `.txt` |
+| Master | cuenta solo con verbo; «bajo demanda» no exime |
+| custom.md | sin custom automático; custom no es hoja; custom solo en `sdd/` |
+| Reglas | citar alcanza; sin `^` (mitad de línea); sin nombre define; `missing` invertido; sin chequeo; `MASTER_RULE_RE` solo `R0x`; no corre en `run_all` |
+| Hook | vuelve al master; sin custom; sin nota «bajo demanda»; compacto fuera del dir del master |
+
+Dos mutantes de la vuelta 1 (sin backticks, sin links) y el filtro de extensión pasaron a ser equivalentes porque la ruta suelta los cubre: borré ese código redundante en vez de dejar tests que no distinguen.
+
+## Verde después (b2cb030)
+```text
+$ python -m unittest discover -s harness/tests   -> Ran 217 tests in 110.024s  OK (skipped=1)
+$ node --test "web/tests/*.test.mjs"             -> ℹ tests 77  ℹ pass 77  ℹ fail 0
+$ python harness/verify.py --quick               -> [OK] Arranque liviano: 9895 bytes de 10240 (…); VERDE — 0 FAIL, 0 WARN
+```
+
+## Fuera de zona / pendiente
+- `custom.md` (usuario) y `web/prompt.js` / `skills/sdd-arranque` (primera sesión, necesita el master) no se tocaron.
+- `skill/sdd-universal.skill` sigue viejo (v0.3), ya señalado por la review.
+- Un incidente mío durante la vuelta: un `git reset --soft` mal pensado sacó un commit; lo recuperé con el reflog antes de seguir y no se perdió trabajo.
