@@ -1,5 +1,7 @@
-# Review P-1 @ b7e4cd9ac7ca77563c78cd1d9c52bc4342fb2b51
+# Review P-1 @ 0743fb46956bcc2dee2a08fb0d981f2397046a2c
 **Veredicto:** CHANGES_REQUESTED
+
+> Vuelta 1 @ b7e4cd9 (CHANGES_REQUESTED) abajo; la vuelta 2 está al final.
 
 Reviewer independiente (tier ALTO). Base `ab90d19`, código `62c3af7`, handback en `b7e4cd9`. Trabajé solo en el worktree `sdd-universal-P-1-rev` (rama `v0.37-P-1-rev`). Python 3.14.0, Node v24.11.1. Mis scripts están en `scratchpad/p1-rev/`: `sondas.py`, `sondas2.py`, `mutantes.py`, `mutantes2.py`, `zip.mjs` y `check_zip.py`. Cada mutante corrió con `subprocess.run(..., timeout=120)` y lo revertí con `git checkout -- harness/checks.py`. `verify.py` creó `sdd/progress/v0.37-P-1-rev/current.md` de plantilla en cada corrida. Lo borré cada vez y no lo commiteé.
 
@@ -126,3 +128,100 @@ AGENTS/CLAUDE/COMPACT de ab90d19     -> [FAIL] Arranque de AGENTS.md: 193825 byt
 - **L2 (bloquea el merge de la v0.37):** el master se contradice con el arranque nuevo. El recuadro dice «1. Leé este archivo completo. Es el único que se lee entero, siempre», §1 paso 4 dice `AGENTS.md → Leé sdd/SDD-MASTER.md…`, en §2 la fila «Arrancar la sesión → SDD-MASTER.md» y en §5 «espejo → apunta acá». El **texto de R22** («un espejo de una línea que apunta acá») es texto de regla: necesita OK del owner (R25). Lo mismo en `SDD-MASTER-EN.md`, `models.md:9,13` y `web/reglas.js` (R22). Un agente que abre el master bajo demanda lee «leé este archivo completo, siempre» y lo carga entero.
 - **L3 (no bloquea):** alinear `prompts/relevo.md:51` y `agents/README.md:8`. `skill/sdd-universal.skill` está obsoleto (v0.3) desde antes.
 - **L4 (no bloquea):** el compacto del ZIP nombra docs que no vienen. El «pedíselo al humano» del índice alcanza, y el master ya tenía el mismo hueco. Si los loops (R33) son parte de PRO, conviene sumar `loops.md` al ZIP con `conAgentes`.
+
+## Vuelta 2 @ 0743fb4
+**Veredicto:** CHANGES_REQUESTED
+
+Base de la vuelta: `0dcbb9a`, con la zona ampliada por el leader. El código va de `314f567` a `b2cb030`, el handback está en `636ad7a` y `0743fb4` es la frase de `custom.md` del leader. Volví a aplicar todas las sondas y todos los mutantes de la vuelta 1 y sumé otros nuevos. Los scripts están en `scratchpad/p1-rev/`: `sondas.py`, `sondas2.py`, `sondas3.py`, `mutantes_v2.py`, `zip2.mjs`, `check_zip.py`, `custom_realista.md`, `custom_15.md` y `custom_16.md`. Cada mutante corrió con `timeout=180` y lo revertí con `git checkout`. `verify.py` volvió a crear `sdd/progress/v0.37-P-1-rev/current.md`: lo borré y no lo commiteé.
+
+### Pedidos de la vuelta 1
+| # | Estado |
+|---|---|
+| 1 fijas, desactivables y AUTO | Hecho. Las 16 fijas y las AUTO coinciden con el `— fija` del master; el pedido se confirma, se registra en §3 y se rechaza si es fija. |
+| 2 `custom.md` en el arranque | Hecho. Está en AGENTS/CLAUDE del repo y del ZIP, en el hook, en la §2 y el recuadro del master y en `relevo.md`, y el check lo suma siempre. El margen se discute abajo. |
+| 3 header | Hecho («arranque de TODA sesión»; «COMPACT(solo esto)»). |
+| 4 R23 | Hecho, pero **con una regresión**: se borró «lenguaje llano». El master pide (a) «mostrando el resultado en lenguaje llano» y (b) «cero jerga sin explicar», y «explicar lo básico» solo cubre (c). |
+| 5 R22, R12 y R01 | Hechos. |
+| 6 índice §3 | Hecho. |
+| 7 burlas de la vuelta 1 | Cerradas. Las 11 burlas de la vuelta 1 que daban OK ahora dan FAIL (`sondas.py` y `sondas2.py`, con el master y el compacto reales): verbos fuera de la lista, ruta suelta sin backticks, ruta en otra línea y autolink. |
+| 8 mutantes vivos de la vuelta 1 | Muertos: R2, R4, R6, R7, R10 y R15. |
+| 9 test del LEEME | Hecho. |
+| 10 handback en la misma base | Hecho (LF: 36916 → 9895). Yo mido 9901 con `custom.md` de `0743fb4`: 432 + 8479 + 990. |
+| L1 hook | Hecho (detalle abajo). |
+| L2 master y espejos | Hecho en el recuadro, §1.4–5, §2 y §5, en ES y EN, más `models.md`, `agents/README.md` y `relevo.md`. R22 cambió solo en la frase acordada con el owner, en ES, EN y `web/reglas.js`; el resto del texto de reglas de §4 está intacto (lo comprobé con el diff). |
+
+### El master contra el compacto otra vez
+Volví a comparar regla por regla. Quedan cubiertos los toggles (fijas, desactivables y AUTO), R01 «al iniciar sesión», R12 (IA en el producto, N4 y el playbook, registro en §3), R22 (acción de arranque) y R23 (c), (e) y el registro. Lo que todavía falta:
+- **R23 (a)/(b), regresión de esta vuelta:** «lenguaje llano / cero jerga» ya no está en ninguna parte del arranque.
+- **Recuadro del master contra el compacto:** el recuadro dice «este archivo se abre bajo demanda. **Si lo abriste, leelo completo.**» (y en EN, «If you opened it, read it in full»), mientras el índice del compacto dice «SDD-MASTER.md §4 (bajo demanda, **nunca entero**)». Un agente que abre el master para buscar una regla se encuentra con la orden de leer los 36 KB. Eso es justo lo que P-1 quiere evitar, y las dos instrucciones se contradicen.
+- Siguen menores y sin cambio: el stub de R29, la versión de R28, el umbral de R18 y la Fase 1 de R09. Para R29 y R18 el índice manda a `harness.md` y a `prompts/sdd-lite.md`.
+
+### El criterio invertido para el master (`sondas3.py`)
+| Sonda | Resultado |
+|---|---|
+| `Leé` + master + «completo antes de trabajar; no es bajo demanda.» | **OK: burla** |
+| `Leé` + master + «entero siempre, no solo si la tarea lo pide.» | **OK: burla** |
+| `Read` + master + «in full at startup (on demand? no: always).» | **OK: burla** |
+| `Leé` + master + «completo (solo si sos un agente de IA).» | **OK: burla** |
+| Exención legítima (master + «abrilo solo si la tarea lo pide.») | OK (bien) |
+| El master nombrado sin verbo y sin exención («El núcleo es …»), o con «Ver SDD-MASTER.md» en el compacto | FAIL (bien: el criterio es estricto) |
+| Otro archivo con verbo y «solo si» | FAIL (bien: la exención es solo para el master) |
+| Copia del master con otro nombre y con verbo | FAIL. Sin verbo queda bajo demanda: es coherente. |
+| `custom.md` que dice «Leé sdd/SDD-MASTER.md entero» | **OK: el custom es hoja.** Es una limitación declarada y aceptable, porque es contenido del usuario. Pero el `custom.md` que genera la web (`web/reglas-ui.js:34`) todavía dice «El agente lee el master primero». |
+| Verbo nuevo «seguir» + ruta dentro de una línea del compacto | FAIL por sobrecuenta. Hoy no pasa en el compacto real; si pasa, es del lado seguro. |
+
+**Falsos positivos en el arranque real:** no hay. El master se nombra en la línea 2 de `AGENTS.md`/`CLAUDE.md` («abrilo solo si…»), en la línea 52 del compacto ES y EN («bajo demanda / on demand») y en la línea 2 del espejo del ZIP. **Ninguna de esas líneas tiene un verbo de la lista**, así que la corrección del pedido 11 no rompe nada.
+
+### Mutantes (`mutantes_v2.py`): 23 muertos, 5 vivos, 0 timeouts
+- Muertos: todos los re-aplicados de la vuelta 1 (R1, R2, R4–R13 y R15) y N1, N2, N4, N6, N7, N9, H1, H2, H4 y H5.
+- Vivos:
+  - N3: lookbehind de `BARE_PATH_RE`. Prácticamente equivalente.
+  - N5: `master.parent` en la búsqueda de custom. Equivalente en los layouts normales.
+  - N10: `entry.resolve()`. Solo cambia el doble conteo de un ciclo.
+  - N8: «solo si» también exime a otros archivos. No hay test que lo fije; mi sonda lo cubre.
+  - H3: el hook sin buscar `custom.md` en la raíz cuando el master está en `sdd/`.
+
+  Ninguno de los cinco bloquea. Para N8 y H3 alcanza un test chico cada uno.
+
+### Hook y ZIP (punto 4)
+```text
+ZIP PRO con sdd/custom.md:    [arnés] Rama `master`. Leé sdd/SDD-COMPACT.md (y sdd/custom.md, que pisa) y seguí desde el próximo paso de sdd/progress/master/current.md. El master (sdd/SDD-MASTER.md) se abre solo si la tarea lo pide.
+sin custom.md:                [arnés] Rama `master`. Leé sdd/SDD-COMPACT.md y seguí desde … El master (sdd/SDD-MASTER.md) se abre solo si la tarea lo pide.
+sin compacto (paquete viejo): [arnés] Rama `master`. Leé sdd/SDD-MASTER.md y seguí desde …
+este repo:                    [arnés] Rama `v0.37-P-1-rev`. Leé SDD-COMPACT.md (y custom.md, que pisa) y seguí desde … El master (SDD-MASTER.md) se abre solo si la tarea lo pide.
+```
+El caso inverso, un arnés viejo con un paquete nuevo, sigue diciendo «Leé master» hasta que se actualice `harness/`. Es esperable y va al changelog.
+
+ZIP armado como en los tests, en PRO y NOVATO. AGENTS y CLAUDE mandan a leer `sdd/SDD-COMPACT.md` y `sdd/custom.md` «si existe (pisa)», y la línea siguiente deja el master «solo si la tarea lo pide». Resultado de `check_startup` sobre el proyecto descomprimido:
+```text
+custom «R01=OFF» (8 B)                                           -> OK    8736 de 10240
+custom realista: generador web + 12 overrides + 5 notas (1246 B) -> OK    9974 de 10240   (PRO y NOVATO)
+15 overrides + 7 notas (1493 B)                                  -> OK   10221 de 10240   (19 bytes de margen)
+el mismo + 1 nota de 48 B (1541 B)                               -> FAIL 10269 > 10240
+```
+
+### Margen (punto 3): un proyecto normal se queda en FAIL
+La parte del paquete en un proyecto pesa ~8,7 KB (espejo + compacto). Para `custom.md` quedan **~1,5 KB**. Solo el encabezado que genera la web ya ocupa ~330 B. Con 15 overrides y un puñado de notas, el proyecto queda en rojo, y `custom.md` está pensado para crecer: tiene una sección «Notas personales». El test web usa un custom de 35 B, así que no lo ve.
+
+**Recomendación para el owner: (a).** Que el tope de 10 KB sea del paquete (espejo + compacto + lo que manden a leer), con FAIL. `custom.md` tendría su propio tope, con WARN si pasa de 2 KB: «se paga en cada llamada; mové las notas largas a un doc bajo demanda».
+- **Por qué (a):** el paquete controla sus bytes y el proyecto controla los suyos. Un FAIL que el usuario no puede arreglar sin borrar sus propias reglas enseña a ignorar el check.
+- **Por qué no (b):** achicar el compacto solo posterga el problema, porque `custom.md` no tiene techo. Además obliga a sacar justo lo que se agregó en esta vuelta para cerrar contrato.
+- **Alternativa (c), si el owner quiere un número solo:** un tope total más alto (p. ej. 12 KB) con WARN, y el FAIL de 10 KB solo para la parte del paquete. Es más complejo y no aporta mucho sobre (a).
+
+### Verde re-ejecutado @ 0743fb4
+```text
+$ python -m unittest discover -s harness/tests   -> Ran 217 tests in 116.086s  OK (skipped=1)
+$ node --test "web/tests/*.test.mjs"             -> tests 77  pass 77  fail 0
+$ python harness/verify.py --quick               -> [OK] Arranque liviano: 9901 bytes de 10240 (AGENTS.md + SDD-COMPACT.md, custom.md); 33 reglas definidas · VERDE — 0 FAIL, 0 WARN
+```
+
+### Pedidos de la vuelta 2 (implementer, dentro de la zona ampliada)
+11. **Cerrar la burla del «bajo demanda»:** que la línea que nombra el master quede exenta solo si dice que es bajo demanda **y no tiene verbo de lectura** (`found == master and (reads or not on_demand)`). Va con un test por cada una de las cuatro sondas de arriba, visto en rojo. Ya revisé que no rompe las líneas reales.
+12. **Recuadro del master, ES y EN:** cambiar «Si lo abriste, leelo completo» / «If you opened it, read it in full» por «leé solo la sección que la tarea pide (§4 la regla, §6 el start-prompt…)», para que coincida con el «nunca entero» del índice.
+13. **R23 en el compacto, ES y EN:** devolver «lenguaje llano, cero jerga sin explicar». Son ~30 bytes. Si el margen no da, esperar la decisión del owner sobre el punto 3 antes de recortar otra cosa.
+14. Opcional: tests para N8 (otro archivo con verbo y «solo si» cuenta) y H3 (el hook encuentra `custom.md` en la raíz cuando el master está en `sdd/`).
+
+### Para el leader
+- **Decidir el margen con el owner** (recomiendo la opción (a), arriba). Si se elige (a), es un cambio del check y entra en esta misma tarjeta.
+- `web/reglas-ui.js:34` (fuera de la zona): el `custom.md` que genera la web dice «El agente lee el master primero y después este archivo». Hay que alinearlo con la frase de `0743fb4`.
+- Sin cambio desde la vuelta 1: `skill/sdd-universal.skill` está obsoleto (v0.3) y el ZIP no trae `loops.md` (L4).
