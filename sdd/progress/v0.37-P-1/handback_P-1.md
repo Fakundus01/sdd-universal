@@ -250,3 +250,14 @@ $ python harness/verify.py --quick               -> VERDE — 0 FAIL, 0 WARN
 ## Pendiente / notas
 - Sin cambios fuera de zona. `skill/sdd-universal.skill` (v0.3) y `loops.md` fuera del ZIP siguen como en la review.
 - El check sigue sin validar el contenido de las reglas (solo que cada `R<nn>` esté definida).
+
+## Costo
+<!-- Completado por el leader (2026-10-07) con los avisos de fin de corrida de Claude Code. Tokens = `subagent_tokens` que informa la herramienta, sin desglose entrada/salida; el costo en USD no lo informa. -->
+| Rol | Modelo | Vuelta | Tokens (entrada/salida) | Costo USD | Duración |
+|---|---|---|---|---|---|
+| implementer | sonnet (MEDIO) | 1 | 137 900 (total, sin desglose) | n/d | 12 min |
+| reviewer | opus (ALTO) | 1 | 136 357 (total, sin desglose) | n/d | 9 min 28 s |
+| implementer | sonnet (MEDIO) | 2 | 233 765 (total, sin desglose) | n/d | 35 min 10 s |
+| reviewer | opus (ALTO) | 2 | 209 645 (total, sin desglose) | n/d | 12 min 8 s |
+| implementer | sonnet (MEDIO) | 3 | 266 886 (total, sin desglose) | n/d | 25 min 59 s |
+| reviewer | opus (ALTO) | 3 | 252 025 (total, sin desglose) | n/d | 13 min 29 s |
