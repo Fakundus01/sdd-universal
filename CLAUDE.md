@@ -1,12 +1,4 @@
-Leé [`SDD-COMPACT.md`](SDD-COMPACT.md) (las reglas R01–R33 y el índice de qué abrir según la tarea) y obedecé sus reglas.
-El texto completo de una regla vive en `SDD-MASTER.md`: abrilo solo si la tarea lo pide, no de arranque.
+Leé [`SDD-COMPACT.md`](SDD-COMPACT.md) (reglas R01–R33 + índice de qué abrir) y `custom.md` si existe (pisa) y obedecé sus reglas.
+`SDD-MASTER.md` (texto completo de cada regla): abrilo solo si la tarea lo pide.
 
-> **Este repo es el paquete SDD Universal**, así que la estructura es distinta a la
-> de un proyecto normal:
->
-> - El **núcleo** vive en la raíz (`SDD-MASTER.md`, `SDD-COMPACT.md`, `scenarios.md`…).
->   En un proyecto normal la ruta sería `<proyecto>/sdd/SDD-MASTER.md`.
-> - `sdd/` es la especificación **de la web del catálogo** (`web/`), que es una
->   aplicación de verdad y por eso tiene su propio SDD.
-> - `examples/turnos/sdd/` es un ejemplo didáctico: no lo edites como si fuera un
->   proyecto activo.
+> **Este repo es el paquete SDD Universal:** el núcleo vive en la raíz (en un proyecto: `<proyecto>/sdd/`); `sdd/` es el SDD de la web del catálogo (`web/`); `examples/turnos/sdd/` es didáctico, no lo edites.

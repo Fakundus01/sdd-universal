@@ -171,16 +171,21 @@ test("P-1: el AGENTS.md y el CLAUDE.md del ZIP mandan a leer el compacto, no el 
       const leer_ = texto.split("\n").filter(l => l.startsWith("Leé ")).join("\n");
       assert.match(leer_, /sdd\/SDD-COMPACT\.md/, `${nivel} ${espejo}: no manda a leer el compacto`);
       assert.doesNotMatch(leer_, /SDD-MASTER/, `${nivel} ${espejo}: manda a leer el master entero`);
+      assert.match(leer_, /sdd\/custom\.md/, `${nivel} ${espejo}: no manda a leer el custom.md`);
+      assert.match(texto, /SDD-MASTER\.md`: abrilo solo si la tarea lo pide/, `${nivel} ${espejo}: el master no queda bajo demanda`);
     }
   }
 });
 
 test("P-1: el arranque del ZIP (espejo + compacto) pesa ≤ 10 KB y define todas las reglas del master", async () => {
-  const {zip} = await armar({nivel: "PRO"});
+  const custom = "PERFIL=ESTRICTO\nMODO=FULL\nR01=OFF\n";
+  const {zip} = await armar({nivel: "PRO", custom});
   const compacto = zip.get("prueba/sdd/SDD-COMPACT.md").datos;
+  // en LF, como lo mide el arnés: un clon de Windows con autocrlf no pesa más
+  const bytesLF = b => Buffer.byteLength(lf(b.toString("utf8")));
   for (const espejo of ["AGENTS.md", "CLAUDE.md"]){
-    const bytes = zip.get("prueba/" + espejo).datos.length + compacto.length;
-    assert.ok(bytes <= TOPE_ARRANQUE, `${espejo} + compacto = ${bytes} bytes > ${TOPE_ARRANQUE}`);
+    const bytes = bytesLF(zip.get("prueba/" + espejo).datos) + bytesLF(compacto) + bytesLF(zip.get("prueba/sdd/custom.md").datos);
+    assert.ok(bytes <= TOPE_ARRANQUE, `${espejo} + compacto + custom.md = ${bytes} bytes > ${TOPE_ARRANQUE}`);
   }
   const lineas = compacto.toString("utf8");
   const reglas = reglasDelMaster();
@@ -193,4 +198,6 @@ test("P-1: el LEEME del ZIP lista el compacto y no dice que AGENTS.md apunta al 
   const {zip} = await armar({nivel: "PRO"});
   const leeme = zip.get("prueba/LEEME.md").datos.toString("utf8");
   assert.match(leeme, /`sdd\/SDD-COMPACT\.md`/);
+  assert.doesNotMatch(leeme, /Una línea para que cualquier agente encuentre el SDD solo \|/, "el LEEME sigue diciendo que AGENTS.md es una línea al master");
+  assert.match(leeme, /Apuntan al compacto/);
 });

@@ -38,7 +38,13 @@ STARTUP_MAX_BYTES = 10 * 1024
 STARTUP_ENTRIES = ("AGENTS.md", "CLAUDE.md")
 # Una línea del arranque que manda a leer algo: con uno de estos verbos, cada archivo que cite (link o `ruta`) entra
 # al arranque. Los punteros «abrí X cuando la tarea lo pida» no llevan el verbo y quedan bajo demanda.
-READ_VERB_RE = re.compile(r"(?<!\w)(?:leé|lee|leelo|leelos|leer|read|cargá|cargar|load|obedecé|obey)(?!\w)", re.I)
+READ_VERB_RE = re.compile(r"(?<!\w)(?:leé|lée|lee|leelo|leelos|leer|read|cargá|cargar|load|obedecé|obey|seguí|seguir|"
+                          r"follow|respetá|consultá|aplicá|see)(?!\w)", re.I)
+# Ruta suelta (sin link ni backticks): `Leé sdd/SDD-MASTER.md y obedecé…` es el formato literal del espejo del master.
+BARE_PATH_RE = re.compile(r"(?<![\w./-])[\w./-]+\.(?:md|txt)(?:#[\w-]*)?(?![\w])", re.I)
+# El master se puede nombrar en el arranque solo si la línea dice que se abre bajo demanda; si no, cuenta entero.
+ON_DEMAND_RE = re.compile(r"solo si|bajo demanda|only if|on demand", re.I)
+CUSTOM_NAME = "custom.md"
 RULE_DEF_RE = re.compile(r"^\*{0,2}R(\d\d)[ \t]+(?:·[ \t]+)?[^\s:]+[ \t]*[:·—*]", re.M)
 MASTER_RULE_RE = re.compile(r"^\*\*R(\d\d)\b", re.M)
 STARTUP_EXTS = (".md", ".txt")
@@ -209,7 +215,7 @@ class HarnessChecks:
         problems = False
         for entry in entries:
             files = self._startup_files(entry)
-            size = sum(f.stat().st_size for f in files)
+            size = sum(len(f.read_bytes().replace(b"\r\n", b"\n")) for f in files)  # LF: un clon con autocrlf no pesa más
             if size > worst[0]:
                 worst = (size, entry.name, files)
             if size > STARTUP_MAX_BYTES:
@@ -232,25 +238,37 @@ class HarnessChecks:
                            + (f"; {len(rules)} reglas definidas" if rules else ""))
 
     def _startup_files(self, entry: Path) -> list[Path]:
-        """`entry` y los archivos a los que manda a leer, en orden y sin repetir."""
-        seen, queue = [], [entry]
+        """`entry`, los archivos a los que manda a leer (en orden, sin repetir) y el `custom.md` del proyecto, que
+        pisa al compacto: cuenta aunque el arranque no lo cite. El master cuenta si el arranque lo nombra en una
+        línea que no dice «solo si la tarea lo pide»; cualquier otro archivo, si lo cita una línea con verbo de lectura."""
+        master = (self.root / self.config.master).resolve()
+        seen, queue = [], [entry.resolve()]
         while queue:
             current = queue.pop(0)
             if current in seen:
                 continue
             seen.append(current)
+            if current.name == CUSTOM_NAME:
+                continue  # hoja: overrides del usuario; cuenta en bytes, pero lo que nombra no es arranque
             for line in current.read_text(encoding="utf-8-sig", errors="replace").splitlines():
-                if not READ_VERB_RE.search(line):
-                    continue
-                for target in [*LINK_RE.findall(line), *TICK_RE.findall(line)]:
+                reads = bool(READ_VERB_RE.search(line))
+                on_demand = bool(ON_DEMAND_RE.search(line))
+                cited = [*LINK_RE.findall(line), *TICK_RE.findall(line), *(m.group(0) for m in BARE_PATH_RE.finditer(line))]
+                for target in cited:
                     target = target.split("#", 1)[0]
                     if not target.lower().endswith(STARTUP_EXTS) or SKIP_CHARS & set(target):
                         continue
                     for base in (current.parent, self.root):
                         found = (base / target)
                         if found.is_file():
-                            queue.append(found.resolve())
+                            found = found.resolve()
+                            if (found == master and not on_demand) or (reads and found != master):
+                                queue.append(found)
                             break
+        for folder in {self.root, self.root / "sdd", master.parent}:
+            custom = (folder / CUSTOM_NAME).resolve()
+            if custom.is_file() and custom not in seen:
+                seen.append(custom)
         return seen
 
     # ── tarjetas (la cola) ───────────────────────────────────────────────────

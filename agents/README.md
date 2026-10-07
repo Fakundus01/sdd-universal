@@ -5,7 +5,7 @@ Un archivo por rol de [`orchestration.md`](../orchestration.md) §2. El cuerpo e
 | Herramienta | Cómo se usan |
 |---|---|
 | Claude Code | Copiar todos menos [`leader.md`](leader.md) a `.claude/agents/`. El `leader` es la sesión principal: su archivo se lee al arrancar (`Leé agents/leader.md`). |
-| Codex, Cursor, Copilot, Gemini CLI | Una sesión por rol: primer mensaje = `Leé sdd/SDD-MASTER.md y agents/<rol>.md. Tu tarjeta: sdd/cards/<ID>.md`. |
+| Codex, Cursor, Copilot, Gemini CLI | Una sesión por rol: primer mensaje = `Leé sdd/SDD-COMPACT.md y agents/<rol>.md. Tu tarjeta: sdd/cards/<ID>.md`. |
 | Solo-chat | Pegar [`SDD-COMPACT.md`](../SDD-COMPACT.md) + el cuerpo del rol + la tarjeta. |
 
 El `model:` del frontmatter es el default de Claude para el tier de [`models.md`](../models.md) §4 (ALTO = `opus`, MEDIO = `sonnet`, ECONÓMICO = `haiku`); el leader puede pedir otro por tarjeta. Si los nombres de modelo cambian, R19 los actualiza acá.

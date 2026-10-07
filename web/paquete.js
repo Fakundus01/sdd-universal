@@ -20,7 +20,7 @@ const Paquete = (() => {
   /* Arranque liviano (P-1): el agente carga el compacto (reglas + índice), no el master entero (~36 KB por
      sesión). El master se abre solo bajo demanda, por eso su línea no lleva verbo de lectura. */
   const ESPEJO = (compacto, master) =>
-    `Leé \`${compacto}\` (las reglas y el índice de qué abrir según la tarea) y obedecé sus reglas.\n` +
+    `Leé \`${compacto}\` (las reglas y el índice de qué abrir según la tarea) y \`${compacto.replace("SDD-COMPACT", "custom")}\` si existe (pisa) y obedecé sus reglas.\n` +
     `El texto completo de una regla vive en \`${master}\`: abrilo solo si la tarea lo pide, no de arranque.\n`;
 
   /* Skills para Claude Code: atajos /sdd-* que envuelven los prompts del

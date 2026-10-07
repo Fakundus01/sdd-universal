@@ -4,7 +4,7 @@
 **English mirror.** The canonical source of this package is the Spanish `SDD-MASTER.md`; this mirror tracks it release by release. File names and references are identical in both languages, so everything below works unchanged.
 
 > **If you are an AI agent (Claude, Cursor, Copilot, Gemini or other):**
-> 1. Read this file in full. It is the only file that is always read whole.
+> 1. Your daily startup is `SDD-COMPACT-EN.md` (rules + index, ≤ 10 KB) and `custom.md` if it exists; this file is opened on demand. If you opened it, read it in full.
 > 2. Then read **only** the files the Reading Protocol (§2) lists for your task.
 > 3. Never read all of `sdd/` at once: the goal is to spend as few tokens as possible.
 > 4. When a session starts, say that rule R01 (commits require human OK) is active and can be turned off.
@@ -27,9 +27,9 @@ No technical change happens without being documented and approved in the `sdd/` 
 2. Paste the **START-PROMPT** (§6) as the first prompt of the chat, filling in the blanks.
 3. Work the rest of the session with the **[LOOP-PROMPT](prompts/loop-prompt.md)** and its **HANDBACK** (§7).
 4. Create two one-line mirrors at the repo root so any agent finds this on its own:
-   - `AGENTS.md` → `Read sdd/SDD-MASTER.md and obey its rules.`
-   - `CLAUDE.md` → `Read sdd/SDD-MASTER.md and obey its rules.`
-5. To adapt it to your taste **without editing the universal core**: write your overrides in `sdd/custom.md` (`R01=OFF`, `R05.max=500`, your own rules `+R21-…`). The agent reads the master first and then `custom.md`, which overrides whatever it needs to. That way you can update the core when a new version ships without losing your customization.
+   - `AGENTS.md` → `Read sdd/SDD-COMPACT.md and obey its rules.` (plus: "`sdd/SDD-MASTER.md`: open it only if the task asks")
+   - `CLAUDE.md` → same
+5. To adapt it to your taste **without editing the universal core**: write your overrides in `sdd/custom.md` (`R01=OFF`, `R05.max=500`, your own rules `+R21-…`). The agent reads the compact (or this master, if it opens it) and then `custom.md`, which overrides whatever it needs to. That way you can update the core when a new version ships without losing your customization.
 6. If you work with a chat-only agent (no file access), paste [`SDD-COMPACT-EN.md`](SDD-COMPACT-EN.md) in the first message instead of this document.
 
 ---
@@ -38,7 +38,7 @@ No technical change happens without being documented and approved in the `sdd/` 
 
 | If your task is… | Read only… |
 |---|---|
-| Starting the session | `SDD-MASTER.md` (this file) |
+| Starting the session | [`SDD-COMPACT-EN.md`](SDD-COMPACT-EN.md) + `custom.md` if it exists (this master, on demand only) |
 | Planning a feature | `spec.md` · `features/features-<user>.md` · `status.md` (+ if there is a Cerebro: search for similar work first, [`playbooks/obsidian-cerebro.md`](playbooks/obsidian-cerebro.md) §C) |
 | Implementing code | `design.md` · `contracts/contracts-<user>.md` · `testing.md` |
 | Commit / push / versioning | `changelog/changelog-<user>.md` (+ R01, R13) |
@@ -155,7 +155,7 @@ The SDD is versioned with semver and grows only from real cases: every new rule 
 With more than ~4 people or differentiated roles (PO, BA, SM, QA, devs by seniority, RPA, infra…): apply the [`teams.md`](teams.md) layer. OKs specialize by role (spec→PO, design→Tech Lead, tests→QA, deploy→Infra) and the agent routes each OK to the right person. Tiered autonomy: interns/juniors always STRICT and literal; seniors may use TRUST only on their branch. Per-role subagents with fixed slice and tier.
 
 **R22 · MULTI-AGENT — [ON] — can be turned off**
-The core is one; each AI tool (Claude, Codex/ChatGPT, Cursor, Copilot, Gemini, etc.) gets a one-line mirror pointing here, per the [`models.md`](models.md) table. At kickoff, ask which agents the team uses and generate the missing mirrors. For chat-only agents: `SDD-COMPACT-EN.md` pasted. Brand-agnostic unified model tiers (HIGH/MID/CHEAP) so R03 and R12 work with any provider.
+The core is one; each AI tool (Claude, Codex/ChatGPT, Cursor, Copilot, Gemini, etc.) gets a one-line mirror pointing to the startup (`SDD-COMPACT.md` with its index; the master is opened on demand), per the [`models.md`](models.md) table. At kickoff, ask which agents the team uses and generate the missing mirrors. For chat-only agents: `SDD-COMPACT-EN.md` pasted. Brand-agnostic unified model tiers (HIGH/MID/CHEAP) so R03 and R12 work with any provider.
 
 **R23 · USER-LEVEL — [ON] — can be turned off**
 At kickoff ask: "Do you have coding experience?" and record **NOVICE** or **PRO** in §3. With NOVICE: (a) **think-three-times** before any action with consequences (installing, deleting, deploying, spending money): plan → self-critique hunting for what could go wrong → corrected plan, and only then execute, showing the result in plain language; (b) zero unexplained jargon, one step at a time, waiting for confirmation that the human sees the same thing; (c) never assume knowledge: explain what the terminal is, npm, etc., or route to the playbook with its `[NOVICE]` notes; (d) reinforced testing (R07), because the human can't review the code; (e) R03 inverts: the agent takes more technical decisions on its own, but explains each in one line.
@@ -207,16 +207,16 @@ Before letting the agent iterate on its own, write `sdd/loops/<name>.md` with **
 
 ```
 repo/
-├── AGENTS.md                      # 1-line mirror → points here
+├── AGENTS.md                      # 1-line mirror → points to the compact
 ├── .gitattributes                 # merge=union for changelogs: N agents without conflicts (S27)
-├── CLAUDE.md                      # 1-line mirror → points here
+├── CLAUDE.md                      # 1-line mirror → points to the compact
 ├── harness.config.json            # project commands: test, lint, e2e, read-only prod (R30)
 ├── harness/                       # verify.py by levels + hooks + pre-commit (from the scaffold)
 ├── README.md                      # install & getting started
 ├── src/ …                         # code
 └── sdd/
-    ├── SDD-MASTER.md              # THIS file (conductor, always read)
-    ├── SDD-COMPACT.md             # keyword cheat-sheet (chat-only / subagents)
+    ├── SDD-MASTER.md              # THIS file (full text of the rules, on demand)
+    ├── SDD-COMPACT.md             # startup of every session: rules + index (also chat-only / subagents)
     ├── GUIDE.md                   # usage guide for humans (quick start, cadences)
     ├── custom.md                  # personal overrides (overrides rules without touching the core)
     ├── scenarios.md               # matrix: where it works, where it doesn't, adaptations (R20)
