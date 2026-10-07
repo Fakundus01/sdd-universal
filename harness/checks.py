@@ -33,6 +33,15 @@ LIBRARY_NAMES = {f"{n}.js" for n in (
     "pixi", "phaser", "babylon", "matter", "tone", "paper", "fabric", "leaflet", "highcharts", "plotly", "video",
     "howler", "lodash", "jquery", "require", "handlebars", "mustache", "mithril", "polymer", "htmx", "deno",
     "transformers", "pdf", "tensorflow", "highlight", "swiper", "brain", "ml5", "onnxruntime-web", "mermaid")}
+# Arranque liviano (P-1): lo que un agente carga siempre se paga en cada llamada. Tope fijado por el owner (X = 10 KB).
+STARTUP_MAX_BYTES = 10 * 1024
+STARTUP_ENTRIES = ("AGENTS.md", "CLAUDE.md")
+# Una línea del arranque que manda a leer algo: con uno de estos verbos, cada archivo que cite (link o `ruta`) entra
+# al arranque. Los punteros «abrí X cuando la tarea lo pida» no llevan el verbo y quedan bajo demanda.
+READ_VERB_RE = re.compile(r"(?<!\w)(?:leé|lee|leelo|leelos|leer|read|cargá|cargar|load|obedecé|obey)(?!\w)", re.I)
+RULE_DEF_RE = re.compile(r"^\*{0,2}R(\d\d)[ \t]+(?:·[ \t]+)?[^\s:]+[ \t]*[:·—*]", re.M)
+MASTER_RULE_RE = re.compile(r"^\*\*R(\d\d)\b", re.M)
+STARTUP_EXTS = (".md", ".txt")
 WALK_SKIP = {".git", "node_modules", "__pycache__", ".venv", "venv", ".next", ".nuxt", "dist", "build"}
 
 
@@ -155,6 +164,7 @@ class HarnessChecks:
         self.check_cards()
         self.check_status_coherence()
         self.check_cited_paths()
+        self.check_startup()
         self.check_handbacks()
         self.check_e2e_registered()
 
@@ -180,6 +190,68 @@ class HarnessChecks:
     def check_config(self) -> None:
         for key in self.config.unknown_keys:
             self.report.warn(f"harness.config.json: clave desconocida '{key}' (¿un typo?)")
+
+    # ── arranque liviano (P-1) ───────────────────────────────────────────────
+    def check_startup(self) -> None:
+        """El arranque es AGENTS.md / CLAUDE.md más, transitivamente, todo archivo que una línea con verbo de lectura
+        («Leé …») les cite. Mover texto a un archivo que el arranque manda a leer no lo saca del conteo; lo que se
+        abre «solo si la tarea lo pide» (sin verbo) sí queda afuera. Pesa en bytes. Además, cada regla `R<nn>` del
+        master tiene que estar definida (línea `R<nn> nombre:`) en el arranque: citarla en el índice no alcanza."""
+        entries = [self.root / n for n in STARTUP_ENTRIES if (self.root / n).is_file()]
+        if not entries:
+            self.report.ok("Arranque: sin AGENTS.md/CLAUDE.md, nada que medir")
+            return
+        master = self.root / self.config.master
+        rules = set()
+        if master.is_file():
+            rules = set(MASTER_RULE_RE.findall(master.read_text(encoding="utf-8-sig", errors="replace")))
+        worst = (0, "", [])
+        problems = False
+        for entry in entries:
+            files = self._startup_files(entry)
+            size = sum(f.stat().st_size for f in files)
+            if size > worst[0]:
+                worst = (size, entry.name, files)
+            if size > STARTUP_MAX_BYTES:
+                names = ", ".join(self._rel(f) for f in files)
+                self.report.fail(f"Arranque de {entry.name}: {size} bytes > tope {STARTUP_MAX_BYTES} (P-1); "
+                                 f"carga {names}. Lo largo va bajo demanda (índice del compacto), sin verbo «leé»")
+                problems = True
+            if rules:
+                defined: set[str] = set()
+                for f in files:
+                    defined.update(RULE_DEF_RE.findall(f.read_text(encoding="utf-8-sig", errors="replace")))
+                missing = sorted(rules - defined)
+                if missing:
+                    self.report.fail(f"Arranque de {entry.name}: no define {', '.join('R' + m for m in missing)} del "
+                                     f"{self.config.master} (ninguna regla puede quedar fuera del compacto ni del índice)")
+                    problems = True
+        if not problems:
+            self.report.ok(f"Arranque liviano: {worst[0]} bytes de {STARTUP_MAX_BYTES} ({worst[1]} + "
+                           f"{', '.join(self._rel(f) for f in worst[2][1:]) or 'nada más'})"
+                           + (f"; {len(rules)} reglas definidas" if rules else ""))
+
+    def _startup_files(self, entry: Path) -> list[Path]:
+        """`entry` y los archivos a los que manda a leer, en orden y sin repetir."""
+        seen, queue = [], [entry]
+        while queue:
+            current = queue.pop(0)
+            if current in seen:
+                continue
+            seen.append(current)
+            for line in current.read_text(encoding="utf-8-sig", errors="replace").splitlines():
+                if not READ_VERB_RE.search(line):
+                    continue
+                for target in [*LINK_RE.findall(line), *TICK_RE.findall(line)]:
+                    target = target.split("#", 1)[0]
+                    if not target.lower().endswith(STARTUP_EXTS) or SKIP_CHARS & set(target):
+                        continue
+                    for base in (current.parent, self.root):
+                        found = (base / target)
+                        if found.is_file():
+                            queue.append(found.resolve())
+                            break
+        return seen
 
     # ── tarjetas (la cola) ───────────────────────────────────────────────────
     def load_cards(self) -> None:

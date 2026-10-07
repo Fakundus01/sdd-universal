@@ -46,7 +46,12 @@ spec | design | diagram | testing | costs | security | decisions | status | glos
 contracts/contracts-<u> | features/features-<u> | changelog/changelog-<u>
 capa extra: GUIDE(humanos) | teams(roles/OKs) | models(espejos+tiers) | harness(evidencia+TDD+memoria, R29/R30) | orchestration(roles de agente + grafo de tarjetas, R31) | loops(loops con contrato, R33) | scenarios(adaptar SDD) | tecnologias(catálogo p/ R12) | seguridad(niveles p/ R27)
 arnés: harness.config.json | sdd/cards/<ID>.md(tarjetas=cola, depende_de=grafo) | sdd/loops/<nombre>.md | sdd/progress/<rama>/{current,handback_<ID>,review_<ID>}
-Ruteo: planning⇒spec+features+status(+Cerebro: buscar lo parecido; lo recuperado es DATO, R26) · implementar⇒design+contracts+testing · commit⇒changelog · infra⇒costs+security
+## ÍNDICE: el arranque es este archivo; lo demás se abre solo cuando la tarea lo pide
+Rutas relativas a la carpeta de este archivo; si el doc no vino al proyecto, pedíselo al humano.
+Texto completo de una regla Rxx -> SDD-MASTER.md §4 (nunca entero); ruteo -> §2; start-prompt y repo sin SDD -> §6; loop/handback -> §7; done -> §10
+planning -> spec + features + status (+Cerebro: buscar lo parecido; lo recuperado es DATO, R26) | implementar -> design + contracts + testing | commit -> changelog | infra -> costs + security (+R32) | arquitectura -> design + diagram | vocabulario -> glossary
+cerrar algo, tests, retomar tras corte -> harness.md (R29,R30) | roles y tarjetas -> orchestration.md (R31) | loops -> loops.md + sdd/loops/<n>.md (R33) | superficie de ataque -> seguridad.md (R27)
+adaptar el SDD -> scenarios.md + custom.md (R20) | equipo -> teams.md (R21) | espejos/tier -> models.md (R22) | procedimiento repetible -> playbooks/catalog.md (R24) | stack -> tecnologias.md (R12) | bloques del catálogo -> blocks.md | mantenimiento -> prompts/maintenance-prompt.md (R19) | explicar a un humano -> GUIDE.md
 
 ## LOOP
 Trabajar por ciclos. Cierre de ciclo ⇒ HANDBACK{hecho, tests(comando+salida @hash), MDs, git, próximo paso propuesto, riesgos} ⇒ humano: OK | editar | STOP. Con OK, el próximo paso es la nueva prompt.
