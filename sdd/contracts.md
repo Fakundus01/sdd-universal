@@ -1,6 +1,6 @@
 # contracts.md · SDD Hub
 
-**Versión:** 0.10 · La web no expone API propia. Sus contratos son dos: la **forma de los archivos de datos** que consume, y las **llamadas a Supabase** que hace.
+**Versión:** 0.11 · La web no expone API propia salvo la fusión con IA (ADR-016, §8). Sus contratos son: la **forma de los archivos de datos** que consume, las **llamadas a Supabase** que hace, y el endpoint de la fusión.
 
 ---
 
@@ -158,4 +158,34 @@ Ninguno admite espacios, `@` ni saltos de línea. **Lo que no garantiza:** un sl
 **`volver`** (`Rutas.volverSeguro`): se acepta solo un string que empiece con `/web/`, sin `//` al principio, sin `\` ni caracteres de control, que resuelto contra el origen siga en el mismo origen y bajo `/web/`, y que no sea `/web/login`. Cualquier otra cosa → `/web/`.
 
 **Métricas:** el detalle de una visita sigue siendo `#/<vista>|clase` al cambiar de vista (es una etiqueta, no una URL: así no cambia el formato de `eventos` ni los outcomes) y `<pathname>|clase` al cargar una página (`/web/combinador|movil`), que ya entraba en el patrón de §6.
+
+---
+
+## 8 · `POST /api/fusionar` — la fusión con IA (ADR-016)
+
+Único endpoint propio de la web. Lo llama `combinador.js` en vez de armar el ZIP solo con concatenación, cuando la persona eligió usar la fusión con IA.
+
+**Pedido:**
+```js
+{ tipo, stack, tecnologias, playbooks, custom,   // lo mismo que ya arma Prompt.armar
+  descripcion }                                   // texto libre de la persona, nuevo
+```
+
+**Respuesta — `200`:**
+```js
+{ archivos: [{ nombre, contenido }],   // mismo formato que ya usa paquete.js para el ZIP
+  fusion: "ia" }                       // o "simulada" si no hay ANTHROPIC_API_KEY
+```
+
+**Respuestas de error, nunca un 500 genérico:**
+
+| Código | Cuándo | Cuerpo |
+|---|---|---|
+| `400` | `tipo`/`stack` no están en el catálogo, o `descripcion` pasa de un largo máximo (a definir en `IA-1`, pensado para que no sea una forma barata de inflar el costo del prompt) | `{ error: "..." }` |
+| `429` | Rate limit por IP, o el tope de gasto del día no alcanza para esta llamada | `{ error: "...", reintentar_en }` |
+| `200` con `fusion: "simulada"` | Sin `ANTHROPIC_API_KEY` en el entorno, o el modelo falló | nunca un error al usuario: cae a la fusión v1 (concatenación), igual que hoy sin esta feature |
+
+**Lo que nunca viaja en la respuesta:** la clave, el prompt completo mandado al modelo, ni nada de `costs.md`/`security.md` — son detalles del servidor, no del contrato con el front.
+
+**Degradación:** `combinador.js` sigue pudiendo armar el ZIP sin llamar nunca a este endpoint (botón aparte, v1 intacta) — el contrato de `paquete.js` (§pendiente de este archivo) no cambia.
 

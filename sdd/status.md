@@ -1,6 +1,6 @@
 # status.md · SDD Hub
 
-**Versión:** 0.36.0 · **Última actualización:** 2026-10-06 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
+**Versión:** 0.37.0 · **Última actualización:** 2026-10-09 · Estados: Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%
 
 ## Features
 
@@ -35,9 +35,10 @@
 
 | F26 | R33 y grafo de tarjetas en la web y el arnés (loop `dev-de-10`) | Complete | 100% | 0.35: R33 en el configurador; `verify.py` revisa `depende_de` y ciclos; espejos EN al día; el paquete usa su propio arnés (clave `master`); smoke de la interfaz en CI (D2) |
 
-| F27 | Cerebro entre proyectos y grafo del paquete (loop `obsidian-cerebro`) | In Progress | 80% | 0.36: `cerebro/` (búsqueda híbrida local y OpenAI, MCP, instalador, CI), instalado en la máquina del owner; MD del núcleo enlazados y el ZIP reescribe links. Falta: S42 por síntoma y enlazar el resto del repo |
+| F27 | Cerebro entre proyectos y grafo del paquete (loop `obsidian-cerebro`) | In Progress | 80% | 0.36: `cerebro/` (búsqueda híbrida local y OpenAI, MCP, instalador, CI), instalado en la máquina del owner; MD del núcleo enlazados y el ZIP reescribe links. 0.37: grafo de contexto (`graph/_meta/sync_graph.py`, R30-style con hash + `--accept`, en el pre-commit) con 12 nodos — todo el repo enlazado (núcleo, `harness/`, `sdd/`, `skills/`, `imports/`, `agents/`, `prompts/`, `playbooks/`, `web/`, `dev/`, `supabase/`, `cerebro/`). Falta: S42 por síntoma (aparte, no es de este grafo) |
+| F28 | Fusión con IA del combinador (v2 de `blocks.md`, ADR-016) | Planned | 40% | 0.37: función serverless con Claude arma un `sdd/` a medida; reactiva Vercel/Supabase (revierte parcialmente ADR-012). Tres controles antes de código: tope de gasto como reserva, rate limit por IP, alerta (`costs.md`). N4 de `seguridad.md` (`security.md` §3c). Sin promoción automática al catálogo (fuera de alcance, `spec.md` §3). Diseño del endpoint en `design.md` §10 y `contracts.md` §8. Tarjetas: `IA-1` (endpoint + reserva + rate limit), `IA-2`/`IA-3` (UI y tests, en paralelo, dependen de `IA-1`). Próximo: OK del owner para despachar |
 
-**Avance total: 25 / 26 features vigentes completas** (F19 retirada; F27 en curso) (F19 retirada)
+**Avance total: 25 / 27 features vigentes completas** (F19 retirada; F27 y F28 en curso)
 
 ## Bloqueos
 
@@ -60,8 +61,7 @@ El 2026-10-03 todas estaban vencidas. Con el OK del owner («hacé las deudas qu
 
 ## Próximo ciclo
 
-0. **Owner:** OK para el push de `v0.35-loops-grafo` y el merge a `main` (R01, R32). El loop `dev-de-10` está cumplido (`sdd/loops/dev-de-10.md`).
-0b. v0.36 cortada (loop `obsidian-cerebro`, 10/10 vueltas). **Owner:** OK para el merge de `v0.36-obsidian-cerebro` a `main` (el MCP del Cerebro apunta a este checkout). Deudas de F27: S42 por síntoma, enlazar `sdd/`, `skills/`, `imports/`; re-importar el Cerebro sin links relativos; `cerebro/tests` en `verify.py --full`.
+~~0. v0.35 (`loops-grafo`) y 0b. v0.36 (`obsidian-cerebro`)~~ — mergeados a `main` con OK del owner (PR #3, 2026-10-06). Deuda de F27 que quedaba («enlazar `sdd/`, `skills/`, `imports/`») cerrada en 0.37 vía `graph/` (ver F27 arriba); sigue abierto solo S42 (aparte) y `cerebro/tests` en `verify.py --full`.
 1. Ejemplos de punta a punta con el SDD (e-commerce, landing, ticketera con IA, chatbot), cada uno en su repo: lo que falle ahí entra a `scenarios.md` (R20).
 2. **Owner:** hacer O3 (3 personas ajenas, 2 minutos cada una) y anotar el resultado acá; decidir D6 (dominio para el SMTP), que pesa todavía menos en local, donde no hay mails.
 3. Cuando la web salga a otros: reactivar Supabase, correr los dos `.sql` y repetir la prueba de dos cuentas (ver Bloqueos).

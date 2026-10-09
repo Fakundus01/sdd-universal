@@ -1,6 +1,6 @@
 # spec.md · SDD Hub (la web del catálogo)
 
-**Versión:** 0.10 · **Última actualización:** 2026-10-05 · **Estado:** vigente
+**Versión:** 0.11 · **Última actualización:** 2026-10-09 · **Estado:** vigente
 
 ## 1 · Problema
 
@@ -18,12 +18,13 @@ El paquete SDD Universal son 20 archivos Markdown en un repo. Para quien ya sabe
 | O2 | El prompt sale de la web y no a mano | Clics en "Generar" sobre cargas de la página | > 25% |
 | O3 | Se entiende sin leer nada | Alguien ajeno al proyecto explica qué es después de 2 min en la página | Sí / No, con 3 personas |
 | O4 | Entra desde el celular | De las llegadas al combinador, cuántas vienen de un celular | > 30% |
+| O5 | La fusión con IA se usa de verdad, no solo se prueba | % de paquetes generados que usaron la fusión con Claude (ADR-016) sobre el total | > 15% |
 
 **Cómo se mide (0.33, ADR-013):** O1, O2 y O4 salen de los contadores anónimos propios (`supabase/metricas.sql`) sobre los **últimos 30 días**, y el panel (`admin.html`) los muestra contra la meta. Para O4, la visita guarda una clase gruesa de dispositivo (`movil` / `escritorio`), nunca el user-agent. **O3 es manual**: no sale de ningún contador; el panel tiene dónde anotarlo, y el resultado que vale se escribe en `status.md`.
 
 ## 3 · Qué NO entra
 
-- **Generar el `sdd/` desde la web.** La web arma el prompt; el `sdd/` lo genera el agente del usuario. Meter un modelo en el medio nos obliga a tener API keys, costos por uso y moderación — es la v2 que describe `blocks.md`, y no es este proyecto.
+- **Promoción automática de combinaciones al catálogo** (la v2 completa de `blocks.md` §7). La fusión con IA (ADR-016) solo arma un `sdd/` a medida para quien lo pide; que una combinación se vuelva bloque oficial sigue pasando por una persona, igual que cualquier fila nueva de `scenarios.md` (R20).
 - **Ejecutar código del usuario.** No somos un playground.
 - **Analytics de terceros.** Los outcomes se miden con contadores propios y anónimos (sin usuario, IP, user-agent ni cookies), sin píxeles ni servicios de afuera.
 - **Un CMS.** El catálogo se edita commiteando. Son 24 cards, no 24.000.
@@ -37,6 +38,7 @@ El paquete SDD Universal son 20 archivos Markdown en un repo. Para quien ya sabe
 - **C5** · **Cada vista tiene su URL real** (ADR-015): `/web/catalogo`, `/web/combinador`… se recargan, se comparten y el atrás del navegador funciona. Los links viejos con `#/` siguen andando: redirigen a la ruta nueva.
 - **C4** · **Tiene que funcionar sin cuenta** — revisado el 2026-08-15 (ADR-010). El login suma, no habilita: catálogo, descargas, paquete `.zip`, combinador, tecnologías y reglas funcionan completos sin registrarse. **Lo único que la cuenta habilita es persistencia:** sin ella se guardan hasta 3 combinaciones y solo en ese navegador. **Desde 0.34 (ADR-014) no hay portón:** el sitio abre directo, sin cuenta, y entrar es opcional, en su propia ruta (`/web/login`), para quien quiera guardar combinaciones o entrar al panel.
 - **S1** · *Supuesto:* la gente llega desde GitHub o desde un link compartido, no desde buscadores. Por eso importan las metaetiquetas OG más que el SEO.
+- **C6** · **La función serverless de la fusión con IA nunca expone la clave de la API al front** (ADR-016): vive solo en su propio entorno, nunca en `web/`.
 
 ## 5 · Decisiones ya tomadas
 
@@ -44,6 +46,7 @@ El paquete SDD Universal son 20 archivos Markdown en un repo. Para quien ya sabe
 - Tema **oscuro por default**, claro opt-in — ADR-005
 - Supabase para cuentas, con degradación a `localStorage` — ADR-006
 - Los datos (tecnologías, reglas) se **generan** desde las fuentes, no se transcriben — ADR-004
+- Función serverless con Claude fusiona los bloques en un `sdd/` a medida, con tope de gasto como reserva, rate limit por IP y alerta — ADR-016
 
 ## 6 · Sub-tareas
 

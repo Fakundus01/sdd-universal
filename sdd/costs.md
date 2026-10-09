@@ -1,6 +1,6 @@
 # costs.md · SDD Hub
 
-**Versión:** 0.8 · **Constraint (C2 de la spec): USD 0/mes.** R14: si algo pasa a facturar, se avisa antes.
+**Versión:** 0.9 · **Constraint (C2 de la spec): USD 0/mes, salvo la fusión con IA (ADR-016), que se paga aparte y con tope.** R14: si algo pasa a facturar, se avisa antes.
 
 ## Hoy
 
@@ -19,9 +19,18 @@
 | El sitio se vuelve viral y pasa 100 GB/mes | Vercel Pro, USD 20/mes | No con este público |
 | Se quiere dominio propio | ~USD 15/año | Es lo primero que va a pasar, y es lo más barato |
 | Hacen falta más de 3.000 mails/mes de magic link | SMTP propio (Resend), free hasta 3.000/mes; después ~USD 20/mes | Requeriría cientos de registros mensuales |
-| Se agrega la v2 de `blocks.md` (un modelo fusionando bloques) | Por uso, y sin techo natural | **Este es el peligroso** — ver abajo |
 
-**El único ítem que puede romper C2 de verdad** es meter un modelo de IA en la web. Un endpoint público que llama a una API paga es una factura sin límite superior si alguien la abusa. Por eso está explícitamente fuera de alcance en la spec, y si algún día entra necesita, antes que código: límite de gasto, rate limit por IP y una alerta. La decisión iría a un ADR propio.
+## La fusión con IA (ADR-016)
+
+Es la única pieza del proyecto que no es USD 0/mes a propósito, y es la misma clase de riesgo que rompió el tope de gasto siete veces en otros proyectos hechos con el paquete (S33, `examples/hallazgos-2026-10.md#H18`): un endpoint que llama a una API paga es una factura sin límite superior si alguien la abusa. Tres controles, los tres antes de escribir el endpoint, no después:
+
+| Control | Qué hace |
+|---|---|
+| **Tope de gasto como reserva** | Se anota bajo lock lo máximo que puede costar la llamada **antes** de llamar (prompt en bytes × peor precio), nunca "chequear y después llamar" — `playbooks/ia-en-el-producto.md` §A |
+| **Rate limit por IP** | Tope de pedidos por IP y por minuto en el endpoint, aparte del tope de gasto diario |
+| **Alerta** | Al acercarse al tope diario, igual que las de Vercel/Supabase de abajo — mismo pendiente: que llegue a más de un mail |
+
+**Tope diario:** a definir con el primer dato real de uso (no hay histórico todavía); arranca conservador y se ajusta, nunca al revés.
 
 ## La trampa del free tier de Supabase
 

@@ -209,3 +209,18 @@
 
 **Lo que cuesta:** abrir `web/index.html` como archivo (`file://`) ya no navega entre vistas por URL: hace falta `node dev/dev.mjs` o Vercel. Desde ADR-012 es como se trabaja, así que se acepta.
 
+---
+
+## ADR-016 · Activar la v2 de `blocks.md`: función serverless con Claude fusiona los bloques en un `sdd/` a medida — 2026-10-09 · Vigente · **Revierte parcialmente ADR-012**
+
+**Contexto.** `spec.md` §3 excluía explícito "generar el `sdd/` desde la web" por lo que dice `costs.md`: un endpoint que llama a una API paga es una factura sin techo si alguien la abusa, y es la misma clase de falla que rompió el tope de gasto siete veces en otros proyectos hechos con el paquete (S33, `examples/hallazgos-2026-10.md#H18`). ADR-012 además había dejado Vercel y Supabase inactivos "hasta que la web se abra a otros programadores". Esa condición se cumple ahora: el owner suma a Ignacio y Hernán al equipo, con clientes propios.
+
+**Decisión del owner:**
+- Se reactivan Vercel y la parte de infraestructura que esta feature necesita (Supabase sigue como está, para cuentas). Se agrega una función serverless nueva, no se toca el flujo v1 (sigue andando sin backend ni key para quien no la use).
+- La función llama a **Claude por la API oficial** (ya catalogada en `tecnologias.md`, con sus trampas documentadas) para fusionar los bloques elegidos en un `sdd/` más específico que la concatenación plana de v1. Sigue bajando como `.zip`: la función nunca ejecuta nada, y el agente del usuario sigue siendo quien aplica el resultado.
+- **Alcance de esta primera versión:** solo la fusión a medida. La promoción automática de combinaciones nuevas al catálogo oficial (la idea original de `blocks.md` §7) queda fuera — es una decisión con más riesgo (meter basura al catálogo sin revisión humana) para otra vez.
+- **La clave es una sola**, del owner, puesta en el entorno de la función serverless — nunca en `web/` ni en el front. El tope de gasto es compartido entre todo el tráfico de la web (equipo + clientes), no por persona.
+- Antes de escribir código: tope de gasto como **reserva** (el patrón de `playbooks/ia-en-el-producto.md`, nunca "chequear y después llamar"), **rate limit por IP** en el endpoint, y una **alerta** — los tres ya estaban anotados en `costs.md` como condición de entrada.
+
+**Lo que cuesta:** la web deja de ser 100% estática para quien usa la fusión con IA (v1 sin IA se mantiene estática). Sumar una persona nueva al equipo (Ignacio, Hernán) ahora implica coordinarse sobre una sola clave y un solo tope de gasto compartido, no claves propias por persona.
+

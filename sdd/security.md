@@ -1,6 +1,6 @@
 # security.md · SDD Hub
 
-**Versión:** 0.8 · Aplica R17. Hay datos personales (el email de quien se registra), así que la sección 2 no es opcional.
+**Versión:** 0.9 · Aplica R17. Hay datos personales (el email de quien se registra), así que la sección 2 no es opcional. Desde ADR-016 el proyecto tiene IA adentro: aplica N4 de [`../seguridad.md`](../seguridad.md) (ver §3c).
 
 ## 1 · Claves: cuál es pública y cuál no
 
@@ -54,6 +54,18 @@ Esta es la confusión más peligrosa del proyecto, así que va explícita:
 - Las cuentas de ejemplo (`dev/dev.mjs`) tienen contraseñas fijas y conocidas **a propósito**: existen solo en `dev/.data/`, que está en `.gitignore`, y no se parecen a nada de la nube. El secreto con que se firman los JWT locales se genera al crear el clúster y vive en la misma carpeta.
 - El servidor no sirve archivos que empiecen con punto ni nada de `dev/.data/`. El filtro se aplica a lo pedido **y al nombre real en disco** (`realpathSync.native`): en Windows `dev/DATA~1/` es un alias 8.3 de `dev/.data/` que no tiene punto, y así se llegaba al secreto de los JWT (lo encontró el reviewer de 0.32).
 - Solo atiende pedidos con `Host` `127.0.0.1` o `localhost`: una página ajena que reapunte su dominio a esta máquina (DNS rebinding) llega con otro `Host` y recibe 403.
+
+## 3c · La fusión con IA (ADR-016, N4 de `seguridad.md`)
+
+| Riesgo OWASP LLM | Cómo se cubre acá |
+|---|---|
+| **LLM01 · Prompt injection** | La descripción libre que escribe la persona en el combinador es **dato**, nunca instrucción para el fusionador: va escapada dentro de etiquetas del sistema, igual que cualquier texto de usuario (R26) |
+| **LLM02 · Agencia excesiva** | El modelo solo redacta texto (el `sdd/` a medida). Cero herramientas, cero acceso a nada ejecutable, cero llamadas salientes propias |
+| **LLM04 / LLM10 · Consumo de modelo / de recursos** | El tope de gasto como reserva y el rate limit por IP de `costs.md` |
+| **LLM05 · Manejo inseguro de la salida** | Lo que devuelve el modelo se descarga como `.zip` y lo aplica el agente del usuario — nunca se ejecuta ni se renderiza como HTML en la web |
+| **LLM07 · Fuga del system prompt** | El prompt que arma la fusión no lleva secretos ni la clave; si el modelo lo repite, no hay nada sensible que filtrar |
+
+**Clave:** vive solo en el entorno de la función serverless (variable de entorno del deploy), nunca en `web/` ni en ningún archivo que viaje al navegador — a diferencia de la `anon` de Supabase, que sí es pública a propósito (§1).
 
 ## 4 · Lo que NO está cubierto
 

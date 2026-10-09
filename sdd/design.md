@@ -1,6 +1,6 @@
 # design.md · SDD Hub
 
-**Versión:** 0.8 · **Última actualización:** 2026-08-15
+**Versión:** 0.9 · **Última actualización:** 2026-10-09
 
 ## 1 · La decisión que ordena todo: sin build
 
@@ -117,3 +117,20 @@ La regla que lo sostiene: **el emulador traduce, Postgres decide.** `rest.mjs` a
 
 - ~~`index.html` pasó las 300 líneas de JS que pide R05~~ — **resuelto en 0.31 (D1):** el JS inline se partió en seis archivos de 105 a 237 líneas sin la cabecera, cortando por las secciones que ya tenía, sin cambiar el código. Para verificarlo se corrió un smoke en Chrome headless antes y después del corte, con salida idéntica, y un rojo forzado con el orden de carga invertido.
 - Tests automatizados parciales desde 0.31 (D2): el ZIP y la sincronía de las reglas, sin navegador. El resto se sigue verificando en el navegador (R07, front). Ver `testing.md`.
+
+## 10 · Fusión con IA (ADR-016)
+
+```
+api/
+└── fusionar.js          función serverless (Vercel, zero-config: cualquier cosa bajo /api/)
+```
+
+**Por qué `/api/` en la raíz, no `web/api/`:** ADR-002 ya fija la raíz del repo como root directory de Vercel; `/api/` ahí es la convención zero-config de Vercel para funciones Node, sin tocar `vercel.json`.
+
+**Contrato (detalle en `contracts.md` §4):** recibe los bloques elegidos + la descripción libre de la persona, devuelve el `sdd/` fusionado como JSON de archivos (mismo formato interno que ya arma `combinador.js` para el ZIP — la función no reinventa el empaquetado, solo reemplaza el paso de "concatenar" por "pedirle a Claude que fusione").
+
+**Reserva de gasto:** vive en la función misma, con un store simple (ver tarjeta `IA-1`) — nada de Postgres nuevo para esto; un proyecto de Supabase ya pausado una vez por free tier (`costs.md`) no es donde confiar un lock de concurrencia.
+
+**Modo simulado (igual que `playbooks/ia-en-el-producto.md` §F):** sin `ANTHROPIC_API_KEY` en el entorno, la función devuelve la fusión v1 (concatenación plana) con un aviso — el combinador sigue andando entero sin key, como hoy.
+
+**Lo que NO hace `dev/` todavía:** el entorno local (§8) no emula esta función — corre contra Vercel real (preview deploy) o, sin key, contra el modo simulado de arriba. No hace falta un emulador nuevo para esto.
