@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.36 · **Fecha:** 2026-10-06 · **Owner:** Facundo Moreno
+**Versión:** 0.37 · **Fecha:** 2026-10-09 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -126,6 +126,8 @@ El análisis de repos y las tareas de lectura masiva se delegan a subagentes con
 **R12 · MODELO-RECOMENDADO — [ON] — desactivable**
 Al arrancar, y ante features con IA, recomendar modelo por tarea sin sobredimensionar: generación de texto simple → modelo económico; refactor grande / arquitectura / código crítico → modelo alto. Registrar la recomendación en §3. Si el **producto** tiene IA adentro: nivel N4 de [`seguridad.md`](seguridad.md) y [`playbooks/ia-en-el-producto.md`](playbooks/ia-en-el-producto.md) (el tope de gasto es una reserva, no un chequeo).
 
+**Al elegir stack técnico** (lenguaje, framework, DB): mismo principio — clasificar primero el tipo de proyecto contra [`tecnologias.md`](tecnologias.md), recomendar la combinación que sirve para *este* proyecto y decir qué se descartó. Esa clasificación y lo descartado se escriben en `decisions.md` como ADR desde el primer commit — no alcanza con decirlo solo en el chat (S43).
+
 **R13 · CHANGELOG-SEMVER — [ON] — fija**
 Versionado `MAJOR.MINOR.PATCH`. Cada cambio implementado genera una entrada en `changelog/changelog-<usuario>.md`: qué se agregó/modificó/corrigió, archivos tocados, impacto. El changelog nunca se borra.
 
@@ -213,6 +215,7 @@ repo/
 ├── harness.config.json            # comandos del proyecto: test, lint, e2e, prod de solo lectura (R30)
 ├── harness/                       # verify.py por niveles + hooks + pre-commit (del scaffold)
 ├── README.md                      # instalación y puesta en marcha
+├── material-cliente/              # lo que aportó el cliente, tal como llegó: imgs/, logo/, tipografias/, disenos/, documentos/, flujo/, arquitectura/
 ├── src/ …                         # código
 └── sdd/
     ├── SDD-MASTER.md              # ESTE archivo (conductor, siempre se lee)
@@ -256,6 +259,8 @@ repo/
 
 **Contrato de calidad de `spec.md` — los 6 elementos.** Una spec no pasa el OK si le falta alguno: (1) outcomes concretos y medibles, no nombres de features; (2) límites de alcance explícitos (qué NO entra); (3) constraints y supuestos técnicos; (4) decisiones ya tomadas (DB, librerías, patrones) para no re-discutir; (5) desglose en sub-tareas paralelizables; (6) criterios de verificación testeables. La spec es un contrato ejecutable que restringe lo que el agente puede generar — no un doc pasivo.
 
+**Material que aporta el cliente** (imágenes, logo, tipografías, diseños, documentos, diagramas de flujo o de arquitectura que ya tenga): va a `material-cliente/` tal como llegó — nunca se inventa ni se descarga de otro lado. `spec.md` anota qué se recibió, de quién y cuándo, igual que un ADR.
+
 **Proyecto de 1 sola persona:** sin carpetas por usuario — `contracts.md`, `features.md` y `changelog.md` planos dentro de `sdd/`.
 **Proyecto multi-persona:** un archivo por usuario con sufijo (`contracts-facundo.md`, `contracts-matias.md`). Ningún agente escribe el archivo de otro usuario. Si además se trabaja por branches, cada rama toca solo los archivos de su dueño y al mergear el agente consolida.
 **Estados de feature (`status.md`):** Specified 20% → Planned 40% → Tasked 60% → In Progress 80% → Complete 100%.
@@ -278,10 +283,13 @@ Modo: [ESTRICTO / CONFIANZA] · Reglas apagadas: [ej. R01=OFF / ninguna]
 Pasos: hacé el cuestionario socrático (R04) preguntando lo que falte
 (forma de trabajar, lenguajes —un solo lenguaje tipo TypeScript
 full-stack, o Python back + JS front—, frameworks con recomendación,
-etc.). Después proponé estructura + stack, esperá mi OK, creá la
-carpeta del repo (R10, con OK), creá el .gitignore con .env desde el
-paso 0 (R17), generá los MD de sdd/ y hacé el primer commit (solo los
-MD y el .gitignore) según R01.
+etc.). Clasificá el tipo de proyecto contra tecnologias.md antes de
+recomendar (R12): decí qué combinación sirve para este caso y qué
+alternativas descartaste y por qué. Después proponé estructura + stack,
+esperá mi OK, creá la carpeta del repo (R10, con OK), creá el .gitignore
+con .env desde el paso 0 (R17), generá los MD de sdd/ (el stack elegido
+y lo descartado van a decisions.md como primer ADR) y hacé el primer
+commit (solo los MD y el .gitignore) según R01.
 ```
 
 ### 6.2 Brownfield — repo existente sin SDD
@@ -377,6 +385,7 @@ Las versiones de la línea actual (0.32 en adelante). Las anteriores (0.31 hacia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.37 | 2026-10-09 | S43: R12 ajustada — elegir stack sigue el mismo principio que elegir modelo (clasificar contra `tecnologias.md`, decir qué se descartó) y esa justificación se escribe en `decisions.md` como ADR, no solo en el chat. START-PROMPT §6.1 lo pide explícito. |
 | 0.36 | 2026-10-06 | **Memoria entre proyectos**, vía S41: el repo se puede abrir como vault de Obsidian (links markdown normales, `.obsidian/` fuera de git) y un vault «Cerebro» guarda una nota por lección, decisión o escenario de cada proyecto. `cerebro/` la busca en forma híbrida (palabras + embeddings locales, después OpenAI opcional) y la expone por MCP; lo recuperado es dato (R26). El planning busca ahí antes de proponer. Sin regla nueva: playbook `obsidian-cerebro` y una fila en §2. S42: las tarjetas con riesgo de obstáculo no van en tier ECONÓMICO ([`orchestration.md`](orchestration.md) §9). |
 | 0.35 | 2026-10-06 | **R33 · LOOP-CON-CONTRATO** y grafo de tarjetas, vía S39 y S40: un loop autónomo se escribe antes en `sdd/loops/<nombre>.md` (disparador, objetivo medible, verificación, regla de corte, memoria) y aprobarlo autoriza commits solo en su rama. Las tarjetas declaran `depende_de` y el leader despacha por niveles del grafo. Nuevo [`loops.md`](loops.md); `orchestration.md` §10. Recoge lo que en 2026 se llama *loop engineering* y *graph engineering* (de ejecución), sin sumar capas que el paquete ya tenía. |
 | 0.34 | 2026-10-05 | Web sin portón y con rutas reales, a pedido del owner: la app abre sin cuenta; el login es opcional y vive en `/web/login` (vuelve solo a rutas internas); el onboarding deja de ser un diálogo encima de todo y pasa a `/web/preferencias`. Cada vista tiene su URL (`/web/catalogo`, `/web/combinador`…), recargable y compartible, con rewrite en el servidor local y en `vercel.json`. Los links viejos con `#/` redirigen. Arregla el bug de 0.33: el onboarding quedaba arriba del portón y ninguno de los dos se podía tocar (ADR-014, ADR-015 de la web). |

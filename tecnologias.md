@@ -1,6 +1,6 @@
 # tecnologias.md · Catálogo de tecnologías
 
-**Versión:** 0.8.2 · 2026-10-05 · **Bloque:** `stack` · **Para agentes:** leer solo cuando la tarea sea elegir o justificar el stack (R12), o cuando el humano traiga tecnologías elegidas desde la web del catálogo.
+**Versión:** 0.8.3 · 2026-10-09 · **Bloque:** `stack` · **Para agentes:** leer solo cuando la tarea sea elegir o justificar el stack (R12), o cuando el humano traiga tecnologías elegidas desde la web del catálogo.
 
 > Este archivo dice **qué existe**, no qué usar. La recomendación por tarea la hace el agente con R12; las versiones se verifican contra la web al arrancar (R19), y por eso esta tabla no lleva números de versión: envejecerían mal y darían una falsa sensación de estar al día.
 
@@ -262,7 +262,7 @@ class TicketNuevo(BaseModel):
 
 1. **Desde la web:** en el combinador, el botón *Elegir tecnologías* abre el catálogo con filtros por categoría, ecosistema, tipo y open source. Lo que marques entra al prompt de arranque como bloque `TECNOLOGÍAS ELEGIDAS`.
 2. **Desde el chat:** nombrá las tecnologías y el agente las cruza con esta tabla. Si pedís algo que no está, no pasa nada: es un punto de partida, no una restricción. Desde la web pasa lo mismo: lo que buscás y no está se puede sumar igual, y entra al prompt en un bloque aparte, **«PEDIDAS QUE NO ESTÁN EN EL CATÁLOGO»**, para que el agente confirme qué es y si encaja. Antes de 0.8 se perdía sin aviso.
-3. **Al elegir stack (R12):** elegir de esta lista **no reemplaza la justificación**. El agente tiene que decir por qué esa combinación sirve para *este* proyecto, y qué descartó. Una tecnología tildada en una web no es una decisión de arquitectura.
+3. **Al elegir stack (R12):** elegir de esta lista **no reemplaza la justificación**. El agente tiene que decir por qué esa combinación sirve para *este* proyecto, y qué descartó. Una tecnología tildada en una web no es una decisión de arquitectura. Esa justificación se guarda en `sdd/decisions.md` como el primer ADR del proyecto (igual que R28 con las dependencias) — vivir solo en el chat no alcanza (S43).
 4. **Lo que el humano eligió, manda** salvo que sea técnicamente inviable — y en ese caso el agente lo dice antes de escribir código, no después (R25).
 
 ## Cómo crece
@@ -273,6 +273,7 @@ Igual que todo en este paquete (R20): una tecnología entra cuando alguien la us
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.8.3 | 2026-10-09 | §"Cómo se usa" punto 3: la justificación del stack se guarda en `sdd/decisions.md` como primer ADR (S43), no solo en el chat. |
 | 0.8.2 | 2026-10-05 | +2: pgvector y Embeddings, con la lección de RAG (lo recuperado es dato; permisos antes de buscar; cambiar de modelo obliga a re-indexar), y RAG en la entrada de Anthropic API. La lección de Pydantic corregida: el validador homónimo vuelve **opcional** un campo obligatorio y el 500 sale al serializar (pydantic 2.13.5). Total: 130. |
 | 0.8.1 | 2026-10-05 | Lección de Pydantic (`@field_validator` con el mismo nombre que el campo), en FastAPI y en Pydantic. |
 | 0.8 | 2026-10-05 | +8 tecnologías que pidieron cuatro proyectos reales y el combinador perdía en silencio: Vite, Vitest, pytest, Tailwind CSS, React Router, Mercado Pago, Stripe (categoría nueva: Pagos) y Anthropic API. Sección «Lecciones de proyectos reales» (FastAPI y Anthropic API). Total: 128 en 14 categorías. |
