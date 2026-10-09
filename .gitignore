@@ -26,3 +26,6 @@ dev/.data/
 
 # Cerebro (S41): entorno virtual local y modelos
 cerebro/.venv/
+
+# Dependencias de las funciones serverless bajo api/ (IA-1): el SDK de Anthropic
+node_modules/
