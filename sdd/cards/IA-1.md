@@ -1,7 +1,7 @@
 ---
 id: IA-1
 titulo: "Endpoint /api/fusionar con reserva de gasto, rate limit y modo simulado"
-estado: pending
+estado: in_progress
 feature: F28 · Fusión con IA del combinador (v2 de blocks.md, ADR-016)
 depende_de: []
 rama: ia-fusion
