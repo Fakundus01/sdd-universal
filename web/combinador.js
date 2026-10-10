@@ -155,7 +155,7 @@ function refrescarSalida(){
   renderFiles(); renderArbol();
 }
 $("comb").addEventListener("change", e => {
-  if (e.target && e.target.id === "comboname") return;
+  if (e.target && (e.target.id === "comboname" || e.target.id === "cdesc")) return;
   refrescarSalida();
 });
 ReglasUI.alCambiar(() => { $("cperf").value = ReglasUI.perfil(); refrescarSalida(); });
@@ -170,6 +170,74 @@ $("zipSolo").onclick = () => {
   Sesion.contar("paquete", "sueltos");
   bajar("zipSolo", Paquete.soloMd);
 };
+
+/* ---------- fusión con IA (F28, ADR-016) ---------- */
+/* El pedido de contracts.md §8: tipo/stack van como key del catálogo (no el
+   objeto {name, extra} que usa Prompt.armar), tecnologias/playbooks son el
+   mismo estado que arma el prompt hoy, y custom es exactamente la expresión
+   que ya usa opcionesPaquete() — nunca null «por error», nunca 400. */
+function opcionesFusion(){
+  const o = {
+    tipo: $("ctype").value, stack: $("cstack").value,
+    tecnologias: [...sel], playbooks: playbooksElegidos(),
+    custom: ReglasUI.hayCambios() ? ReglasUI.generar() : null
+  };
+  const descripcion = $("cdesc").value.trim();
+  if (descripcion) o.descripcion = descripcion;
+  return o;
+}
+
+/* Botón aparte del v1 (criterio 1): llama a /api/fusionar y arma el ZIP con
+   lo que devuelve, reusando Zip.descargar (criterio 3) igual que paquete.js.
+   Nunca rompe el camino v1: sin key, sin red, 429/500 o el endpoint ausente
+   en este deploy caen automáticamente a Paquete.proyecto (criterio 5), y
+   "simulada" arma el mismo ZIP con un aviso, no un error (criterio 4). */
+async function fusionarIA(){
+  const b = $("zipFusion"), original = b.textContent, msg = $("zipmsg");
+  msg.className = "zipmsg"; msg.textContent = "";
+  b.disabled = true; b.textContent = "Armando…";
+  Feedback.empezar();
+  Feedback.toast("Armando tu paquete con fusión IA…", {spinner: true, duracion: 0, id: "zip"});
+  const tipo = $("ctype").value;
+  try {
+    const r = await fetch("/api/fusionar", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(opcionesFusion())
+    });
+    if (!r.ok) throw new Error("fusión: HTTP " + r.status);
+    const datos = await r.json();
+    if (!datos || !Array.isArray(datos.archivos) || !datos.archivos.length)
+      throw new Error("fusión: respuesta sin archivos");
+    const carpeta = Paquete.slug($("comboname").value.trim() || TYPES[$("ctype").value].name);
+    Zip.descargar(`${carpeta}.zip`, datos.archivos);
+    if (datos.fusion === "simulada"){
+      msg.textContent = `Listo: ${datos.archivos.length} archivos. Sin IA disponible: esta es la versión simulada (igual a la v1).`;
+      Feedback.toast(`Paquete listo (modo simulado): ${datos.archivos.length} archivos`, {tipo: "ok", id: "zip", duracion: 3200});
+      Sesion.contar("paquete", "ia-simulada:" + tipo);
+    } else {
+      msg.textContent = `Listo: ${datos.archivos.length} archivos, con fusión IA.`;
+      Feedback.toast(`Paquete con IA listo: ${datos.archivos.length} archivos`, {tipo: "ok", id: "zip", duracion: 2600});
+      Sesion.contar("paquete", "ia:" + tipo);
+    }
+  } catch (e) {
+    // Nunca una promesa sin catch ni una pantalla rota: cae al v1 de siempre.
+    Feedback.toast("Sin fusión IA: armamos el paquete v1", {tipo: "err", id: "zip", duracion: 2600});
+    try {
+      const n = await Paquete.proyecto({...opcionesPaquete(), onPaso: (h, t) => Feedback.fijar(h / t)});
+      msg.textContent = `La fusión con IA no respondió: armamos el paquete v1 de siempre (${n} archivos).`;
+      Feedback.toast(`Paquete v1 listo: ${n} archivos`, {tipo: "ok", id: "zip", duracion: 2600});
+      Sesion.contar("paquete", "ia-fallback:" + tipo);
+    } catch (e2) {
+      msg.className = "zipmsg err";
+      msg.textContent = "No se pudo armar el paquete: " + e2.message;
+      Feedback.toast("No se pudo armar el paquete", {tipo: "err", id: "zip", duracion: 3200});
+    }
+  } finally {
+    b.disabled = false; b.textContent = original; Feedback.terminar();
+  }
+}
+$("zipFusion").onclick = fusionarIA;
 
 /* ---------- descarga rápida desde el catálogo ---------- */
 (() => {
