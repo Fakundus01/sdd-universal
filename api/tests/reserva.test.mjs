@@ -13,8 +13,9 @@ const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const WORKER = path.join(AQUI, 'fixtures', 'reservaWorker.js');
 
 /** Lanza `n` hilos reales que intentan reservar `cota` contra el mismo
- * estado compartido, todos a la vez (barrera), con una demora a propósito
- * entre leer y anotar para ensanchar la ventana de la carrera. */
+ * estado compartido, todos a la vez (barrera REAL, no apenas creados: ver
+ * Cambio 8 de la review de IA-1), con una demora a propósito entre leer y
+ * anotar para ensanchar la ventana de la carrera. */
 function correrEnHilosReales({ modo, n, cota, tope, delayMs }) {
   return new Promise((resolve, reject) => {
     const lockBuffer = new SharedArrayBuffer(4);
@@ -23,12 +24,23 @@ function correrEnHilosReales({ modo, n, cota, tope, delayMs }) {
     const gate = new Int32Array(gateBuffer);
     const gastadoView = new BigInt64Array(gastadoBuffer);
 
+    let listos = 0;
     let pendientes = n;
     let oks = 0;
     const workers = [];
     for (let i = 0; i < n; i++) {
       const w = new Worker(WORKER, { workerData: { lockBuffer, gastadoBuffer, gateBuffer, cota, tope, delayMs, modo } });
       w.on('message', (msg) => {
+        if (msg.tipo === 'listo') {
+          listos += 1;
+          // Barrera real: recién cuando los N workers avisaron que están
+          // parados en Atomics.wait, se los suelta a todos juntos.
+          if (listos === n) {
+            Atomics.store(gate, 0, 1);
+            Atomics.notify(gate, 0, Infinity);
+          }
+          return;
+        }
         if (msg.ok) oks += 1;
         pendientes -= 1;
         if (pendientes === 0) {
@@ -40,10 +52,6 @@ function correrEnHilosReales({ modo, n, cota, tope, delayMs }) {
       w.on('error', reject);
       workers.push(w);
     }
-    // Barrera: recién ahora, con los 8 hilos ya arrancados y esperando en
-    // Atomics.wait, se los suelta juntos.
-    Atomics.store(gate, 0, 1);
-    Atomics.notify(gate, 0, Infinity);
   });
 }
 

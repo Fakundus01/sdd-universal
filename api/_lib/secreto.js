@@ -8,14 +8,17 @@ function tachar(texto, clave) {
   return texto.split(clave).join('[REDACTED]');
 }
 
-/** El tipo del error siempre es la señal principal (playbook §B paso 9: "al
- * log va el tipo, nunca el texto, porque puede traer datos del usuario");
- * el mensaje se tacha igual, por si acaso, pero nunca se loguea el stack
- * completo ni el objeto crudo del SDK (podría traer headers con la key). */
-function logSeguro(prefijo, error, clave) {
-  const tipo = (error && (error.name || error.constructor?.name)) || typeof error;
-  const mensaje = error && typeof error.message === 'string' ? tachar(error.message, clave) : '';
-  console.error(`${prefijo}: ${tipo}${mensaje ? ' — ' + mensaje : ''}`);
+/** Al log va el TIPO, nunca el texto (playbook §B paso 9: "puede traer datos
+ * del usuario") — y punto, sin excepción "por si acaso": loguear el mensaje
+ * fue justo lo que en la review dejó pasar el cuerpo entero de un error de
+ * la API. `error.name` en las clases del SDK de Anthropic hereda el genérico
+ * "Error" (no lo pisan), así que `error.constructor.name` es la señal real
+ * (ej. "BadRequestError", "APIConnectionError"); el `status` HTTP, si lo
+ * hay, se suma porque es dato del protocolo, no del usuario. */
+function logSeguro(prefijo, error) {
+  const tipo = (error && error.constructor && error.constructor.name) || (error && error.name) || typeof error;
+  const status = error && typeof error.status === 'number' ? ` status=${error.status}` : '';
+  console.error(`${prefijo}: ${tipo}${status}`);
 }
 
 module.exports = { tachar, logSeguro };

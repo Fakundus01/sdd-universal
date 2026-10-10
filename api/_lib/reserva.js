@@ -1,15 +1,30 @@
 'use strict';
 /* La reserva de gasto: playbooks/ia-en-el-producto.md §A paso 1.
  * "Nunca chequear y después llamar": bajo lock se anota `gastado + cota <=
- * tope` y RECIÉN AHÍ se llama. El estado vive en SharedArrayBuffer y el
- * lock es un spinlock de Atomics — no una promesa encadenada — porque la
- * tarjeta pide probarlo con hilos reales (worker_threads), no con async
- * interleaving simulado en el mismo hilo (ver api/tests/reserva.test.mjs):
- * un "lock" que solo sirve entre promesas del mismo hilo puede dar verde
- * por suerte (JS corre lo sincrónico de un tirón) sin proteger nada de
- * verdad. Atomics.compareExchange es la única primitiva que sigue siendo
- * correcta tanto en el hilo principal (producción: un solo proceso, muchos
- * pedidos concurrentes por I/O asíncrona) como entre hilos reales (el test).
+ * tope` y RECIÉN AHÍ se llama.
+ *
+ * ADR-017 — ESTO ES UN FRENO POR INSTANCIA, NO UN TOPE GLOBAL. `gastado`
+ * vive en memoria de ESTA instancia de la función. Vercel corre N
+ * instancias en paralelo (procesos/microVMs distintos) y cada una arranca
+ * en $0 en cada arranque en frío: el gasto real queda acotado por
+ * `tope × instancias_concurrentes × reciclajes_del_día`, no por `tope`. No
+ * hay forma de que `SharedArrayBuffer` sincronice eso — comparte memoria
+ * dentro de un mismo proceso, nunca entre procesos. El techo real y duro,
+ * compartido por todo el tráfico, es el límite de gasto de la consola de
+ * Anthropic (ver `sdd/design.md` §10 y `sdd/decisions.md` ADR-017).
+ *
+ * Por qué sigue siendo un spinlock de Atomics y no una promesa encadenada:
+ * dentro de ESTA instancia, muchos pedidos concurrentes comparten el mismo
+ * hilo principal de Node (I/O asíncrona, no hilos reales) y ahí un mutex
+ * async ya alcanzaría. Pero la tarjeta pide probar la primitiva con hilos
+ * reales (worker_threads), no con async interleaving simulado en el mismo
+ * hilo (ver api/tests/reserva.test.mjs): un "lock" que solo sirve entre
+ * promesas del mismo hilo puede dar verde por suerte (JS corre lo
+ * sincrónico de un tirón) sin probar nada de verdad bajo preemption real.
+ * Atomics.compareExchange es la única primitiva que sigue siendo correcta
+ * tanto dentro del hilo principal como entre hilos reales — y no cuesta
+ * nada extra usarla también ahí, aunque el problema que de verdad importa
+ * en producción (instancias distintas) quede fuera de su alcance.
  *
  * Unidad interna: micro-dólares (1e-6 USD) en un BigInt64Array, para no
  * perder precisión con floats bajo Atomics (que no opera sobre Float64Array
@@ -39,30 +54,16 @@ function liberarLock(lock) {
   Atomics.store(lock, 0, LIBRE);
 }
 
-function busyWaitMs(ms) {
-  const fin = Date.now() + ms;
-  while (Date.now() < fin) {
-    /* spin: usado SOLO por el test de concurrencia, para ensanchar a propósito
-       la ventana entre leer y anotar y así demostrar que el lock la cierra
-       igual (mutante "reserva sin lock" de la verificación del playbook). */
-  }
-}
-
 /**
  * Bajo lock: si `gastado + cota <= tope`, anota la cota y devuelve {ok:true}.
  * Si no entra, no anota nada y devuelve {ok:false}. `cota` y `tope` son
  * BigInt en micro-dólares.
- *
- * `debugDelayMs` (opcional): SOLO para api/tests/reserva.test.mjs — nunca lo
- * pasa api/fusionar.js. Ensancha la sección crítica para probar que, aun con
- * la ventana abierta a propósito, el lock sigue dando un resultado correcto.
  */
-function reservar(estado, cota, tope, debugDelayMs = 0) {
+function reservar(estado, cota, tope) {
   adquirirLock(estado.lock);
   try {
     const gastado = Atomics.load(estado.gastado, 0);
     if (gastado + cota > tope) return { ok: false, gastado };
-    if (debugDelayMs) busyWaitMs(debugDelayMs);
     Atomics.store(estado.gastado, 0, gastado + cota);
     return { ok: true, gastado: gastado + cota };
   } finally {
@@ -94,4 +95,16 @@ function gastadoActual(estado) {
   return Atomics.load(estado.gastado, 0);
 }
 
-module.exports = { crearEstado, reservar, liberar, ajustar, gastadoActual };
+module.exports = {
+  crearEstado,
+  reservar,
+  liberar,
+  ajustar,
+  gastadoActual,
+  // Primitivas de más bajo nivel: las usa SOLO api/tests/fixtures/ para
+  // instrumentar el lock real con una demora a propósito en el test de
+  // concurrencia, en vez de tener un hook de debug en el código de
+  // producción (review de IA-1, mejora no bloqueante).
+  adquirirLock,
+  liberarLock,
+};
