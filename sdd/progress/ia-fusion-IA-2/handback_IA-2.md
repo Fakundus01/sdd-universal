@@ -1,7 +1,7 @@
 # Handback IA-2 — UI del combinador: botón de fusión con IA, degradación y aviso de modo simulado
 
 - **Estado:** done
-- **Rama / commit:** `ia-fusion-IA-2` @ ver "Rama / commit" abajo (se completa después de commitear)
+- **Rama / commit:** `ia-fusion-IA-2` @ `3cf02b3`
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
