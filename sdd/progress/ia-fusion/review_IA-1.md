@@ -1,4 +1,4 @@
-# Review IA-1
+# Review IA-1 @ 83d1eb2
 **Veredicto vigente (vuelta 3, @ 83d1eb2):** APPROVED
 
 ---
@@ -324,3 +324,7 @@ No bloquean, pero conviene hacerlos en esta vuelta:
 - **`harness.config.json` `test` no instala dependencias:** en un clon o worktree nuevo, `api/tests/fusionar.test.mjs` falla con `Cannot find module '@anthropic-ai/sdk'`. El «verde, 178 tests» del commit `4ae7ed8` dependía de un `node_modules` local. Sugerencia: anteponer `npm ci --ignore-scripts` al comando `test` (o un check de arnés que avise si existe `package-lock.json` y falta `node_modules/`).
 - **Faltaría un check de «input de prompt acotado»:** que el reviewer o un test genérico mande cada campo libre del contrato con 1 MB y espere `400`. Habría atrapado el Cambio 2 y, con tipos inválidos, el Cambio 3.
 - **Plantilla de tarjetas con IA en serverless:** agregar un criterio fijo que pregunte «¿el estado de gasto sobrevive y se comparte entre instancias?». La tarjeta pidió «hilos reales», y eso empujó a probar el eje equivocado (hilos dentro de un proceso) en lugar del real (procesos distintos).
+
+---
+
+**Veredicto final (vigente): APPROVED.** Ver "Vuelta 3 · @ 83d1eb2" al principio de este archivo. Las vueltas 1 y 2 (abajo) son historial, ya resuelto en vueltas posteriores.
