@@ -104,3 +104,5 @@ Write-Host "  `$env:CEREBRO_DIR = $(Q $CerebroDir); `$env:CEREBRO_EMBEDDINGS = '
 Write-Host "  & $(Q $pyVenv) $(Q $cerebroPy) buscar 'el agente copio un archivo para pasar un check'"
 Write-Host "`nEl MCP NO se registro (eso se hace una vez, con tu OK). Con -s user queda disponible en todos tus proyectos:" -ForegroundColor Yellow
 Write-Host "  claude mcp add -s user cerebro -e CEREBRO_DIR=$(Q $CerebroDir) -e CEREBRO_EMBEDDINGS=$Embeddings -- $(Q $pyVenv) $(Q (Join-Path $PSScriptRoot 'mcp_server.py'))"
+Write-Host "`nSi en vez de Claude Code usas Codex CLI, el equivalente (tambien con tu OK, no lo corre este script):" -ForegroundColor Yellow
+Write-Host "  codex mcp add cerebro -e CEREBRO_DIR=$(Q $CerebroDir) -e CEREBRO_EMBEDDINGS=$Embeddings -- $(Q $pyVenv) $(Q (Join-Path $PSScriptRoot 'mcp_server.py'))"

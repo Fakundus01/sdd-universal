@@ -32,6 +32,14 @@ A mano (Windows; en Linux/macOS `cerebro/.venv/bin/python` en lugar de `cerebro/
    ```bash
    cerebro/.venv/Scripts/python cerebro/cerebro.py importar-sdd .
    ```
+4b. **`importar-todo <carpeta-madre>`**: lo mismo que `importar-sdd`, pero para todos los repos SDD de una carpeta de una sola corrida — pensado para cuando `CEREBRO_DIR` vive al lado de varios proyectos (el caso típico: una carpeta de trabajo con un repo por cliente). Cada hijo directo de `<carpeta-madre>` se importa con el slug de su propio nombre de carpeta como `proyecto` (así las notas de cada cliente no se mezclan ni se etiquetan como si fueran del paquete SDD Universal).
+   ```bash
+   cerebro/.venv/Scripts/python cerebro/cerebro.py importar-todo "C:\ruta\a\tu\carpeta\de\proyectos"
+   ```
+   Requiere [Gitleaks](https://github.com/gitleaks/gitleaks) en el PATH (`winget install Gitleaks.Gitleaks` en Windows) — es **bloqueante a propósito**: si no está instalado, el comando no toca ni una sola carpeta, porque no puede garantizar que no cruce un secreto entre repos. Por cada carpeta candidata corre `gitleaks detect` antes de importar nada; si encuentra algo, esa carpeta se saltea entera (nunca se imprime el valor del secreto, solo qué archivo lo tiene). Tres formas de sacar una carpeta del barrido:
+   - Que no parezca un repo SDD (sin `sdd/` ni `SDD-MASTER.md` en su raíz) — se saltea sola.
+   - Un archivo `CEREBRO-NO-ENTRA.md` en la raíz de esa carpeta — la deja afuera siempre, pase lo que pase con Gitleaks.
+   - Ser el propio `CEREBRO_DIR` — nunca se autoimporta.
 5. **`indexar`**: incremental, solo lo que cambió. La primera vez con `local` baja el modelo (ver abajo).
    El índice guarda una versión de esquema junto con el modelo: si lo armó una versión anterior de esta herramienta (el `proyecto` se guarda ahora como el slug de su nombre), `buscar` e `indexar` piden `indexar --todo` en vez de dar resultados filtrados incorrectos.
    ```bash
@@ -45,7 +53,7 @@ A mano (Windows; en Linux/macOS `cerebro/.venv/bin/python` en lugar de `cerebro/
    ```bash
    claude mcp add -s user cerebro -e CEREBRO_DIR="$HOME/Documents/Cerebro" -- <ruta>/cerebro/.venv/Scripts/python <ruta>/cerebro/mcp_server.py
    ```
-   Después, `/mcp` en Claude Code lista `cerebro` conectado. Más abajo, la sección «MCP».
+   Después, `/mcp` en Claude Code lista `cerebro` conectado. Más abajo, la sección «MCP». Si usás **Codex CLI** en vez de Claude Code, es `codex mcp add` en lugar de `claude mcp add` (mismos argumentos; ver «MCP» más abajo).
 
 La primera búsqueda con `CEREBRO_EMBEDDINGS=local` **baja el modelo** (unos 220 MB, una sola vez) y avisa por stderr qué baja y adónde. Sin internet esa primera vez, falla con un error claro. El modelo queda en `~/.cache/cerebro/modelos` (o en `CEREBRO_MODELOS`); no entra al repo.
 
@@ -107,6 +115,13 @@ Los errores esperados (índice sin armar, modelo distinto, tipo inválido, `k` f
 ```
 claude mcp add -s user cerebro -- <ruta>/cerebro/.venv/Scripts/python <ruta>/cerebro/mcp_server.py   # Windows
 claude mcp add -s user cerebro -- <ruta>/cerebro/.venv/bin/python <ruta>/cerebro/mcp_server.py        # Linux/macOS
+```
+
+**Con Codex CLI** en vez de Claude Code, el servidor es el mismo (stdio, cualquier cliente MCP); solo cambia el comando de registro — `codex mcp add` en vez de `claude mcp add`, mismos argumentos (no hay `-s user`: en Codex el registro en `~/.codex/config.toml` ya es global, no por carpeta):
+
+```
+codex mcp add cerebro -- <ruta>/cerebro/.venv/Scripts/python <ruta>/cerebro/mcp_server.py   # Windows
+codex mcp add cerebro -- <ruta>/cerebro/.venv/bin/python <ruta>/cerebro/mcp_server.py        # Linux/macOS
 ```
 
 Usa las mismas variables que la CLI (`CEREBRO_DIR`, `CEREBRO_EMBEDDINGS`). Antes de usar `buscar` hace falta `indexar` (ver «Instalación»).
