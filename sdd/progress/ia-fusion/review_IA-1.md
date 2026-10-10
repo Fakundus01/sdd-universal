@@ -1,5 +1,83 @@
 # Review IA-1
-**Veredicto vigente (vuelta 2, @ 4ddc0e4):** CHANGES_REQUESTED
+**Veredicto vigente (vuelta 3, @ 83d1eb2):** APPROVED
+
+---
+
+# Vuelta 3 · @ 83d1eb2
+**Veredicto:** APPROVED
+
+Revisor: reviewer (tier ALTO), worktree nuevo `sdd-universal-IA-1-review`, HEAD detached en `83d1eb2`. Diff revisado: `git diff 4ddc0e4..83d1eb2` (`api/` + `sdd/contracts.md` §8 del leader). Antes de los tests corrí `npm ci --ignore-scripts`.
+
+Los dos bloqueantes de la vuelta 2 (V2-1, V2-2) y el no bloqueante V2-3 quedaron cerrados. Los comprobé con mi propio mutante y mis propias sondas, no con el reporte del implementer. No encontré nada nuevo que bloquee.
+
+## Verificación re-ejecutada (vuelta 3)
+```text
+$ python harness/verify.py
+── Arnés ──
+[OK]    Creado sdd/progress/detached/current.md desde la plantilla
+[OK]    Tarjetas válidas (19)
+[OK]    Rutas citadas existen (222 revisadas)
+── Lint ──
+[WARN]  sin 'lint' en harness.config.json
+── Tests ──
+[OK]    test — `node --test "web/tests/*.test.mjs" "api/tests/*.test.mjs" && python -m unittest discover -s harness/tests` (259.1s): Ran 178 tests in 255.872s · OK (skipped=1)
+VERDE — 0 FAIL, 1 WARN
+
+$ node --test "api/tests/*.test.mjs"   # 3 corridas seguidas, para descartar un test inestable
+ℹ tests 56 ℹ pass 56 ℹ fail 0 ℹ skipped 0
+ℹ tests 56 ℹ pass 56 ℹ fail 0 ℹ skipped 0
+ℹ tests 56 ℹ pass 56 ℹ fail 0 ℹ skipped 0
+```
+El WARN de lint y el `skipped=1` (en `harness/tests`) ya estaban antes de esta tarjeta.
+
+### Mutante V2-1 (copia de `api/` fuera del repo, sin tocar el worktree)
+El mismo mutante de la vuelta 2: le saqué `adquirirLock`/`liberarLock` a `reservar()` de producción y corrí la suite completa 3 veces:
+```text
+✖ IA-1 AC3: bajo lock, 8 hilos reales en paralelo nunca gastan más del tope (218.0723ms)  ℹ pass 55 ℹ fail 1
+✖ IA-1 AC3: bajo lock, 8 hilos reales en paralelo nunca gastan más del tope (264.1867ms)  ℹ pass 55 ℹ fail 1
+✖ IA-1 AC3: bajo lock, 8 hilos reales en paralelo nunca gastan más del tope (236.2855ms)  ℹ pass 55 ℹ fail 1
+```
+**Ahora el mutante muere, 3 de 3.** En la vuelta 2 sobrevivía con 50 de 50 en verde.
+
+### Sondas de la vuelta 3 (script propio fuera del repo, sin red)
+```text
+[custom:null]                -> 200 (simulada)
+[descripcion:null]           -> 200
+[ambos null]                 -> 200
+[custom:true (Prompt.armar)] -> 400   (correcto: contracts.md §8 ahora fija custom = string o null)
+[custom:123]                 -> 400
+[tecnologias:null]           -> 400   (correcto: el contrato dice arrays, [] si no hay)
+[catalogo ausente]           -> 400 {"error":"no se pudo procesar el pedido"}
+  log: ["fusionar: excepción no capturada: Error code=ENOENT"]
+```
+
+## Los hallazgos de la vuelta 2
+| # | Estado | Cómo lo verifiqué |
+|---|---|---|
+| V2-1 · El test de AC3 tiene que probar `reservar()` de producción | **Cerrado** | `api/_lib/reserva.js`: entre `4ddc0e4` y `83d1eb2` solo cambió la línea de `module.exports`. El cuerpo de `reservar()`, `adquirirLock` y `liberarLock` es idéntico. `api/tests/fixtures/reservaWorker.js` importa `reservar` de `../../_lib/reserva` y la llama tal cual. La demora se inyecta pisando `Atomics.load` **solo dentro del worker** (cada `worker_thread` tiene su propio `globalThis`) y **solo** cuando lo que se lee es `estado.gastado`. Esa lectura ocurre dentro de la sección crítica, con el lock de producción ya tomado, así que el lock real queda bajo prueba. Que el mutante muera (3/3) lo confirma. Se borró `reservaConLockYDelay.js` |
+| V2-2 · `custom:null` / `descripcion:null` | **Cerrado** | `api/_lib/validacion.js:32-33` usa `?? ''`. Sondas: 200 en los dos casos y con los dos juntos. `contracts.md` §8 (merge del leader `f53700b`) ahora fija la forma del pedido (keys, arrays, `custom` string o null), así que un booleano o un número siguen dando 400 a propósito. Hay tests en `validacion.test.mjs` y `fusionar.test.mjs` |
+| V2-3 · `error.code` en el log (no bloqueante) | **Cerrado** | `api/_lib/secreto.js:26-27`. Sonda: `Error code=ENOENT`, sin el mensaje. Hay test en `secreto.test.mjs` y en `fusionar.test.mjs` |
+
+**¿Se rompió algo al sacar `adquirirLock`/`liberarLock` del export?** No. `grep` en todo el repo (sin `node_modules/`): fuera de `reserva.js` solo aparecen en comentarios y en el handback. Ningún módulo ni test los importa, y la suite completa está verde.
+
+## Checkpoints (vuelta 3)
+- C1: [x] `verify.py` completo da 0 FAIL y las rutas nuevas existen.
+- C2: [x] Los 8 AC tienen evidencia real. AC3: el tope por instancia se probó con hilos reales contra `reservar()` de producción, y el mutante da rojo. El tope global quedó delegado al límite de la consola por ADR-017, que es decisión del owner. AC6: 4xx/529 liberan; 5xx y los errores de red conservan. AC7: todo lo que entra al prompt tiene cota y tipo validado. Zona respetada: `83d1eb2` toca `api/` y su propio `sdd/progress/`. `contracts.md` lo trajo el merge del leader.
+- C3: [x] El código respeta `contracts.md` §8 (ahora con la forma exacta del pedido), `design.md` §10 y ADR-017, `security.md` §3c (LLM01) y el playbook §B paso 9.
+- C4: [x] Verificación re-ejecutada por mí (no copiada), 3 corridas de la suite sin inestabilidad, y el mutante de la reserva muere. Nada skipeado ni debilitado en `api/`.
+- C5: [x] El handback está completo y las env vars documentadas. No hay secretos ni prints de debug. Nit: el handback vuelve a declarar un hash de antes de un amend (`00b1d93`; `git diff 00b1d93 83d1eb2` difiere en una sola línea del handback). El HEAD real es `83d1eb2`.
+
+## Pendientes no bloqueantes (para el leader, antes de producción)
+- **ADR-017:** configurar el límite de gasto en la consola de Anthropic (verificado contra la doc vigente, R19) y anotar el valor en el ADR. Hasta entonces, el tope de la app es solo un freno por instancia.
+- `api/fusionar.js` (ajuste con `usage` ausente): una respuesta 200 sin `usage` libera toda la reserva. La API real siempre manda `usage`, pero lo coherente con S33 sería conservar la cota.
+- `api/_lib/costo.js`: atar el precio a `ANTHROPIC_MODEL` (hoy $15/$75 cubre el catálogo vigente; el techo es Fable 5.1, $10/$50).
+- `contracts.md` §8: decidir si la red de seguridad de último recurso debe responder 400 (como ahora) o 503.
+- `sdd/design.md` §10 y `sdd/costs.md` todavía citan «ADR-016 opción B / actualización» en vez de ADR-017.
+- Probar `web/catalogo.js` dentro del bundle en un preview deploy real. Si falta, ahora se ve como `code=ENOENT` en el log.
+
+## Mejoras al arnés detectadas (vuelta 3)
+- Se mantienen las de las vueltas 1 y 2. La que más pesó en esta tarjeta: un reviewer que corre un mutante sobre la función que nombra el AC encontró la regresión de la vuelta 2 que los 50 tests en verde no mostraban. Conviene que sea un paso fijo de `agents/reviewer.md` para los AC de concurrencia o de gasto.
+- Tres vueltas seguidas el handback declaró un hash viejo, de antes de un amend. Un check de `verify.py` que compare el hash del handback con `HEAD` (o que pida no declarar el hash del mismo commit que lo contiene) lo atraparía.
 
 ---
 
