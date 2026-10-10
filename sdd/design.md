@@ -1,6 +1,6 @@
 # design.md · SDD Hub
 
-**Versión:** 0.9 · **Última actualización:** 2026-10-09
+**Versión:** 0.10 · **Última actualización:** 2026-10-09
 
 ## 1 · La decisión que ordena todo: sin build
 
@@ -129,7 +129,7 @@ api/
 
 **Contrato (detalle en `contracts.md` §4):** recibe los bloques elegidos + la descripción libre de la persona, devuelve el `sdd/` fusionado como JSON de archivos (mismo formato interno que ya arma `combinador.js` para el ZIP — la función no reinventa el empaquetado, solo reemplaza el paso de "concatenar" por "pedirle a Claude que fusione").
 
-**Reserva de gasto:** vive en la función misma, con un store simple (ver tarjeta `IA-1`) — nada de Postgres nuevo para esto; un proyecto de Supabase ya pausado una vez por free tier (`costs.md`) no es donde confiar un lock de concurrencia.
+**Reserva de gasto — por instancia, no global (DRIFT resuelto, ADR-016 opción B):** vive en memoria de la función misma (`SharedArrayBuffer`+`Atomics`), nada de Postgres nuevo para esto; un proyecto de Supabase ya pausado una vez por free tier (`costs.md`) no es donde confiar un lock de concurrencia. Esto sincroniza solo **dentro de una misma instancia tibia** de Vercel — es un freno de abuso local, no un tope global (Vercel corre N instancias en paralelo, cada una con su propio contador). **El techo real y duro es el límite de gasto de la consola de Anthropic** (workspace o API key), que hay que configurar antes de producción.
 
 **Modo simulado (igual que `playbooks/ia-en-el-producto.md` §F):** sin `ANTHROPIC_API_KEY` en el entorno, la función devuelve la fusión v1 (concatenación plana) con un aviso — el combinador sigue andando entero sin key, como hoy.
 

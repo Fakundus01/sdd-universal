@@ -1,6 +1,6 @@
 # decisions.md · SDD Hub
 
-**Versión:** 0.8 · ADRs con fecha y motivo. No se borran ni se editan: si una decisión cambia, se agrega otra que la reemplaza.
+**Versión:** 0.9 · ADRs con fecha y motivo. No se borran ni se editan: si una decisión cambia, se agrega otra que la reemplaza.
 
 ---
 
@@ -223,4 +223,19 @@
 - Antes de escribir código: tope de gasto como **reserva** (el patrón de `playbooks/ia-en-el-producto.md`, nunca "chequear y después llamar"), **rate limit por IP** en el endpoint, y una **alerta** — los tres ya estaban anotados en `costs.md` como condición de entrada.
 
 **Lo que cuesta:** la web deja de ser 100% estática para quien usa la fusión con IA (v1 sin IA se mantiene estática). Sumar una persona nueva al equipo (Ignacio, Hernán) ahora implica coordinarse sobre una sola clave y un solo tope de gasto compartido, no claves propias por persona.
+
+---
+
+## ADR-017 · La reserva de gasto de ADR-016 es por instancia, no global; el techo duro es el límite de la consola de Anthropic — 2026-10-09 · Vigente · **Ajusta ADR-016**
+
+**Contexto — DRIFT encontrado en la review de la tarjeta `IA-1` (R25).** La reserva bajo lock que describe ADR-016 usa `SharedArrayBuffer`+`Atomics`, que solo sincroniza **dentro de una misma instancia** de la función serverless. Vercel corre N instancias en paralelo, cada una con su propio contador en `$0` y reseteado en cada arranque en frío: el tope real queda acotado por `tope × instancias_concurrentes × reciclajes_del_día`, no por el tope declarado — no es un tope global compartido entre todo el tráfico, como decía ADR-016.
+
+**Decisión del owner (opción B de las tres que planteó el review):**
+- No se suma una dependencia nueva (store compartido tipo Redis/KV, ni Postgres — que `design.md` §10 ya había descartado para esto) solo para que el tope sea global de verdad.
+- Se acepta la reserva en memoria por lo que es — un freno de abuso **por instancia tibia**, documentado así en el código y en `design.md` §10 — y el **techo real y duro** pasa a ser el límite de gasto configurable en la consola de Anthropic (workspace o API key).
+- **Antes de producción:** configurar ese límite en la consola (verificado contra la doc vigente del proveedor, R19 — no se asume de memoria que existe con ese nombre o alcance) y anotar acá el valor elegido.
+
+**Por qué no la opción A (store compartido):** una dependencia paga más para mantener, con su propio ADR (R28) y su propia superficie de fallas, por una garantía que el límite del proveedor ya cubre igual de bien como último recorte de daño.
+
+**Lo que cuesta:** sin el límite de la consola configurado, el tope de la aplicación no protege contra un abuso distribuido entre muchas instancias — es una ventana de riesgo real hasta que ese límite esté puesto, no solo una formalidad.
 
