@@ -1,6 +1,6 @@
 # contracts.md · SDD Hub
 
-**Versión:** 0.11 · La web no expone API propia salvo la fusión con IA (ADR-016, §8). Sus contratos son: la **forma de los archivos de datos** que consume, las **llamadas a Supabase** que hace, y el endpoint de la fusión.
+**Versión:** 0.12 · La web no expone API propia salvo la fusión con IA (ADR-016, §8). Sus contratos son: la **forma de los archivos de datos** que consume, las **llamadas a Supabase** que hace, y el endpoint de la fusión.
 
 ---
 
@@ -167,9 +167,12 @@ Ninguno admite espacios, `@` ni saltos de línea. **Lo que no garantiza:** un sl
 
 **Pedido:**
 ```js
-{ tipo, stack, tecnologias, playbooks, custom,   // lo mismo que ya arma Prompt.armar
-  descripcion }                                   // texto libre de la persona, nuevo
+{ tipo, stack,                // keys del catálogo (web/catalogo.js: TYPES/STACKS), no el objeto {name, extra}
+  tecnologias, playbooks,     // arrays de strings; [] si no hay
+  custom,                     // string, o null (así lo manda combinador.js cuando no hay cambios: ReglasUI.hayCambios() ? ReglasUI.generar() : null) — nunca 400
+  descripcion }               // texto libre de la persona, nuevo; string u omitido, nunca null como error
 ```
+Todo lo que entra al prompt lleva cota (bytes y/o cantidad de ítems, `IA-1`): lo que la pase es `400`, nunca se trunca en silencio.
 
 **Respuesta — `200`:**
 ```js
