@@ -1,10 +1,10 @@
 ---
 id: IA-2
 titulo: "UI del combinador: botón de fusión con IA, degradación y aviso de modo simulado"
-estado: pending
+estado: in_progress
 feature: F28 · Fusión con IA del combinador (v2 de blocks.md, ADR-016)
 depende_de: [IA-1]
-rama: ia-fusion
+rama: ia-fusion-IA-2
 ---
 
 # Tarjeta IA-2 — UI del combinador: botón de fusión con IA, degradación y aviso de modo simulado
