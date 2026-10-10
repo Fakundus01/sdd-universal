@@ -95,16 +95,4 @@ function gastadoActual(estado) {
   return Atomics.load(estado.gastado, 0);
 }
 
-module.exports = {
-  crearEstado,
-  reservar,
-  liberar,
-  ajustar,
-  gastadoActual,
-  // Primitivas de más bajo nivel: las usa SOLO api/tests/fixtures/ para
-  // instrumentar el lock real con una demora a propósito en el test de
-  // concurrencia, en vez de tener un hook de debug en el código de
-  // producción (review de IA-1, mejora no bloqueante).
-  adquirirLock,
-  liberarLock,
-};
+module.exports = { crearEstado, reservar, liberar, ajustar, gastadoActual };

@@ -39,6 +39,25 @@ test('AC8/Cambio 6: logSeguro() nunca imprime el mensaje del error, solo el tipo
   assert.ok(salida.includes('status=401'), 'el status HTTP, si existe, se suma al log');
 });
 
+test('V2-3: logSeguro() suma error.code cuando existe (dato del sistema, no del usuario)', () => {
+  // Ej: ENOENT si falta web/catalogo.js en el bundle de Vercel (review vuelta 2,
+  // sonda "catalogo ausente en el bundle") — hoy el log decía solo "Error",
+  // sin ninguna pista de la causa real.
+  const error = new Error('ENOENT: no such file or directory, open \'web/catalogo.js\'');
+  error.code = 'ENOENT';
+  const lineas = [];
+  const originalError = console.error;
+  console.error = (...args) => lineas.push(args.join(' '));
+  try {
+    logSeguro('fusionar', error);
+  } finally {
+    console.error = originalError;
+  }
+  const salida = lineas.join('\n');
+  assert.ok(salida.includes('code=ENOENT'), `el log tiene que incluir error.code: ${salida}`);
+  assert.ok(!salida.includes('no such file or directory'), 'el mensaje sigue sin loguearse, solo el code');
+});
+
 test('logSeguro() con un error sin status ni constructor con nombre propio no revienta', () => {
   const lineas = [];
   const originalError = console.error;

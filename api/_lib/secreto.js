@@ -18,7 +18,13 @@ function tachar(texto, clave) {
 function logSeguro(prefijo, error) {
   const tipo = (error && error.constructor && error.constructor.name) || (error && error.name) || typeof error;
   const status = error && typeof error.status === 'number' ? ` status=${error.status}` : '';
-  console.error(`${prefijo}: ${tipo}${status}`);
+  // `error.code` (ej. "ENOENT" si falta web/catalogo.js en el bundle de
+  // Vercel) es dato del SISTEMA, no del usuario: no choca con "nunca el
+  // texto" del playbook §B paso 9, y sin esto la red de seguridad de último
+  // recurso de fusionar.js quedaba indistinguible de cualquier otro bug
+  // (review de IA-1, V2-3).
+  const code = error && typeof error.code === 'string' ? ` code=${error.code}` : '';
+  console.error(`${prefijo}: ${tipo}${status}${code}`);
 }
 
 module.exports = { tachar, logSeguro };

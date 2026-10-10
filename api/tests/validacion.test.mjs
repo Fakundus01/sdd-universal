@@ -12,11 +12,26 @@ function pedidoBase(extra = {}) {
 
 test('Cambio 3: tecnologias/playbooks mal tipados dan ok:false, nunca tiran una excepción', () => {
   assert.equal(validarPedido(pedidoBase({ tecnologias: 'abc' })).ok, false);
+  // tecnologias/playbooks son "arrays de strings; [] si no hay" (contracts.md §8):
+  // null no es la convención documentada para estos dos, así que sigue siendo 400.
   assert.equal(validarPedido(pedidoBase({ tecnologias: null })).ok, false);
   assert.equal(validarPedido(pedidoBase({ playbooks: 'abc' })).ok, false);
   assert.equal(validarPedido(pedidoBase({ playbooks: null })).ok, false);
   assert.equal(validarPedido(pedidoBase({ custom: 123 })).ok, false);
-  assert.equal(validarPedido(pedidoBase({ custom: null })).ok, false);
+});
+
+test('V2-2 (contracts.md §8, review vuelta 2): custom:null es la convención de combinador.js — nunca 400', () => {
+  // combinador.js manda `custom: ReglasUI.hayCambios() ? ReglasUI.generar() : null`:
+  // un cliente que sigue el contrato al pie de la letra no puede recibir 400 por esto.
+  const r = validarPedido(pedidoBase({ custom: null }));
+  assert.equal(r.ok, true, `custom:null tendría que pasar, no: ${JSON.stringify(r)}`);
+  assert.equal(r.pedido.custom, '');
+});
+
+test('V2-2: descripcion:null tampoco es un 400 ("nunca null como error", contracts.md §8)', () => {
+  const r = validarPedido(pedidoBase({ descripcion: null }));
+  assert.equal(r.ok, true, `descripcion:null tendría que pasar, no: ${JSON.stringify(r)}`);
+  assert.equal(r.pedido.descripcion, '');
 });
 
 test('Cambio 2: tecnologias/playbooks por encima de la cantidad o el largo máximo dan 400', () => {

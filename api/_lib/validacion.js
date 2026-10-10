@@ -20,7 +20,17 @@ function validarPedido(pedido) {
   if (!pedido || typeof pedido !== 'object' || Array.isArray(pedido)) {
     return { ok: false, error: 'pedido inválido: se esperaba JSON' };
   }
-  const { tipo, stack, tecnologias = [], playbooks = [], custom = '', descripcion = '' } = pedido;
+  const { tipo, stack, tecnologias = [], playbooks = [] } = pedido;
+  // `custom` y `descripcion` admiten `null` como "vacío" (review de IA-1, V2-2;
+  // contracts.md §8): `combinador.js` manda `custom: null` cuando no hay
+  // cambios de reglas, y el contrato dice de `descripcion` "nunca null como
+  // error". `??` cubre `null` Y `undefined`, a diferencia del default de la
+  // desestructuración (`= ''`), que solo cubre `undefined`.
+  // `tecnologias`/`playbooks` NO entran acá: el contrato los documenta como
+  // "arrays de strings; [] si no hay" — `null` ahí sigue siendo un tipo
+  // inválido (400), no la convención del contrato.
+  const custom = pedido.custom ?? '';
+  const descripcion = pedido.descripcion ?? '';
 
   if (!tipoValido(tipo)) return { ok: false, error: 'tipo no está en el catálogo' };
   if (!stackValido(stack)) return { ok: false, error: 'stack no está en el catálogo' };

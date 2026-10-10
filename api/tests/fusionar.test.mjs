@@ -3,6 +3,7 @@
 // cliente): node --test "api/tests/*.test.mjs"
 import { test, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import fsMod from 'node:fs';
 
 import handlerMod from '../fusionar.js';
 import anthropicClienteMod from '../_lib/anthropicCliente.js';
@@ -296,7 +297,7 @@ test('Cambio 4 (AC6): un 504 (gateway timeout) también conserva la reserva', as
   assert.ok(gastado > 0n, 'un 504 tiene que conservar la reserva, no liberarla');
 });
 
-test('Cambio 3 (AC7/500→400): tecnologias/playbooks/custom mal tipados dan 400, nunca 500', async () => {
+test('Cambio 3 (AC7/500→400): tecnologias/playbooks mal tipados dan 400, nunca 500', async () => {
   for (const campo of ['tecnologias', 'playbooks']) {
     for (const valorMalo of ['abc', null, 123]) {
       const res = crearRes();
@@ -305,8 +306,21 @@ test('Cambio 3 (AC7/500→400): tecnologias/playbooks/custom mal tipados dan 400
     }
   }
   const res2 = crearRes();
-  await handler(crearReq({ body: { ...PEDIDO_VALIDO(), custom: null } }), res2);
-  assert.equal(res2.statusCode, 400);
+  await handler(crearReq({ body: { ...PEDIDO_VALIDO(), custom: 123 } }), res2);
+  assert.equal(res2.statusCode, 400, 'custom mal tipado (no string, no null) sigue siendo 400');
+});
+
+test('V2-2: custom:null en el handler completo da 200, no 400 (contracts.md §8)', async () => {
+  const res = crearRes();
+  await handler(crearReq({ body: { ...PEDIDO_VALIDO(), custom: null } }), res);
+  assert.equal(res.statusCode, 200, `custom:null tendría que pasar la validación: ${res._body}`);
+  assert.equal(cuerpo(res).fusion, 'simulada');
+});
+
+test('V2-2: descripcion:null en el handler completo da 200, no 400', async () => {
+  const res = crearRes();
+  await handler(crearReq({ body: { ...PEDIDO_VALIDO(), descripcion: null } }), res);
+  assert.equal(res.statusCode, 200, `descripcion:null tendría que pasar la validación: ${res._body}`);
 });
 
 test('Cambio 2 (AC7): custom/tecnologias/playbooks por encima del máximo dan 400', async () => {
@@ -414,4 +428,30 @@ test('Cambio 3: red de seguridad de último recurso — una excepción inesperad
   await handler(req, res);
   assert.equal(res.statusCode, 400);
   assert.ok(cuerpo(res).error);
+});
+
+test('V2-3: si falta web/catalogo.js en el bundle (ENOENT), el 400 queda diagnosticable en el log', async () => {
+  const pedido = PEDIDO_VALIDO(); // construido ANTES de romper fs.readFileSync
+  catalogoMod._resetCacheParaTests();
+  const original = fsMod.readFileSync;
+  fsMod.readFileSync = () => {
+    const error = new Error("ENOENT: no such file or directory, open 'web/catalogo.js'");
+    error.code = 'ENOENT';
+    throw error;
+  };
+
+  const avisos = [];
+  const originalError = console.error;
+  console.error = (...args) => avisos.push(args.join(' '));
+  const res = crearRes();
+  try {
+    await handler(crearReq({ body: pedido }), res);
+  } finally {
+    console.error = originalError;
+    fsMod.readFileSync = original;
+    catalogoMod._resetCacheParaTests();
+  }
+
+  assert.equal(res.statusCode, 400, 'nunca un 500, aunque falte el catálogo');
+  assert.ok(avisos.some((l) => l.includes('code=ENOENT')), `el log tiene que diagnosticar la causa real: ${avisos.join('\n')}`);
 });
