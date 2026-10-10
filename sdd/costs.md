@@ -1,6 +1,6 @@
 # costs.md · SDD Hub
 
-**Versión:** 0.9 · **Constraint (C2 de la spec): USD 0/mes, salvo la fusión con IA (ADR-016), que se paga aparte y con tope.** R14: si algo pasa a facturar, se avisa antes.
+**Versión:** 0.10 · **Constraint (C2 de la spec): USD 0/mes, salvo la fusión con IA (ADR-016/ADR-017), que se paga aparte y con tope.** R14: si algo pasa a facturar, se avisa antes.
 
 ## Hoy
 
@@ -26,7 +26,7 @@ Es la única pieza del proyecto que no es USD 0/mes a propósito, y es la misma 
 
 | Control | Qué hace |
 |---|---|
-| **Tope de gasto como reserva** | Se anota bajo lock lo máximo que puede costar la llamada **antes** de llamar (prompt en bytes × peor precio), nunca "chequear y después llamar" — `playbooks/ia-en-el-producto.md` §A |
+| **Tope de gasto como reserva (por instancia) + límite de la consola (global)** | Se anota bajo lock lo máximo que puede costar la llamada **antes** de llamar (prompt en bytes × peor precio), nunca "chequear y después llamar" — `playbooks/ia-en-el-producto.md` §A. **La reserva en memoria solo frena dentro de una misma instancia de Vercel** (ADR-016, actualización 2026-10-09): el techo real y compartido entre todo el tráfico es el límite de gasto configurado en la consola de Anthropic (workspace/API key), no el código |
 | **Rate limit por IP** | Tope de pedidos por IP y por minuto en el endpoint, aparte del tope de gasto diario |
 | **Alerta** | Al acercarse al tope diario, igual que las de Vercel/Supabase de abajo — mismo pendiente: que llegue a más de un mail |
 
