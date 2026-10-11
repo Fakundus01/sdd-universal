@@ -1,6 +1,6 @@
 # orchestration.md · Orquestación con roles: quién hace qué, y cómo vuelve
 
-**Versión:** 0.36 · 2026-10-06 · **Para agentes:** leer solo si R31 está activa (la herramienta tiene subagentes, o la feature necesita más de una tarjeta). Cada subagente lee **solo su fila** de §2 + su tarjeta. **Para humanos:** cómo se reparte el trabajo entre agentes sin que se autoaprueben ni se pisen.
+**Versión:** 0.37 · 2026-10-11 · **Para agentes:** leer solo si R31 está activa (la herramienta tiene subagentes, o la feature necesita más de una tarjeta). Cada subagente lee **solo su fila** de §2 + su tarjeta. **Para humanos:** cómo se reparte el trabajo entre agentes sin que se autoaprueben ni se pisen.
 
 > Se apoya en [`harness.md`](harness.md) (evidencia, tarjetas, memoria en disco). Nace de Relay (chat-commerce-ai). Escenarios S28–S31.
 > Los roles de [`teams.md`](teams.md) son de **personas**; los de acá son de **agentes**. Conviven: el `leader` dirige cada OK humano al rol de persona que corresponde (R21).
@@ -15,19 +15,23 @@
 
 ---
 
-## 2 · Los siete roles
+## 2 · Los nueve roles
 
 | Rol | Hace | No hace | Escribe | Tier ([`models.md`](models.md)) |
 |---|---|---|---|---|
 | `leader` | Descompone la feature en tarjetas, elige modelo y esfuerzo, despacha, verifica que lo que vuelve tenga archivo, decide cuándo escalar al humano. **Único escritor de `sdd/`** (spec, status, tarjetas) | Editar código de producto ni tests. Aceptar resultados que vengan en el chat sin archivo. Cambiar requisitos sin OK humano | `sdd/**`, `current.md` | ALTO |
 | `implementer` | Implementa **una** tarjeta con TDD (R29), se autoverifica con `verify.py --changed`, escribe y commitea el handback | Autoaprobarse. Salir de su zona de archivos. Tocar `sdd/`. Improvisar un workaround ante un error inesperado (→ `blocked`) | código + tests de su zona, `handback_<ID>.md` | MEDIO |
 | `reviewer` | Aprueba o rechaza contra la tarjeta, el diseño y los checkpoints C1–C5. **Re-ejecuta** la verificación y busca casos borde. Mira el diff real, no lo que dice el handback | Editar código ni tests. Aprobar con algo en rojo, skipeado o debilitado | `review_<ID>.md` | ALTO |
+| [`security-reviewer`](agents/security-reviewer.md) | Aplica [`seguridad.md`](seguridad.md) contra la tarjeta: los niveles N0–N6 que `security.md` tiene activos, y que cada control declarado tenga su test (R27, R29) | Editar código ni tests. Aprobar un control sin su test | `security_review_<ID>.md` | ALTO |
+| [`pentester`](agents/pentester.md) | Ataca lo que `reviewer` y `security-reviewer` ya aprobaron, con los mismos casos que un atacante real (inyección, auth cruzada, path traversal, prompt injection…) | Editar código ni tests. Atacar producción real o datos de usuarios reales | `pentest_<ID>.md` | ALTO |
 | [`analytic`](agents/analytic.md) | Investiga antes de implementar: lee código, datos o logs, diagnostica, responde una pregunta acotada | Implementar. Escribir en producción (solo `prod_readonly_query`) | `explore_<tema>.md` | ECONÓMICO / MEDIO |
 | `infra-implementer` | CI/CD, deploy, migraciones, servicios externos. Sigue el playbook o runbook. **Separa lectura de escritura**: prepara y verifica, pero la escritura en prod la ejecuta el humano o lleva su OK explícito (R32) | Escribir en producción o mergear a `prod_branch` sin OK humano. Mergear sin review | IaC, workflows, migraciones, `handback_<ID>.md` | MEDIO |
 | [`looper`](agents/looper.md) | Corre el loop cerrado: lanza la verificación o el E2E, lee el resultado, re-despacha al implementer con la falla, hasta verde o hasta el límite (§6) | Cambiar la aceptación, los tests o el check para que pase | `current.md` (bitácora del loop) | ECONÓMICO |
 | `prompter` | Mejora tarjetas, prompts de rol y el arnés a partir de las fallas ([`harness.md`](harness.md) §8) | Cambiar requisitos ni decisiones | `harness_fixes.md`, `agents/`, checks | ALTO |
 
 **Por qué no hay `spec-keeper`:** en Relay era un rol aparte, único escritor de la spec. Acá lo absorbe el `leader`, que ya es el único escritor de `sdd/` (coherente con R09). Lo que se conserva es la distinción de §5.
+
+**`security-reviewer` y `pentester` corren siempre que R27 activó algún nivel más allá de N0** (hay login, datos personales, plata, IA, archivos o API pública en la tarjeta): la gravedad no la decide quién despacha, la decide la clasificación de `security.md`. Sin R31 (un solo agente), el mismo `reviewer` hace las tres pasadas — funcionalidad, controles de `seguridad.md` y el intento de romperlos — en la misma sesión.
 
 Prompts de rol agnósticos en `agents/<rol>.md`. En Claude Code se copian a `.claude/agents/`; en otras herramientas se pegan como primer mensaje de la sesión de ese rol.
 
@@ -44,8 +48,12 @@ Humano ──pedido──▶ leader (sesión principal)
                     ├──▶ looper (si hay E2E)      ──▶ verde, o re-despacho al implementer
                     ├──▶ reviewer                 ──▶ review_<ID>.md  ── CHANGES_REQUESTED ─┐
                     │        └───────────────── vuelve al implementer con la ruta ◀────────┘
-                    └── APPROVED → leader cierra la tarjeta, actualiza status y current.md
-                                   → OK humano (R01) → commit / merge
+                    ├──▶ security-reviewer (si R27 activó N1+) ──▶ security_review_<ID>.md ── CHANGES_REQUESTED ─┐
+                    │        └──────────────────────────── vuelve al implementer con la ruta ◀──────────────────┘
+                    ├──▶ pentester (si R27 activó N1+)         ──▶ pentest_<ID>.md         ── CHANGES_REQUESTED ─┐
+                    │        └──────────────────────────── vuelve al implementer con la ruta ◀──────────────────┘
+                    └── APPROVED (las tres) → leader cierra la tarjeta, actualiza status y current.md
+                                              → OK humano (R01) → commit / merge
 ```
 
 **Escalado por complejidad:**
@@ -66,6 +74,8 @@ Todo subagente escribe su resultado en **un archivo** y al chat devuelve **una s
 - `done -> sdd/progress/<rama>/handback_<ID>.md`
 - `blocked -> sdd/progress/<rama>/handback_<ID>.md`
 - `APPROVED -> …/review_<ID>.md` · `CHANGES_REQUESTED -> …/review_<ID>.md`
+- `APPROVED -> …/security_review_<ID>.md` · `CHANGES_REQUESTED -> …/security_review_<ID>.md` (`security-reviewer`)
+- `APPROVED -> …/pentest_<ID>.md` · `CHANGES_REQUESTED -> …/pentest_<ID>.md` (`pentester`)
 - `retry -> …/current.md` (solo el looper: falla con firma, re-despachar al implementer)
 
 Nunca el diff ni la salida de tests en el chat. Plantillas: tarjeta [`prompts/task-card.md`](prompts/task-card.md), handback [`prompts/handback.md`](prompts/handback.md). Cada paso de mano lee el archivo original, no un resumen de un resumen. Instrucción tipo para despachar:
@@ -148,6 +158,7 @@ Un loop con contrato (R33, [`loops.md`](loops.md) §4) recorre este mismo grafo.
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.37 | 2026-10-11 | S44: nadie atacaba lo que `reviewer` ya aprobaba. Dos roles nuevos en §2 (nueve en total): `security-reviewer` (aplica `seguridad.md` contra la tarjeta, controles con su test) y `pentester` (ataca lo que ambos reviewers ya aprobaron, con los casos de un atacante real). Corren siempre que R27 activó N1+; sin R31, el mismo `reviewer` hace las tres pasadas. §3 y §4 con el gate extra antes del OK humano. |
 | 0.36 | 2026-10-06 | §9: ECONÓMICO solo para tarjetas mecánicas (S42, del loop `dev-de-10`). |
 | 0.35 | 2026-10-06 | §10 Grafo de tarjetas (S40): `depende_de` en la tarjeta, despacho por niveles, bloqueo que se propaga, mermaid en `current.md`, sin ciclos. |
 | 0.30 | 2026-10-02 | Primera versión, destilada de Relay: siete roles (`leader`, `implementer`, `reviewer`, `analytic`, `infra-implementer`, `looper`, `prompter`), con el `spec-keeper` absorbido por el leader; flujo con escalado por complejidad, respuestas de una línea, límites del looper, worktrees y zonas, ramas `dev`/`main` y permisos aparte para infra. |

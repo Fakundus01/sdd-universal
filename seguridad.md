@@ -1,6 +1,6 @@
 # seguridad.md · Controles por superficie de ataque
 
-**Versión:** 0.13 · 2026-10-05 · **Bloque:** `seguridad` · **Para agentes:** leer cuando se clasifica la superficie del proyecto (R27), cuando se escribe o revisa `security.md`, y antes de cualquier feature que toque autenticación, datos de terceros, pagos, archivos o IA.
+**Versión:** 0.15 · 2026-10-11 · **Bloque:** `seguridad` · **Para agentes:** leer cuando se clasifica la superficie del proyecto (R27), cuando se escribe o revisa `security.md`, y antes de cualquier feature que toque autenticación, datos de terceros, pagos, archivos o IA.
 
 > **Por qué existe.** R17 cubre lo básico —secretos fuera del repo, `.gitignore` como paso 0— y con eso alcanza para un script. No alcanza para nada que tenga usuarios. Este archivo agrega los controles que aparecen cuando el proyecto crece, **organizados por lo que el proyecto realmente hace**, no como una lista de 80 ítems que nadie lee.
 >
@@ -25,6 +25,8 @@ En el arranque, el agente responde estas seis preguntas y aplica **solo** los ni
 La clasificación y los niveles activados **se registran en `security.md` del proyecto**, con fecha. Si más adelante el proyecto suma login, se reclasifica: agregar una feature puede activar un nivel nuevo, y ese es justamente el momento en que la gente se olvida.
 
 **Cada control que se declara lleva un test que se vio fallar (R29).** En los ejemplos de [`scenarios.md`](scenarios.md) S35, controles escritos en `security.md` (vencimiento de sesión, contención de rutas, el lock del rate limit) sobrevivían a su mutante: estaban en la spec pero ningún test los tocaba, o el test no daba rojo nunca. La tabla de controles del proyecto tiene una columna «test» y el reviewer (R30) rompe cada control una vez para verlo fallar. Un control sin test es una intención, no un control.
+
+**Con orquestación (R31), la verificación es un rol aparte de la revisión funcional (S44).** El `reviewer` certifica que la tarjeta cumple su diseño; no es su trabajo atacarla. `security-reviewer` aplica esta tabla contra la tarjeta — los niveles que `security.md` tiene activos — y `pentester` corre después, atacando con los mismos casos que usaría un atacante real. Ver [`orchestration.md`](orchestration.md) §2–§3. Sin R31 (un solo agente), las tres pasadas —funcionalidad, controles, ataque— las hace el mismo reviewer, en la misma sesión.
 
 ---
 
@@ -154,6 +156,9 @@ Si el cliente lo exige, `security.md` lleva una sección por función, con la ev
 | Headers: `nosniff`, `X-Frame-Options`, `Referrer-Policy`, y CSP si se puede | Baratos y evitan familias enteras de ataque |
 | Paginación con techo | `?limite=999999` no puede bajar la base |
 | Estáticos servidos desde una **lista blanca** armada al arrancar, nunca `base / ruta_del_pedido` | Tocar el disco con la ruta del cliente es path traversal, y en Windows `\\host\share` dispara SMB saliente y filtra el hash NTLM. Test: rutas hostiles (`..`, `%5c`, UNC, letra de unidad, alias 8.3) y un espía que confirma que el disco no se toca |
+| Documentación interactiva (Swagger UI / OpenAPI, `/docs`, `/openapi.json`) en producción es una **decisión explícita**, no el default que trae el framework | En desarrollo es gratis y ayuda a probar (FastAPI la sirve sola; Express con `swagger-ui-express`, Django con `drf-spectacular`). En producción, sin pensarlo, le muestra a cualquiera el mapa completo de la API —rutas internas, de admin, nombres de servicios— sin que tenga que atacar nada, solo mirar |
+
+**El contrato vivo es la fuente de verdad del inventario, no un `.md` a mano.** Si el proyecto expone `/openapi.json` (o el equivalente del framework), `security-reviewer` y `pentester` lo recorren **entero** para N6, además del diff de la tarjeta — un endpoint viejo que nadie tocó en esta tarjeta sigue siendo atacable y `sdd/contracts.md` puede haber quedado desactualizado; el spec que sirve el servidor, no.
 
 ---
 
@@ -198,6 +203,8 @@ Igual que todo el paquete (R20): un control entra cuando alguien se comió el pr
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.15 | 2026-10-11 | N6: Swagger UI/OpenAPI en producción pasa a decisión explícita, no default del framework; `/openapi.json` (o equivalente) es la fuente de verdad del inventario de endpoints para `security-reviewer`/`pentester`, no solo el diff ni `sdd/contracts.md` a mano. |
+| 0.14 | 2026-10-11 | §1: con R31, la verificación de este archivo y el intento de romperla son roles aparte del reviewer funcional (S44) — `security-reviewer` y `pentester` en [`orchestration.md`](orchestration.md) 0.37. Sin R31, las hace el mismo reviewer. |
 | 0.13 | 2026-10-05 | N4 con el **mapa completo** del OWASP Top 10 para LLMs (2025), cada riesgo con su control en el paquete; reglas para agentes que actúan (LLM06: el que lee no es el que actúa, aprobación humana, salida validada), y el NIST AI RMF (Govern / Map / Measure / Manage) para clientes corporativos ([`scenarios.md`](scenarios.md) S38). |
 | 0.12 | 2026-10-05 | Lecciones de los cuatro ejemplos (`scenarios.md` S33 y S35): N2 con el borrado en el archivo (`secure_delete` + `VACUUM`, backups); N4 con el tope como **reserva** y el playbook `ia-en-el-producto`, escape del texto del usuario y tests con el SDK real; N6 con los estáticos por lista blanca; cada control declarado lleva un test que se vio fallar; error 9 «un control sin test». |
 | 0.11 | 2026-08-15 | Primera versión: clasificación por superficie (N0–N6), controles con su porqué y su verificación, herramientas con lo que cada una **no** detecta, y los 8 errores que más se repiten. Nace de R27. |

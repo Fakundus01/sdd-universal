@@ -71,6 +71,8 @@ Cuando hay orquestación ([`orchestration.md`](orchestration.md)), el `leader` e
 |---|---|---|---|
 | `leader` | ALTO | alto | Descompone y decide: un error acá se propaga a todas las tarjetas |
 | `reviewer` | ALTO | medio–alto | Un revisor barato aprueba todo. El ahorro nunca va en quien verifica |
+| `security-reviewer` | ALTO | medio–alto | Mismo motivo que `reviewer`: aplicado a los controles de `seguridad.md` |
+| `pentester` | ALTO | alto | Un pentester barato no encuentra nada, y que eso se lea como «está seguro» es peor que no correrlo |
 | `prompter` | ALTO | alto | Escribe reglas y checks que van a gobernar a todos los demás |
 | `implementer` | MEDIO | alto | El grueso del trabajo; acá está el ahorro |
 | `infra-implementer` | MEDIO | alto | Toca CI, migraciones y servicios externos |
@@ -85,5 +87,6 @@ Cuando hay orquestación ([`orchestration.md`](orchestration.md)), el `leader` e
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.31 | 2026-10-11 | §4: `security-reviewer` y `pentester` (S44, [`orchestration.md`](orchestration.md) 0.37), ambos ALTO por el mismo motivo que `reviewer`. |
 | 0.30 | 2026-10-02 | §4 nueva: tier y esfuerzo por rol de agente (R31), con el ahorro en los implementers y nunca en quien decide o verifica. |
 | 0.3 | 2026-08-15 | Primera versión: tabla de espejos por herramienta (Claude, Codex/ChatGPT, Cursor, Copilot, Gemini, Windsurf, Meta/solo-chat), tiers unificados marca-agnóstico y técnicas de ahorro por capa. |

@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.37 · **Fecha:** 2026-10-09 · **Owner:** Facundo Moreno
+**Versión:** 0.38.1 · **Fecha:** 2026-10-11 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -195,7 +195,7 @@ Rojo → verde → refactor: el test se escribe primero y se lo ve fallar por la
 Nada es `done` sin **evidencia ejecutable** —comando + salida literal + hash del commit— y sin un **reviewer independiente** que re-ejecute la verificación (subagente `reviewer`, sesión nueva o el humano; nunca quien implementó), aunque el cambio parezca trivial. Lo propio del proyecto (test, lint, e2e) se declara en `harness.config.json`, nunca en el núcleo. El trabajo en vuelo vive en `sdd/progress/<rama>/`, no en el chat. Detalle: `harness.md`.
 
 **R31 · ORQUESTACIÓN-CON-ROLES — [AUTO: con subagentes o una feature de más de una tarjeta] — desactivable**
-Aplicar [`orchestration.md`](orchestration.md): `leader` (sesión principal, único escritor de `sdd/`), `implementer`, `reviewer`, `analytic`, `infra-implementer`, `looper`, `prompter`. Una tarjeta por agente con zona de archivos explícita; cada subagente escribe su resultado en un archivo y devuelve solo `done -> <ruta>`. OFF con NOVATO (R23).
+Aplicar [`orchestration.md`](orchestration.md): `leader` (sesión principal, único escritor de `sdd/`), `implementer`, `reviewer`, `security-reviewer`, `pentester`, `analytic`, `infra-implementer`, `looper`, `prompter`. `security-reviewer` y `pentester` corren siempre que R27 activó algún nivel más allá de N0: el primero aplica `seguridad.md` contra la tarjeta, el segundo la ataca con los casos de un atacante real, los dos después del `reviewer` funcional. Una tarjeta por agente con zona de archivos explícita; cada subagente escribe su resultado en un archivo y devuelve solo `done -> <ruta>`. OFF con NOVATO (R23).
 
 **R32 · PRODUCCIÓN-CON-OK — [ON] — fija**
 Antes de desplegar se miran los **datos** de producción con una consulta de solo lectura, no solo el código: a quién afecta el cambio. Escribir en producción o mergear a la rama de prod lo ejecuta el humano o lleva su OK explícito: R01 cubre el commit, esto cubre lo que no se deshace con un revert. Con carga nueva o jobs reactivados: [`playbooks/go-live.md`](playbooks/go-live.md).
@@ -385,6 +385,8 @@ Las versiones de la línea actual (0.32 en adelante). Las anteriores (0.31 hacia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.38.1 | 2026-10-11 | A pedido del owner, sobre 0.38: `security-reviewer` y `pentester` usan el spec vivo (`/openapi.json` o equivalente — Swagger UI, gratis con FastAPI) como inventario real de endpoints para N6, no solo `sdd/contracts.md` ni el diff de la tarjeta, que pueden quedar desactualizados. `seguridad.md` 0.15 suma el control: Swagger/OpenAPI en producción es decisión explícita, no el default del framework. |
+| 0.38 | 2026-10-11 | S44: nadie atacaba lo que el `reviewer` ya aprobaba. R31 suma dos roles — `security-reviewer` (aplica `seguridad.md` contra la tarjeta) y `pentester` (la ataca con los casos de un atacante real) —, los dos después del reviewer funcional y siempre que R27 activó N1+. Sin regla nueva: `orchestration.md` 0.37 §2–§4, `models.md` 0.31 §4, `seguridad.md` 0.14 §1, [`agents/security-reviewer.md`](agents/security-reviewer.md) y [`agents/pentester.md`](agents/pentester.md). |
 | 0.37 | 2026-10-09 | S43: R12 ajustada — elegir stack sigue el mismo principio que elegir modelo (clasificar contra `tecnologias.md`, decir qué se descartó) y esa justificación se escribe en `decisions.md` como ADR, no solo en el chat. START-PROMPT §6.1 lo pide explícito. |
 | 0.36 | 2026-10-06 | **Memoria entre proyectos**, vía S41: el repo se puede abrir como vault de Obsidian (links markdown normales, `.obsidian/` fuera de git) y un vault «Cerebro» guarda una nota por lección, decisión o escenario de cada proyecto. `cerebro/` la busca en forma híbrida (palabras + embeddings locales, después OpenAI opcional) y la expone por MCP; lo recuperado es dato (R26). El planning busca ahí antes de proponer. Sin regla nueva: playbook `obsidian-cerebro` y una fila en §2. S42: las tarjetas con riesgo de obstáculo no van en tier ECONÓMICO ([`orchestration.md`](orchestration.md) §9). |
 | 0.35 | 2026-10-06 | **R33 · LOOP-CON-CONTRATO** y grafo de tarjetas, vía S39 y S40: un loop autónomo se escribe antes en `sdd/loops/<nombre>.md` (disparador, objetivo medible, verificación, regla de corte, memoria) y aprobarlo autoriza commits solo en su rama. Las tarjetas declaran `depende_de` y el leader despacha por niveles del grafo. Nuevo [`loops.md`](loops.md); `orchestration.md` §10. Recoge lo que en 2026 se llama *loop engineering* y *graph engineering* (de ejecución), sin sumar capas que el paquete ya tenía. |
