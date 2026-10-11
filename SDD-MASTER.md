@@ -1,6 +1,6 @@
 # SDD-MASTER · Gobernanza Universal de Desarrollo con Agentes de IA
 
-**Versión:** 0.38.1 · **Fecha:** 2026-10-11 · **Owner:** Facundo Moreno
+**Versión:** 0.39 · **Fecha:** 2026-10-11 · **Owner:** Facundo Moreno
 **Fuente de verdad:** este archivo y los MD de `sdd/`. Los exportes a Word/PDF se generan desde acá.
 
 > **Si sos un agente de IA (Claude, Cursor, Copilot, Gemini u otro):**
@@ -40,6 +40,7 @@ Ningún cambio técnico ocurre sin estar documentado y aprobado en los MD de `sd
 |---|---|
 | Arrancar la sesión | `SDD-MASTER.md` (este archivo) |
 | Planning de una feature | `spec.md` · `features/features-<usuario>.md` · `status.md` (+ si hay Cerebro: buscar lo parecido antes, [`playbooks/obsidian-cerebro.md`](playbooks/obsidian-cerebro.md) §C) |
+| Planificar por sprints o fases (MVP primero, resto después) | [`teams.md`](teams.md) §4 (no hace falta R21 solo para esto) · [`scenarios.md`](scenarios.md) S45 — acota alcance, nunca R07/R27 |
 | Implementar código | `design.md` · `contracts/contracts-<usuario>.md` · `testing.md` |
 | Commit / push / versionar | `changelog/changelog-<usuario>.md` (+ R01, R13) |
 | Entender la arquitectura | `design.md` · `diagram.md` |
@@ -385,6 +386,7 @@ Las versiones de la línea actual (0.32 en adelante). Las anteriores (0.31 hacia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.39 | 2026-10-11 | S45: plan por sprints con MVP primero — fila nueva en §2, `teams.md` §4 usable sin R21 solo para mapear sprints a `status.md`, y aclarado que un sprint acota alcance, nunca R07 (testing) ni R27 (seguridad): esas corren tarjeta por tarjeta, no al sprint final. `teams.md` 0.31, `scenarios.md` 0.22. |
 | 0.38.1 | 2026-10-11 | A pedido del owner, sobre 0.38: `security-reviewer` y `pentester` usan el spec vivo (`/openapi.json` o equivalente — Swagger UI, gratis con FastAPI) como inventario real de endpoints para N6, no solo `sdd/contracts.md` ni el diff de la tarjeta, que pueden quedar desactualizados. `seguridad.md` 0.15 suma el control: Swagger/OpenAPI en producción es decisión explícita, no el default del framework. |
 | 0.38 | 2026-10-11 | S44: nadie atacaba lo que el `reviewer` ya aprobaba. R31 suma dos roles — `security-reviewer` (aplica `seguridad.md` contra la tarjeta) y `pentester` (la ataca con los casos de un atacante real) —, los dos después del reviewer funcional y siempre que R27 activó N1+. Sin regla nueva: `orchestration.md` 0.37 §2–§4, `models.md` 0.31 §4, `seguridad.md` 0.14 §1, [`agents/security-reviewer.md`](agents/security-reviewer.md) y [`agents/pentester.md`](agents/pentester.md). |
 | 0.37 | 2026-10-09 | S43: R12 ajustada — elegir stack sigue el mismo principio que elegir modelo (clasificar contra `tecnologias.md`, decir qué se descartó) y esa justificación se escribe en `decisions.md` como ADR, no solo en el chat. START-PROMPT §6.1 lo pide explícito. |
