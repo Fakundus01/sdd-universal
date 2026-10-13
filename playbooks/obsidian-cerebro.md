@@ -97,6 +97,31 @@ El agente busca en el Cerebro lo parecido a la tarea («tope de gasto de IA», �
 3. `python cerebro/cerebro.py indexar --todo`: los vectores de dos modelos no se comparan, se reindexa todo.
 4. **Qué sale de tu máquina:** el texto de cada fragmento indexado y de cada consulta va a la API de OpenAI. Por eso las notas no llevan secretos ni datos de personas (§B). La decisión queda escrita con fecha en `cerebro/README.md`.
 
+## E · Que el código no se adelante a los nodos (`graph/`)
+
+El grafo de links de Obsidian (§A) no sabe si un `.md` quedó desactualizado respecto del código que
+describe. `graph/` sí: cada nodo declara qué rutas de código describe y un hash de su contenido;
+`graph/_meta/sync_graph.py --check` (en el pre-commit) falla si ese código cambió desde la última
+vez que alguien revisó la prosa. Formato de nodo, comandos y por qué va separado del arnés SDD en
+[`graph/README.md`](../graph/README.md).
+
+## F · Un Cerebro para varios repos a la vez (`importar-todo`)
+
+Cuando `CEREBRO_DIR` vive al lado de varios proyectos (una carpeta de trabajo con un repo por
+cliente, por ejemplo), `cerebro importar-todo <carpeta-madre>` hace lo mismo que `importar-sdd`
+pero para todos de una corrida — cada repo etiqueta sus notas con el slug de su propio nombre de
+carpeta, nunca como si fueran del paquete SDD Universal.
+
+**Bloqueante a propósito:** necesita [Gitleaks](https://github.com/gitleaks/gitleaks) en el PATH.
+Sin él, el comando no toca ni una sola carpeta — no puede garantizar que no cruce un secreto de un
+repo al Cerebro de otro. Antes de importar cualquier carpeta corre `gitleaks detect` sobre ella; si
+encuentra algo, esa carpeta se saltea entera y solo se informa qué archivo lo tiene, nunca el valor.
+
+**Para sacar una carpeta del barrido sin que Gitleaks tenga que revisarla:** un archivo
+`CEREBRO-NO-ENTRA.md` en su raíz. Es la cuarentena para lo que sabés de antemano que no tiene nada
+que ver (archivos de claves sueltos, por ejemplo) — la convención completa en
+[`cerebro/README.md`](../cerebro/README.md).
+
 ## Verificación
 - El grafo del repo muestra [`SDD-MASTER.md`](../SDD-MASTER.md) conectado con [`harness.md`](../harness.md), [`loops.md`](../loops.md), [`orchestration.md`](../orchestration.md).
 - `cerebro buscar "loop sin regla de corte"` trae la nota de S39 entre las primeras.

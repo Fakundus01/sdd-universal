@@ -41,6 +41,32 @@ const Paquete = (() => {
   // Sin el bit de ejecución, git ignora el pre-commit en Linux/macOS.
   const EJECUTABLES = new Set(["git-hooks/pre-commit"]);
 
+  // El grafo de contexto (graph/_meta/sync_graph.py): que los .md que describen una carpeta no se
+  // desfasen del código. Va con el arnés (mismo pre-commit); sin tests/, igual que HARNESS.
+  const GRAFO = ["_meta/sync_graph.py", "README.md"];
+
+  /* material-cliente/: lo que el cliente mande (fotos, logo, diseños…), tal como llegó. Va siempre
+     — no depende de nivel ni de conHarness, cualquier proyecto puede recibir algo de un cliente. Un
+     ZIP no representa carpetas vacías: cada subcarpeta lleva un .gitkeep para que exista igual. */
+  const MATERIAL_CLIENTE = ["imgs", "logo", "tipografias", "disenos", "documentos", "flujo", "arquitectura"];
+  const MATERIAL_CLIENTE_README = `# material-cliente/
+
+Lo que el cliente mandó, tal como lo mandó. Nada de esto se inventa ni se descarga de ningún lado
+— si una carpeta queda vacía, es porque el cliente todavía no mandó nada de eso.
+
+| Carpeta | Qué va ahí |
+|---|---|
+| \`imgs/\` | Fotos de producto, capturas, cualquier imagen que haya mandado el cliente |
+| \`logo/\` | El logo, en los formatos que haya (vector y rasterizado, si hay de los dos) |
+| \`tipografias/\` | Las fuentes de su marca, si las tiene (el archivo de la fuente, no un link) |
+| \`disenos/\` | Mockups, un Figma exportado, capturas de referencia visual |
+| \`documentos/\` | PDFs, la hoja de requerimientos, contratos — cualquier documento de texto |
+| \`flujo/\` | Diagramas de flujo o de proceso que el cliente ya tenga armados |
+| \`arquitectura/\` | Diagramas técnicos previos, si el cliente ya tenía algo pensado |
+
+\`sdd/spec.md\` anota qué se recibió, de quién y cuándo — igual que un ADR.
+`;
+
   /* Plantillas del loop de R30/R31 (tarjeta, handback, relevo): harness.md,
      orchestration.md, agents/ y el hook de contexto las citan como prompts/. */
   /* sdd-lite es la plantilla del modo LITE (R18, scenarios.md S36). Va
@@ -121,7 +147,7 @@ Carpeta generada desde el catálogo del SDD Universal. Ya viene con todo en su l
 ## Qué hacer ahora (3 pasos)
 ${brownfield ? `
 > **Tu proyecto ya existe**, así que esta carpeta no reemplaza a la tuya:
-> copiá ${[ "\`sdd/\`", conAgentes && "\`agents/\`", conHarness && "\`harness/\`",
+> copiá ${[ "\`sdd/\`", "\`material-cliente/\`", conAgentes && "\`agents/\`", conHarness && "\`harness/\`", conHarness && "\`graph/\`",
              conSkills && "\`.claude/skills/\`", "\`.gitattributes\`", "\`AGENTS.md\`" ]
              .filter(Boolean).join(", ")} y \`CLAUDE.md\` **dentro** del repo que ya tenés
 > (si ya tenés un \`.gitattributes\`, sumale las líneas del de acá).
@@ -146,10 +172,12 @@ ${brownfield
 | \`sdd/prompts/\` | Plantillas de tarjeta, handback y relevo, y la de \`sdd-lite.md\` (modo LITE: todo el SDD en un solo archivo): las usa el agente al trabajar |${playbooks.length ? `\n| \`sdd/playbooks/\` | ${playbooks.length} receta(s) paso a paso: ${playbooks.join(", ")} |` : ""}
 | \`PROMPT-DE-ARRANQUE.txt\` | Tu prompt, ya armado con las opciones que elegiste |
 | \`.gitignore\` | Con \`.env\` adentro desde el minuto cero (R17) |
-| \`AGENTS.md\` / \`CLAUDE.md\` | Una línea para que cualquier agente encuentre el SDD solo |${conSkills ? `
+| \`AGENTS.md\` / \`CLAUDE.md\` | Una línea para que cualquier agente encuentre el SDD solo |
+| \`material-cliente/\` | Lo que te mande el cliente (fotos, logo, diseños…), tal como llegó. Arranca vacía — \`material-cliente/README.md\` dice qué va en cada subcarpeta |${conSkills ? `
 | \`.claude/skills/\` | Atajos para Claude Code: ${SKILLS.filter(s => conAgentes || !s.pro).map(s => `\`/${s.n}\``).join(", ")}. Si usás otro agente, ignorala — no molesta |` : ""}${conAgentes ? `
 | \`agents/\` | Los prompts de cada rol (leader, implementer, reviewer…). En Claude Code se copian a \`.claude/agents/\`: ver \`agents/README.md\` |` : ""}${conHarness ? `
-| \`harness/\` | El arnés: \`verify.py\` por niveles, pre-commit, hooks y CI de ejemplo. Necesita Python 3.10+. **Lo instala el agente** siguiendo \`harness/README.md\` cuando haya código que verificar (en Windows, con \`git update-index --chmod=+x harness/git-hooks/pre-commit\` para que el hook siga siendo ejecutable en Linux/macOS) |` : ""}
+| \`harness/\` | El arnés: \`verify.py\` por niveles, pre-commit, hooks y CI de ejemplo. Necesita Python 3.10+. **Lo instala el agente** siguiendo \`harness/README.md\` cuando haya código que verificar (en Windows, con \`git update-index --chmod=+x harness/git-hooks/pre-commit\` para que el hook siga siendo ejecutable en Linux/macOS) |
+| \`graph/\` | El grafo de contexto: que los \`.md\` que describen una carpeta no se desfasen del código. Arranca vacío — \`graph/README.md\` explica cómo sumar un nodo a medida que el proyecto crece |` : ""}
 
 **Lo que todavía no está:** \`spec.md\`, \`design.md\`, \`contracts.md\` y compañía. Esos **los escribe el agente** sobre tu idea, en el paso 3. No se descargan de ningún lado porque todavía no existen.
 
@@ -279,7 +307,7 @@ SDD Universal · https://sdd-universal.vercel.app
     const skills = SKILLS.filter(s => conAgentes || !s.pro);
     const total = 4 + PLANTILLAS.length + (conTecnologias ? 1 : 0) + (conGuia ? 1 : 0) + playbooks.length
                 + (conSkills ? skills.length : 0)
-                + (conHarness ? HARNESS.length : 0) + (conAgentes ? AGENTES.length : 0);
+                + (conHarness ? HARNESS.length + GRAFO.length : 0) + (conAgentes ? AGENTES.length : 0);
     let hecho = 0;
     const paso = () => onPaso && onPaso(++hecho, total);
     const traerP = async r => { const t = await traer(r); paso(); return t; };
@@ -303,6 +331,10 @@ SDD Universal · https://sdd-universal.vercel.app
     for (const t of PLANTILLAS)
       archivos.push({nombre: `${carpeta}/sdd/prompts/${t}.md`, origen: `prompts/${t}.md`, contenido: await traerP(`../prompts/${t}.md`)});
 
+    archivos.push({nombre: `${carpeta}/material-cliente/README.md`, contenido: MATERIAL_CLIENTE_README});
+    for (const m of MATERIAL_CLIENTE)
+      archivos.push({nombre: `${carpeta}/material-cliente/${m}/.gitkeep`, contenido: ""});
+
     if (custom)           archivos.push({nombre: `${carpeta}/sdd/custom.md`, origen: "custom.md", usuario: true, contenido: custom});
     if (conTecnologias)archivos.push({nombre: `${carpeta}/sdd/tecnologias.md`, origen: "tecnologias.md", contenido: await traerP("../tecnologias.md")});
     if (conGuia)          archivos.push({nombre: `${carpeta}/sdd/GUIDE.md`, origen: "GUIDE.md", contenido: await traerP("../GUIDE.md")});
@@ -323,6 +355,10 @@ SDD Universal · https://sdd-universal.vercel.app
       for (const h of HARNESS)
         archivos.push({nombre: `${carpeta}/harness/${h}`, origen: `harness/${h}`, contenido: await traerP(`../harness/${h}`),
                        ejecutable: EJECUTABLES.has(h)});
+
+    if (conHarness)
+      for (const g of GRAFO)
+        archivos.push({nombre: `${carpeta}/graph/${g}`, origen: `graph/${g}`, contenido: await traerP(`../graph/${g}`)});
 
     Zip.descargar(`${carpeta}.zip`, enlazar(archivos));
     return archivos.length;
@@ -360,5 +396,6 @@ SDD Universal · https://sdd-universal.vercel.app
     return archivos.length;
   }
 
-  return {proyecto, soloMd, soloSkills, reescribirLinks, enlazar, slug, SKILLS, SKILLS_EXTRA, HARNESS};
+  return {proyecto, soloMd, soloSkills, reescribirLinks, enlazar, slug, SKILLS, SKILLS_EXTRA, HARNESS, GRAFO,
+          MATERIAL_CLIENTE};
 })();

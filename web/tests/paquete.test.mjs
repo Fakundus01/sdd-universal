@@ -70,20 +70,27 @@ test("PRO con arnés: trae la capa de ejecución completa", async () => {
   for (const f of ["sdd/SDD-MASTER.md", "sdd/seguridad.md", "sdd/harness.md", "sdd/orchestration.md",
                    "sdd/prompts/task-card.md", "sdd/prompts/handback.md", "sdd/prompts/relevo.md",
                    "agents/leader.md", "agents/reviewer.md", "harness/verify.py",
+                   "graph/_meta/sync_graph.py", "graph/README.md",
+                   "material-cliente/README.md", "material-cliente/imgs/.gitkeep",
+                   "material-cliente/logo/.gitkeep", "material-cliente/tipografias/.gitkeep",
+                   "material-cliente/disenos/.gitkeep", "material-cliente/documentos/.gitkeep",
+                   "material-cliente/flujo/.gitkeep", "material-cliente/arquitectura/.gitkeep",
                    ".claude/skills/relevo/SKILL.md", ".claude/skills/harness-fix/SKILL.md"])
     assert.ok(nombres.includes(f), `falta ${f}`);
   assert.equal(nombres.filter(n => n.startsWith("harness/")).length, 12);
+  assert.equal(nombres.filter(n => n.startsWith("graph/")).length, 2);
   assert.equal(nombres.filter(n => n.startsWith("agents/")).length, 8);
+  assert.equal(nombres.filter(n => n.startsWith("material-cliente/")).length, 8);
   assert.deepEqual(ultimoPaso, [traidos.length, traidos.length], "la barra de progreso no cierra");
-  // harness/ sale igual que en el repo
-  for (const n of nombres.filter(n => n.startsWith("harness/")))
+  // harness/ y graph/ salen igual que en el repo
+  for (const n of nombres.filter(n => n.startsWith("harness/") || n.startsWith("graph/")))
     assert.equal(lf(zip.get("prueba/" + n).datos.toString("utf8")), lf(leer(n)), n);
 });
 
 test("lo que trae la capa de ejecución no cita prompts/ ni agents/ que falten", async () => {
   const {zip, nombres} = await armar({nivel: "PRO"});
   const capa = nombres.filter(n =>
-    /^(sdd\/(harness|orchestration)\.md|sdd\/prompts\/|agents\/|harness\/|\.claude\/skills\/(relevo|harness-fix)\/)/.test(n));
+    /^(sdd\/(harness|orchestration)\.md|sdd\/prompts\/|agents\/|harness\/|graph\/|\.claude\/skills\/(relevo|harness-fix)\/)/.test(n));
   assert.ok(capa.length > 20, "el filtro no encontró la capa");
   for (const n of capa)
     for (const [, cita] of zip.get("prueba/" + n).datos.toString("utf8").matchAll(/\b((?:prompts|agents)\/[\w.-]+\.md)\b/g))
@@ -119,18 +126,21 @@ test("el pre-commit sale ejecutable y nada más lo es", async () => {
 
 test("NOVATO: sin agents/ ni harness-fix (R31 va OFF)", async () => {
   const {zip, nombres} = await armar({nivel: "NOVATO", conHarness: false});
-  assert.ok(!nombres.some(n => n.startsWith("agents/") || n.startsWith("harness/")));
+  assert.ok(!nombres.some(n => n.startsWith("agents/") || n.startsWith("harness/") || n.startsWith("graph/")));
   assert.ok(!nombres.includes(".claude/skills/harness-fix/SKILL.md"));
   assert.ok(!zip.get("prueba/LEEME.md").datos.toString("utf8").includes("/harness-fix"),
             "el LEEME anuncia una skill que no viene");
   assert.ok(nombres.includes("sdd/harness.md"), "harness.md va siempre: R30 es fija");
+  // material-cliente/ no depende de nivel ni de conHarness: cualquier proyecto puede recibir algo de un cliente.
+  assert.ok(nombres.includes("material-cliente/README.md"), "material-cliente/ no debería depender de conHarness");
+  assert.equal(nombres.filter(n => n.startsWith("material-cliente/")).length, 8);
 });
 
 test("brownfield: el LEEME dice que hay que llevarse harness/ y agents/", async () => {
   const {zip} = await armar({nivel: "PRO", brownfield: true});
   const leeme = zip.get("prueba/LEEME.md").datos.toString("utf8");
   const paso = leeme.split("\n").find(l => l.includes("**dentro** del repo"));
-  for (const c of ["`sdd/`", "`agents/`", "`harness/`", "`.claude/skills/`", "`.gitattributes`"])
+  for (const c of ["`sdd/`", "`material-cliente/`", "`agents/`", "`harness/`", "`graph/`", "`.claude/skills/`", "`.gitattributes`"])
     assert.ok(paso.includes(c), `el paso brownfield no menciona ${c}`);
 });
 

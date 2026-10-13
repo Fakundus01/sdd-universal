@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import config  # noqa: E402
 import embedders  # noqa: E402
 import importar  # noqa: E402
+import importar_todo  # noqa: E402
 import notas  # noqa: E402
 from indice import ErrorIndice, Indice  # noqa: E402
 
@@ -45,6 +46,8 @@ def _parser() -> argparse.ArgumentParser:
     n.add_argument("--fecha", help="AAAA-MM-DD (default: hoy)")
     imp = sub.add_parser("importar-sdd", help="siembra el Cerebro con escenarios, hallazgos y lecciones de un repo SDD")
     imp.add_argument("repo")
+    it = sub.add_parser("importar-todo", help="importar-sdd de cada repo SDD de una carpeta madre, con Gitleaks antes de cada uno")
+    it.add_argument("carpeta")
     return p
 
 
@@ -166,8 +169,17 @@ def _cmd_importar_sdd(base: Path, args, emb) -> int:
     return 1 if r.invalidas else 0
 
 
+def _cmd_importar_todo(base: Path, args, emb) -> int:
+    _exigir_base(base)
+    try:
+        r = importar_todo.importar_todo(Path(args.carpeta), base)
+    except importar_todo.ErrorImportarTodo as e:
+        raise ErrorCLI(str(e)) from None
+    return 1 if r.bloqueados else 0
+
+
 COMANDOS = {"init": _cmd_init, "indexar": _cmd_indexar, "buscar": _cmd_buscar, "revisar": _cmd_revisar,
-            "nota": _cmd_nota, "importar-sdd": _cmd_importar_sdd}
+            "nota": _cmd_nota, "importar-sdd": _cmd_importar_sdd, "importar-todo": _cmd_importar_todo}
 USAN_EMBEDDER = {"indexar", "buscar"}
 
 

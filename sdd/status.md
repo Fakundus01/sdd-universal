@@ -64,4 +64,16 @@ El 2026-10-03 todas estaban vencidas. Con el OK del owner («hacé las deudas qu
 ~~0. v0.35 (`loops-grafo`) y 0b. v0.36 (`obsidian-cerebro`)~~ — mergeados a `main` con OK del owner (PR #3, 2026-10-06). Deuda de F27 que quedaba («enlazar `sdd/`, `skills/`, `imports/`») cerrada en 0.37 vía `graph/` (ver F27 arriba); sigue abierto solo S42 (aparte) y `cerebro/tests` en `verify.py --full`.
 1. Ejemplos de punta a punta con el SDD (e-commerce, landing, ticketera con IA, chatbot), cada uno en su repo: lo que falle ahí entra a `scenarios.md` (R20).
 2. **Owner:** hacer O3 (3 personas ajenas, 2 minutos cada una) y anotar el resultado acá; decidir D6 (dominio para el SMTP), que pesa todavía menos en local, donde no hay mails.
+
+**O3 — guion para las 3 personas (sin dar contexto antes):**
+> «Mirá esta página 2 minutos, sin que te explique nada yo. Después contame con tus palabras qué es esto y para qué sirve.»
+
+Mostrales el combinador (`web/combinador.html` o la portada tal como la ve alguien nuevo). Marcá Sí si la explicación agarra la idea central (sin necesidad de que sea textual), No si no.
+
+**Resultado O3** (completar acá cuando se corra):
+| Persona | Sí/No | Qué dijo (opcional) |
+|---|---|---|
+| 1 | — | — |
+| 2 | — | — |
+| 3 | — | — |
 3. Cuando la web salga a otros: reactivar Supabase, correr los dos `.sql` y repetir la prueba de dos cuentas (ver Bloqueos).

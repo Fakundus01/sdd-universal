@@ -46,6 +46,7 @@ class Candidata:
     fecha: str
     tags: list[str]
     origen: str = ""
+    proyecto: str = PROYECTO  # `importar-todo` pasa el slug del repo; `importar-sdd` usa el default
 
 
 def celdas(linea: str) -> list[str]:
@@ -72,7 +73,7 @@ def _matriz(texto: str) -> list[str] | None:
     return lineas[ini + 1:fin]
 
 
-def _escenarios(texto: str, avisos: list[str]) -> list[Candidata]:
+def _escenarios(texto: str, avisos: list[str], proyecto: str) -> list[Candidata]:
     m = re.search(r"\*\*Versión:\*\*[^\n]*?(\d{4}-\d{2}-\d{2})", texto)
     fecha = m.group(1) if m else datetime.date.today().isoformat()
     out = []
@@ -92,11 +93,11 @@ def _escenarios(texto: str, avisos: list[str]) -> list[Candidata]:
         cuerpo = (f"**Situación:** {situacion}\n\n**¿Funciona hoy?** {funciona}\n\n"
                   f"**Problema:** {problema}\n\n**Adaptación:** {adaptacion}")
         out.append(Candidata(id_.lower(), "escenario", _una_linea(situacion), cuerpo,
-                             f"{PROYECTO}/scenarios.md#{id_}", fecha, [id_], "scenarios.md"))
+                             f"{proyecto}/scenarios.md#{id_}", fecha, [id_], "scenarios.md", proyecto))
     return out
 
 
-def _hallazgos(texto: str, nombre: str, avisos: list[str]) -> list[Candidata]:
+def _hallazgos(texto: str, nombre: str, avisos: list[str], proyecto: str) -> list[Candidata]:
     m = re.search(r"(\d{4}-\d{2})", nombre)
     fecha = f"{m.group(1)}-01" if m else datetime.date.today().isoformat()
     sufijo = re.sub(r"^hallazgos-", "", Path(nombre).stem).lower()
@@ -113,7 +114,7 @@ def _hallazgos(texto: str, nombre: str, avisos: list[str]) -> list[Candidata]:
         cuerpo = (f"**Ejemplo:** {ejemplo}\n\n**Dónde:** {donde}\n\n"
                   f"**Qué pasó:** {paso}\n\n**Propuesta:** {propuesta}")
         out.append(Candidata(f"{sufijo}-{id_.lower()}", "hallazgo", _una_linea(paso) or id_, cuerpo,
-                             f"{PROYECTO}/examples/{nombre}#{id_}", fecha, [id_], nombre))
+                             f"{proyecto}/examples/{nombre}#{id_}", fecha, [id_], nombre, proyecto))
     return out
 
 
@@ -144,7 +145,7 @@ def _resumen_al_cortar(texto: str) -> list[str]:
     return seccion
 
 
-def _lecciones(texto: str, loop: str) -> list[Candidata]:
+def _lecciones(texto: str, loop: str, proyecto: str) -> list[Candidata]:
     seccion = _resumen_al_cortar(texto)
     m = _FECHA.search("\n".join(seccion))
     fecha = m.group(0) if m else datetime.date.today().isoformat()
@@ -164,13 +165,14 @@ def _lecciones(texto: str, loop: str) -> list[Candidata]:
             continue
         n += 1
         out.append(Candidata(f"{loop}-l{n}", "leccion", titulo, completo,
-                             f"{PROYECTO}/sdd/loops/{loop}.md#resumen-al-cortar", fecha, [loop], f"{loop}.md"))
+                             f"{proyecto}/sdd/loops/{loop}.md#resumen-al-cortar", fecha, [loop], f"{loop}.md",
+                             proyecto))
     return out
 
 
 def _texto(c: Candidata) -> str:
     """La nota completa, con la marca `importado: <hash del resto>` para saber si después la editaron."""
-    base = ["---", f"proyecto: {PROYECTO}", f"tipo: {c.tipo}", f"fecha: {c.fecha}", f"fuente: {c.fuente}",
+    base = ["---", f"proyecto: {c.proyecto}", f"tipo: {c.tipo}", f"fecha: {c.fecha}", f"fuente: {c.fuente}",
             f"tags: [{', '.join(c.tags)}]", "---", f"# {c.titulo}", "", c.cuerpo.strip(), ""]
     return _con_marca("\n".join(base))
 
@@ -224,31 +226,33 @@ def _leer(repo: Path, ruta: str, avisos: list[str]) -> str | None:
     return p.read_text(encoding="utf-8")
 
 
-def candidatas(repo: Path, avisos: list[str]) -> list[Candidata]:
+def candidatas(repo: Path, avisos: list[str], proyecto: str) -> list[Candidata]:
     out: list[Candidata] = []
     t = _leer(repo, "scenarios.md", avisos)
     if t is not None:
-        out += _escenarios(t, avisos)
+        out += _escenarios(t, avisos, proyecto)
     for p in sorted((repo / "examples").glob("hallazgos-*.md")) if (repo / "examples").is_dir() else []:
-        out += _hallazgos(p.read_text(encoding="utf-8"), p.name, avisos)
+        out += _hallazgos(p.read_text(encoding="utf-8"), p.name, avisos, proyecto)
     if not (repo / "examples").is_dir() or not list((repo / "examples").glob("hallazgos-*.md")):
         avisos.append("examples/hallazgos-*.md: no existe en el repo; se saltea")
     loops = repo / "sdd" / "loops"
     for p in sorted(loops.glob("*.md")) if loops.is_dir() else []:
         texto = p.read_text(encoding="utf-8")
         if _estado(texto) == "cumplido":
-            out += _lecciones(texto, p.stem)
+            out += _lecciones(texto, p.stem, proyecto)
     return out
 
 
-def importar(repo: Path, base: Path) -> Resumen:
+def importar(repo: Path, base: Path, proyecto: str = PROYECTO) -> Resumen:
+    """`proyecto` default a `PROYECTO` ("sdd-universal"): así `importar-sdd` sigue igual que siempre.
+    `importar-todo` pasa el slug del nombre de cada carpeta que recorre."""
     repo, base = Path(repo), Path(base)
     if not repo.is_dir():
         raise ErrorImportar(f"no existe el repo {repo}")
     if not base.is_dir():
         raise ErrorImportar(f"no existe {base}: corré `cerebro.py init`")
     r = Resumen()
-    cands = candidatas(repo, r.avisos)
+    cands = candidatas(repo, r.avisos, proyecto)
     vistos: dict[str, Candidata] = {}
     for c in cands:
         if c.id in vistos:
@@ -258,7 +262,7 @@ def importar(repo: Path, base: Path) -> Resumen:
     raiz = base / "proyectos"
     raiz.mkdir(exist_ok=True)
     raiz_real = raiz.resolve()
-    carpeta = raiz / notas.slug(PROYECTO)
+    carpeta = raiz / notas.slug(proyecto)
     if raiz_real.parent != base.resolve() or carpeta.resolve().parent != raiz_real:
         raise ErrorImportar(f"{carpeta}: queda fuera de CEREBRO_DIR/proyectos (¿un enlace?)")
     previas = _existentes(carpeta)
