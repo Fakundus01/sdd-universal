@@ -10,6 +10,7 @@ desktop.ini
 
 # Herramientas (config local; .claude/launch.json SÍ se versiona)
 .claude/settings.local.json
+.claude/worktrees/
 .vercel/
 
 # Nunca secretos (R17)
