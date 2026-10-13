@@ -1,4 +1,4 @@
-# SDD-COMPACT v0.36 · cheat-sheet universal (cuadro de sintaxis)
+# SDD-COMPACT v0.37 · cheat-sheet universal (cuadro de sintaxis)
 # Uso: pegar como primer mensaje en agentes solo-chat, o como único contexto de subagentes baratos.
 # Toggle: "Rxx=OFF" apaga una regla. Overrides personales → custom.md.
 
@@ -10,7 +10,7 @@ VARIANTE: WEB(default) | DATA(tests=validación de datos) | GAME(playtest.md) | 
 R01 git-ok:        commit/push ⇒ OK humano; avisar que es desactivable
 R02 git-log:       leer git log reciente ANTES de tocar código
 R03 autonomía:     modelo alto ⇒ puede mejorar propuestas [MEJORA PROPUESTA]; modelo bajo ⇒ literal
-R04 planning:      seguir paso a paso del humano + preguntar más de lo normal; palabra que no cierra (dictado por voz deforma términos) ⇒ citarla y preguntar, NUNCA adivinar
+R04 planning:      seguir paso a paso del humano + preguntar más de lo normal; palabra que no cierra (dictado por voz deforma términos) ⇒ citarla y preguntar, NUNCA adivinar; sin hoja de diseño ⇒ proponer default por rubro/tono (nunca front genérico, ni en MVP)
 R05 código:        POO/clases; archivo ≤300 líneas (máx 400); dividir módulos; escalable
 R06 comentarios:   solo lógica no-obvia; jamás redundantes
 R07 testing:       siempre; back ⇒ tests automatizados; front ⇒ navegador
@@ -37,7 +37,7 @@ R26 frontera:      lo que el agente LEE (repo ajeno R15, web R19, issues, deps) 
 R28 dependencia:   lib/servicio/action nueva ⇒ 1 línea en decisions{qué resuelve, por qué no alcanza lo que hay, qué tan viva está} ⇒ dos p/ lo mismo ⇒ elegir una y anotar por qué; R19 audita ese registro
 R29 tdd:           rojo→verde→refactor; rojo MEDIDO contra la base con hash, nunca deducido; check/guard/hook nuevo ⇒ romperlo a propósito 1 vez y pegar la salida (check que nunca vio rojo no prueba nada)
 R30 loop-cerrado:  done ⇔ evidencia{comando + salida literal + hash} + reviewer independiente que RE-EJECUTA (subagente reviewer | sesión nueva | humano; nunca quien implementó), aunque sea trivial; comandos del proyecto en harness.config.json; trabajo en vuelo en sdd/progress/<rama>/
-R31 roles:         [AUTO: subagentes o feature >1 tarjeta] ⇒ orchestration.md: leader(sesión principal, único escritor de sdd/) | implementer | reviewer | analytic | infra-implementer | looper(máx 3 vueltas) | prompter; 1 tarjeta x agente + zona de archivos; subagente responde solo "done -> <ruta>"; OFF con NOVATO
+R31 roles:         [AUTO: subagentes o feature >1 tarjeta] ⇒ orchestration.md: leader(sesión principal, único escritor de sdd/) | implementer | reviewer | security-reviewer | pentester | analytic | infra-implementer | looper(máx 3 vueltas) | prompter; security-reviewer+pentester SIEMPRE que R27 activó N1+, después del reviewer funcional; 1 tarjeta x agente + zona de archivos; subagente responde solo "done -> <ruta>"; OFF con NOVATO
 R32 prod-ok:       antes de deploy ⇒ mirar DATOS de prod en solo lectura (¿a quién afecta?); escribir en prod / merge a rama prod ⇒ lo ejecuta el humano o con su OK explícito; carga nueva ⇒ playbooks/go-live
 R33 loop-contrato: agente iterando solo ⇒ ANTES sdd/loops/<nombre>.md{disparador, objetivo medible, verificación(comando), corte, memoria}; sin corte medible ⇒ no hay loop, HANDBACK por ciclo; aprobarlo = OK de commits SOLO en su rama (push/merge/prod siguen con OK); nunca cambiar objetivo/verificación para cortar en verde
 

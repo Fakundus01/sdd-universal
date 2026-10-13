@@ -1,6 +1,6 @@
 # teams.md · Capa Enterprise: el SDD para equipos grandes
 
-**Versión:** 0.31 · 2026-10-11 · **Para agentes:** leer solo si la Identidad (§3 del master) dice equipo grande o la R21 está activa. **Para humanos:** cómo escala el SDD de individual a empresa.
+**Versión:** 0.32 · 2026-10-13 · **Para agentes:** leer solo si la Identidad (§3 del master) dice equipo grande o la R21 está activa. **Para humanos:** cómo escala el SDD de individual a empresa.
 
 ---
 
@@ -59,6 +59,8 @@ Las ceremonias **no generan documentos nuevos**: leen los que el SDD ya produce.
 
 **MVP primero no pospone R07 ni R27 ([`scenarios.md`](scenarios.md) S45).** Un sprint acota **alcance** (qué features entran), nunca **rigor**: cada feature, en el sprint que sea, sigue el flujo completo — tests (R07) y, si R27 activó un nivel, `security-reviewer`/`pentester` ([`orchestration.md`](orchestration.md) §2) — en su propio sprint. "Dejamos tests o seguridad para el sprint final" es exactamente lo que esas reglas, fijas, existen para evitar.
 
+**Tampoco acota diseño (R04 del master).** Sin hoja de requerimientos de diseño, el sprint MVP usa el mismo default por rubro y tono que cualquier otro — no sale con un front genérico "porque total es el MVP", justo la pieza que el cliente ve primero y con la que juzga todo lo demás.
+
 ---
 
 ## 5 · Subagentes por rol (para el agente orquestador)
@@ -113,6 +115,7 @@ El agente los genera solo si aplican (no por default): `team.md` (quién es qui�
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.32 | 2026-10-13 | §4: el sprint MVP tampoco acota diseño — hereda el default por rubro/tono de R04 (master 0.40) cuando no hay hoja de requerimientos de diseño. |
 | 0.31 | 2026-10-11 | §4: la tabla de ceremonias se puede usar sin R21 solo para mapear sprints a `status.md`; MVP primero acota alcance, no rigor — R07/R27 no se posponen al sprint final ([`scenarios.md`](scenarios.md) S45). |
 | 0.30 | 2026-10-02 | §5 apunta a [`orchestration.md`](orchestration.md) (R31) y mapea sus subagentes a los roles de agente; quedan claros los dos ejes: roles de persona acá, roles de agente allá. |
 | 0.3 | 2026-08-15 | Primera capa enterprise: 11 roles con RACI, OKs especializados por rol, autonomía escalonada por seniority, ceremonias Scrum mapeadas, 6 subagentes por rol, rutas de onboarding y secciones RPA/infra. |
