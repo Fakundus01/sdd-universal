@@ -26,3 +26,7 @@ dev/.data/
 
 # Cerebro (S41): entorno virtual local y modelos
 cerebro/.venv/
+
+# Python: bytecode cacheado, nunca fuente
+__pycache__/
+*.pyc
