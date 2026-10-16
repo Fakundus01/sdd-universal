@@ -44,8 +44,9 @@ def _parser() -> argparse.ArgumentParser:
     n.add_argument("--cuerpo", required=True)
     n.add_argument("--tags", default="", help="separadas por coma")
     n.add_argument("--fecha", help="AAAA-MM-DD (default: hoy)")
-    imp = sub.add_parser("importar-sdd", help="siembra el Cerebro con escenarios, hallazgos y lecciones de un repo SDD")
+    imp = sub.add_parser("importar-sdd", help="siembra el Cerebro con escenarios, hallazgos, decisiones y lecciones de un repo SDD")
     imp.add_argument("repo")
+    imp.add_argument("--proyecto", help="bajo qué proyecto se guardan las notas (default: sdd-universal)")
     it = sub.add_parser("importar-todo", help="importar-sdd de cada repo SDD de una carpeta madre, con Gitleaks antes de cada uno")
     it.add_argument("carpeta")
     return p
@@ -150,7 +151,10 @@ def _cmd_nota(base: Path, args, emb) -> int:
 def _cmd_importar_sdd(base: Path, args, emb) -> int:
     _exigir_base(base)
     try:
-        r = importar.importar(Path(args.repo), base)
+        if args.proyecto:
+            r = importar.importar(Path(args.repo), base, proyecto=notas.slug(args.proyecto))
+        else:
+            r = importar.importar(Path(args.repo), base)
     except importar.ErrorImportar as e:
         raise ErrorCLI(str(e)) from None
     for aviso in r.avisos:
@@ -161,7 +165,7 @@ def _cmd_importar_sdd(base: Path, args, emb) -> int:
         print(f"aviso: huérfana: {aviso}", file=sys.stderr)
     for error in r.invalidas:
         print(f"saltada (formato): {error}", file=sys.stderr)
-    tipos = ", ".join(f"{r.por_tipo.get(t, 0)} {t}" for t in ("escenario", "hallazgo", "leccion"))
+    tipos = ", ".join(f"{r.por_tipo.get(t, 0)} {t}" for t in ("escenario", "hallazgo", "decision", "leccion"))
     print(f"importadas: {tipos}")
     print(f"{r.nuevas} nuevas, {r.actualizadas} actualizadas, {r.sin_cambios} sin cambios, "
           f"{len(r.editadas)} editadas a mano (no se pisaron), {len(r.huerfanas)} huérfanas (se dejan)"

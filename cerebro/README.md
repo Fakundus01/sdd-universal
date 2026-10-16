@@ -28,7 +28,7 @@ A mano (Windows; en Linux/macOS `cerebro/.venv/bin/python` en lugar de `cerebro/
    ```bash
    cerebro/.venv/Scripts/python cerebro/cerebro.py init
    ```
-4. **`importar-sdd`** (opcional pero recomendado): siembra el Cerebro con los escenarios, hallazgos y lecciones del repo SDD.
+4. **`importar-sdd`** (opcional pero recomendado): siembra el Cerebro con los escenarios, hallazgos, decisiones (ADRs de `sdd/decisions.md`) y lecciones del repo SDD.
    ```bash
    cerebro/.venv/Scripts/python cerebro/cerebro.py importar-sdd .
    ```

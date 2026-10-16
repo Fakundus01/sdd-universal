@@ -1,6 +1,7 @@
 """importar-sdd: escenarios, hallazgos y lecciones de un repo SDD -> notas del Cerebro."""
 from __future__ import annotations
 
+import datetime
 import shutil
 import unittest
 from pathlib import Path
@@ -66,11 +67,54 @@ Algo.
 """
 
 
-def armar(repo: Path, escenarios=ESCENARIOS, hallazgos=HALLAZGOS, loops=None) -> None:
+DECISIONES = """# decisions.md · SDD Hub
+
+**Versión:** 0.9 · ADRs con fecha y motivo.
+
+---
+
+## ADR-001 · HTML estático sin build — 2026-08-15 · Vigente
+
+**Decisión:** sin bundler, sin framework.
+
+**Por qué:** menos ceremonia.
+
+---
+
+## ADR-002 · Mail + contraseña — 2026-08-20 · **Reemplaza a ADR-001**
+
+**Decisión:** contraseña como camino principal.
+
+---
+
+## ADR-001 · Magic link sin contraseñas — 2026-08-20 · **Reemplazada por ADR-002**
+
+**Decisión:** magic link por email.
+"""
+
+
+DECISIONES_CON_CAMPO_FECHA = """# decisions.md · ADRs · Otro repo
+
+## ADR-001 · Stack principal: Postgres y React
+
+**Fecha:** 2026-10-09
+**Decisión:** Postgres 18 y React 19.
+**Motivo:** concurrencia real.
+
+## ADR-002 · Sin fecha declarada
+
+**Decisión:** algo.
+**Estado:** Reemplazada por ADR-001
+"""
+
+
+def armar(repo: Path, escenarios=ESCENARIOS, hallazgos=HALLAZGOS, loops=None, decisiones=None) -> None:
     (repo / "examples").mkdir(parents=True, exist_ok=True)
     (repo / "sdd" / "loops").mkdir(parents=True, exist_ok=True)
     if escenarios is not None:
         (repo / "scenarios.md").write_text(escenarios, encoding="utf-8")
+    if decisiones is not None:
+        (repo / "sdd" / "decisions.md").write_text(decisiones, encoding="utf-8")
     if hallazgos is not None:
         (repo / "examples" / "hallazgos-2026-10.md").write_text(hallazgos, encoding="utf-8")
     for nombre, texto in (loops if loops is not None else {"uno.md": LOOP_CUMPLIDO}).items():
@@ -208,6 +252,76 @@ class TestContenido(Base):
 
 
 HALLAZGOS_NOV = HALLAZGOS.replace("py-react", "otra-cosa").replace("Vitest", "Jest")
+
+
+class TestDecisiones(Base):
+    def test_cada_adr_es_una_nota_decision_con_su_fecha_y_estado(self):
+        armar(self.repo, decisiones=DECISIONES)
+        self.importar()
+        # por título, no por `#ADR-NNN`: el origen repite el id a propósito
+        por_titulo = {n.titulo: n for _, n in self.notas("decision")}
+        self.assertEqual(len(por_titulo), 3)
+        adr = por_titulo["Mail + contraseña"]
+        self.assertEqual(adr.titulo, "Mail + contraseña")
+        self.assertEqual(adr.fecha, "2026-08-20")
+        self.assertEqual(adr.fuente, "sdd-universal/sdd/decisions.md#ADR-002")
+        self.assertIn("**Estado:** **Reemplaza a ADR-001**", adr.cuerpo)
+        self.assertIn("**Decisión:** contraseña como camino principal.", adr.cuerpo)
+
+    def test_el_estado_deja_una_etiqueta_con_la_que_filtrar(self):
+        armar(self.repo, decisiones=DECISIONES)
+        self.importar()
+        etiquetas = {n.titulo: n.tags for _, n in self.notas("decision")}
+        self.assertEqual(etiquetas["HTML estático sin build"], ["ADR-001", "vigente"])
+        self.assertEqual(etiquetas["Mail + contraseña"], ["ADR-002", "vigente"])
+        # mismo id que el vigente, pero el estado lo distingue
+        self.assertEqual(etiquetas["Magic link sin contraseñas"], ["ADR-001", "reemplazada"])
+
+    def test_un_adr_repetido_en_el_origen_se_avisa_y_no_pisa_al_primero(self):
+        armar(self.repo, decisiones=DECISIONES)
+        r = self.importar()
+        self.assertTrue(any("ADR-001 aparece 2 veces" in a for a in r.avisos), r.avisos)
+        titulos = sorted(n.titulo for _, n in self.notas("decision"))
+        self.assertEqual(titulos, ["HTML estático sin build", "Magic link sin contraseñas",
+                                   "Mail + contraseña"])
+
+    def test_segunda_corrida_no_duplica_los_adr(self):
+        armar(self.repo, decisiones=DECISIONES)
+        self.importar()
+        r = self.importar()
+        self.assertEqual(r.nuevas, 0)
+        self.assertEqual(len(self.notas("decision")), 3)
+
+    def test_sin_decisions_md_se_avisa_y_el_resto_se_importa(self):
+        armar(self.repo)
+        r = self.importar()
+        self.assertTrue(any("sdd/decisions.md" in a for a in r.avisos), r.avisos)
+        self.assertEqual(self.notas("decision"), [])
+        self.assertTrue(self.notas("escenario"))
+
+    def test_adr_con_la_fecha_como_campo_del_cuerpo_y_no_en_el_titulo(self):
+        armar(self.repo, decisiones=DECISIONES_CON_CAMPO_FECHA)
+        self.importar()
+        por_titulo = {n.titulo: n for _, n in self.notas("decision")}
+        adr = por_titulo["Stack principal: Postgres y React"]
+        self.assertEqual(adr.fecha, "2026-10-09")
+        self.assertEqual(adr.tags, ["ADR-001", "vigente"])
+        # el título no se queda con el `— fecha · estado` porque acá no lo hay
+        self.assertNotIn("—", adr.titulo)
+
+    def test_sin_fecha_en_ningun_lado_se_avisa_y_se_usa_hoy(self):
+        armar(self.repo, decisiones=DECISIONES_CON_CAMPO_FECHA)
+        r = self.importar()
+        self.assertTrue(any("ADR-002 no declara fecha" in a for a in r.avisos), r.avisos)
+        adr = next(n for _, n in self.notas("decision") if n.titulo == "Sin fecha declarada")
+        self.assertEqual(adr.fecha, datetime.date.today().isoformat())
+        self.assertEqual(adr.tags, ["ADR-002", "reemplazada"])
+
+    def test_decisions_sin_ningun_adr_se_avisa(self):
+        armar(self.repo, decisiones="# decisions.md\n\nTodavía no hay ninguna.\n")
+        r = self.importar()
+        self.assertTrue(any("no encuentro ningún" in a for a in r.avisos), r.avisos)
+        self.assertEqual(self.notas("decision"), [])
 
 
 class TestIds(Base):

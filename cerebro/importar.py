@@ -1,5 +1,6 @@
-"""importar-sdd: convierte lo que ya aprendió el paquete (matriz de scenarios.md, hallazgos y «Resumen al cortar»
-de los loops cumplidos) en notas del Cerebro. Idempotente; no pisa una nota editada a mano."""
+"""importar-sdd: convierte lo que ya aprendió el paquete (matriz de scenarios.md, hallazgos, ADRs de
+sdd/decisions.md y «Resumen al cortar» de los loops cumplidos) en notas del Cerebro. Idempotente; no pisa
+una nota editada a mano."""
 from __future__ import annotations
 
 import datetime
@@ -18,6 +19,10 @@ _FECHA = re.compile(r"\d{4}-\d{2}-\d{2}")
 _NOMBRE_FECHA = re.compile(r"^(\d{4}-\d{2}-\d{2})-")
 _NOMBRE = re.compile(r"^\d{4}-\d{2}-\d{2}-(.+)\.md$")
 _NEGRITA_INICIAL = re.compile(r"^\*\*(.+?)\*\*")
+_CAB_ADR = re.compile(r"^##\s+(ADR-\d+)\s*·\s*(.+?)\s*$")
+_CAB_FECHA_ESTADO = re.compile(r"^(.*?)\s*—\s*(\d{4}-\d{2}-\d{2})\s*·\s*(.+?)$")
+_CAMPO_FECHA = re.compile(r"^\*\*Fecha:\*\*\s*(\d{4}-\d{2}-\d{2})", re.M)
+_CAMPO_ESTADO = re.compile(r"^\*\*Estado:\*\*\s*(.+?)\s*$", re.M)
 
 
 class ErrorImportar(Exception):
@@ -170,6 +175,59 @@ def _lecciones(texto: str, loop: str, proyecto: str) -> list[Candidata]:
     return out
 
 
+def _marca_estado(estado: str) -> str:
+    """`vigente` | `reemplazada`: una etiqueta con la que se pueda filtrar, no el texto completo."""
+    return "reemplazada" if re.search(r"reemplazad[ao] por", estado, re.I) else "vigente"
+
+
+def _decisiones(texto: str, avisos: list[str], proyecto: str) -> list[Candidata]:
+    """Los ADRs de `sdd/decisions.md`. El cuerpo del ADR se guarda tal cual: ya viene con sus campos
+    en negrita (Decisión / Motivo / Costo aceptado / Revisión…) y cuáles aparecen varía por ADR.
+
+    Se aceptan los dos encabezados que usan los repos SDD: con fecha y estado al final del título
+    (`· … — <fecha> · <estado>`) o solo el título, con un campo `**Fecha:**`/`**Estado:**` en el cuerpo."""
+    lineas = texto.replace("\r\n", "\n").split("\n")
+    cabeceras = [(i, m) for i, l in enumerate(lineas) if (m := _CAB_ADR.match(l))]
+    if not cabeceras:
+        avisos.append("sdd/decisions.md: no encuentro ningún `## ADR-NNN · …`; se saltea")
+        return []
+    out = []
+    vistos: dict[str, int] = {}
+    for orden, (ini, m) in enumerate(cabeceras):
+        adr, resto = m.group(1).strip(), m.group(2).strip()
+        fin = cabeceras[orden + 1][0] if orden + 1 < len(cabeceras) else len(lineas)
+        cuerpo = "\n".join(lineas[ini + 1:fin]).strip()
+        while cuerpo.endswith("---"):
+            cuerpo = cuerpo[:-3].strip()
+        if not cuerpo:
+            avisos.append(f"sdd/decisions.md: {adr} no tiene cuerpo; se saltea")
+            continue
+        cab = _CAB_FECHA_ESTADO.match(resto)
+        if cab:
+            titulo, fecha, estado = (g.strip() for g in cab.groups())
+            cuerpo = f"**Estado:** {estado}\n\n{cuerpo}"
+        else:
+            titulo = resto
+            f, e = _CAMPO_FECHA.search(cuerpo), _CAMPO_ESTADO.search(cuerpo)
+            estado = e.group(1).strip() if e else "Vigente"
+            if f:
+                fecha = f.group(1)
+            else:
+                fecha = datetime.date.today().isoformat()
+                avisos.append(f"sdd/decisions.md: {adr} no declara fecha; se usa la de hoy")
+        # el origen puede repetir IDs a propósito (una decisión reemplazada y la que la reemplaza):
+        # el id de la nota se desempata por orden para que el import siga siendo idempotente
+        vistos[adr] = vistos.get(adr, 0) + 1
+        if vistos[adr] > 1:
+            avisos.append(f"sdd/decisions.md: {adr} aparece {vistos[adr]} veces; la nota va como "
+                          f"{adr.lower()}-{vistos[adr]}")
+        id_ = adr.lower() if vistos[adr] == 1 else f"{adr.lower()}-{vistos[adr]}"
+        out.append(Candidata(id_, "decision", _una_linea(titulo), cuerpo,
+                             f"{proyecto}/sdd/decisions.md#{adr}", fecha, [adr, _marca_estado(estado)],
+                             "decisions.md", proyecto))
+    return out
+
+
 def _texto(c: Candidata) -> str:
     """La nota completa, con la marca `importado: <hash del resto>` para saber si después la editaron."""
     base = ["---", f"proyecto: {c.proyecto}", f"tipo: {c.tipo}", f"fecha: {c.fecha}", f"fuente: {c.fuente}",
@@ -235,6 +293,9 @@ def candidatas(repo: Path, avisos: list[str], proyecto: str) -> list[Candidata]:
         out += _hallazgos(p.read_text(encoding="utf-8"), p.name, avisos, proyecto)
     if not (repo / "examples").is_dir() or not list((repo / "examples").glob("hallazgos-*.md")):
         avisos.append("examples/hallazgos-*.md: no existe en el repo; se saltea")
+    t = _leer(repo, "sdd/decisions.md", avisos)
+    if t is not None:
+        out += _decisiones(t, avisos, proyecto)
     loops = repo / "sdd" / "loops"
     for p in sorted(loops.glob("*.md")) if loops.is_dir() else []:
         texto = p.read_text(encoding="utf-8")
