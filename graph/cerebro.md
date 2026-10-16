@@ -1,7 +1,7 @@
 ---
 id: cerebro
 rutas: [cerebro/cerebro.py, cerebro/config.py, cerebro/embedders.py, cerebro/importar.py, cerebro/importar_todo.py, cerebro/indice.py, cerebro/mcp_server.py, cerebro/notas.py, cerebro/README.md]
-hash: c2218b017abcc4c3573045c6f8f6f2a9dfc3e7556c75b23136cf7502767bc92b
+hash: 8d8498b6d786858d8070e3cd20c0f531b4ba68014442316ebe4598af5aa5e1fc
 ---
 
 # cerebro
@@ -10,7 +10,9 @@ Memoria entre proyectos para el agente (S41, F27): notas en Markdown en un vault
 (`CEREBRO_DIR`), búsqueda híbrida (palabras + significado) y un MCP para que el agente la consulte
 antes de planificar. Contrato completo en [`playbooks/obsidian-cerebro.md`](../playbooks/obsidian-cerebro.md).
 
-- `cerebro.py` — CLI: `init`, `importar-sdd`, `importar-todo`, `indexar`, `buscar`, `nota`.
+- `cerebro.py` — CLI: `init`, `importar-sdd`, `importar-todo`, `indexar`, `buscar`, `nota`, y
+  `al-dia` (importar-todo + indexar en un comando: la vuelta del Cerebro, idempotente y pensada
+  para correrse seguido o programada).
 - `indice.py` — índice SQLite (FTS5 + vectores), fusión por rango recíproco (RRF).
 - `embedders.py` — `fastembed` local (default) u OpenAI, nunca mezclados en el mismo índice.
 - `importar.py` — siembra el vault con los escenarios, hallazgos, ADRs (`sdd/decisions.md`) y

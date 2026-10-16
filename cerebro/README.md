@@ -45,6 +45,14 @@ A mano (Windows; en Linux/macOS `cerebro/.venv/bin/python` en lugar de `cerebro/
    ```bash
    cerebro/.venv/Scripts/python cerebro/cerebro.py indexar
    ```
+5b. **`al-dia`**: `importar-todo` y después `indexar`, de una sola vez — la vuelta del Cerebro en
+   un comando, para no tener que acordarse de los dos ni del orden. Los dos pasos son idempotentes,
+   así que está pensado para correrlo seguido: a mano, desde un loop (R33) o programado. Si una
+   carpeta queda bloqueada por Gitleaks, indexa igual lo que sí entró —el corte es por carpeta, no
+   por corrida— y sale con `1` para que un cron lo note.
+   ```bash
+   cerebro/.venv/Scripts/python cerebro/cerebro.py al-dia "C:\ruta\a\tu\carpeta\de\proyectos"
+   ```
 6. **`buscar`**: probalo antes de dárselo al agente.
    ```bash
    cerebro/.venv/Scripts/python cerebro/cerebro.py buscar "el agente copió un archivo para pasar un check"

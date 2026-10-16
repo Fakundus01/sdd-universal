@@ -49,6 +49,9 @@ def _parser() -> argparse.ArgumentParser:
     imp.add_argument("--proyecto", help="bajo qué proyecto se guardan las notas (default: sdd-universal)")
     it = sub.add_parser("importar-todo", help="importar-sdd de cada repo SDD de una carpeta madre, con Gitleaks antes de cada uno")
     it.add_argument("carpeta")
+    ad = sub.add_parser("al-dia", help="importar-todo + indexar de una sola vez: la vuelta del Cerebro")
+    ad.add_argument("carpeta")
+    ad.add_argument("--todo", action="store_true", help="reindexa todo, no solo lo que cambio")
     return p
 
 
@@ -182,9 +185,22 @@ def _cmd_importar_todo(base: Path, args, emb) -> int:
     return 1 if r.bloqueados else 0
 
 
+def _cmd_al_dia(base: Path, args, emb) -> int:
+    """La vuelta del Cerebro en un comando: traer lo nuevo de cada repo y dejar la busqueda al dia.
+    Los dos pasos son idempotentes, asi que esta pensado para correrlo seguido o programado.
+
+    Si una carpeta queda bloqueada por Gitleaks, se indexa igual lo que si entro: el corte es por
+    carpeta, no por corrida, y lo que ya estaba en el vault no tiene por que quedarse sin indexar.
+    El codigo de salida conserva el 1 para que un loop o un cron lo note."""
+    bloqueo = _cmd_importar_todo(base, args, emb)
+    print()
+    return _cmd_indexar(base, args, emb) or bloqueo
+
+
 COMANDOS = {"init": _cmd_init, "indexar": _cmd_indexar, "buscar": _cmd_buscar, "revisar": _cmd_revisar,
-            "nota": _cmd_nota, "importar-sdd": _cmd_importar_sdd, "importar-todo": _cmd_importar_todo}
-USAN_EMBEDDER = {"indexar", "buscar"}
+            "nota": _cmd_nota, "importar-sdd": _cmd_importar_sdd, "importar-todo": _cmd_importar_todo,
+            "al-dia": _cmd_al_dia}
+USAN_EMBEDDER = {"indexar", "buscar", "al-dia"}
 
 
 def main(argv=None, embedder=None) -> int:

@@ -8,8 +8,11 @@ from unittest import mock
 
 from soporte import ConCerebro
 
+import config  # noqa: E402
 import importar_todo  # noqa: E402
 import notas  # noqa: E402
+from embedders import Falso  # noqa: E402
+from indice import Indice  # noqa: E402
 
 LOOP_CUMPLIDO = """---
 estado: cumplido
@@ -162,6 +165,40 @@ class TestCLI(Base):
         with mock.patch("importar_todo.subprocess.run", side_effect=gitleaks_sucio("x.txt")):
             code, out, err = self.cli("importar-todo", str(self.afuera))
         self.assertEqual(code, 1)
+
+
+class TestAlDia(Base):
+    """`al-dia` es la vuelta del Cerebro en un comando: importar lo nuevo de cada repo y reindexar.
+    Los dos pasos son idempotentes, así que está pensado para correrlo seguido o programado."""
+
+    def filas_indexadas(self) -> int:
+        """Cuántas notas quedaron en el índice: lo que hace que la búsqueda las encuentre."""
+        with Indice(config.ruta_indice(self.base), Falso()) as ind:
+            return len(ind.buscar("lección", k=50))
+
+    @mock.patch("importar_todo.shutil.which", return_value="gitleaks")
+    @mock.patch("importar_todo.subprocess.run", side_effect=gitleaks_limpio)
+    def test_importa_y_ademas_indexa(self, _run, _which):
+        armar_repo(self.afuera / "repo")
+        code, out, err = self.cli("al-dia", str(self.afuera), embedder=Falso())
+        self.assertEqual(code, 0, err)
+        self.assertIn("importado", out)
+        # "borradas" solo lo imprime el resumen del indexador: "nuevas" también aparece en el
+        # resumen del importador, así que no distingue si el segundo paso corrió.
+        self.assertIn("borradas", out, "no indexó: al-dia tiene que dejar la búsqueda al día")
+        self.assertGreater(self.filas_indexadas(), 0, "las notas importadas no entraron al índice")
+
+    @mock.patch("importar_todo.shutil.which", return_value="gitleaks")
+    def test_si_gitleaks_bloquea_igual_indexa_lo_que_entro_y_sale_con_1(self, _which):
+        """El corte es por carpeta, no por corrida: lo que ya estaba en el vault no se queda sin
+        indexar porque un repo nuevo tenga un secreto. Y el 1 es para que un cron lo note."""
+        self.nota("viejo", "2026-01-01-algo.md", "Algo", "Una lección previa.")
+        armar_repo(self.afuera / "repo")
+        with mock.patch("importar_todo.subprocess.run", side_effect=gitleaks_sucio("x.env")):
+            code, out, err = self.cli("al-dia", str(self.afuera), embedder=Falso())
+        self.assertEqual(code, 1)
+        self.assertIn("borradas", out, "no indexó cuando una carpeta quedó bloqueada")
+        self.assertGreater(self.filas_indexadas(), 0)
 
 
 if __name__ == "__main__":
