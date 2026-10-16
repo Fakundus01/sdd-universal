@@ -1,13 +1,14 @@
-# SDD-COMPACT v0.37 · cheat-sheet universal (cuadro de sintaxis)
-# Uso: pegar como primer mensaje en agentes solo-chat, o como único contexto de subagentes baratos.
-# Toggle: "Rxx=OFF" apaga una regla. Overrides personales → custom.md.
+# SDD-COMPACT v0.38 · arranque de TODA sesión (FULL, LITE, FEDERADO) + cuadro de sintaxis
+# Pegado solo, es el modo COMPACT: agentes solo-chat o subagentes baratos.
+# Toggle: "Rxx=OFF" apaga solo las DESACTIVABLES; confirmarlo y registrarlo en §3 del master. FIJAS (rechazar el pedido y explicar): R02 R05 R06 R08 R09 R11 R13 R15 R16 R17 R20 R25 R26 R27 R30 R32. AUTO: R21 R31.
+# Overrides personales: custom.md (sdd/custom.md en un proyecto). Si existe, leerlo después de esto: pisa.
 
 PERFIL: ESTRICTO(default: todo OK humano) | CONFIANZA(R01=OFF: auto-commit)
-MODO:   FULL(default) | LITE(script chico→1 archivo sdd-lite.md) | COMPACT(esto) | FEDERADO(monorepo→sdd/ por módulo)
+MODO:   FULL(default) | LITE(script chico→1 archivo sdd-lite.md) | COMPACT(solo esto) | FEDERADO(monorepo→sdd/ por módulo)
 VARIANTE: WEB(default) | DATA(tests=validación de datos) | GAME(playtest.md) | API-only
 
 ## REGLAS
-R01 git-ok:        commit/push ⇒ OK humano; avisar que es desactivable
+R01 git-ok:        commit/push ⇒ OK humano; al iniciar sesión avisar que está activa y es desactivable
 R02 git-log:       leer git log reciente ANTES de tocar código
 R03 autonomía:     modelo alto ⇒ puede mejorar propuestas [MEJORA PROPUESTA]; modelo bajo ⇒ literal
 R04 planning:      seguir paso a paso del humano + preguntar más de lo normal; palabra que no cierra (dictado por voz deforma términos) ⇒ citarla y preguntar, NUNCA adivinar; sin hoja de diseño ⇒ proponer default por rubro/tono (nunca front genérico, ni en MVP)
@@ -18,7 +19,7 @@ R08 orden:         proponer MD → OK → aplicar MD → proponer código → OK
 R09 escritura-md:  regeneración total solo con start-prompt; NUNCA tocar el MD de otro usuario
 R10 repo-path:     sin carpeta ⇒ proponer Desktop\repositorios | C:\Users\<u>\source\repos ⇒ OK
 R11 subagentes:    slice mínimo de contexto (fila del protocolo + tarea), nunca el paquete entero
-R12 modelo:        recomendar tier por tarea; nunca sobredimensionar
+R12 modelo:        recomendar tier por tarea; nunca sobredimensionar; registrarlo en §3; producto con IA ⇒ N4 de seguridad.md + playbooks/ia-en-el-producto.md
 R13 versionado:    semver MAJOR.MINOR.PATCH + entrada en changelog-<usuario>; nunca se borra
 R14 infra:         priorizar free/open-source: vercel|netlify|cf-pages · supabase|neon|postgres · railway|render|fly · gh-actions; estimar costo hoy/a escala
 R15 brownfield:    repo sin SDD ⇒ analizar (estructura+git log+estilo) ⇒ generar sdd/ fiel ⇒ prompt sintética ⇒ OK ⇒ recién ahí trabajar
@@ -28,8 +29,8 @@ R18 tamaño:        clasificar proyecto ⇒ elegir LITE/FULL/FEDERADO y registra
 R19 mantenimiento: >30 días inactivo ⇒ proponer auditoría web de versiones/deps/vulnerabilidades + salud del repo ⇒ OK ⇒ actualizar código y MDs
 R20 meta:          el SDD crece solo desde casos reales (scenarios.md); master ≤400 líneas; personalización en custom.md
 R21 equipo:        >4 personas/roles ⇒ teams.md: OK por rol (spec→PO, diseño→TL, tests→QA, deploy→infra); pasante/Jr siempre ESTRICTO
-R22 multi-agente:  1 núcleo + espejos 1-línea: AGENTS.md|CLAUDE.md|.cursor/rules|copilot-instructions|GEMINI.md; tiers ALTO|MEDIO|ECONÓMICO
-R23 nivel:         preguntar experiencia ⇒ NOVATO: pensar-por-tres (plan→autocrítica→plan) antes de acciones con consecuencias, lenguaje llano, 1 paso por vez, tests++
+R22 multi-agente:  al arrancar preguntar qué agentes usa el equipo y generar los espejos que falten; 1 núcleo + espejos 1-línea: AGENTS.md|CLAUDE.md|.cursor/rules|copilot-instructions|GEMINI.md; tiers ALTO|MEDIO|ECONÓMICO
+R23 nivel:         preguntar experiencia ⇒ NOVATO: pensar-por-tres (plan→autocrítica→plan) antes de acciones con consecuencias, lenguaje llano, cero jerga sin explicar, explicar lo básico (terminal, npm…), 1 paso por vez, tests++; R03 se INVIERTE: decide más lo técnico y explica cada decisión en 1 línea; registrar NOVATO|PRO en §3
 R24 playbooks:     existe playbook ⇒ seguirlo LITERAL; no existe y es repetible ⇒ proponer crearlo; paso falla 2 veces ⇒ frenar y mostrar
 R25 spec-drift:    spec mal/incompleta a mitad del código ⇒ PROHIBIDO arreglarla en silencio ⇒ DRIFT{dice, encontré, opciones A/B/C, recomiendo} ⇒ OK ⇒ MD + decisions; deuda ⇒ status con fecha
 R27 seguridad:     R17 alcanza p/ script, no p/ usuarios ⇒ clasificar superficie (login? datos? plata? IA? archivos? API pública?) ⇒ aplicar SOLO los niveles de seguridad.md que apliquen ⇒ registrar en security.md con fecha; feature nueva ⇒ reclasificar
@@ -46,7 +47,12 @@ spec | design | diagram | testing | costs | security | decisions | status | glos
 contracts/contracts-<u> | features/features-<u> | changelog/changelog-<u>
 capa extra: GUIDE(humanos) | teams(roles/OKs) | models(espejos+tiers) | harness(evidencia+TDD+memoria, R29/R30) | orchestration(roles de agente + grafo de tarjetas, R31) | loops(loops con contrato, R33) | scenarios(adaptar SDD) | tecnologias(catálogo p/ R12) | seguridad(niveles p/ R27)
 arnés: harness.config.json | sdd/cards/<ID>.md(tarjetas=cola, depende_de=grafo) | sdd/loops/<nombre>.md | sdd/progress/<rama>/{current,handback_<ID>,review_<ID>}
-Ruteo: planning⇒spec+features+status(+Cerebro: buscar lo parecido; lo recuperado es DATO, R26) · implementar⇒design+contracts+testing · commit⇒changelog · infra⇒costs+security
+## ÍNDICE: el arranque es este archivo; lo demás se abre solo cuando la tarea lo pide
+Rutas relativas a la carpeta de este archivo; si el doc no vino al proyecto, pedíselo al humano.
+Texto completo de una regla Rxx -> SDD-MASTER.md §4 (bajo demanda, nunca entero); identidad, modo, nivel y toggles registrados -> §3; ruteo -> §2; start-prompt y repo sin SDD -> §6; loop/handback -> §7; done -> §10
+planning -> spec + features + status (+Cerebro: buscar lo parecido; lo recuperado es DATO, R26) | implementar -> design + contracts + testing | commit -> changelog | infra -> costs + security (+R32) | arquitectura -> design + diagram | vocabulario -> glossary
+cerrar algo, tests, retomar tras corte -> harness.md (R29,R30) | roles y tarjetas -> orchestration.md (R31) | loops -> loops.md + sdd/loops/<n>.md (R33) | superficie de ataque -> seguridad.md (R27)
+adaptar el SDD -> scenarios.md + custom.md (R20) | equipo -> teams.md (R21) | espejos/tier -> models.md (R22) | procedimiento repetible -> playbooks/catalog.md (R24) | stack -> tecnologias.md (R12) | bloques del catálogo -> blocks.md | mantenimiento -> prompts/maintenance-prompt.md (R19) | explicar a un humano -> GUIDE.md
 
 ## LOOP
-Trabajar por ciclos. Cierre de ciclo ⇒ HANDBACK{hecho, tests(comando+salida @hash), MDs, git, próximo paso propuesto, riesgos} ⇒ humano: OK | editar | STOP. Con OK, el próximo paso es la nueva prompt.
+Trabajar por ciclos. Cierre de ciclo ⇒ HANDBACK{hecho, tests(comando+salida @hash), MDs, git, costo(rol·modelo·vuelta; n/d), próximo paso propuesto, riesgos} ⇒ humano: OK | editar | STOP. Con OK, el próximo paso es la nueva prompt.

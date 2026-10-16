@@ -17,7 +17,11 @@ const Paquete = (() => {
     return await r.text();
   }
 
-  const ESPEJO = raiz => `Leé \`${raiz}\` y obedecé sus reglas.\n`;
+  /* Arranque liviano (P-1): el agente carga el compacto (reglas + índice), no el master entero (~36 KB por
+     sesión). El master se abre solo bajo demanda, por eso su línea no lleva verbo de lectura. */
+  const ESPEJO = (compacto, master) =>
+    `Leé \`${compacto}\` (las reglas y el índice de qué abrir según la tarea) y \`${compacto.replace("SDD-COMPACT", "custom")}\` si existe (pisa) y obedecé sus reglas.\n` +
+    `El texto completo de una regla vive en \`${master}\`: abrilo solo si la tarea lo pide, no de arranque.\n`;
 
   /* Skills para Claude Code: atajos /sdd-* que envuelven los prompts del
      master. Van en .claude/skills/ y Claude las descubre solo al abrir el
@@ -165,14 +169,15 @@ ${brownfield
 
 | | |
 |---|---|
-| \`sdd/SDD-MASTER.md\` | El núcleo: las reglas y el protocolo de lectura |
+| \`sdd/SDD-COMPACT.md\` | El arranque de cada sesión (≈8 KB): las reglas R01–R33 en una línea cada una y un índice de qué abrir según la tarea |
+| \`sdd/SDD-MASTER.md\` | El núcleo completo: el texto de cada regla y el protocolo de lectura. El agente lo abre solo cuando la tarea lo pide |
 | \`sdd/seguridad.md\` | Los controles según lo que tu proyecto hace (R27). El agente lo usa solo, no hace falta que lo leas |
 | \`sdd/harness.md\` | Cómo se demuestra que algo está terminado: test primero, evidencia literal y un reviewer que la re-ejecuta (R29, R30) |
 | \`sdd/orchestration.md\` | Cómo se reparte el trabajo entre agentes con roles, cuando hace falta (R31) |
 | \`sdd/prompts/\` | Plantillas de tarjeta, handback y relevo, y la de \`sdd-lite.md\` (modo LITE: todo el SDD en un solo archivo): las usa el agente al trabajar |${playbooks.length ? `\n| \`sdd/playbooks/\` | ${playbooks.length} receta(s) paso a paso: ${playbooks.join(", ")} |` : ""}
 | \`PROMPT-DE-ARRANQUE.txt\` | Tu prompt, ya armado con las opciones que elegiste |
 | \`.gitignore\` | Con \`.env\` adentro desde el minuto cero (R17) |
-| \`AGENTS.md\` / \`CLAUDE.md\` | Una línea para que cualquier agente encuentre el SDD solo |
+| \`AGENTS.md\` / \`CLAUDE.md\` | Apuntan al compacto, para que cualquier agente encuentre el SDD solo sin cargar el master entero |
 | \`material-cliente/\` | Lo que te mande el cliente (fotos, logo, diseños…), tal como llegó. Arranca vacía — \`material-cliente/README.md\` dice qué va en cada subcarpeta |${conSkills ? `
 | \`.claude/skills/\` | Atajos para Claude Code: ${SKILLS.filter(s => conAgentes || !s.pro).map(s => `\`/${s.n}\``).join(", ")}. Si usás otro agente, ignorala — no molesta |` : ""}${conAgentes ? `
 | \`agents/\` | Los prompts de cada rol (leader, implementer, reviewer…). En Claude Code se copian a \`.claude/agents/\`: ver \`agents/README.md\` |` : ""}${conHarness ? `
@@ -305,7 +310,7 @@ SDD Universal · https://sdd-universal.vercel.app
     const conAgentes = nivel !== "NOVATO";
     // progreso real: quien arma el zip sabe cuantos archivos va a buscar
     const skills = SKILLS.filter(s => conAgentes || !s.pro);
-    const total = 4 + PLANTILLAS.length + (conTecnologias ? 1 : 0) + (conGuia ? 1 : 0) + playbooks.length
+    const total = 5 + PLANTILLAS.length + (conTecnologias ? 1 : 0) + (conGuia ? 1 : 0) + playbooks.length
                 + (conSkills ? skills.length : 0)
                 + (conHarness ? HARNESS.length + GRAFO.length : 0) + (conAgentes ? AGENTES.length : 0);
     let hecho = 0;
@@ -316,9 +321,11 @@ SDD Universal · https://sdd-universal.vercel.app
       {nombre: `${carpeta}/PROMPT-DE-ARRANQUE.txt`, contenido: prompt},
       {nombre: `${carpeta}/.gitignore`, contenido: GITIGNORE},
       {nombre: `${carpeta}/.gitattributes`, contenido: GITATTRIBUTES},
-      {nombre: `${carpeta}/AGENTS.md`, contenido: ESPEJO("sdd/SDD-MASTER.md")},
-      {nombre: `${carpeta}/CLAUDE.md`, contenido: ESPEJO("sdd/SDD-MASTER.md")},
+      {nombre: `${carpeta}/AGENTS.md`, contenido: ESPEJO("sdd/SDD-COMPACT.md", "sdd/SDD-MASTER.md")},
+      {nombre: `${carpeta}/CLAUDE.md`, contenido: ESPEJO("sdd/SDD-COMPACT.md", "sdd/SDD-MASTER.md")},
       {nombre: `${carpeta}/sdd/SDD-MASTER.md`, origen: "SDD-MASTER.md", contenido: await traerP("../SDD-MASTER.md")},
+      // El arranque diario: AGENTS.md/CLAUDE.md mandan a leer este, no el master (P-1).
+      {nombre: `${carpeta}/sdd/SDD-COMPACT.md`, origen: "SDD-COMPACT.md", contenido: await traerP("../SDD-COMPACT.md")},
       // seguridad.md va siempre: R27 lo necesita en el arranque para clasificar
       // la superficie, y es justo lo que nadie descarga si hay que elegirlo.
       {nombre: `${carpeta}/sdd/seguridad.md`, origen: "seguridad.md", contenido: await traerP("../seguridad.md")},

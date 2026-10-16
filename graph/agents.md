@@ -1,7 +1,7 @@
 ---
 id: agents
 rutas: [agents/**]
-hash: abc62eeed6882bc4ada59efd3ad18272dedadfc8096f2e2fed0a0344be9dd2d0
+hash: b657649314fdc0094eeea7806bc2da90e078a41ad100796c180f2821b5f7cd66
 ---
 
 # agents

@@ -1,7 +1,7 @@
 ---
 id: prompts
 rutas: [prompts/**]
-hash: bd59099775510fe24d670de880394eb4e132c79fed82c47f17b124ce10e26887
+hash: c071f582364565348a02f375198b72d4901dc3645659e6aff16a1aa518477484
 ---
 
 # prompts

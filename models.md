@@ -6,11 +6,11 @@
 
 ## 1 · Un solo núcleo, espejos por herramienta (R22)
 
-El SDD **nunca se duplica**: cada herramienta lee su archivo de entrada, y ese archivo es una línea que apunta al master. El start-prompt pregunta qué agentes usa el equipo y genera los espejos que falten.
+El SDD **nunca se duplica**: cada herramienta lee su archivo de entrada, y ese archivo es una línea que apunta al compacto (el master se abre bajo demanda). El start-prompt pregunta qué agentes usa el equipo y genera los espejos que falten.
 
 | Herramienta | Archivo que lee | Contenido del espejo |
 |---|---|---|
-| Claude Code / Cowork | `CLAUDE.md` (o la skill `sdd-universal`) | `Leé sdd/SDD-MASTER.md y obedecé sus reglas.` |
+| Claude Code / Cowork | `CLAUDE.md` (o la skill `sdd-universal`) | `Leé sdd/SDD-COMPACT.md y obedecé sus reglas.` |
 | OpenAI Codex / ChatGPT | `AGENTS.md` (estándar abierto) | ídem |
 | Cursor | `.cursor/rules/sdd.mdc` con `alwaysApply: true` (también lee `AGENTS.md`) | ídem |
 | GitHub Copilot | `.github/copilot-instructions.md` | ídem |

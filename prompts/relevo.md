@@ -48,4 +48,4 @@ Hacé el relevo:
 <Lo PRIMERO que hace la sesión nueva. Concreto: archivo, función, comando o decisión pendiente.>
 ```
 
-**No:** resumir la conversación entera, ni pegar salidas largas (comando + una línea de resultado alcanza). La sesión nueva arranca con: *«Leé `sdd/SDD-MASTER.md` y después `sdd/progress/<rama>/current.md` (en LITE, `sdd/sdd-lite.md`), y seguí desde el próximo paso.»* — en Claude Code, el hook de inicio se lo muestra solo.
+**No:** resumir la conversación entera, ni pegar salidas largas (comando + una línea de resultado alcanza). La sesión nueva arranca con: *«Leé `sdd/SDD-COMPACT.md` (y `sdd/custom.md` si existe) y después `sdd/progress/<rama>/current.md` (en LITE, `sdd/sdd-lite.md`), y seguí desde el próximo paso.»* — en Claude Code, el hook de inicio se lo muestra solo.

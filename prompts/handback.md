@@ -1,6 +1,6 @@
 # handback.md · Plantilla de handback en archivo (R30)
 
-El HANDBACK del master (§7) es el cierre de ciclo **en el chat**, en ~20 líneas. Este es el handback **en archivo** que deja un agente al terminar una tarjeta: va en `sdd/progress/<rama>/handback_<ID>.md`, se commitea con la rama antes de responder `done`, y es lo que lee el reviewer. Qué cuenta como evidencia: [`harness.md`](../harness.md) §4.
+El HANDBACK del master (§7) es el cierre de ciclo **en el chat**, en ~20 líneas. Este es el handback **en archivo** que deja un agente al terminar una tarjeta: va en `sdd/progress/<rama>/handback_<ID>.md` (con la sección «Costo»: `verify.py --quick` avisa si una tarjeta `done` de la v0.37 en adelante no la trae, y en cualquier rama, si la trae vacía o con `<…>` sin completar), se commitea con la rama antes de responder `done`, y es lo que lee el reviewer. Qué cuenta como evidencia: [`harness.md`](../harness.md) §4.
 
 ````markdown
 # Handback H-1 — <título>
@@ -46,6 +46,17 @@ $ python harness/verify.py --changed
 ```
 
 <Si tocaste un check, un hook o cómo se reporta un error: la cola del rojo forzado.>
+
+## Costo
+<!-- Una fila por rol y vuelta. El agente completa solo rol y vuelta: el modelo y los tokens, USD y duración los ve el
+     LEADER en el aviso de fin de cada corrida (el agente no conoce los suyos ni su modelo con certeza) y los completa
+     al recibir este handback; lo que anotes vos en `<modelo>` no vale como dato. Los `<…>` los reemplaza el leader:
+     una fila con algún `<…>` sin completar dispara el WARN de `verify.py --quick`. `n/d` es una decisión explícita
+     del leader («la herramienta no lo da»): no se estima ni se inventa (R22).
+     Tokens: «entrada/salida» si la herramienta los separa; si da un total, el total con `(total)`. -->
+| Rol | Modelo | Vuelta | Tokens | Costo USD | Duración |
+|---|---|---|---|---|---|
+| implementer | <modelo> | 1 | <tokens> | <USD> | <duración> |
 
 ## Fuera de zona / riesgos
 - <lo que viste y no tocaste; riesgos para otras ramas>

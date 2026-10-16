@@ -38,7 +38,9 @@
 | F27 | Cerebro entre proyectos y grafo del paquete (loop `obsidian-cerebro`) | In Progress | 80% | 0.36: `cerebro/` (búsqueda híbrida local y OpenAI, MCP, instalador, CI), instalado en la máquina del owner; MD del núcleo enlazados y el ZIP reescribe links. 0.37: grafo de contexto (`graph/_meta/sync_graph.py`, R30-style con hash + `--accept`, en el pre-commit) con 13 nodos — todo el repo enlazado (núcleo, `harness/`, `sdd/`, `skills/`, `imports/`, `agents/`, `prompts/`, `playbooks/`, `web/`, `dev/`, `supabase/`, `cerebro/` y `api/` desde el merge de IA-1). Falta: S42 por síntoma (aparte, no es de este grafo) |
 | F28 | Fusión con IA del combinador (v2 de `blocks.md`, ADR-016) | In Progress | 90% | 0.37: [`IA-1`](cards/IA-1.md) (endpoint `/api/fusionar`) y [`IA-2`](cards/IA-2.md) (botón de fusión en el combinador, con degradación a v1) **done y mergeadas a `main`** el 2026-10-16. ADR-018: `api/` vive acá con su dependencia y el arnés sigue verificándose sin instalar nada. La review de IA-2 encontró un bloqueante que no era suyo: los tres `detalle` nuevos (`ia:`, `ia-simulada:`, `ia-fallback:`) violaban el CHECK de `supabase/metricas.sql` y el insert iba a fallar **en silencio** — arreglado, más un test que cruza los valores de la web contra el SQL para que no vuelva a pasar. Falta: [`IA-3`](cards/IA-3.md) en `review` (los 4 tests G1–G4 escritos, los 4 mutantes mueren; necesita reviewer que no sea quien los escribió, R30) y, como mejora menor, `maxlength="4000"` en el textarea `#cdesc` (hoy un texto más largo cae al fallback v1 con un aviso genérico) |
 
-**Avance total: 25 / 27 features vigentes completas** (F19 retirada; F27 y F28 en curso)
+| F29 | Contexto fijo liviano y costo por tarjeta (v0.37) | Tasked | 60% | **Era F28 en la rama del plan; renumerada al mergear** porque F28 ya es «Fusión con IA» en `main` y la referencian ADR-016/017/018 y las tarjetas IA. Tarjetas [P-1](cards/P-1.md) (arranque con el compacto + índice; done: 3 vueltas, APPROVED @ 455e5a5; arranque 36916 → 8952 bytes, `custom.md` aparte con WARN > 2 KB) y [P-2](cards/P-2.md) (tokens/costo/duración por rol en el handback; done, 2 vueltas, APPROVED @ 10a01ec). Sin loop todavía; independientes entre sí |
+
+**Avance total: 25 / 28 features vigentes completas** (F19 retirada; F27, F28 y F29 en curso)
 
 ## Bloqueos
 
@@ -62,6 +64,7 @@ El 2026-10-03 todas estaban vencidas. Con el OK del owner («hacé las deudas qu
 ## Próximo ciclo
 
 ~~0. v0.35 (`loops-grafo`) y 0b. v0.36 (`obsidian-cerebro`)~~ — mergeados a `main` con OK del owner (PR #3, 2026-10-06). Deuda de F27 que quedaba («enlazar `sdd/`, `skills/`, `imports/`») cerrada en 0.37 vía `graph/` (ver F27 arriba); sigue abierto solo S42 (aparte) y `cerebro/tests` en `verify.py --full`.
+0c. v0.37, pendientes del paquete (**F29**, venía de la rama `v0.37-plan`, ya mergeada): [P-1](cards/P-1.md) y [P-2](cards/P-2.md) done. Pendientes de la review de P-2: tests para los mutantes R7 (título `## Costo` exacto) y V6 (decide la última sección), falso WARN si un handback cita la plantilla en un bloque de código. Pendientes de la review de P-1: test del mutante V3-f (`custom.md` no define reglas); nota de migración en el changelog (los `custom.md` bajados antes dicen «el agente lee el master primero» y ahora se leen en cada sesión); opcional WARN si `custom.md` nombra el master sin «bajo demanda»; `skill/sdd-universal.skill` obsoleto (v0.3); el ZIP no trae `loops.md`.
 1. Ejemplos de punta a punta con el SDD (e-commerce, landing, ticketera con IA, chatbot), cada uno en su repo: lo que falle ahí entra a `scenarios.md` (R20).
 2. **Owner:** hacer O3 (3 personas ajenas, 2 minutos cada una) y anotar el resultado acá; decidir D6 (dominio para el SMTP), que pesa todavía menos en local, donde no hay mails.
 
