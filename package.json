@@ -1,0 +1,11 @@
+{
+  "name": "sdd-universal-api",
+  "private": true,
+  "description": "Dependencias de las funciones serverless bajo api/ (Vercel, zero-config). web/ sigue sin build (C1/C2 de spec.md no aplican acá).",
+  "scripts": {
+    "test": "node --test \"api/tests/*.test.mjs\""
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0"
+  }
+}

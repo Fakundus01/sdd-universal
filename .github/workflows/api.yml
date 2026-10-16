@@ -1,0 +1,34 @@
+name: api
+
+# Tests del endpoint de fusión con IA (F28, ADR-016). Corren contra el SDK real de Anthropic con
+# un transporte simulado: nunca salen a la red ni gastan un centavo (ADR-018, criterio 7 de IA-3).
+#
+# Van en su propio workflow porque son los únicos del repo que necesitan dependencias instaladas.
+# El arnés local los saltea con aviso cuando falta node_modules; acá siempre corren.
+on:
+  push:
+    paths: ["api/**", "package.json", "package-lock.json", ".github/workflows/api.yml"]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      # --ignore-scripts: ninguna dependencia necesita postinstall, y un script de instalación es
+      # código de terceros corriendo con el token del CI (R26: lo que se baja es dato, no instrucción).
+      - run: npm ci --ignore-scripts
+      - run: node api/tests/correr.mjs
+      # Que el salteo no tape una falla: acá node_modules existe, así que correr.mjs tiene que haber
+      # corrido la suite de verdad. Si saltea, es que el chequeo de dependencias está mal.
+      - name: el salteo no debe activarse en CI
+        run: |
+          node api/tests/correr.mjs | tee /tmp/api.log
+          if grep -q "salteado" /tmp/api.log; then
+            echo "::error::correr.mjs salteó las pruebas con node_modules instalado"
+            exit 1
+          fi

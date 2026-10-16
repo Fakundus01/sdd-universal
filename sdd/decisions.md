@@ -226,6 +226,23 @@
 
 ---
 
+## ADR-018 · `api/` vive en este repo con su dependencia, pero el arnés del paquete se verifica sin instalar nada — 2026-10-16 · Vigente · **Acota ADR-001**
+
+**Contexto.** Al mergear la tarjeta `IA-1` a `main`, el repo gana `package.json` y una dependencia real: el SDK de Anthropic (`@anthropic-ai/sdk`). No es una comodidad de desarrollo — las pruebas del endpoint corren contra el SDK con un transporte simulado y está prohibido mockear el cliente a mano ([`playbooks/ia-en-el-producto.md`](../playbooks/ia-en-el-producto.md) §E, criterio 1 de `IA-3`). Pero ADR-001 decidió que la web no tiene build ni `node_modules`, y este repo es además **el paquete que alguien baja para leer los MD**: no es un proyecto Node.
+
+Si el comando `test` del arnés incluyera las pruebas de `api/` sin más, un clon limpio daría **rojo por una dependencia que falta**. Ese es exactamente el falso rojo que el arnés viene sacando (S46; `sdd/progress/main/harness_fixes.md`), y se paga igual de caro: se aprende a ignorar el rojo, y el día que el rojo es de verdad nadie lo mira.
+
+**Decisión.**
+- `api/` se queda en este repo. Sacarlo a otro repo separaría el código de su especificación, que vive acá (§0 del master): F28 en `sdd/status.md`, el contrato en `sdd/contracts.md` §8, ADR-016 y ADR-017.
+- La cadena del comando `test` **sigue corriendo sin instalar nada** (web, arnés, grafo, Cerebro) y termina en `node api/tests/correr.mjs`, que corre las pruebas de `api/` si está `node_modules/@anthropic-ai/sdk` y, si no, **saltea con aviso y sale 0**. Misma forma que ya tienen `lint` ausente (WARN, no FAIL) y `e2e` declarado sin corrida registrada.
+- Donde sí hay dependencias —la máquina de desarrollo y CI— corren completas y cualquier falla es un FAIL de verdad. El workflow `api.yml` corre `npm ci --ignore-scripts` y además **verifica que el salteo no se active**: con `node_modules` instalado, un salteo significa que el chequeo de dependencias está roto.
+
+**Por qué no las alternativas.** (a) *Exigir `npm ci` para verificar el paquete*: le cobra una instalación a todo el que clona para leer MD, y rompe la propiedad más útil del arnés — que un clon limpio verifica en verde. (b) *Dejar `api/tests` afuera del comando `test`*: una suite que no corre en ningún lado es una suite que no existe; justo hoy eso dejó 239 pruebas sin correr por meses. (c) *`api/` en otro repo*: separa el código de su spec y duplica el SDD.
+
+**Lo que cuesta.** En una máquina sin `npm ci`, el verde del arnés **no cubre** `api/`. El aviso lo dice en la misma línea de la salida, y CI lo cubre siempre; pero quien revise una tarjeta de `api/` tiene que instalar las dependencias antes de re-ejecutar la verificación (R30), y la tarjeta lo dice.
+
+---
+
 ## ADR-017 · La reserva de gasto de ADR-016 es por instancia, no global; el techo duro es el límite de la consola de Anthropic — 2026-10-09 · Vigente · **Ajusta ADR-016**
 
 **Contexto — DRIFT encontrado en la review de la tarjeta `IA-1` (R25).** La reserva bajo lock que describe ADR-016 usa `SharedArrayBuffer`+`Atomics`, que solo sincroniza **dentro de una misma instancia** de la función serverless. Vercel corre N instancias en paralelo, cada una con su propio contador en `$0` y reseteado en cada arranque en frío: el tope real queda acotado por `tope × instancias_concurrentes × reciclajes_del_día`, no por el tope declarado — no es un tope global compartido entre todo el tráfico, como decía ADR-016.
