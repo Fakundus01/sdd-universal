@@ -200,8 +200,8 @@ test("N3: los conteos del README y de la web coinciden con los archivos", () => 
   assert.ok(escenarios > 30, "no encontré la matriz de escenarios");
   for (const f of ["README.md", "web/catalogo.js", "web/index.html", "web/inicio.js", "web/manuales.js"]){
     const t = leer(f);
-    for (const m of t.matchAll(/(\d+) tecnologías/g)) assert.equal(+m[1], tech, `${f}: «${m[0]}»`);
-    for (const m of t.matchAll(/(\d+) situaciones/g)) assert.equal(+m[1], escenarios, `${f}: «${m[0]}»`);
+    for (const m of t.matchAll(/(\d+) tecnologías/g)) assert.equal(+m[1], tech, `${f}: «${m[0]}» — node web/sync_conteos.mjs --accept`);
+    for (const m of t.matchAll(/(\d+) situaciones/g)) assert.equal(+m[1], escenarios, `${f}: «${m[0]}» — node web/sync_conteos.mjs --accept`);
   }
 });
 
