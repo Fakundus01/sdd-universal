@@ -1,7 +1,7 @@
 ---
 id: playbooks
 rutas: [playbooks/**]
-hash: 5d7e854c30e332bac24cccebe6b795c0299a9a11cb73127dd81b75607ddafc3f
+hash: 6f9419f03f917bc6c08a5f17b8da262b808b7b51e8ea88f4e7ba8716a41dea59
 ---
 
 # playbooks

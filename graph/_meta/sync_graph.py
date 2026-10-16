@@ -120,6 +120,15 @@ def resolve_ruta(root: Path, ruta: str) -> list[Path]:
     return []
 
 
+def normalizar(datos: bytes) -> bytes:
+    """CRLF -> LF antes de hashear. En Windows con `core.autocrlf` el mismo archivo convive en disco
+    con un fin de linea o con el otro segun que herramienta lo escribio ultimo, y un hash sobre los
+    bytes crudos marcaba el nodo como desactualizado sin que el contenido hubiera cambiado. Un check
+    que grita en falso se calla con --accept, y ahi se acepta tambien el drift real que venga de
+    acompanante."""
+    return datos.replace(b"\r\n", b"\n")
+
+
 def compute_hash(root: Path, rutas: list[str]) -> tuple[str, list[str]]:
     files: list[Path] = []
     missing: list[str] = []
@@ -134,7 +143,7 @@ def compute_hash(root: Path, rutas: list[str]) -> tuple[str, list[str]]:
     for p in ordered:
         digest.update(p.relative_to(root).as_posix().encode("utf-8"))
         digest.update(b"\0")
-        digest.update(p.read_bytes())
+        digest.update(normalizar(p.read_bytes()))
         digest.update(b"\0")
     return digest.hexdigest(), missing
 

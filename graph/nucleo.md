@@ -1,7 +1,7 @@
 ---
 id: nucleo
 rutas: [SDD-MASTER.md, SDD-MASTER-EN.md, SDD-COMPACT.md, SDD-COMPACT-EN.md, scenarios.md, orchestration.md, harness.md, loops.md, teams.md, models.md, tecnologias.md, blocks.md, custom.md, seguridad.md, historial-master.md, GUIDE.md, AGENTS.md, CLAUDE.md, CONTRIBUTING.md, README.md]
-hash: 1a4a3a95e3a75d4b5174da10ecaba80b06328afc38ec1ceb66c842f307328429
+hash: 4a8e144e7d7a014532b256e17e4a72f254f5072f5610325226082ccef1f40b97
 ---
 
 # núcleo

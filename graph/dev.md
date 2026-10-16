@@ -1,7 +1,7 @@
 ---
 id: dev
 rutas: [dev/**]
-hash: d43fe89d2f1bcd58070737985d39dbdc0640e1af5799b9cdd692f1b534e4ef3d
+hash: 21700f57b7d4600933d516c61ba9ba3b3ed08944d743faac6c2e857b0601b4a3
 ---
 
 # dev

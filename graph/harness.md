@@ -1,7 +1,7 @@
 ---
 id: harness
 rutas: [harness/**]
-hash: 0e41fc401d5ea80188e5ffbb0ec453956bbd8601e64fe74871c7a47e03c81e78
+hash: 57d10bce4f71f236d7d24b0165fa10d4ec79bbcd8576092fc3870403562bd8c5
 ---
 
 # harness

@@ -1,7 +1,7 @@
 ---
 id: imports
 rutas: [imports/**]
-hash: 4f6bf47846c9fe2bef3bd77c7d3b5716a4d1fbe0dd3c54f638a9e3deff9ee3bc
+hash: 55d967635270675ab4cb1cae904ab6e5348fbc95c244319ec76bf9c9c43dd782
 ---
 
 # imports

@@ -115,6 +115,32 @@ class TestSyncGraph(unittest.TestCase):
         meta.write_text("# script\n", encoding="utf-8")
         self.assertEqual(self.check(), 0)
 
+    def test_cambiar_el_fin_de_linea_no_desincroniza(self):
+        """El hash se calculaba sobre bytes crudos, asi que en Windows (core.autocrlf) cualquier
+        editor que guardara con el otro fin de linea marcaba el nodo como desactualizado sin que
+        el contenido hubiera cambiado. Un check que grita en falso se calla con --accept, y ahi se
+        acepta tambien el drift real que venga de acompanante."""
+        self.node()
+        f = self.root / "area" / "a.py"
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_bytes(b"x = 1\ny = 2\n")
+        self.update(accept=True)
+        self.assertEqual(self.check(), 0)
+        f.write_bytes(b"x = 1\r\ny = 2\r\n")  # el mismo contenido, en CRLF
+        self.assertEqual(self.check(), 0, "CRLF en vez de LF no es un cambio de contenido")
+        f.write_bytes(b"x = 1\ny = 2\n")        # y de vuelta
+        self.assertEqual(self.check(), 0)
+
+    def test_el_fin_de_linea_normalizado_no_tapa_un_cambio_real(self):
+        """La normalizacion no debilita el check: con CRLF, un cambio de verdad sigue cayendo."""
+        self.node()
+        f = self.root / "area" / "a.py"
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_bytes(b"x = 1\r\n")
+        self.update(accept=True)
+        f.write_bytes(b"x = 2\r\n")
+        self.assertEqual(self.check(), 1)
+
     def test_update_accept_preserva_crlf(self):
         path = self.root / "graph" / "area.md"
         path.parent.mkdir(parents=True, exist_ok=True)

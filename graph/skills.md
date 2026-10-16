@@ -1,7 +1,7 @@
 ---
 id: skills
 rutas: [skills/**]
-hash: 09818e6653f408024a76b46fa639de111e3fab89068c5589862abf5978057089
+hash: fa0369b570ed488bb06e64154b6f31f05a8a2bc2c8e5bbf583b9c9dda0a3223c
 ---
 
 # skills
