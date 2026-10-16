@@ -4,5 +4,9 @@
   "e2e": "node --test \"dev/tests/*.test.mjs\"",
   "deploy": "git push origin main",
   "base_branch": "main",
-  "prod_branch": "main"
+  "prod_branch": "main",
+  "sync": [
+    "python graph/_meta/sync_graph.py --update --accept",
+    "node web/sync_conteos.mjs --accept"
+  ]
 }

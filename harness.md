@@ -1,6 +1,6 @@
 # harness.md · El arnés: que lo que el agente dice que hizo sea cierto
 
-**Versión:** 0.36 · 2026-10-16 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
+**Versión:** 0.37 · 2026-10-16 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
 
 > Nace de **Relay**, el sistema que se usó en producción en `chat-commerce-ai` (features H-1 a H-11). Escenarios S28–S31.
 > El SDD gobierna *qué* se construye; el arnés hace cumplir *que esté construido*.
@@ -54,6 +54,7 @@ Se activa con **R29/R30** (ON por default). Funciona con un solo agente: no hace
 | `base_branch` / `prod_branch` | no | Ramas de integración y de producción (default: `main` / `main`). |
 | `context_threshold` | no | Tokens de *trabajo* de la sesión antes de pedir relevo (§6). Default 400000. |
 | `master` | no | Ruta del [`SDD-MASTER.md`](SDD-MASTER.md), relativa a la raíz. Default `sdd/SDD-MASTER.md`. Para repos donde el núcleo no vive en `sdd/` (el propio paquete, que lo tiene en la raíz). Tiene que quedar **dentro** del repo: una ruta absoluta o con `..` que salga de la raíz se rechaza al cargar la config. La usan el chequeo de que el master existe y la lectura del modo (LITE/FULL). |
+| `sync` | no | Comandos que vuelven a poner **lo derivado** en sincronía con su fuente: conteos calculados, hashes de un grafo de contexto, índices, espejos generados. Los corre `ciclo.py` antes de verificar, siempre y en orden. Tienen que ser **idempotentes y sin red**: se van a correr muchas veces, también sobre un árbol limpio. Lo que *detecta* el drift es un test; esto lo *arregla*, y por eso va aparte de `lint`. |
 | `cited_paths_docs` | no | Docs cuyas rutas citadas tienen que existir (§7). Default `AGENTS.md`, `CLAUDE.md`, `sdd/testing.md`, `sdd/spec.md` y `sdd/sdd-lite.md` (los que existan). El master y [`orchestration.md`](orchestration.md) no van por default: citan archivos opcionales (`GEMINI.md`, `metrics.md`) y darían falsos positivos. |
 
 JSON y no YAML/TOML: lo leen la stdlib de Python y de Node sin dependencias (R28). Los comentarios van en `sdd/design.md`, no en el JSON. Tipos inválidos o claves desconocidas dan error o aviso, nunca un traceback.
@@ -76,6 +77,26 @@ Un solo comando, tres niveles. Lo corre el agente al arrancar, mientras trabaja,
 La primera línea de la salida es el comando, el hash y la rama (`verify.py --changed @ 3f1c9a2e (rama feat/stock)`): pegada entera, ya es evidencia (§4). En CI, con HEAD detached, la rama sale de `GITHUB_HEAD_REF` o `CI_COMMIT_REF_NAME`. En un monorepo, la raíz es la carpeta que contiene `harness/` y los cambios se cuentan relativos a ella. Sin git, `--changed` corre los tests igual y avisa que no puede saber qué cambió.
 
 Exit distinto de 0 si algo falla. Pensado para Windows (Git Bash, PowerShell, cmd), macOS y Linux; probado en Windows, y el workflow `harness.yml` del repo del SDD Universal (no del proyecto) corre la suite en los tres.
+
+### Una vuelta en un comando (`ciclo.py`)
+
+Verificar es un paso; la **vuelta** son cuatro, y siempre los mismos: poner en sincronía lo derivado, verificar, armar la evidencia, commitear. Hacerlos a mano cuesta tokens y, peor, se olvidan justo cuando la vuelta salió bien y uno tiene ganas de cerrar.
+
+```text
+python harness/ciclo.py                      sync + verify --changed + evidencia
+python harness/ciclo.py --full               lo que corre el reviewer
+python harness/ciclo.py --commit "mensaje"   y si quedó verde, commitea con la evidencia pegada
+python harness/ciclo.py --commit "m" --push  además pushea la rama
+```
+
+Lo que garantiza, y es todo el punto:
+
+- **No commitea en rojo.** Un `done` con el verificador en rojo no es evidencia (R30), y el que arma el commit a mano se entera después.
+- **La evidencia se arma sola**, con el comando exacto, la salida literal y el hash: el bloque que pide §4, sin que nadie lo transcriba (transcribir es donde se cuelan las salidas editadas).
+- **Un fixer en rojo frena antes de verificar:** seguir dejaría lo derivado a medias y el verde no significaría nada.
+- **Nunca despliega**, ni con `--push`: `deploy` sigue siendo documental (R32). Y `--push` se niega sobre `prod_branch` salvo `--a-prod`, que es el OK humano explícito.
+
+`ciclo.py` no reemplaza a `verify.py`: lo llama. Lo que es del proyecto —qué fixers, qué suite— sigue declarado en `harness.config.json` y en ningún otro lado.
 
 **Salida perdida.** En Windows, bajo carga, el hilo que lee la salida de un subproceso puede morir (`OSError: [WinError 1]`) y la salida llega vacía aunque el comando haya andado. El arnés reintenta una vez; si se pierde de nuevo, es un `FAIL` que dice «salida no disponible» (sin salida no hay evidencia, aunque el exit sea 0), nunca un traceback. Los hooks dejan cerrar si el exit fue 0, y si no, bloquean con ese mismo aviso.
 
@@ -229,6 +250,7 @@ Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.37 | 2026-10-16 | §2 suma la clave `sync` (los comandos que arreglan lo derivado) y §3 suma `ciclo.py`: la vuelta completa en un comando —sync, verify, evidencia armada, commit— que no commitea en rojo y no despliega nunca. Nace de hacer el ritual siete veces a mano en una sesión. |
 | 0.36 | 2026-10-16 | §5 suma dos pasos al paso de mutantes, de la review de la tarjeta `IA-3` ([`scenarios.md`](scenarios.md) S46 y S47): al menos un mutante en el punto de uso que nombra el criterio, no solo en la primitiva; y una precarga que bloquea `fetch` para probar de una que la suite no llama a la API real. Sin regla Rxx nueva. |
 | 0.35 | 2026-10-06 | §2: clave `master` para un núcleo fuera de `sdd/` (DRIFT de la tarjeta L-6, opción A elegida por el owner: el paquete no podía usar su propio arnés sin una copia del master). §7: el arnés revisa `depende_de` de las tarjetas (existe, sin ciclos, sin despacho fuera de orden), por [`orchestration.md`](orchestration.md) §10 (tarjeta L-2). |
 | 0.33.2 | 2026-10-05 | Review R30 de v0.33.1 (R3): la salida perdida de un subproceso (`stdout=None` en Windows bajo carga) se reintenta una vez y, si se repite, es un `FAIL` «salida no disponible» en `verify.py` y un aviso en los hooks, en vez de un traceback (§3). También en `git` (`repo.py`) y en los tests (`support.py`), donde era el flaky de la suite. |

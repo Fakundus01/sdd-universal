@@ -16,7 +16,7 @@ DEFAULT_MASTER = "sdd/SDD-MASTER.md"
 DEFAULT_CITED_DOCS = ["AGENTS.md", "CLAUDE.md", "sdd/testing.md", "sdd/spec.md", "sdd/sdd-lite.md"]
 STR_KEYS = {"test", "test_quick", "lint", "lint_file", "e2e", "prod_readonly_query", "deploy",
             "base_branch", "prod_branch", "master"}
-LIST_KEYS = {"lint_ext", "cited_paths_docs"}
+LIST_KEYS = {"lint_ext", "cited_paths_docs", "sync"}
 INT_KEYS = {"context_threshold"}
 KNOWN_KEYS = STR_KEYS | LIST_KEYS | INT_KEYS
 # lint_file no pasa por un shell: se parte en argumentos y la ruta entra como UN argumento. Así ningún nombre de
@@ -84,6 +84,9 @@ class HarnessConfig:
     prod_branch: str = "main"
     context_threshold: int = 400_000
     cited_paths_docs: list[str] = field(default_factory=lambda: list(DEFAULT_CITED_DOCS))
+    # Comandos que vuelven a poner en sincronía lo derivado (conteos, hashes, índices) con su fuente.
+    # Idempotentes y sin efectos de red: `ciclo.py` los corre antes de verificar, siempre.
+    sync: list[str] = field(default_factory=list)
     unknown_keys: list[str] = field(default_factory=list)
 
     @classmethod
