@@ -1,6 +1,6 @@
 {
   "master": "SDD-MASTER.md",
-  "test": "node --test \"web/tests/*.test.mjs\" && python -m unittest discover -s harness/tests && python -m unittest discover -s graph/_meta/tests",
+  "test": "node --test \"web/tests/*.test.mjs\" && python -m unittest discover -s harness/tests && python -m unittest discover -s graph/_meta/tests && python -m unittest discover -s cerebro/tests",
   "e2e": "node --test \"dev/tests/*.test.mjs\"",
   "deploy": "git push origin main",
   "base_branch": "main",
