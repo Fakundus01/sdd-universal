@@ -1,7 +1,7 @@
 ---
 id: sdd
 rutas: [sdd/**]
-hash: da07ab4ef309ebd236852afd30acba0c2d987f8ea776873e96156f576a47d4f2
+hash: bc3c419fa907c935a3680753e098031d393275080fbc2b06d063bc0bb543f5ba
 ---
 
 # sdd
