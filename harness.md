@@ -1,6 +1,6 @@
 # harness.md · El arnés: que lo que el agente dice que hizo sea cierto
 
-**Versión:** 0.35 · 2026-10-06 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
+**Versión:** 0.36 · 2026-10-16 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
 
 > Nace de **Relay**, el sistema que se usó en producción en `chat-commerce-ai` (features H-1 a H-11). Escenarios S28–S31.
 > El SDD gobierna *qué* se construye; el arnés hace cumplir *que esté construido*.
@@ -118,6 +118,10 @@ $ python harness/verify.py --changed      # @ 3f1c9a2e
 
 **Mutantes de carrera:** un test de concurrencia tiene que dar rojo con el lock sacado. Si no, la demora está fuera de la ventana entre mirar y anotar, o los hilos no arrancan juntos (`threading.Barrier`). Uno de los ejemplos tuvo un test así que no dio rojo en ninguna de 50 corridas.
 
+**Mutante en el punto de uso (S46).** Un mutante aplicado a la primitiva prueba la primitiva. Si el criterio de aceptación habla del endpoint, del handler o del comando, al menos un mutante va **ahí**, en el punto donde esa primitiva se usa — porque el bug clásico no es que la primitiva esté mal, es que nadie la llame antes de hacer el gasto. En la tarjeta `IA-3`, «`reservar()` sin lock» moría 3 de 3, y el mutante que chequeaba el tope, llamaba al modelo y recién después anotaba sobrevivía las 56 pruebas gastando 5× el tope. Un criterio y una evidencia pueden coincidir en el nombre y no en el alcance; el mutante es lo que lo distingue.
+
+**La suite no sale a la red (S47).** Inyectar un cliente HTTP falso en cada test prueba que *ese* test no sale: no que no salga ninguno. Lo que lo prueba de una es una **precarga** (`node --import`, `conftest.py` o el equivalente del runtime) que reemplaza `fetch` por uno que registra y falla, con un assert de cero llamadas reales al final. En un proyecto con IA (N4) va como opción del comando `test`. Y la precarga se prueba a sí misma: con un cliente construido sin el `fetch` de test tiene que registrar la llamada, o no está atrapando nada.
+
 **Variantes de dominio:** DATA → el «test» es una validación de datos (esquema, rangos, nulos) y el rojo forzado es un dataset roto a propósito. GAME → `playtest.md` documenta el caso y su resultado; el rojo forzado es el estado de juego que el check debe rechazar.
 
 ### Checks de drift fuente ↔ realidad
@@ -225,6 +229,7 @@ Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.36 | 2026-10-16 | §5 suma dos pasos al paso de mutantes, de la review de la tarjeta `IA-3` ([`scenarios.md`](scenarios.md) S46 y S47): al menos un mutante en el punto de uso que nombra el criterio, no solo en la primitiva; y una precarga que bloquea `fetch` para probar de una que la suite no llama a la API real. Sin regla Rxx nueva. |
 | 0.35 | 2026-10-06 | §2: clave `master` para un núcleo fuera de `sdd/` (DRIFT de la tarjeta L-6, opción A elegida por el owner: el paquete no podía usar su propio arnés sin una copia del master). §7: el arnés revisa `depende_de` de las tarjetas (existe, sin ciclos, sin despacho fuera de orden), por [`orchestration.md`](orchestration.md) §10 (tarjeta L-2). |
 | 0.33.2 | 2026-10-05 | Review R30 de v0.33.1 (R3): la salida perdida de un subproceso (`stdout=None` en Windows bajo carga) se reintenta una vez y, si se repite, es un `FAIL` «salida no disponible» en `verify.py` y un aviso en los hooks, en vez de un traceback (§3). También en `git` (`repo.py`) y en los tests (`support.py`), donde era el flaky de la suite. |
 | 0.33 | 2026-10-05 | Review R30 de v0.33: `sdd/spec.md` y `sdd/sdd-lite.md` entran a los `cited_paths_docs` por default, así H13 se dispara en el caso que lo originó (B1); en LITE, el relevo va a `sdd/sdd-lite.md` y el registro del e2e a `sdd/e2e.md`, sin crear `progress/` (M1). |
