@@ -788,9 +788,13 @@
         <small>— los atajos /sdd-arranque, /sdd-ciclo, /sdd-auditoria, /relevo y /harness-fix; con otro agente no molestan</small></label>
       <label class="oschk"><input type="checkbox" id="zipHarness" checked> Sumar el arnés ejecutable
         <small>— harness/: verify.py, pre-commit y CI de ejemplo (R30). Necesita Python 3.10+; lo instala el agente</small></label>
+      <label class="lbl" for="cdesc">Descripción libre para la fusión con IA (opcional)</label>
+      <textarea id="cdesc" rows="2" style="height:auto"
+        placeholder="Contale a la IA algo más de tu proyecto — se usa solo con «Fusión con IA», abajo"></textarea>
       <div class="zipbtns">
         <button class="b-zip" id="zipProyecto" type="button">📦 Descargar la carpeta del proyecto</button>
         <button class="b-zip alt" id="zipSolo" type="button">Solo los MD sueltos</button>
+        <button class="b-zip" id="zipFusion" type="button">✨ Fusión con IA</button>
       </div>
       <p class="zipmsg" id="zipmsg" role="status"></p>
       <details class="zipdet">

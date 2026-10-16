@@ -140,7 +140,10 @@ alter table public.eventos add constraint eventos_detalle_formato_check check (
     when 'visita'      then detalle ~ '^((/[A-Za-z0-9._/-]{0,80}|#/[a-z]{1,20})\|(movil|escritorio)|md:[A-Za-z0-9._-]{1,80})$'
     when 'descarga'    then detalle ~ '^[A-Za-z0-9._-]{1,60}$'
     when 'combinacion' then detalle ~ '^[a-z0-9-]{1,30}/[a-z0-9-]{1,20}/(NOVATO|PRO)/(nuevo|brownfield)$'
-    when 'paquete'     then detalle ~ '^(sueltos|skills|(proyecto|rapido):[a-z0-9-]{1,30})$'
+    -- IA-2 (F28): la fusion con IA suma tres prefijos. 'ia-simulada' e 'ia-fallback' van
+    -- ANTES de 'ia' a proposito: con la alternativa corta primero, un motor que no busca el
+    -- match mas largo corta en 'ia' y despues no encuentra el ':'.
+    when 'paquete'     then detalle ~ '^(sueltos|skills|(proyecto|rapido|ia-simulada|ia-fallback|ia):[a-z0-9-]{1,30})$'
     when 'perfil'      then detalle ~ '^(nivel|interes|agente):[A-Za-z0-9-]{1,30}$'
     else false
   end) not valid;

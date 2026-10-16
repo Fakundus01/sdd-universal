@@ -1,7 +1,7 @@
 ---
 id: supabase
 rutas: [supabase/**]
-hash: 871bad988268fd5a8df47a1e546ef1841e9bd6a67fac7980c2816de8a902db09
+hash: de9eeeffe8a2e6d2a64d6d7d511e42da9a2a751e500ed33ac89425d4ee8e097f
 ---
 
 # supabase

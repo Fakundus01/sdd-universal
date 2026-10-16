@@ -1,10 +1,10 @@
 ---
 id: IA-2
 titulo: "UI del combinador: botón de fusión con IA, degradación y aviso de modo simulado"
-estado: pending
+estado: done
 feature: F28 · Fusión con IA del combinador (v2 de blocks.md, ADR-016)
 depende_de: [IA-1]
-rama: ia-fusion
+rama: ia-fusion-IA-2
 ---
 
 # Tarjeta IA-2 — UI del combinador: botón de fusión con IA, degradación y aviso de modo simulado
@@ -40,5 +40,5 @@ El combinador ofrece "Fusión con IA" al lado del botón v1 existente; llama a `
 - TDD (R29): el test de "cae a v1 si el endpoint falla" se ve fallar primero (sin el catch, se cuelga o rompe)
 
 ## Entrega
-- Handback en `sdd/progress/ia-fusion/handback_IA-2.md` (plantilla `prompts/handback.md`), commiteado.
+- Handback en `sdd/progress/ia-fusion-IA-2/handback_IA-2.md` (plantilla `prompts/handback.md`), commiteado.
 - Respuesta: solo `done -> <ruta>` o `blocked -> <ruta>`.
