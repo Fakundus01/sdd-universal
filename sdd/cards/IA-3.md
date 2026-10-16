@@ -1,7 +1,7 @@
 ---
 id: IA-3
 titulo: "Tests de carga adversarios del endpoint: tope de gasto, rate limit, errores que no cobran"
-estado: pending
+estado: review
 feature: F28 · Fusión con IA del combinador (v2 de blocks.md, ADR-016)
 depende_de: [IA-1]
 rama: ia-fusion
