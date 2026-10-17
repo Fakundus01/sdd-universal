@@ -194,6 +194,30 @@ class TestCLI(ConCerebro):
         code, out, _ = self.cli("buscar", "UnboundLocalError", "--tipo", "receta", embedder=emb)
         self.assertNotEqual(code, 0)
 
+    def test_patron_y_problema_se_escriben_indexan_y_filtran(self):
+        """Los dos tipos de oficio (ADR-020). Lo que importa acá es que se puedan **separar** de lo
+        de cada proyecto: si no se pudiera filtrar por ellos, serían cuatro notas sueltas más."""
+        self.cli("init")
+        self.nota("oficio", "p.md", "Dar vuelta una tarjeta es un clic, nunca un hover",
+                  "El hover se lleva puesto el boton principal.", tipo="patron")
+        self.nota("oficio", "t.md", "Dos formas de activar el mismo estado pelean",
+                  "El clic la daba vuelta y el hover la queria girar de nuevo.", tipo="problema")
+        self.nota("andres-bakery", "d.md", "Las tarjetas se dan vuelta con un clic",
+                  "Decision de este proyecto.", tipo="decision")
+        emb = Contador()
+        code, out, err = self.cli("indexar", embedder=emb)
+        self.assertEqual(code, 0, err)
+        code, out, _ = self.cli("buscar", "tarjeta hover clic", "--json", "--tipo", "patron",
+                                embedder=emb)
+        self.assertEqual([r["ruta"] for r in json.loads(out)], ["proyectos/oficio/p.md"])
+        code, out, _ = self.cli("buscar", "tarjeta hover clic", "--json", "--tipo", "problema",
+                                embedder=emb)
+        self.assertEqual([r["ruta"] for r in json.loads(out)], ["proyectos/oficio/t.md"])
+        # Sin filtro siguen conviviendo con la decisión del proyecto, que es lo que se busca: el
+        # oficio no reemplaza lo que pasó en cada uno, se suma.
+        code, out, _ = self.cli("buscar", "tarjeta hover clic", "--json", "-k", "9", embedder=emb)
+        self.assertEqual(len(json.loads(out)), 3)
+
     def test_buscar_texto_marca_dato_recuperado_y_fuente(self):
         self.cli("init")
         self.nota("p", "a.md", "UnboundLocalError en el hook", "x")

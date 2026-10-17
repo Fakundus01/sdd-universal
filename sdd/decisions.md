@@ -288,3 +288,27 @@ Esto **no es autodescubrimiento**: no se escanean puertos ni se prueba `localhos
 - **Un demonio caído cuesta un sondeo**, y eso hubo que acotarlo: medido en Windows, un puerto muerto no rechaza la conexión, se come el timeout entero. La primera versión además armaba un cliente nuevo por búsqueda, así que cada una volvía a pagarlo: buscar salía **más caro** que antes de todo esto (2,0 s contra 1,3 s). Se arregló con tres cosas: `/salud` tiene timeout corto (0,6 s, de sobra para un localhost que bindea antes de cargar el modelo), los clientes se reusan entre llamadas, y el «no está» se recuerda por 30 s. Medido después: **631 ms una vez por proceso y 0 ms las demás**, y prender el demonio se empieza a notar solo a los 30 s. Sigue siendo un costo real la primera vez.
 - `nota()` sigue indexando local (carga el modelo). Se deja así: escribir una nota es raro comparado con buscar, y el demonio se entera del índice nuevo solo.
 - El CLI (`cerebro.py buscar`) **no** usa el demonio todavía. Se puede agregar igual; no se hizo porque el caso que dolía era el del MCP.
+
+---
+
+## ADR-020 · Dos tipos de nota de oficio (`patron`, `problema`), separados de lo que pasó en cada proyecto — 2026-10-17 · Vigente
+
+**Contexto, con un caso real.** En `andres-bakery` el agente escribió ADR-016 (la tarjeta del catálogo gira con el hover) y, el mismo día, ADR-022 la reemplazó: gira con un clic en la foto, porque con hover *"vos querés ir a tocar el Agregar y pum, se da vuelta la tarjeta"*. ADR-022 es una nota excelente —tiene el síntoma, la medición antes y después, y lo que se descartó—, pero está guardada como **decisión de ese proyecto**. Cuando se arranque el proyecto siguiente, nada va a decir «las tarjetas se dan vuelta con clic» salvo que a alguien se le ocurra buscarlo. El conocimiento está, pero no se transfiere.
+
+**Decisión.** Dos tipos nuevos, pensados para repetirse entre proyectos:
+
+- **`patron`** — la forma de hacer algo que ya probamos y queremos repetir («dar vuelta una tarjeta es un clic, nunca un hover»).
+- **`problema`** — la trampa concreta y cómo se sale («dos formas de activar el mismo estado pelean entre ellas»).
+
+Van bajo un proyecto propio (`proyectos/oficio/`) porque no son de ningún proyecto: son del oficio. Los cuatro tipos de antes no cambian ni se tocan — siguen contando lo que pasó en **un** proyecto, que es otra cosa y también hace falta.
+
+**Por qué dos tipos y no un tag sobre los que ya había.** `tipo` es el filtro de `buscar`: con un tipo propio, un agente puede pedir «sólo patrones» antes de diseñar una pantalla y «sólo problemas» antes de dar algo por terminado, que son dos momentos distintos. Con un tag habría que recuperar todo y filtrar después, y el filtro del índice no llega a los tags.
+
+**Por qué `diseño` y `código` son un tag y no dos tipos.** Multiplicar la taxonomía (`patron-diseno`, `patron-codigo`, `patron-datos`…) obliga a elegir bien la primera vez y a migrar cuando aparezca el quinto ámbito. El eje que importa para filtrar es *patrón vs. problema*; el ámbito es para agrupar al mostrarlo.
+
+**La promoción es un acto humano, a propósito.** Una decisión de un proyecto se vuelve `patron` cuando pasó en dos proyectos, o cuando el owner dice que es el default. No se promueve sola: la mitad de las decisiones de un proyecto son suyas y nada más («el perfil de Andrea es un JSON y no una tabla» no es default de nada), y un default equivocado se propaga a todos los proyectos que vengan — sale más caro que no tener ninguno. El `fuente` del patrón apunta a las ADRs que lo originaron, así se puede rastrear de dónde salió.
+
+**Costo aceptado.**
+- El conjunto `TIPOS` queda escrito en cada nota del vault: agregar uno es compatible hacia atrás (las 190 notas de hoy siguen válidas), pero **sacar** uno invalidaría notas existentes. El test que fija el conjunto está para que eso sea deliberado y no un descuido.
+- Dos tipos más es más superficie para elegir mal al escribir una nota. Se acota con la regla corta: si vale para otro proyecto, es de oficio; si no, es del proyecto.
+- El importador (`importar-sdd`) **no** produce estos tipos y no se tocó: no hay forma de deducir de un `decisions.md` si una decisión es de oficio o del proyecto. Entran a mano o por el MCP.

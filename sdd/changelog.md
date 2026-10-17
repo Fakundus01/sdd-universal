@@ -12,11 +12,13 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 - **`cerebro/demonio.py`** (ADR-019): el MCP puede preguntarle a un demonio de búsqueda que tenga el modelo y el índice ya abiertos. Medido en el MCP real: **1314 ms → 54 ms** por búsqueda. El demonio **no es parte del paquete**; acá está el cliente y el contrato (`GET /salud` con la `base` que sirve, `POST /buscar`, token en `X-Cerebro-Token`).
 - Se configura con los archivos que el demonio deja en `<CEREBRO_DIR>/cerebrod/` (`url.txt` y `token.txt`), o con `CEREBRO_DEMONIO` / `CEREBRO_DEMONIO_TOKEN`, que les ganan. Sin ninguno de los dos no se abre ningún socket: no hay autodescubrimiento ni escaneo de puertos.
 
+- **Dos tipos de nota de oficio** (ADR-020): `patron` (la forma de hacer algo que ya probamos y queremos repetir) y `problema` (la trampa concreta y cómo se sale). Van bajo `proyectos/oficio/` y se filtran con `--tipo`, así un agente puede pedir sólo patrones antes de diseñar una pantalla y sólo problemas antes de dar algo por terminado. Los cuatro tipos de antes no cambian: siguen contando lo que pasó en **un** proyecto.
+
 ### Modificado
 - `mcp_server.buscar` usa el demonio si lo hay y **cae al índice local** si no está, si sirve otro Cerebro, si el token no sirve o si contesta algo que no se entiende. El formato R26 lo sigue poniendo `mcp_server`, no el demonio, así que lo que recibe el cliente no cambia por qué camino vino.
 
 ### Verificado
-- `cerebro/tests` 264 OK (23 nuevos en `test_demonio.py`), con el venv y también con el Python pelado sin `fastembed` ni `mcp`, que es como corre la CI.
+- `cerebro/tests` 265 OK (23 nuevos en `test_demonio.py`, 1 para los tipos de oficio), con el venv y también con el Python pelado sin `fastembed` ni `mcp`, que es como corre la CI.
 - A mano contra el demonio real: mismo primer resultado y mismo bloque R26 por los dos caminos; con el demonio apagado, 631 ms de sondeo una vez por proceso y 0 ms las demás.
 - Lo que **no** está cubierto por tests acá: el demonio real. No vive en este repo, así que los tests corren contra uno falso.
 

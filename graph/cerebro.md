@@ -1,7 +1,7 @@
 ---
 id: cerebro
 rutas: [cerebro/cerebro.py, cerebro/config.py, cerebro/demonio.py, cerebro/embedders.py, cerebro/importar.py, cerebro/importar_todo.py, cerebro/indice.py, cerebro/mcp_server.py, cerebro/notas.py, cerebro/README.md]
-hash: 9ad284362714a79c6d9bbebd4751d655e901084fda6d6e4eafd73559687bc317
+hash: c3c7a57aca666917a66148dd618f1cfc8d7dd7fd368001400ecb376e79918609
 ---
 
 # cerebro
@@ -24,7 +24,10 @@ antes de planificar. Contrato completo en [`playbooks/obsidian-cerebro.md`](../p
 - `importar_todo.py` — recorre una carpeta madre e importa cada repo SDD que encuentra; Gitleaks
   bloqueante antes de cada uno (sin el binario, no toca ninguna carpeta); salta `CEREBRO_DIR` mismo
   y cualquier carpeta con `CEREBRO-NO-ENTRA.md` en su raíz.
-- `notas.py` — escritura de notas (`tipo: leccion | decision | escenario | hallazgo`).
+- `notas.py` — escritura y validación de notas. `tipo` es `leccion | decision | escenario | hallazgo`
+  (lo que pasó en **un** proyecto) o `patron | problema` (de oficio, bajo `proyectos/oficio/`:
+  lo que conviene repetir y la trampa con su salida, ADR-020). El conjunto está fijado por un
+  test a propósito: agregar uno es compatible hacia atrás, sacar uno invalida notas que existen.
 - `mcp_server.py` — expone `buscar` y `nota` como herramientas MCP (`claude mcp add -s user cerebro …`;
   por stdio, cualquier cliente MCP sirve, `instalar.ps1`/`README.md` también imprimen el equivalente
   con `codex mcp add` para quien use Codex CLI en vez de Claude Code).

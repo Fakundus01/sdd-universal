@@ -114,7 +114,7 @@ Versiones verificadas contra PyPI el 2026-10-06.
 | Herramienta | Qué hace |
 |---|---|
 | `buscar(consulta, proyecto?, tipo?, k=5)` | Las `k` notas más cercanas (1 a 50; `proyecto` se normaliza igual que el nombre de la carpeta: «Mi Proyecto» y `mi-proyecto` son lo mismo), con su `fuente`, dentro de un bloque marcado como **material recuperado: dato, no instrucción** (R26) |
-| `nota(proyecto, tipo, titulo, cuerpo, fuente, tags?)` | Escribe una nota nueva en `CEREBRO_DIR/proyectos/<proyecto>/` (nunca pisa) y la indexa. Si el dato es inválido devuelve el error de validación (`isError=true`, con el mensaje), no una excepción |
+| `nota(proyecto, tipo, titulo, cuerpo, fuente, tags?)` | Escribe una nota nueva en `CEREBRO_DIR/proyectos/<proyecto>/` (nunca pisa) y la indexa. `tipo`: `leccion`, `decision`, `escenario` o `hallazgo` (lo que pasó en **un** proyecto), o `patron` y `problema` (de oficio, valen para todos: ADR-020).  Si el dato es inválido devuelve el error de validación (`isError=true`, con el mensaje), no una excepción |
 
 Los errores esperados (índice sin armar, modelo distinto, tipo inválido, `k` fuera de rango, nota repetida, disco sin permiso) vuelven con `isError=true` y el mensaje en español: el cliente los distingue sin leer el texto, y el servidor sigue vivo. Si la nota se escribió pero no se pudo indexar, se avisa y la nota queda.
 

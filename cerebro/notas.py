@@ -9,7 +9,10 @@ import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 
-TIPOS = ("leccion", "decision", "escenario", "hallazgo")
+# Los cuatro primeros son de UN proyecto: lo que pasó, qué se decidió, qué se encontró.
+# `patron` y `problema` son de oficio y se repiten entre proyectos: la forma de hacer algo
+# que ya probamos, y la trampa concreta con su salida (ADR-020).
+TIPOS = ("leccion", "decision", "escenario", "hallazgo", "patron", "problema")
 OBLIGATORIOS = ("proyecto", "tipo", "fecha", "fuente")
 RESERVADOS = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(10)), *(f"LPT{i}" for i in range(10))}
 LARGO_SLUG = 60
@@ -23,7 +26,8 @@ _PROHIBIDOS_EN_LINEA = re.compile("[\x00\n\r\x0b\x0c\x1c\x1d\x1e\x85\u2028\u2029
 
 LEEME = """# Cerebro
 
-Memoria entre proyectos: una nota = una lección, decisión, escenario o hallazgo
+Memoria entre proyectos: una nota = una lección, decisión, escenario, hallazgo,
+patrón o problema
 (playbook `obsidian-cerebro` del SDD Universal).
 
 - Las notas van en `proyectos/<proyecto>/<fecha>-<slug>.md`, con frontmatter
