@@ -256,3 +256,35 @@ Si el comando `test` del arnés incluyera las pruebas de `api/` sin más, un clo
 
 **Lo que cuesta:** sin el límite de la consola configurado, el tope de la aplicación no protege contra un abuso distribuido entre muchas instancias — es una ventana de riesgo real hasta que ese límite esté puesto, no solo una formalidad.
 
+
+---
+
+## ADR-019 · El MCP puede preguntarle a un demonio de búsqueda; el demonio no es parte del paquete — 2026-10-17 · Vigente
+
+**Contexto — medido, no estimado.** En Windows, con 175 notas y 262 fragmentos (`embedders.Local`, MiniLM multilingüe):
+
+| | |
+|---|---|
+| primer `embed` en un proceso (carga el modelo ONNX) | 3440 ms |
+| segundo `embed`, **mismo** embedder | 6 ms |
+| `embed` con un embedder **nuevo** | **1223 ms** |
+| `Indice.buscar` con el índice ya abierto | 35 ms |
+
+`embedders.obtener()` devuelve un `Local()` nuevo en cada llamada y cada instancia rearma su sesión ONNX, así que **cada `buscar` del MCP paga ~1,2 s** aunque el proceso lleve horas vivo. El trabajo real son 35 ms: el resto es cargar el modelo una y otra vez.
+
+**Decisión.** `mcp_server.buscar` le pregunta primero a un demonio, si hay uno, y si no hay —o no contesta, o no sirve este Cerebro— usa el camino local de siempre. El cliente es `cerebro/demonio.py`: stdlib, sin dependencias nuevas (R28 no aplica). **El demonio en sí no está en este repo**: acá vive sólo el contrato (`GET /salud` con la `base` que sirve, `POST /buscar` con la forma que ya devuelve `Indice.buscar`, token en `X-Cerebro-Token`).
+
+**Por qué no cachear el embedder en `obtener()`, que es una línea.** Cada sesión de Claude Code levanta su propio `mcp_server.py`. Cachear el modelo adentro del proceso serían ~220 MB **por sesión**: con cuatro sesiones abiertas, casi un giga para tener cuatro copias de lo mismo. Un demonio lo tiene una vez por máquina. Además el cacheo no ayuda al CLI, que arranca un proceso nuevo cada vez.
+
+**Cómo se configura, y por qué así.** Un demonio que quiera que lo usen deja su `url.txt` y su `token.txt` en `<CEREBRO_DIR>/cerebrod/`; las variables `CEREBRO_DEMONIO` y `CEREBRO_DEMONIO_TOKEN` le ganan si están. Se eligió el archivo como forma principal por tres razones: **(a)** poner esos archivos adentro del propio Cerebro ya *es* el acto de opt-in explícito, así que no hace falta además una variable; **(b)** configura a todos los clientes de una vez —cada sesión de Claude Code levanta su propio `mcp_server.py`, y con variables de entorno habría que acordarse de ponerla en el `env` de cada registro, que es exactamente el tipo de config que se desincroniza; **(c)** al cortarlo limpio el demonio borra su `url.txt`, y entonces el paquete ni siquiera intenta conectarse. Ojo con esto último: si lo **matan** —`Stop-ScheduledTask`, una caída— el archivo queda, y ahí se cae al camino local pagando un sondeo (ver el costo, abajo).
+
+Esto **no es autodescubrimiento**: no se escanean puertos ni se prueba `localhost` por las dudas. Sin esos archivos y sin esas variables, el módulo no abre un socket.
+
+**La comprobación que no es negociable.** Antes de usar lo que conteste, se verifica que el demonio esté sirviendo **el mismo** `CEREBRO_DIR` (`/salud` → `base`, comparada con `normcase` + `resolve`). Un demonio apuntando a otro Cerebro contestaría igual de rápido, con notas bien formadas y citando fuentes que existen: serían de otra memoria, y quien pregunta no tendría ningún síntoma para notarlo. Es el único modo de falla de esto que es silencioso, así que se chequea siempre y ante la duda se usa el índice local. El resultado se recuerda para no pagar un `/salud` por búsqueda, y se olvida apenas una llamada falla (el demonio se pudo reiniciar apuntando a otro lado).
+
+**Costo aceptado.**
+- Hay **dos caminos** por los que puede venir un resultado. Se acota con el contrato chico, con que la respuesta se valide clave por clave antes de usarla (si falta alguna, se cae al local en vez de romper formateando) y con que el formato R26 lo ponga siempre `mcp_server`, no el demonio.
+- El paquete prueba el cliente contra un demonio **falso** (`tests/test_demonio.py`, 23 tests: se usa, se ignora si es otro Cerebro, si está apagado, si el token no sirve, si contesta cualquier cosa, y no vuelve a sondearlo en cada búsqueda). Contra un demonio real no hay test acá, porque el demonio no vive acá.
+- **Un demonio caído cuesta un sondeo**, y eso hubo que acotarlo: medido en Windows, un puerto muerto no rechaza la conexión, se come el timeout entero. La primera versión además armaba un cliente nuevo por búsqueda, así que cada una volvía a pagarlo: buscar salía **más caro** que antes de todo esto (2,0 s contra 1,3 s). Se arregló con tres cosas: `/salud` tiene timeout corto (0,6 s, de sobra para un localhost que bindea antes de cargar el modelo), los clientes se reusan entre llamadas, y el «no está» se recuerda por 30 s. Medido después: **631 ms una vez por proceso y 0 ms las demás**, y prender el demonio se empieza a notar solo a los 30 s. Sigue siendo un costo real la primera vez.
+- `nota()` sigue indexando local (carga el modelo). Se deja así: escribir una nota es raro comparado con buscar, y el demonio se entera del índice nuevo solo.
+- El CLI (`cerebro.py buscar`) **no** usa el demonio todavía. Se puede agregar igual; no se hizo porque el caso que dolía era el del MCP.

@@ -1,7 +1,7 @@
 ---
 id: cerebro
-rutas: [cerebro/cerebro.py, cerebro/config.py, cerebro/embedders.py, cerebro/importar.py, cerebro/importar_todo.py, cerebro/indice.py, cerebro/mcp_server.py, cerebro/notas.py, cerebro/README.md]
-hash: 8d8498b6d786858d8070e3cd20c0f531b4ba68014442316ebe4598af5aa5e1fc
+rutas: [cerebro/cerebro.py, cerebro/config.py, cerebro/demonio.py, cerebro/embedders.py, cerebro/importar.py, cerebro/importar_todo.py, cerebro/indice.py, cerebro/mcp_server.py, cerebro/notas.py, cerebro/README.md]
+hash: 9ad284362714a79c6d9bbebd4751d655e901084fda6d6e4eafd73559687bc317
 ---
 
 # cerebro
@@ -29,4 +29,13 @@ antes de planificar. Contrato completo en [`playbooks/obsidian-cerebro.md`](../p
   por stdio, cualquier cliente MCP sirve, `instalar.ps1`/`README.md` también imprimen el equivalente
   con `codex mcp add` para quien use Codex CLI en vez de Claude Code).
 
-**Deuda abierta (F27):** `cerebro/tests` todavía no entra en `verify.py --full`.
+- `demonio.py` — cliente **opcional** de un demonio de búsqueda que tenga el modelo y el índice ya
+  abiertos (ADR-019). `mcp_server.buscar` le pregunta a él si lo hay: medido, 1314 ms → 54 ms, porque
+  `embedders.obtener()` arma un `Local()` nuevo por llamada y cada instancia rearma su sesión ONNX.
+  Es opt-in (sin `cerebrod/url.txt` adentro del Cerebro ni `CEREBRO_DEMONIO` no se abre ningún
+  socket) y nunca obligatorio: si no está, si sirve **otro** `CEREBRO_DIR` o si contesta cualquier
+  cosa, se usa el índice local. El demonio en sí no vive en este repo; acá están el cliente y el
+  contrato.
+
+**Deuda abierta (F27):** nada pendiente acá — `cerebro/tests` ya entra en el `test` de
+`harness.config.json` y corre en `verify.py` (264 tests al 2026-10-17).

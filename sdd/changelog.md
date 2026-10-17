@@ -4,6 +4,24 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 
 ---
 
+## [0.37.0] — 2026-10-17 · cerebro
+
+> Sección abierta, **incompleta**: 0.37 ya tiene mergeado a `main` bastante más que esto (el grafo de contexto de F27, `IA-1`/`IA-2` de F28, `P-1`/`P-2` de F29) y todavía no está escrito acá. Lo de abajo es sólo lo del Cerebro.
+
+### Agregado
+- **`cerebro/demonio.py`** (ADR-019): el MCP puede preguntarle a un demonio de búsqueda que tenga el modelo y el índice ya abiertos. Medido en el MCP real: **1314 ms → 54 ms** por búsqueda. El demonio **no es parte del paquete**; acá está el cliente y el contrato (`GET /salud` con la `base` que sirve, `POST /buscar`, token en `X-Cerebro-Token`).
+- Se configura con los archivos que el demonio deja en `<CEREBRO_DIR>/cerebrod/` (`url.txt` y `token.txt`), o con `CEREBRO_DEMONIO` / `CEREBRO_DEMONIO_TOKEN`, que les ganan. Sin ninguno de los dos no se abre ningún socket: no hay autodescubrimiento ni escaneo de puertos.
+
+### Modificado
+- `mcp_server.buscar` usa el demonio si lo hay y **cae al índice local** si no está, si sirve otro Cerebro, si el token no sirve o si contesta algo que no se entiende. El formato R26 lo sigue poniendo `mcp_server`, no el demonio, así que lo que recibe el cliente no cambia por qué camino vino.
+
+### Verificado
+- `cerebro/tests` 264 OK (23 nuevos en `test_demonio.py`), con el venv y también con el Python pelado sin `fastembed` ni `mcp`, que es como corre la CI.
+- A mano contra el demonio real: mismo primer resultado y mismo bloque R26 por los dos caminos; con el demonio apagado, 631 ms de sondeo una vez por proceso y 0 ms las demás.
+- Lo que **no** está cubierto por tests acá: el demonio real. No vive en este repo, así que los tests corren contra uno falso.
+
+---
+
 ## [0.36.0] — 2026-10-06 · paquete + web + cerebro
 
 Obsidian y el Cerebro entre proyectos (S41, S42), con el loop `obsidian-cerebro` (`sdd/loops/obsidian-cerebro.md`): 11 tarjetas, 10 de 10 vueltas, **cortado** por tope con dos objetivos parciales por decisión del owner.
