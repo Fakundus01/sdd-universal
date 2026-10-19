@@ -8,8 +8,12 @@
 // de USD 1 con 8 pedidos en paralelo. Un criterio que dice «el endpoint» y una evidencia que prueba
 // una función interna coinciden en el nombre, no en el alcance.
 //
-// Los cuatro cálculos de abajo repiten la fórmula del handler a propósito: un test que le pregunta
-// al código cuánto debería gastar no prueba nada.
+// Qué reimplementa este archivo y qué no. `cotaUSDDe()` llama a `estimarCotaUSD` de producción, y G3
+// compara contra `costoRealUSD`, también de producción: la fórmula y los precios NO se repiten acá.
+// Lo que el test reimplementa a propósito es *qué bytes entran* en la cota (instrucción + mensaje
+// de usuario), que es lo que mata a los mutantes que subestiman el prompt. Limitación que queda: la
+// tabla de precios de `api/_lib/costo.js` no la fija ningún test de este archivo (dividir el precio
+// de salida por 10 sigue pasando en verde); eso se cierra con un valor literal en `costo.test.mjs`.
 //   node --test "api/tests/*.test.mjs"
 import { test, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -70,17 +74,25 @@ function crearReq(body, ip = '203.0.113.9') {
 const cuerpo = (res) => JSON.parse(res._body);
 const gastadoUSD = () => Number(gastadoActual(_estadoParaTests())) / MICROS;
 
-/** Una respuesta válida del modelo, con el `usage` que se le pida y una demora opcional: la demora
- * es lo que deja a los N pedidos pisándose de verdad en el mismo tick. */
+/** Una respuesta válida del modelo y una demora opcional: la demora es lo que deja a los N pedidos
+ * pisándose de verdad en el mismo tick. Sin `usage` explícito, el peor caso sale del PEDIDO REAL que
+ * mandó el handler (`max_tokens` y bytes del cuerpo), no de las constantes de la cota: así un handler
+ * que autoriza más salida de la que reservó gasta de verdad más que el tope. */
 function fetchLento({ usage, demoraMs = 30 }) {
   let llamadas = 0;
-  const f = async () => {
+  const f = async (url, init) => {
     llamadas += 1;
+    const u = usage ?? {
+      input_tokens: 0,
+      cache_creation_input_tokens: bytesUtf8(init.body),
+      cache_read_input_tokens: 0,
+      output_tokens: JSON.parse(init.body).max_tokens,
+    };
     if (demoraMs) await new Promise((r) => setTimeout(r, demoraMs));
     const body = {
       id: 'msg_test', type: 'message', role: 'assistant',
       content: [{ type: 'text', text: JSON.stringify({ archivos: [{ nombre: 'x', contenido: 'y' }] }) }],
-      model: 'claude-test', stop_reason: 'end_turn', usage,
+      model: 'claude-test', stop_reason: 'end_turn', usage: u,
     };
     return new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } });
   };
@@ -116,17 +128,9 @@ test('G1: 8 pedidos en paralelo al endpoint nunca gastan más que el tope (S33, 
   const cota = cotaUSDDe(p);
   assert.ok(cota < 1, `la cota (${cota}) tiene que entrar en el tope de 1 para que el test tenga sentido`);
 
-  // `usage` del peor caso: lo que el handler reservó es lo que de verdad costó, así que `gastado`
-  // final queda en llamadas × cota y la cuenta no depende del ajuste posterior.
-  const promptBytes = bytesUtf8(INSTRUCCION_SISTEMA + '\n\n' + mensajeUsuario(p));
-  const f = fetchLento({
-    usage: {
-      input_tokens: 0,
-      cache_creation_input_tokens: promptBytes + 500,
-      cache_read_input_tokens: 0,
-      output_tokens: MAX_TOKENS_SALIDA,
-    },
-  });
+  // Sin `usage` explícito: el transporte simulado cobra el peor caso del pedido que de verdad llegó
+  // (su `max_tokens` y los bytes de su cuerpo), así el gasto final lo decide el handler, no el test.
+  const f = fetchLento({});
   _establecerFetchParaTests(f);
 
   // IPs distintas: el rate limit por IP no tiene que ser lo que salve al tope. Si el único freno

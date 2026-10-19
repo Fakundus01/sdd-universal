@@ -1,7 +1,7 @@
 ---
 id: api
 rutas: [api/**, package.json, .github/workflows/api.yml]
-hash: 282d50480142dabd4b0c2e62ef6536de33643e98dd043c9c8830c45436d9dc43
+hash: 78900b6e2e29b830cb5694400ce101277dc2231afffbaff31d6287f9940af82f
 ---
 
 # api
