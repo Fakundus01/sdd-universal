@@ -1,7 +1,7 @@
-# Vuelta 3 · @ HASHPLACEHOLDER
+# Vuelta 3 · @ e975512
 
 - **Estado:** review (vuelta 3; la vuelta 2 fue `CHANGES_REQUESTED` por un solo bloqueante, ver [`review_IA-3.md`](review_IA-3.md))
-- **Rama / commit:** `ia-fusion-IA-3-v3` @ HASHPLACEHOLDER
+- **Rama / commit:** `ia-fusion-IA-3-v3` @ e975512
 - **Quién:** implementer. No puede autoaprobarse (R30).
 
 ## Qué cambió (solo `api/tests/topeEndpoint.test.mjs`)
