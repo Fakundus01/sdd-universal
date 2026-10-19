@@ -79,7 +79,10 @@ Nota: M2 falla con el motivo correcto: con identidad local el mutante sí commit
 ## Costo
 | Rol | Modelo | Vuelta | Tokens | Costo USD | Duración |
 |---|---|---|---|---|---|
-| implementer | <modelo> | 1 | <tokens> | <USD> | <duración> |
+| implementer | sonnet | 1 | 77 006 (total) | n/d | 5 min 29 s · 25 llamadas a herramientas |
+| reviewer | sonnet | 1 | 62 244 (total) | n/d | 8 min 39 s · 13 llamadas a herramientas |
+
+Tokens y duración: del aviso de fin de cada corrida, que da un total y no separa entrada/salida. **USD `n/d` por decisión del leader:** la herramienta no informa el costo y sin el corte entrada/salida no se estima (R22). Las dos filas las completó el leader al recibir el handback y la review.
 
 ## Fuera de zona / riesgos
 - `graph/harness.md` y `graph/sdd.md`: solo el hash, regenerado con `python graph/_meta/sync_graph.py --update --accept` porque el pre-commit lo exige (mismo criterio que en c73735f de L-8); la prosa no se tocó.
