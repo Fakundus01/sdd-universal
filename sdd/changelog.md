@@ -17,6 +17,11 @@ Semver `MAJOR.MINOR.PATCH` (R13). Acompaña la versión del paquete. No se borra
 ### Modificado
 - `mcp_server.buscar` usa el demonio si lo hay y **cae al índice local** si no está, si sirve otro Cerebro, si el token no sirve o si contesta algo que no se entiende. El formato R26 lo sigue poniendo `mcp_server`, no el demonio, así que lo que recibe el cliente no cambia por qué camino vino.
 
+### Corregido
+- **El smoke de la interfaz acusaba al producto de un bug que no tenía** (`L-8`): el job `smoke` de `.github/workflows/web.yml` estuvo rojo en `main` del 2026-10-16 al 19. Su assert «ningún archivo del ZIP está vacío» era un **proxy** de «ningún archivo volvió vacío del servidor», escrito cuando todo el paquete tenía contenido; cuando el paquete sumó los siete `.gitkeep` de `material-cliente/` —vacíos por definición— el proxy empezó a fallar. El ZIP estaba bien: `web/tests/paquete.test.mjs` esperaba esas entradas, y un lector ajeno (`zipfile` de Python) abre un paquete con entradas de 0 bytes sin corrupción. Ahora el paso separa marcadores (deben estar vacíos; uno con texto también es rojo) de archivos con contenido (no pueden estarlo) y **nombra los archivos culpables**.
+- **`verify.py` avisa de lo que no cubre:** WARN en `--full` y `--changed` (no en `--quick`) mientras exista el script del smoke, con el comando para correrlo. Nació de que la verificación local dio VERDE tres días con `main` roja en CI. Documentado en `sdd/testing.md`; dos tests en `harness/tests/test_verify.py`.
+- Lección al núcleo (R20): `scenarios.md` **S49** (0.25) y `harness.md` **0.39** — §3 (el nivel local nombra lo que no cubre; cerrar mira el CI de la rama base), §5 (un assert afirma la propiedad, no un correlato; dos chequeos que se contradicen son un hallazgo; el mensaje de falla nombra al culpable) y una fila nueva en la tabla de drift.
+
 ### Verificado
 - `cerebro/tests` 265 OK (23 nuevos en `test_demonio.py`, 1 para los tipos de oficio), con el venv y también con el Python pelado sin `fastembed` ni `mcp`, que es como corre la CI.
 - A mano contra el demonio real: mismo primer resultado y mismo bloque R26 por los dos caminos; con el demonio apagado, 631 ms de sondeo una vez por proceso y 0 ms las demás.

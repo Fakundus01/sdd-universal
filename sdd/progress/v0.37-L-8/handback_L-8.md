@@ -82,7 +82,10 @@ VERDE — 0 FAIL, 2 WARN
 ## Costo
 | Rol | Modelo | Vuelta | Tokens | Costo USD | Duración |
 |---|---|---|---|---|---|
-| implementer | <modelo> | 1 | <tokens> | <USD> | <duración> |
+| implementer | sonnet | 1 | 80 759 (total) | n/d | 6 min 7 s · 30 llamadas a herramientas |
+| reviewer | sonnet | 1 | 66 793 (total) | n/d | 4 min 31 s · 11 llamadas a herramientas |
+
+Tokens y duración: del aviso de fin de cada corrida, que da un total y no separa entrada/salida. **USD `n/d` por decisión del leader:** la herramienta no informa el costo y sin el corte entrada/salida no se estima (R22). Las dos filas las completó el leader al recibir el handback.
 
 ## Fuera de zona / riesgos
 - `graph/{harness,sdd,web}.md`: el pre-commit bloquea si el grafo está desactualizado; corrí `sync_graph.py --update --accept` (solo cambia la línea de hash, sin tocar prosa). Si el leader quiere prosa nueva en esos nodos, es suya.
