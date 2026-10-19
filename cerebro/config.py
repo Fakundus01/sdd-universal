@@ -26,6 +26,33 @@ def ruta_indice(base: Path) -> Path:
     return Path(base) / ".cerebro" / "indice.sqlite"
 
 
+def _archivo_demonio(base: Path, nombre: str) -> str | None:
+    """Una línea de `<CEREBRO_DIR>/cerebrod/<nombre>`, o `None`.
+
+    Esa carpeta es la convención: un demonio que quiera que lo usen deja ahí su `url.txt` y su
+    `token.txt`. Poner esos archivos adentro del Cerebro es el acto de opt-in — no se descubre
+    nada solo, no se escanean puertos, y alcanza con borrar la carpeta para volver atrás. Además
+    sirve para todos los clientes a la vez, sin repetir la config en cada uno."""
+    try:
+        texto = (Path(base) / "cerebrod" / nombre).read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeDecodeError):
+        return None
+    return texto.splitlines()[0].strip() if texto else None
+
+
+def url_demonio(base: Path) -> str:
+    """La URL de un demonio de búsqueda: `CEREBRO_DEMONIO`, y si no, `cerebrod/url.txt`. Vacío si
+    no hay ninguno de los dos, que es lo normal: ahí el paquete no abre ningún socket."""
+    propio = os.environ.get("CEREBRO_DEMONIO", "").strip()
+    return propio or (_archivo_demonio(base, "url.txt") or "")
+
+
+def token_demonio(base: Path) -> str | None:
+    """El token del demonio: `CEREBRO_DEMONIO_TOKEN`, y si no, `cerebrod/token.txt`."""
+    propio = os.environ.get("CEREBRO_DEMONIO_TOKEN", "").strip()
+    return propio or _archivo_demonio(base, "token.txt")
+
+
 def ruta_env() -> Path:
     """El `.env` de la raíz del paquete (`.gitignore`-ado; el repo solo versiona `.env.example`)."""
     return Path(__file__).resolve().parent.parent / ".env"

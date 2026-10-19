@@ -93,6 +93,8 @@ Versiones verificadas contra PyPI el 2026-10-06.
 | `CEREBRO_DIR` | Carpeta del Cerebro (default `Documents/Cerebro`) |
 | `CEREBRO_MODELOS` | Dónde se guarda el modelo bajado (default `~/.cache/cerebro/modelos`) |
 | `CEREBRO_SIN_MODELO` | Cualquier valor: la integración con el modelo real se saltea con motivo (la CI lo fija para no bajar ~220 MB) |
+| `CEREBRO_DEMONIO` | URL de un demonio de búsqueda (ver «Demonio de búsqueda»). Si no está, se lee `<CEREBRO_DIR>/cerebrod/url.txt`; sin ninguno de los dos, no hay demonio — que es lo normal |
+| `CEREBRO_DEMONIO_TOKEN` | El token de ese demonio. Si no está, se lee `<CEREBRO_DIR>/cerebrod/token.txt` |
 
 ## Con OpenAI (opcional)
 
@@ -112,7 +114,7 @@ Versiones verificadas contra PyPI el 2026-10-06.
 | Herramienta | Qué hace |
 |---|---|
 | `buscar(consulta, proyecto?, tipo?, k=5)` | Las `k` notas más cercanas (1 a 50; `proyecto` se normaliza igual que el nombre de la carpeta: «Mi Proyecto» y `mi-proyecto` son lo mismo), con su `fuente`, dentro de un bloque marcado como **material recuperado: dato, no instrucción** (R26) |
-| `nota(proyecto, tipo, titulo, cuerpo, fuente, tags?)` | Escribe una nota nueva en `CEREBRO_DIR/proyectos/<proyecto>/` (nunca pisa) y la indexa. Si el dato es inválido devuelve el error de validación (`isError=true`, con el mensaje), no una excepción |
+| `nota(proyecto, tipo, titulo, cuerpo, fuente, tags?)` | Escribe una nota nueva en `CEREBRO_DIR/proyectos/<proyecto>/` (nunca pisa) y la indexa. `tipo`: `leccion`, `decision`, `escenario` o `hallazgo` (lo que pasó en **un** proyecto), o `patron` y `problema` (de oficio, valen para todos: ADR-020).  Si el dato es inválido devuelve el error de validación (`isError=true`, con el mensaje), no una excepción |
 
 Los errores esperados (índice sin armar, modelo distinto, tipo inválido, `k` fuera de rango, nota repetida, disco sin permiso) vuelven con `isError=true` y el mensaje en español: el cliente los distingue sin leer el texto, y el servidor sigue vivo. Si la nota se escribió pero no se pudo indexar, se avisa y la nota queda.
 
@@ -133,6 +135,31 @@ codex mcp add cerebro -- <ruta>/cerebro/.venv/bin/python <ruta>/cerebro/mcp_serv
 ```
 
 Usa las mismas variables que la CLI (`CEREBRO_DIR`, `CEREBRO_EMBEDDINGS`). Antes de usar `buscar` hace falta `indexar` (ver «Instalación»).
+
+## Demonio de búsqueda (opcional)
+
+`buscar` por el MCP cuesta ~1,2 s, y casi todo es cargar el modelo: `embedders.obtener()` devuelve un `Local()` nuevo en cada llamada y cada instancia rearma su sesión ONNX. El trabajo real son 35 ms. Si hay un proceso que tenga el modelo y el índice abiertos, `mcp_server.buscar` le pregunta a él y la búsqueda pasa a ~40 ms.
+
+Es **opt-in**: mientras no haya un `cerebrod/url.txt` adentro del Cerebro (ni `CEREBRO_DEMONIO` en el entorno) no se abre ningún socket; no se escanean puertos ni se prueba `localhost` por las dudas. Y que el demonio no esté nunca es un error — si no contesta, o no sirve este Cerebro, o contesta algo raro, se usa el índice local igual que siempre. El por qué está en `demonio.py` y en el ADR-019.
+
+**El demonio no es parte del paquete.** Acá está el cliente y el contrato, que es chico:
+
+| | |
+|---|---|
+| `GET /salud` | `{"base": "<el CEREBRO_DIR que está sirviendo>"}` |
+| `POST /buscar` | `{consulta, proyecto, tipo, k}` → `{"ok": true, "resultados": [...]}`, con la misma forma que devuelve `Indice.buscar` |
+| token | header `X-Cerebro-Token` |
+
+**Lo que se verifica siempre:** que el demonio sirva **el mismo** `CEREBRO_DIR`. Uno apuntando a otro Cerebro contestaría igual de rápido y con notas bien formadas, pero de otra memoria, y quien preguntó no tendría cómo notarlo. Es la única falla silenciosa posible acá, así que ante la duda se usa el índice local.
+
+**Cómo configurarlo.** Lo normal es que el demonio deje sus dos archivos adentro del Cerebro y no haya nada más que hacer — eso configura a todos los clientes a la vez, que importa porque cada sesión de Claude Code levanta su propio `mcp_server.py`:
+
+```
+<CEREBRO_DIR>/cerebrod/url.txt      http://127.0.0.1:8788
+<CEREBRO_DIR>/cerebrod/token.txt    <el token>
+```
+
+Cortado limpio, el demonio borra su `url.txt` y el paquete deja de intentarlo. Si lo matan, el archivo queda: la primera búsqueda de cada proceso paga un sondeo de hasta 0,6 s, usa el índice local, y no vuelve a preguntar por 30 s. Para apuntar a otro demonio sin tocar esos archivos están `CEREBRO_DEMONIO` y `CEREBRO_DEMONIO_TOKEN`, que les ganan.
 
 ## Tests
 

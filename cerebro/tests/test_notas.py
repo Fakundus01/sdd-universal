@@ -48,8 +48,12 @@ class TestParsear(unittest.TestCase):
         self.assertEqual(errores, [])
         self.assertEqual(nota.tags, ["loops", "arnés"])
 
-    def test_los_cuatro_tipos(self):
-        self.assertEqual(set(notas.TIPOS), {"leccion", "decision", "escenario", "hallazgo"})
+    def test_los_tipos(self):
+        """Cambiar este conjunto tiene que ser deliberado: el `tipo` es el filtro de `buscar` y
+        queda escrito en cada nota del vault, asi que agregar uno es una decision (ADR-020) y
+        sacar uno invalidaria notas que ya existen."""
+        self.assertEqual(set(notas.TIPOS), {"leccion", "decision", "escenario", "hallazgo",
+                                            "patron", "problema"})
         for tipo in notas.TIPOS:
             self.assertEqual(self.errores(VALIDA.replace("tipo: leccion", f"tipo: {tipo}")), [], tipo)
 
