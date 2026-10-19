@@ -1,7 +1,7 @@
 # Handback L-9 — ciclo.py sin identidad de git
 
 - **Estado:** done
-- **Rama / commit:** `v0.37-L-9` @ `HASH_PLACEHOLDER` (base `main` @ b300044)
+- **Rama / commit:** `v0.37-L-9` @ `1fab5b2 (código y tests; un commit posterior solo fija este hash y el del grafo)` (base `main` @ b300044)
 - **Quién:** implementer (MEDIO)
 
 ## Hecho
