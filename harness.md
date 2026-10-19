@@ -1,6 +1,6 @@
 # harness.md · El arnés: que lo que el agente dice que hizo sea cierto
 
-**Versión:** 0.38 · 2026-10-19 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
+**Versión:** 0.39 · 2026-10-19 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
 
 > Nace de **Relay**, el sistema que se usó en producción en `chat-commerce-ai` (features H-1 a H-11). Escenarios S28–S31.
 > El SDD gobierna *qué* se construye; el arnés hace cumplir *que esté construido*.
@@ -78,6 +78,8 @@ La primera línea de la salida es el comando, el hash y la rama (`verify.py --ch
 
 Exit distinto de 0 si algo falla. Pensado para Windows (Git Bash, PowerShell, cmd), macOS y Linux; probado en Windows, y el workflow `harness.yml` del repo del SDD Universal (no del proyecto) corre la suite en los tres.
 
+**«Todo, igual que CI» solo si es cierto (S49).** Cuando CI corre un check que el nivel local no puede correr —un navegador, un secreto, una GPU, una base en la nube—, `verify.py` en verde **no dice nada de ese check**, y un rojo puede vivir ahí días mientras la verificación local sale VERDE. El arnés nombra lo que no cubre: el nivel completo avisa qué checks viven solo en CI y con qué comando se corren a mano, y cerrar una tarjeta mira el estado de CI de la **rama base**, no solo el verde local — «tests verdes» de R16 incluye los que corren allá. En el repo del SDD Universal el smoke de la interfaz vivió rojo tres días así, y el rojo era del propio check.
+
 ### Una vuelta en un comando (`ciclo.py`)
 
 Verificar es un paso; la **vuelta** son cuatro, y siempre los mismos: poner en sincronía lo derivado, verificar, armar la evidencia, commitear. Hacerlos a mano cuesta tokens y, peor, se olvidan justo cuando la vuelta salió bien y uno tiene ganas de cerrar.
@@ -145,6 +147,8 @@ $ python harness/verify.py --changed      # @ 3f1c9a2e
 
 **Un assert que no puede dar rojo (S48).** El rojo forzado se mide por test («cae G1»), y un test puede afirmar tres cosas de las cuales una no pueda fallar nunca. En la tarjeta `IA-3`, el assert «el gasto registrado al final no pasa el tope» era una tautología: el `usage` de la respuesta falsa se fabricaba con la misma constante con la que el código calculaba la cota, así que el gasto final *era* lo reservado, por construcción. El mutante que cotizaba con `max_tokens` y le pedía el doble al modelo sobrevivía las 61 pruebas gastando 1,24× el tope con un solo pedido. Dos consecuencias. Cuando un test afirma varias cosas, el rojo se mide **por assert**: para cada afirmación tiene que haber un mutante plausible que la haga caer sola, o esa afirmación es decorativa. Y **el dato con el que el código decide no lo fabrica el test con las constantes del código**: un `usage`, un precio, un reloj, un hash se derivan de la entrada real (el `max_tokens` que el pedido pidió, los bytes que mandó), porque si no, el test mide su propia aritmética.
 
+**Un assert que mide un correlato, no la propiedad (S49).** El assert cómodo de escribir suele ser un **proxy** de lo que importa: «ningún archivo del ZIP está vacío» por «ningún archivo volvió vacío del servidor». El proxy anda mientras la realidad no cambie; cuando cambia de forma legítima —el paquete sumó siete `.gitkeep`, vacíos por definición— el proxy acusa al producto de un bug que no tiene. Lo que lo atrapa: el assert nombra **la propiedad** (lo que vino del servidor tiene contenido; los marcadores declarados están vacíos, y uno con texto adentro también es rojo), y cuando **dos chequeos del mismo repo se contradicen** —ahí el test del paquete *esperaba* esas entradas— uno de los dos está mal, y eso ya es un hallazgo. Un rojo falso no es ruido: tapa a los verdaderos todo el tiempo que dura, y enseña a ignorar el tablero. Y el mensaje de falla lleva **el dato que delata al culpable**: «hay archivos vacíos» obligó a parchear el chequeo para saber cuáles eran.
+
 **Variantes de dominio:** DATA → el «test» es una validación de datos (esquema, rangos, nulos) y el rojo forzado es un dataset roto a propósito. GAME → `playtest.md` documenta el caso y su resultado; el rojo forzado es el estado de juego que el check debe rechazar.
 
 ### Checks de drift fuente ↔ realidad
@@ -155,6 +159,7 @@ Los checks comunes comparan el código consigo mismo. Hacen falta además checks
 |---|---|
 | Esquema de las migraciones ≠ modelos | Comparar metadata (ej. `compare_metadata` en Alembic, `prisma migrate diff`) |
 | CI que nunca corrió (workflow en una rama que no es la por defecto) | `verify.py` avisa si `e2e` está declarado y no hay corrida verde registrada |
+| Check que solo corre en CI (navegador, secretos, GPU) | El nivel completo nombra lo que no cubre y su comando a mano (§3) |
 | Rutas citadas en los MD que no existen | Check de rutas (§7) |
 | Lógica de negocio vs datos de producción | `prod_readonly_query` antes del deploy (R32) |
 
@@ -252,6 +257,7 @@ Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.39 | 2026-10-19 | §3 suma que el nivel local nombra lo que **no** cubre cuando CI corre checks que él no puede correr, y §5 que un assert afirma la propiedad y no un correlato de ella: el proxy acusa al producto cuando la realidad cambia de forma legítima. De la tarjeta `L-8` ([`scenarios.md`](scenarios.md) S49): el smoke vivió rojo tres días con la verificación local en VERDE. Sin regla Rxx nueva. |
 | 0.38 | 2026-10-19 | §5 suma el rojo medido **por assert** cuando un test afirma varias cosas, y que el dato con el que el código decide no se fabrica con las constantes del código. De la vuelta 2 de la review de `IA-3` ([`scenarios.md`](scenarios.md) S48): el assert del tope de gasto no podía fallar y un mutante gastaba 1,24× el tope en verde. Sin regla Rxx nueva. |
 | 0.37 | 2026-10-16 | §2 suma la clave `sync` (los comandos que arreglan lo derivado) y §3 suma `ciclo.py`: la vuelta completa en un comando —sync, verify, evidencia armada, commit— que no commitea en rojo y no despliega nunca. Nace de hacer el ritual siete veces a mano en una sesión. |
 | 0.36 | 2026-10-16 | §5 suma dos pasos al paso de mutantes, de la review de la tarjeta `IA-3` ([`scenarios.md`](scenarios.md) S46 y S47): al menos un mutante en el punto de uso que nombra el criterio, no solo en la primitiva; y una precarga que bloquea `fetch` para probar de una que la suite no llama a la API real. Sin regla Rxx nueva. |
