@@ -148,7 +148,7 @@ def commitear(ciclo: Ciclo, mensaje: str, evidencia: str) -> int:
     proc = run_captured(["git", "-c", "i18n.commitEncoding=utf-8", "commit", "-q", "-F", "-"],
                         cwd=ciclo.root, input=cuerpo, timeout=120)
     if proc.returncode:
-        print(f"[ciclo] el commit falló (¿hook en rojo?):\n{decodificar(proc.stdout)}{decodificar(proc.stderr)}")
+        print(f"[ciclo] el commit falló (git salió con {proc.returncode}); esto devolvió:\n{decodificar(proc.stdout)}{decodificar(proc.stderr)}")
         return 1
     print(f"[ciclo] commiteado @ {ciclo.repo.head()}")
     return 0
