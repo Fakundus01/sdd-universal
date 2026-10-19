@@ -42,6 +42,10 @@ class Project:
         self.write("harness.config.json", json.dumps(config if config is not None else {"test": PASS_CMD}))
         if git:
             self.git("init", "-q", "-b", "main")
+            # Identidad LOCAL al repo de prueba: los `git` que corre ciclo.py aca adentro la heredan, y la
+            # suite no depende de la config global de quien la corre (ni la toca).
+            self.git("config", "user.email", "t@t")
+            self.git("config", "user.name", "t")
             self.commit("inicio")
 
     def cleanup(self) -> None:
@@ -55,7 +59,7 @@ class Project:
 
     def git(self, *args: str) -> str:
         # run_captured: bajo carga, en Windows la salida se puede perder (stdout=None) y el setUp reventaba.
-        proc = run_captured(["git", "-c", "user.email=t@t", "-c", "user.name=t", *args], cwd=self.root, text=True)
+        proc = run_captured(["git", *args], cwd=self.root, text=True)
         if proc.returncode:
             raise subprocess.CalledProcessError(proc.returncode, proc.args, proc.stdout, proc.stderr)
         return proc.stdout.strip()

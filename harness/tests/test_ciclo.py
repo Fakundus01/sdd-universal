@@ -49,11 +49,33 @@ class TestCiclo(unittest.TestCase):
         self.assertNotIn("EVIDENCIA", salida, "siguió como si nada con lo derivado a medias")
 
     def test_no_commitea_en_rojo(self):
-        codigo, salida = self.correr("--full", "--commit", "no deberia entrar",
-                                     config={"test": FAIL_CMD})
+        # Con algo para commitear (el sync deja derivado.txt): si el guardián de rojo faltara, commitearia.
+        self.proy = Project(config={"test": FAIL_CMD, "sync": [TOCA]})
+        antes = self.proy.git("rev-parse", "HEAD")
+        salida = io.StringIO()
+        with redirect_stdout(salida):
+            codigo = ciclo.main(["--full", "--commit", "no deberia entrar", "--root", str(self.proy.root)])
+        salida = salida.getvalue()
         self.assertEqual(codigo, 1)
         self.assertIn("no commiteo", salida)
+        self.assertNotIn("[ciclo] commiteando", salida, "intentó commitear con la verificación en rojo")
+        self.assertNotIn("el commit falló", salida, "el 1 vino de un commit roto, no del rojo de la verificación")
+        self.assertEqual(self.proy.git("rev-parse", "HEAD"), antes, "se creó un commit en rojo")
         self.assertNotIn("no deberia entrar", self.proy.git("log", "--oneline"))
+
+    def test_un_commit_que_falla_muestra_lo_que_dijo_git_sin_adivinar_la_causa(self):
+        self.proy = Project(config={"test": PASS_CMD, "sync": [TOCA]})
+        hook = self.proy.write(".git/hooks/pre-commit",
+                               "#!/bin/sh\necho 'RECHAZO-DEL-HOOK-XYZ' >&2\nexit 1\n")
+        hook.chmod(0o755)
+        salida = io.StringIO()
+        with redirect_stdout(salida):
+            codigo = ciclo.main(["--full", "--commit", "m", "--root", str(self.proy.root)])
+        salida = salida.getvalue()
+        self.assertEqual(codigo, 1, salida)
+        self.assertIn("el commit falló", salida)
+        self.assertIn("RECHAZO-DEL-HOOK-XYZ", salida, "no muestra lo que devolvió git")
+        self.assertNotIn("¿hook", salida, "propone una causa en vez de nombrar lo que pasó")
 
     def test_en_verde_commitea_con_la_evidencia_pegada(self):
         codigo, salida = self.correr("--full", "--commit", "mensaje del ciclo",
