@@ -272,7 +272,13 @@ async function smoke({base, cdp, pasos, errores}){
     const carpeta = nombre.slice(0, -4);
     for (const r of ["PROMPT-DE-ARRANQUE.txt", "LEEME.md", ".gitignore", "sdd/SDD-MASTER.md", "sdd/playbooks/env-setup.md"])
       if (!rutas.includes(carpeta + "/" + r)) return "el ZIP no trae " + r + " (" + tipo + ")";
-    if (bajados.some(a => typeof a.contenido === "string" && !a.contenido.length)) return "hay archivos vacíos";
+    // Los .gitkeep son marcadores de carpeta: tienen que estar vacíos. Todo lo demás viene del servidor o se arma
+    // en memoria y no puede estar vacío (un 404 del proxy lo dejaría así). Se nombra al culpable.
+    const marcador = a => a.nombre.split("/").pop() === ".gitkeep";
+    const vacios = bajados.filter(a => !marcador(a) && typeof a.contenido === "string" && !a.contenido.length).map(a => a.nombre);
+    if (vacios.length) return "archivos vacíos que no son marcadores: " + vacios.join(", ");
+    const marcasConTexto = bajados.filter(a => marcador(a) && (typeof a.contenido !== "string" || a.contenido.length)).map(a => a.nombre);
+    if (marcasConTexto.length) return "marcadores .gitkeep con contenido: " + marcasConTexto.join(", ");
     if (!await esperar(() => /Listo/.test($("zrmsg").textContent))) return "el popup no dijo Listo: " + $("zrmsg").textContent;
     return null;`);
 }

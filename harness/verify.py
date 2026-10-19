@@ -32,6 +32,7 @@ from repo import LOST, OutputLost, Repo, run_captured  # noqa: E402
 TAIL_OK = 3
 TAIL_FAIL = 25
 COMMAND_TIMEOUT_S = 1800
+SMOKE = "web/tests/smoke/smoke.mjs"
 
 
 class Verifier:
@@ -54,6 +55,8 @@ class Verifier:
         self.report.section("Arnés")
         HarnessChecks(self.root, config, self.report, self.repo, e2e_running=self.e2e).run_all()
         changed_code = [f for f in self.repo.changed_files() if not f.startswith("sdd/")]
+        if self.mode != "quick":
+            self._smoke_aviso()
         if self.mode == "full":
             self._full(config)
         else:
@@ -63,6 +66,12 @@ class Verifier:
         if self.e2e:
             self._e2e(config)
         return self._finish()
+
+    def _smoke_aviso(self) -> None:
+        """El smoke necesita Chrome y ~60 s: no corre acá. Un verde de verify.py no dice nada de él (L-8)."""
+        if (self.root / SMOKE).is_file():
+            self.report.warn(f"el smoke del navegador NO corre en verify.py: un verde acá no lo cubre. "
+                             f"Corrélo aparte antes de cerrar: node {SMOKE}")
 
     def _full(self, config: HarnessConfig) -> None:
         self.report.section("Lint")

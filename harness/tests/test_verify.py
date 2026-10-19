@@ -108,6 +108,22 @@ class TestVerify(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertFalse((self.p.root / "sdd/progress/e2e.md").exists())
 
+    def test_avisa_que_el_smoke_no_corre_aca_si_el_proyecto_lo_tiene(self):
+        self.p.write("web/tests/smoke/smoke.mjs", "// smoke\n")
+        self.p.commit("smoke")
+        for modo in ("--full", "--changed"):
+            code, out = run(self.p, modo)
+            self.assertEqual(code, 0, out)
+            self.assertIn("[WARN]", out)
+            self.assertIn("node web/tests/smoke/smoke.mjs", out)
+        _, quick = run(self.p, "--quick")
+        self.assertNotIn("smoke", quick)
+
+    def test_sin_smoke_no_hay_aviso(self):
+        code, out = run(self.p)
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("smoke", out)
+
     def test_e2e_pedido_sin_declarar_falla(self):
         code, out = run(self.p, "--quick", "--e2e")
         self.assertEqual(code, 1)
