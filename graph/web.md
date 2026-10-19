@@ -1,7 +1,7 @@
 ---
 id: web
 rutas: [web/**]
-hash: 20ba129b1e64ef844fb7e714269879473f49b65f131549cf732e49680ed21ff6
+hash: b14c28b9df2984917d6514c2faafec67a617686864d45fae14bf13b2bf1a6f41
 ---
 
 # web
