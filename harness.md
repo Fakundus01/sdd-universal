@@ -1,6 +1,6 @@
 # harness.md · El arnés: que lo que el agente dice que hizo sea cierto
 
-**Versión:** 0.37 · 2026-10-16 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
+**Versión:** 0.38 · 2026-10-19 · **Para agentes:** leer cuando la tarea sea cerrar algo como `done` (R30), escribir un test o un check (R29), configurar el arnés de un proyecto, o retomar trabajo después de un corte de contexto. **Para humanos:** por qué un «listo» del agente no alcanza y qué lo reemplaza.
 
 > Nace de **Relay**, el sistema que se usó en producción en `chat-commerce-ai` (features H-1 a H-11). Escenarios S28–S31.
 > El SDD gobierna *qué* se construye; el arnés hace cumplir *que esté construido*.
@@ -143,6 +143,8 @@ $ python harness/verify.py --changed      # @ 3f1c9a2e
 
 **La suite no sale a la red (S47).** Inyectar un cliente HTTP falso en cada test prueba que *ese* test no sale: no que no salga ninguno. Lo que lo prueba de una es una **precarga** (`node --import`, `conftest.py` o el equivalente del runtime) que reemplaza `fetch` por uno que registra y falla, con un assert de cero llamadas reales al final. En un proyecto con IA (N4) va como opción del comando `test`. Y la precarga se prueba a sí misma: con un cliente construido sin el `fetch` de test tiene que registrar la llamada, o no está atrapando nada.
 
+**Un assert que no puede dar rojo (S48).** El rojo forzado se mide por test («cae G1»), y un test puede afirmar tres cosas de las cuales una no pueda fallar nunca. En la tarjeta `IA-3`, el assert «el gasto registrado al final no pasa el tope» era una tautología: el `usage` de la respuesta falsa se fabricaba con la misma constante con la que el código calculaba la cota, así que el gasto final *era* lo reservado, por construcción. El mutante que cotizaba con `max_tokens` y le pedía el doble al modelo sobrevivía las 61 pruebas gastando 1,24× el tope con un solo pedido. Dos consecuencias. Cuando un test afirma varias cosas, el rojo se mide **por assert**: para cada afirmación tiene que haber un mutante plausible que la haga caer sola, o esa afirmación es decorativa. Y **el dato con el que el código decide no lo fabrica el test con las constantes del código**: un `usage`, un precio, un reloj, un hash se derivan de la entrada real (el `max_tokens` que el pedido pidió, los bytes que mandó), porque si no, el test mide su propia aritmética.
+
 **Variantes de dominio:** DATA → el «test» es una validación de datos (esquema, rangos, nulos) y el rojo forzado es un dataset roto a propósito. GAME → `playtest.md` documenta el caso y su resultado; el rojo forzado es el estado de juego que el check debe rechazar.
 
 ### Checks de drift fuente ↔ realidad
@@ -250,6 +252,7 @@ Modo LITE: el arnés se reduce a `harness.config.json` + `verify.py` + evidencia
 
 | Versión | Fecha | Cambio |
 |---|---|---|
+| 0.38 | 2026-10-19 | §5 suma el rojo medido **por assert** cuando un test afirma varias cosas, y que el dato con el que el código decide no se fabrica con las constantes del código. De la vuelta 2 de la review de `IA-3` ([`scenarios.md`](scenarios.md) S48): el assert del tope de gasto no podía fallar y un mutante gastaba 1,24× el tope en verde. Sin regla Rxx nueva. |
 | 0.37 | 2026-10-16 | §2 suma la clave `sync` (los comandos que arreglan lo derivado) y §3 suma `ciclo.py`: la vuelta completa en un comando —sync, verify, evidencia armada, commit— que no commitea en rojo y no despliega nunca. Nace de hacer el ritual siete veces a mano en una sesión. |
 | 0.36 | 2026-10-16 | §5 suma dos pasos al paso de mutantes, de la review de la tarjeta `IA-3` ([`scenarios.md`](scenarios.md) S46 y S47): al menos un mutante en el punto de uso que nombra el criterio, no solo en la primitiva; y una precarga que bloquea `fetch` para probar de una que la suite no llama a la API real. Sin regla Rxx nueva. |
 | 0.35 | 2026-10-06 | §2: clave `master` para un núcleo fuera de `sdd/` (DRIFT de la tarjeta L-6, opción A elegida por el owner: el paquete no podía usar su propio arnés sin una copia del master). §7: el arnés revisa `depende_de` de las tarjetas (existe, sin ciclos, sin despacho fuera de orden), por [`orchestration.md`](orchestration.md) §10 (tarjeta L-2). |

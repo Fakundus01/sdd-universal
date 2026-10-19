@@ -1,7 +1,7 @@
 ---
 id: IA-3
 titulo: "Tests de carga adversarios del endpoint: tope de gasto, rate limit, errores que no cobran"
-estado: review
+estado: done
 feature: F28 · Fusión con IA del combinador (v2 de blocks.md, ADR-016)
 depende_de: [IA-1]
 rama: ia-fusion
@@ -27,7 +27,7 @@ Una batería de tests que intente romper el tope de gasto de `api/fusionar.js` d
 7. Los tests nunca llaman a la API real; no gastan un centavo al correr en CI.
 
 ## Zona de archivos
-- **Podés tocar:** `api/fusionar.test.js` (o la carpeta de tests que use el runtime elegido en IA-1 — confirmá contra lo que IA-1 dejó andando), fixtures de transporte simulado.
+- **Podés tocar:** los tests del endpoint bajo `api/tests/` — IA-1 dejó andando `node --test` con un archivo por tema, así que esta tarjeta vive en `api/tests/topeEndpoint.test.mjs` (la tarjeta decía «api/fusionar.test.js», sin backticks acá a propósito porque ese archivo nunca existió, cuando se escribió antes de que IA-1 eligiera el runtime) — y fixtures de transporte simulado.
 - **No toques:** `api/fusionar.js` en sí (si un test revela un bug real, lo anotás en el handback con la falla — no lo arreglás vos, vuelve al leader para re-despachar a IA-1 o re-abrirla).
 
 ## Contexto a leer (y nada más)
