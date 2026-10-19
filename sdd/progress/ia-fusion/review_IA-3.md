@@ -1,5 +1,340 @@
-# Review IA-3 @ 9a45e24
+# Review IA-3 @ 3335fe4
+**Veredicto vigente (vuelta 2, @ 3335fe4):** CHANGES_REQUESTED
+
+La vuelta 2 trajo los 4 tests que pidió la vuelta 1 y los 4 mutantes mueren donde dice. Bloquea una sola cosa:
+el assert «gastado final ≤ tope» de G1 está satisfecho por construcción y el mutante **M5b** (la cota se cotiza
+con `MAX_TOKENS_SALIDA` y la llamada pide el doble) sobrevive gastando **USD 1,24 contra un tope de USD 1 con un
+solo pedido**. Arreglo: 2 líneas en el `fetch` falso, ya probadas. Ver «Cambios requeridos» de la vuelta 2.
+
+---
+
+# Vuelta 2 · @ 3335fe4
 **Veredicto:** CHANGES_REQUESTED
+
+Revisor: reviewer (tier ALTO), independiente — no escribí estos tests (R30). Diff revisado: `git show 3335fe4`
+(`api/tests/topeEndpoint.test.mjs` nuevo, + `graph/sdd.md`, `sdd/cards/IA-3.md` y el handback). Working tree de
+`C:\Users\Facundo\Estudio_Trabajo\sdd-universal` (rama `cerebro-oficio`, idéntico a `main` en todo lo revisado:
+`git hash-object api/fusionar.js` = `git rev-parse 3335fe4:api/fusionar.js` = `56a62dda`). No edité ningún archivo
+del repo: los mutantes corrieron sobre una copia sandbox fuera del repo (`api/` + `web/catalogo.js` + `package.json`
++ `node_modules/`).
+
+**Resumen.** Los cuatro tests pedidos están, hacen lo que dicen, y los cuatro mutantes del handback mueren donde dice
+y con la falla que dice: lo verifiqué aplicándolos yo. 4 de los 5 tests son sólidos. Bloquea **una sola cosa**, de la
+misma forma que bloqueó la vuelta 1: el segundo assert de G1 (`gastado final ≤ tope`, que es la medición literal que
+pide el criterio 2) **está satisfecho por construcción**. El `usage` del transporte simulado lo fabrica el propio test
+con las mismas constantes con que el handler calcula la cota, así que nunca puede exceder lo reservado. Mi mutante
+propio **M5b** —la cota se calcula con `MAX_TOKENS_SALIDA` pero la llamada pide `MAX_TOKENS_SALIDA * 2`— pasa las 61
+pruebas en verde, y **un solo pedido** anota USD 1,2288 contra un tope de USD 1. El arreglo son 2 líneas en el
+`fetch` falso, ya lo probé: queda verde con el código real y mata a M5b (y sigue matando a M1b).
+
+## Verificación re-ejecutada
+
+```text
+$ node api/tests/correr.mjs
+✔ G1: 8 pedidos en paralelo al endpoint nunca gastan más que el tope (S33, mata M1b) (80.4678ms)
+✔ G2: la cota sale del prompt real, no de un número fijo (mata M2) (4.2785ms)
+✔ G3: un éxito deja anotado el costo real, no la cota entera (mata M3) (4.0588ms)
+✔ G3b: con tope para dos cotas, tres éxitos chicos seguidos entran los tres (mata M3) (4.8455ms)
+✔ G4: un corte a mitad de la respuesta conserva la reserva (ambiguo, mata M4) (7.6586ms)
+ℹ tests 61
+ℹ suites 0
+ℹ pass 61
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 716.4494
+```
+
+```text
+$ python harness/verify.py
+verify.py @ 550f155 (rama cerebro-oficio)
+
+── Arnés ──
+[OK]    Memoria en disco: sdd/progress/cerebro-oficio/current.md
+[OK]    Tarjetas válidas (21)
+[OK]    Rutas citadas existen (282 revisadas)
+[OK]    Arranque liviano: paquete 9199 bytes de 10240 (AGENTS.md + SDD-COMPACT.md); custom.md 990 bytes (aparte; aviso > 2048); 33 reglas definidas
+
+── Lint ──
+[WARN]  sin 'lint' en harness.config.json
+
+── Tests ──
+[OK]    test — `node --test "web/tests/*.test.mjs" && python -m unittest discover -s harness/tests && python -m unittest discover -s graph/_meta/tests && python -m unittest discover -s cerebro/tests && node api/tests/correr.mjs` (160.0s): Ran 265 tests in 22.278s · OK (skipped=3)
+
+VERDE — 0 FAIL, 1 WARN
+```
+
+El WARN de `lint` y los 3 `skipped` ya estaban antes de la tarjeta.
+
+El repo quedó intacto al terminar (los mutantes corrieron todos en la copia sandbox):
+
+```text
+$ git status --porcelain
+ M .serena/project.yml
+?? .serena/memories/
+?? .serena/project.yml.bak
+
+$ git diff --stat HEAD -- api/
+(vacío)
+```
+
+Los tres de `.serena/` ya estaban antes de empezar y no son de esta tarjeta.
+
+### Estabilidad (20 corridas seguidas de `topeEndpoint.test.mjs`)
+
+```text
+run 1: ℹ pass 5 | ℹ fail 0      ...      run 20: ℹ pass 5 | ℹ fail 0
+=== corridas con falla: 0/20
+```
+
+**G1 no depende del `sleep` de 30 ms.** Lo probé bajando `demoraMs` a 0 en la copia sandbox: el código real sigue
+verde (5/5) y M1b **sigue muriendo** en G1 con el mismo assert. Y tiene que ser así: `manejar()` corre sincrónico
+hasta el primer `await` (`validarPedido` → `permitir` → `reservar` no esperan nada), así que las 8 reservas se
+resuelven antes de que cualquier `fetch` complete, con demora o sin ella. El `sleep` no es lo que hace pasar el test;
+es decorativo. Bien.
+
+### Criterio 7: la suite no sale a la red (re-medido)
+
+```text
+$ node --import file:///…/bloquear_fetch.mjs --test "api/tests/*.test.mjs"
+fetch reales registrados: 0        (una línea por proceso/worker: 17 líneas, todas en 0)
+ℹ tests 61
+ℹ pass 61
+ℹ fail 0
+```
+
+Precarga propia que reemplaza `globalThis.fetch` por uno que registra y falla. Cero llamadas reales, incluidos los
+`worker_threads` de `reserva.test.mjs`. Sin clave real en el entorno en ningún momento.
+
+## Mutantes
+
+Todos sobre la copia sandbox de `api/fusionar.js` (`<scratchpad>/sandbox`), aplicados y restaurados por script
+(`mutar.py`); el repo nunca se tocó. «cae en» es el test que falla; entre paréntesis, los conteos contra
+`topeEndpoint.test.mjs` solo / contra la suite completa.
+
+| Mutante | Qué cambia en `api/fusionar.js` | Resultado | Coincide con el handback |
+|---|---|---|---|
+| **M1b** · chequear y después llamar, con el `catch` prolijo (anota la cota si el error es ambiguo) | `reservar()` → leer `gastadoActual` y comparar sin anotar; tras el éxito `ajustar(+costoReal)`; en el `catch`, `if (!esRechazoDeLaAPI) ajustar(+cota)` | **MUERE** · 4/1 (tope) · 60/1 (suite) · cae en **G1**: `AssertionError [ERR_ASSERTION]: 8 llamada(s) al modelo × USD 0.63626 = USD 5.0901 contra un tope de USD 1 (codigos: 200,200,200,200,200,200,200,200)` | **Sí**, literal |
+| **M2** · cota fija USD 0,06 | `const cotaUSD = 0.06;` | **MUERE** · 3/2 · 59/2 · cae en **G1** y **G2**: `el pedido largo (cota USD 0.8605) tiene que no entrar en un tope de USD 0.7480` | **Sí** |
+| **M3** · no ajusta al costo real tras un éxito | se borra `ajustar(estado, usdAMicros(costoReal) - cotaMicros)` | **MUERE** · 3/2 · 59/2 · cae en **G3** (`quedó anotada la cota en vez del costo real (esperado 525 micro-USD)`) y **G3b** (`el pedido 2 no entró…`) | **Sí** |
+| **M4** · libera con cualquier error | `liberar(estado, cotaMicros)` sin el `if (esRechazoDeLaAPI)` | **MUERE** · 4/1 · 57/4 · cae en **G4** (`se liberó la reserva de un fallo ambiguo…`) y, de rebote, en los 3 tests de «lo ambiguo conserva» de IA-1 | **Sí** (el handback cuenta solo el archivo nuevo) |
+| **M5b** · 🔴 **propio** — la cota se calcula con `MAX_TOKENS_SALIDA` (8192) pero la llamada pide `MAX_TOKENS_SALIDA * 2` | `max_tokens: MAX_TOKENS_SALIDA * 2` en `messages.create` | **SOBREVIVE** · 5/0 · **61/0** | — |
+| M5 · lo mismo pero × 8 (65536) | `max_tokens: MAX_TOKENS_SALIDA * 8` | muere 52/9, pero **por accidente**: el SDK real tira `AnthropicError` («streaming recomendado») antes de salir, y lo que falla son asserts de `fusion:"ia"` y de `maxRetries`, ninguno sobre el tope. Un rojo que dice «el modelo dejó de funcionar», no «se rompió el tope» | — |
+| M6 · propio — la cota ignora `INSTRUCCION_SISTEMA` | `promptBytes: bytesUtf8(mensajeUsuario(pedido))` | **SOBREVIVE** · 61/0. Subestima ~USD 0,02 por pedido (constante, no la controla el usuario): poco daño, pero marca el ancho de la banda ciega de G2 | — |
+| M7 · propio — la cota cuenta la **mitad** de los bytes del prompt | `promptBytes: Math.floor(bytes/2)` | muere · cae en G2 | — |
+| M8 · propio — la cota ignora `custom` (8000 bytes que controla el usuario) | `promptBytes: bytes(prompt) - bytes(pedido.custom)` | muere · cae en G2 | — |
+| M9 · propio, en `api/_lib/costo.js` — precio de salida ÷ 10 | `PEOR_PRECIO_SALIDA_USD_POR_TOKEN = 7.5 / 1_000_000` | **SOBREVIVE** · 61/0 (ver «calidad de los tests») | — |
+
+Los cuatro mutantes del handback mueren donde dice y con el tipo de falla que dice. La cuenta de los conteos cuadra
+exactamente con la tabla del handback cuando se corre solo el archivo nuevo, que es lo que el handback midió.
+
+### El mutante que sobrevive, medido (no es teórico)
+
+Sonda propia: el `fetch` falso deriva el `usage` del **pedido real** (`output_tokens = el max_tokens que el handler
+autorizó`), que es lo que hace un transporte simulado honesto y lo que ningún test de la tarjeta hace.
+
+```text
+=== CODIGO REAL ===
+max_tokens pedido al modelo : 8192 (la cota se calculó con 8192)
+cota reservada              : USD 0.63626
+status                      : 200 ia
+gastado anotado al final    : USD 0.61440   tope: USD 1
+¿pasa el tope con UN pedido?: no
+
+=== MUTANTE M5b ===
+max_tokens pedido al modelo : 16384 (la cota se calculó con 8192)
+cota reservada              : USD 0.63626
+status                      : 200 ia
+gastado anotado al final    : USD 1.22880   tope: USD 1
+¿pasa el tope con UN pedido?: SÍ — tope roto
+```
+
+Con M5b **un solo pedido** anota USD 1,2288 contra un tope de USD 1 y la suite queda en 61/61 verde. El criterio 2
+dice textual «nunca gastan más que el tope, **medido con el gasto registrado al final**»: eso es exactamente lo que
+pasa acá y ningún test lo ve. El motivo es que G1 fabrica el `usage` con `output_tokens: MAX_TOKENS_SALIDA` —la misma
+constante con la que `cotaUSDDe()` calcula la cota— así que `gastado` final **es** `llamadas × cota` por
+construcción y el assert `gastadoUSD() <= 1` no agrega nada sobre el primero. El eslabón que falta no es la carrera
+(eso G1 lo prueba bien): es que **lo que el pedido autoriza a gastar nunca exceda lo reservado**. Hoy el acople entre
+`max_tokens` de la cota y `max_tokens` de la llamada no lo fija ningún test: `grep -n "max_tokens" api/tests/*.mjs`
+solo aparece en `topeEndpoint.test.mjs`, y nunca contra el cuerpo del pedido (la técnica de leer `init.body` ya
+existe en `fusionar.test.mjs`, el test de LLM01, pero mira `system`/`messages`, no `max_tokens`).
+
+### El arreglo pedido, ya probado en el sandbox
+
+```text
+===== con el fix · CODIGO REAL · exit=0
+ℹ tests 5 · pass 5 · fail 0
+
+===== con el fix · M5b (max_tokens x2) · exit=1
+✖ G1: 8 pedidos en paralelo al endpoint nunca gastan más que el tope (S33, mata M1b)
+  AssertionError [ERR_ASSERTION]: gastado final USD 1.2435 > tope 1
+ℹ tests 5 · pass 4 · fail 1
+
+===== con el fix · M1b (chequear y despues llamar) · exit=1
+✖ G1: 8 pedidos en paralelo al endpoint nunca gastan más que el tope (S33, mata M1b)
+  AssertionError [ERR_ASSERTION]: 8 llamada(s) al modelo × USD 0.63626 = USD 5.0901 contra un tope de USD 1 (codigos: 200,200,200,200,200,200,200,200)
+```
+
+Queda verde con el código real, mata a M5b con el segundo assert de G1 (el que hoy no puede fallar) y sigue matando a
+M1b con el primero. Es el cambio del punto 1 de «Cambios requeridos».
+
+## Criterios de aceptación de IA-3
+
+| # | Estado | Dónde está la evidencia (re-verificada por mí) |
+|---|---|---|
+| 1 · SDK real sobre transporte simulado, nunca un mock del cliente | **Cubierto** | `api/_lib/anthropicCliente.js:18` (`new Anthropic({apiKey, maxRetries:0, fetch})`); `api/tests/topeEndpoint.test.mjs:27` + `:130` inyecta solo el `fetch` y devuelve un `Response` nativo. Prueba positiva de que el SDK real está en el camino, no un mock: con M5 (`max_tokens` 65536) el **propio SDK** tira `AnthropicError` antes de salir a la red — un mock escrito a mano no haría eso. G4 además hace pasar al SDK por un `ReadableStream` que se corta a mitad |
+| 2 · Hilos reales + barrera; N pedidos contra tope bajo; gasto registrado al final ≤ tope | **Parcial — bloquea** | Hilos reales y barrera en la primitiva: `api/tests/reserva.test.mjs:79` (ya aprobado en IA-1). A nivel endpoint: `topeEndpoint.test.mjs:134-138` manda 8 pedidos con `Promise.all`, IPs distintas (bien: el rate limit no es lo que salva al tope) y mide `llamadas × cota ≤ tope`, `gastado ≤ tope` y `llamadas === oks`. El primero y el tercero son asserts de verdad (M1b y M2 mueren ahí). **El segundo —la medición literal del criterio— no puede fallar**: el `usage` sale de `MAX_TOKENS_SALIDA`, la misma constante de la cota. M5b lo demuestra: 61/61 verde con un pedido de USD 1,2288 contra un tope de USD 1 |
+| 3 · Fallback/reintento tardío: 529 o timeout no deja la reserva colgada ni cobra de más | **Cubierto** | `fusionar.test.mjs:227` (529 → una sola llamada, `maxRetries:0`), `:252` (529 → gastado 0), `:262` (corte de red → conserva). M4 confirma que esos tres asserts son reales (mueren con el mutante) |
+| 4 · Rate limit por IP: misma IP → 429; IPs distintas no se afectan | **Cubierto** | `fusionar.test.mjs:189`, `rateLimit.test.mjs:7` y `:23`. G1 lo refuerza por el otro lado: con 8 IPs distintas el rate limit no interviene y el freno tiene que ser el tope |
+| 5 · 4xx cuesta 0; corte a mitad de respuesta conserva la reserva | **Cubierto** (era el hueco G4 de la vuelta 1) | 4xx → 0: `fusionar.test.mjs:240`. Corte a mitad: `topeEndpoint.test.mjs:208-220` con un `Response` cuyo `ReadableStream` manda medio JSON y después `error()` — 200 `fusion:"simulada"` y `gastado > 0`. Mata a M4 con su propio mensaje. Es un corte a mitad del **cuerpo** de verdad, no un error del `fetch`: el que faltaba |
+| 6 · Un test por cada forma de romper el tope de S33 | **Parcial — bloquea (6b)** | **6a carrera en el handler:** cerrado. G1 mata a M1b con la cuenta en el mensaje (USD 5,0901 vs tope 1) — era el agujero principal de la vuelta 1. **6b la reserva acota el pedido real:** medio cerrado. G2 mata a M2 (cota fija), M7 (mitad de los bytes) y M8 (ignora `custom`), pero su umbral es el punto medio entre las dos cotas, así que es ciego a toda subestimación menor a ~USD 0,11 por pedido (M6 sobrevive) y, sobre todo, **ciego al lado de la salida**, que es el 96 % de la cota (0,6144 de 0,63626): M5b sobrevive. **6c «ocupada» sin nada en vuelo:** cerrado. G3 fija el costo real exacto (525 micro-USD) y G3b los tres éxitos seguidos; los dos matan a M3 |
+| 7 · Nunca llaman a la API real; no gastan un centavo en CI | **Cubierto** | Re-medido arriba con precarga propia: 0 `fetch` reales en 61 pruebas y en todos los workers. `beforeEach` limpia el `fetch` y restaura el entorno en `afterEach` (bien: `envBackup` devuelve `ANTHROPIC_*` y los dos `FUSIONAR_*`, así que el archivo no se filtra a los otros tests — lo verifiqué corriendo el archivo solo y dentro de la suite completa, mismo resultado) |
+
+## Calidad de los tests (no solo su resultado)
+
+- **¿Algún assert le pregunta al código cuánto debería gastar?** Sí, en parte, y el comentario del archivo
+  (`topeEndpoint.test.mjs:11-12`: «Los cuatro cálculos de abajo repiten la fórmula del handler a propósito: un test
+  que le pregunta al código cuánto debería gastar no prueba nada») **afirma algo que el archivo no hace**.
+  `cotaUSDDe()` **llama** a `estimarCotaUSD` de producción, y G3 compara contra `usdAMicros(costoRealUSD(usage))`,
+  también de producción. Lo que el test reimplementa es *qué bytes entran* en la cota (eso sí, y es lo que mata a M2,
+  M7 y M8), no la fórmula ni los precios. Consecuencia medida: **M9** (precio de salida ÷ 10 en
+  `api/_lib/costo.js:17`) sobrevive 61/61 — toda la tabla de precios puede estar 10× mal y ningún test se mueve,
+  porque `costo.test.mjs` solo prueba monotonía y «> 0». No lo bloqueo acá: la zona de la tarjeta es `api/tests/` y
+  `costs.md` le estaba vedado por R11 (ver «mejoras al arnés»). Sí hay que corregir el comentario, que hoy le dice al
+  próximo lector que el archivo tiene una defensa que no tiene.
+- **¿G1 pasa por suerte por el `sleep` de 30 ms?** No. Verificado con `demoraMs = 0`: verde con el código real y
+  M1b sigue muriendo. 0/20 corridas inestables.
+- **Fixtures limpias:** `beforeEach`/`afterEach` resetean el estado del día, el rate limit, el cache del catálogo y
+  las 4 variables de entorno; no hay orden oculto entre tests (G2 y G3b resetean explícitamente en el medio).
+- **Mensajes de rojo:** muy buenos. Los cuatro asserts que mueren traen la cuenta en el mensaje
+  (`8 llamada(s) × USD 0.63626 = USD 5.0901 contra un tope de USD 1`), así que el rojo se lee sin abrir el test. Es
+  justo lo que la vuelta 1 pidió.
+- **Un detalle de alcance de G1:** `assert.ok(oks >= 1, …)` (`:147`) y `assert.equal(llamadas, oks)` son buenos, pero nada
+  comprueba que los 7 rechazados tengan el 429 **del tope** y no el del rate limit. Con IPs distintas hoy no puede
+  ser el rate limit; igual, chequear el cuerpo (`reintentar_en` hasta medianoche vs. el del rate limit) haría el test
+  inmune a que mañana cambie el límite por IP. No bloqueante.
+
+## Checkpoints
+
+- **C1 · El arnés está sano:** `[x]` — `verify.py` completo VERDE (0 FAIL, 1 WARN preexistente), 282 rutas citadas
+  OK, 21 tarjetas válidas. La ruta nueva `api/tests/topeEndpoint.test.mjs` existe y entra en el glob de
+  `api/tests/correr.mjs`.
+- **C2 · Cumple la tarjeta:** `[ ]` — criterios 2 y 6b sin evidencia que los demuestre a nivel endpoint:
+  `api/tests/topeEndpoint.test.mjs:148` (`gastadoUSD() <= 1 + 1e-9`) está satisfecho por construcción; M5b sobrevive
+  gastando 1,23× el tope en un solo pedido. **Zona de archivos: impecable** — el commit toca `api/tests/` y nada más
+  dentro de `api/` (`git diff 3335fe4^ 3335fe4 -- api/ ':(exclude)api/tests/'` vacío), y `api/fusionar.js` es byte a
+  byte el mismo blob (`56a62dda`) antes y después. Lo de fuera de `api/` es del leader (`graph/sdd.md`,
+  `sdd/cards/IA-3.md` → `estado: review`, el handback). Sin features mezcladas.
+- **C3 · Respeta diseño y convenciones:** `[x]` — no hay código de producción nuevo; el test respeta contracts §8
+  (nunca un 500 al usuario: G4 lo afirma explícitamente), usa las funciones exportadas de `_lib` en vez de duplicar
+  catálogo o prompts, y no agrega dependencias. ADR-017 (freno por instancia, no tope global) queda bien dicho en el
+  handback y no se promete más de lo que el test prueba.
+- **C4 · La verificación es real:** `[ ]` — re-ejecuté todo yo (`correr.mjs` 61/61, `verify.py` VERDE, 20 corridas
+  del archivo nuevo, precarga anti-red) y el rojo de R29 del handback es honesto: los 4 mutantes mueren donde dice.
+  Pero «hay tests nuevos que cubren el cambio» falla por el lado de M5b: el invariante central del criterio 2 tiene
+  un test que no puede dar rojo. Nada skipeado ni debilitado.
+- **C5 · Cierra limpio:** `[x]` — handback completo y commiteado, sin archivos throwaway, sin prints de debug, sin
+  secretos (la clave de los tests es `sk-ant-test-clave`, un literal evidente, y `afterEach` la saca). Nota menor, no
+  bloqueante: el handback dice «**Rama / commit:** `main` @ el commit de este handback» en vez del hash
+  (`3335fe4`) — `verify.py` no lo marca porque hoy revisa los handbacks de la rama actual, pero el próximo handback
+  conviene cerrarlo con el hash real como pide harness §7.5.
+
+## Cambios requeridos
+
+1. **`api/tests/topeEndpoint.test.mjs:75-89` (`fetchLento`) + `:121-130` (G1) — el transporte simulado tiene que
+   derivar el peor caso del pedido real, no de las constantes de la cota.** Cambio concreto, ya probado (verde con el
+   código real, rojo con M5b y con M1b): que `fetchLento` reciba `(url, init)` y, cuando no se le pasa un `usage`
+   explícito, lo construya del cuerpo que mandó el handler —
+   `output_tokens: JSON.parse(init.body).max_tokens`, `cache_creation_input_tokens: bytesUtf8(init.body)` — y que G1
+   lo use así (`fetchLento({})`) en vez de fabricar `output_tokens: MAX_TOKENS_SALIDA`. Con eso el assert
+   `gastado final ≤ tope` pasa a medir lo que dice el criterio 2 y el rojo sale solo:
+   `AssertionError: gastado final USD 1.2435 > tope 1`.
+   Mantener los tres asserts actuales de G1; no hace falta un test nuevo.
+2. **Rojo medido del mutante nuevo (R29), en el handback:** agregar **M5b** (`max_tokens: MAX_TOKENS_SALIDA * 2` en
+   `api/fusionar.js:158`, con la cota intacta) a la tabla de mutantes, con su cola de rojo contra G1 arreglado. Es el
+   mutante que hoy sobrevive; sin él en la tabla, el próximo cambio de `max_tokens` vuelve a pasar sin que nadie se
+   entere.
+3. **`api/tests/topeEndpoint.test.mjs:11-12` — corregir el comentario.** Hoy dice que los cálculos «repiten la
+   fórmula del handler» y que el test no le pregunta al código cuánto debería gastar; en realidad importa
+   `estimarCotaUSD` y `costoRealUSD` de producción y lo que reimplementa es qué bytes entran. Decirlo como es (y, si
+   se quiere, nombrar la limitación: la tabla de precios de `costo.js` no la fija ningún test — M9 sobrevive).
+
+**Lo que NO hace falta** (para que la vuelta 3 sea corta): nada de G2, G3, G3b ni G4 — están bien y matan a sus
+mutantes. Ningún test nuevo. No tocar `api/fusionar.js`: M5b es un mutante, el código real está bien como está.
+
+## Hallazgos para el leader (no bloqueantes, son de IA-1, no de IA-3)
+
+1. **Un 200 válido sin `usage` libera toda la reserva.** Medido con sonda propia sobre el código real: un `200`
+   bien formado cuyo cuerpo no trae `usage` termina con `gastado = USD 0,00000` (porque `costoRealUSD({}) === 0`
+   —`costo.test.mjs:24` lo documenta— y `api/fusionar.js:165` ajusta `0 - cotaMicros`). O sea: respuestas así son
+   gratis en el registro y el tope del día nunca se llena, por muchas que sean. La API real siempre manda `usage`,
+   pero un proxy o un gateway en el medio no es imposible. Arreglo natural, en zona de IA-1: si falta `usage`,
+   conservar la cota en vez de liberarla (el mismo criterio de «lo ambiguo conserva» que ya aplica el `catch`).
+2. **La tabla de precios no la fija ningún test** (M9: precio de salida ÷ 10 sobrevive 61/61). Un solo assert con un
+   número literal en `api/tests/costo.test.mjs` (p. ej. `costoRealUSD({input_tokens:10, output_tokens:5}) ===
+   0.000525`) lo cerraría. Se cruza con R19 y con la nota de `costo.js:9-14`: los precios están sin verificar contra
+   la doc del proveedor y hay que confirmarlos antes de producción.
+3. **Sigue en pie lo de ADR-017**, como dice bien el handback: todo esto es el freno por instancia. El techo duro
+   compartido es el límite de gasto de la consola de Anthropic, que hay que configurar antes de producción.
+
+## Mejoras al arnés detectadas
+
+- **El mutante del reviewer tiene que ir también al punto de uso, y en los dos lados de la cuenta.** La vuelta 1 ya
+  dejó escrito «al menos un mutante en el handler, no solo en la primitiva» y funcionó: así salió M1b. Esta vuelta
+  muestra la segunda mitad de la lección: en un control de gasto hay que mutar **lo que se reserva** *y* **lo que se
+  autoriza a gastar** (`max_tokens`, y mañana un presupuesto de *thinking* o de *streaming*). El agujero no estaba en
+  la reserva, estaba en que nadie ataba la reserva al pedido.
+- **Regla general, candidata a `playbooks/ia-en-el-producto.md` §E: un transporte simulado tiene que responder en
+  función del pedido, no de constantes.** Un `usage` fabricado con las mismas constantes que usa la cota convierte
+  cualquier assert de «gastado ≤ tope» en una tautología. El test que mide un tope tiene que dejar que el peor caso
+  lo decida el pedido (`output_tokens = max_tokens` del cuerpo, bytes de entrada = bytes del cuerpo). Es una línea y
+  cambia el test de decorativo a real.
+- **Un assert que no puede dar rojo es un test skipeado con otra cara.** El rojo forzado de R29 se mide hoy por
+  *test* («cae G1»), y G1 tiene tres asserts de los cuales uno no podía fallar nunca. Vale la pena que R29 se mida
+  por **assert** cuando un test afirma varias cosas: si un mutante plausible no puede hacer caer a un assert
+  concreto, ese assert todavía no está probado.
+- **La precarga `node --import` que bloquea `globalThis.fetch`** volvió a pagar (criterio 7, 0 llamadas reales en 61
+  pruebas, workers incluidos). Segunda vuelta que se usa a mano: debería ser una opción del comando `test` del arnés
+  para los proyectos con IA (N4), con el conteo de `fetch` reales como FAIL.
+- **Chequeo de higiene que el arnés podría automatizar:** `git diff <base>..<hash> -- <zona prohibida>` vacío. Lo hice
+  a mano para confirmar que `api/fusionar.js` no se tocó (y está impecable). La zona de archivos de la tarjeta ya
+  está declarada en el MD: verificarla contra el diff es mecánico.
+
+## Re-verificación del bloqueante por el leader
+
+El leader reprodujo M5b por su cuenta antes de aceptar el veredicto, en una copia sandbox propia
+(`api/` + `web/catalogo.js` + `package.json` + `node_modules/` fuera del repo; el working tree no se tocó):
+
+```text
+$ sed -i 's/max_tokens: MAX_TOKENS_SALIDA,/max_tokens: MAX_TOKENS_SALIDA * 2,/' <sandbox>/api/fusionar.js
+$ node --test "api/tests/topeEndpoint.test.mjs"
+ℹ tests 5 · pass 5 · fail 0          <-- M5b SOBREVIVE
+
+$ node sonda.mjs     # el `usage` lo deriva del pedido real (output_tokens = el max_tokens del cuerpo)
+### con el mutante M5b
+codigo HTTP           : 200
+max_tokens cotizado   : 8192
+max_tokens PEDIDO     : 16384
+cota reservada  (USD) : 0.6363
+gastado final   (USD) : 1.2435   tope: 1
+>>> TOPE ROTO con UN solo pedido
+
+### con el codigo real (3335fe4)
+max_tokens cotizado   : 8192
+max_tokens PEDIDO     : 8192
+cota reservada  (USD) : 0.6363
+gastado final   (USD) : 0.6291   tope: 1
+>>> dentro del tope
+```
+
+Confirmado en los dos sentidos: el mutante rompe el tope con un solo pedido y la suite no se mueve, y el código
+real aguanta. El veredicto CHANGES_REQUESTED queda en pie y los tres cambios requeridos van a la vuelta 3.
+
+---
+
+# Vuelta 1 · @ 9a45e24
+**Veredicto:** CHANGES_REQUESTED · *resuelto en la vuelta 2 salvo el criterio 6b (ver arriba)*
 
 Esta tarjeta no se implementó por separado: se revisa si los criterios de aceptación ya quedaron
 cubiertos por el trabajo de IA-1 (ver sdd/cards/IA-1.md y sus 3 vueltas de review).
