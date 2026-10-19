@@ -12,6 +12,10 @@ desktop.ini
 .claude/settings.local.json
 .claude/worktrees/
 .vercel/
+# Serena: project.yml SÍ se versiona (es config del proyecto); sus memorias las
+# genera la herramienta sola en cada máquina, y el .bak lo deja al editar.
+.serena/memories/
+.serena/*.bak
 
 # Nunca secretos (R17)
 .env
